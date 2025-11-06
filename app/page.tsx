@@ -1,326 +1,371 @@
-"use client";
-
+/* eslint-disable @next/next/no-img-element */
 export default function Home() {
   return (
-    <main className="page">
-      {/* HEADER */}
-      <header className="topbar">
-        <img
-          src="/20251105_073045.jpg"
-          alt="Header background artwork by Gary Whitehead"
-          className="headerImage"
-        />
-        <div className="headerOverlay">
-          <div className="brand">GARY THOMAS WHITEHEAD</div>
-          <div className="portrait">
-            <img src="/Gary.png" alt="Gary Thomas Whitehead portrait" className="garyPhoto" />
+    <main>
+      {/* ===== HERO / HEADER ===== */}
+      <header className="hero">
+        <div className="heroOverlay" />
+        <div className="heroInner">
+          <h1 className="siteTitle">GARY THOMAS WHITEHEAD</h1>
+          <div className="headshotWrap">
+            <img src="/Gary.png" alt="Gary Thomas Whitehead" className="headshot" />
           </div>
         </div>
       </header>
 
-      {/* AUTHOR BIO SECTION */}
-      <section id="bio" className="block card">
-        <h2>✍️ AUTHOR BIO</h2>
-        <h3>Gary Thomas Whitehead</h3>
-        <p>
-          Gary Thomas Whitehead is a multidisciplinary artist whose heart beats through music,
-          painting, and words of faith. As a Christian songwriter and painter, Gary’s work carries a
-          single theme—the beauty of divine connection. Whether through the strokes of a brush, the
-          lyrics of a song, or the pages of a book, he strives to awaken hope and remind others that
-          light always finds its way through.
+      {/* ===== AUTHOR BIO ===== */}
+      <section className="section">
+        <div className="sectionTag">Author Bio</div>
+        <h2 className="h2">Gary Thomas Whitehead</h2>
+        <p className="lede">
+          Gary Thomas Whitehead is a multidisciplinary artist whose heart beats through music, painting, and words of
+          faith. As a Christian songwriter and painter, Gary’s work carries a single theme—the beauty of divine
+          connection. Whether through the strokes of a brush, the lyrics of a song, or the pages of a book, he strives
+          to awaken hope and remind others that light always finds its way through.
         </p>
-        <p>
-          His newest work, <em>The Sent Son: A Biblical Perspective on Jesus as Mediator and Divine
-          Sonship</em>, reflects years of reflection, prayer, and study. Gary writes in this genre
-          because faith has shaped every part of his life—and he believes theology should feel
-          alive, personal, and artful, not distant or academic.
+        <p className="lede">
+          His newest work, <em>The Sent Son: A Biblical Perspective on Jesus as Mediator and Divine Sonship</em>,
+          reflects years of reflection, prayer, and study. Gary writes in this genre because faith has shaped every part
+          of his life—and he believes theology should feel alive, personal, and artful, not distant or academic.
         </p>
-        <p>
-          A fun fact? When he’s not painting or writing, Gary has often been found recording
-          melodies in his home studio, surrounded by canvases still drying on the walls.
+        <p className="lede">
+          A fun fact? When he’s not painting or writing, Gary has often been found recording melodies in his home
+          studio, surrounded by canvases still drying on the walls.
         </p>
       </section>
 
-      {/* BOOK SECTION */}
-      <section id="book" className="block card">
-        <h2>📖 ABOUT THE BOOK</h2>
-        <h3>The Sent Son</h3>
+      {/* ===== BOOK ===== */}
+      <section className="section">
+        <div className="sectionTag">About the Book</div>
+        <h2 className="h2">The Sent Son</h2>
 
         <div className="bookLayout">
-          <div className="bookText">
-            <p className="subtle">
-              <em>The Sent Son</em> is a Biblical perspective on Jesus as Mediator and Divine
-              Sonship — exploring themes of covenant, mercy, and the Father’s heart through
-              scripture-rich reflections.
-            </p>
-
-            <ul className="bookDetails">
-              <li>• Author: <strong>Gary Thomas Whitehead</strong></li>
-              <li>• Genre: <strong>Christian theology / spiritual reflection</strong></li>
-              <li>
-                • The book offers an in-depth scriptural study on Jesus’ role as both mediator and
-                divine son, written in a devotional, reflective tone — consistent with his artistic
-                and musical expression.
-              </li>
-            </ul>
-
-            <ul className="list">
-              <li>
-                <div className="item">
-                  <span>Read sample chapter (PDF)</span>
-                  <a
-                    className="view"
-                    href="/Part%20of%20Chapter%201.pdf"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open →
-                  </a>
-                </div>
-              </li>
-              <li>
-                <div className="item">
-                  <span>Contact the author</span>
-                  <a className="view" href="mailto:Gary's_new_music@yahoo.com">
-                    Email →
-                  </a>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div className="bookImage">
+          <figure className="bookCard">
             <img
               src="/Cover.png"
-              alt="The Sent Son — A Biblical Perspective on Jesus"
-              className="bookCover"
+              alt="Book cover for The Sent Son"
+              className="bookImage"
+              loading="lazy"
             />
+            <figcaption className="bookCaption">The Sent Son — Cover</figcaption>
+          </figure>
+
+          <div className="bookInfo">
+            <ul className="bookBullets">
+              <li><strong>Author:</strong> Gary Thomas Whitehead</li>
+              <li><strong>Genre:</strong> Christian theology / spiritual reflection</li>
+              <li>
+                The book offers an in-depth scriptural study on Jesus’ role as both mediator and divine son, written in
+                a devotional, reflective tone — consistent with his artistic and musical expression.
+              </li>
+            </ul>
+
+            <div className="linkRow">
+              <a
+                className="btn"
+                href="/Part%20of%20Chapter%201.pdf"
+                target="_blank"
+                rel="noopener"
+                title="Open sample chapter PDF"
+              >
+                📖 Read Sample Chapter (PDF)
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* MUSIC SECTION */}
-      <section id="music" className="block card">
-        <h2>🎵 LISTEN</h2>
-        <h3>Music</h3>
-        <p>
-          Experience Gary’s original songs of inspiration and storytelling on your favorite
-          streaming platforms.
+      {/* ===== MUSIC ===== */}
+      <section className="section">
+        <div className="sectionTag">Listen</div>
+        <h2 className="h2">Music</h2>
+        <p className="lede">
+          New singles, reflective instrumentals, and faith-forward lyrics. Find Gary’s music on your favorite platforms:
         </p>
 
-        <div className="embedWrap">
-          <iframe
-            title="Gary Whitehead — SoundCloud"
-            width="100%"
-            height="300"
-            scrolling="no"
-            frameBorder="no"
-            allow="autoplay"
-            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
-          />
-        </div>
-
-        <div className="linkRow">
-          <a
-            className="btn primary"
-            href="https://soundcloud.com/user-747949669"
-            target="_blank"
-            rel="noreferrer"
-          >
-            🎧 SoundCloud
-          </a>
+        <div className="linkRow" style={{ flexWrap: "wrap", gap: 12 }}>
           <a
             className="btn youtube"
             href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener"
+            title="YouTube channel"
           >
             ▶️ YouTube
           </a>
+
+          {/* If you want all artist IDs unified later, this can remain the primary profile for now */}
           <a
             className="btn spotify"
             href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener"
+            title="Spotify profile"
           >
-            🎶 Spotify
+            🎵 Spotify
           </a>
+
           <a
             className="btn facebook"
             href="https://www.facebook.com/profile.php?id=61556807271098"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener"
+            title="Facebook fan page"
           >
             👍 Facebook
+          </a>
+
+          <a className="btn" href="mailto:Gary's_new_music@yahoo.com" title="Contact Gary">
+            ✉️ Contact
           </a>
         </div>
       </section>
 
-      {/* ART / ETSY SECTION */}
-      <section id="art" className="block card">
-        <h2>🎨 GALLERY & SHOP</h2>
-        <h3>Art</h3>
-        <p>
-          Original paintings and fine-art prints by Gary Whitehead. Browse a few favorites below, and
-          visit my Etsy shop for the full collection.
+      {/* ===== ART ===== */}
+      <section className="section">
+        <div className="sectionTag">Gallery & Shop</div>
+        <h2 className="h2">Art</h2>
+        <p className="lede">
+          Original paintings and fine-art prints by Gary Whitehead. Browse a few favorites below.
         </p>
 
         <div className="gallery">
+          {/* Up Through the Trees — FIXED PATH with version param to bust caches */}
           <figure className="artCard">
             <img
-              src="/Up%20Through%20the%20Trees.png"
+              src="/trees.png?v=1"
               alt="Up Through the Trees — branches against a sunrise sky"
+              style={{ width: "100%", height: "auto", display: "block", borderRadius: "14px" }}
               loading="lazy"
             />
             <figcaption>Up Through the Trees</figcaption>
           </figure>
 
+          {/* Flaming — abstract pour */}
           <figure className="artCard">
             <img
               src="/Flames.png"
-              alt="Flaming — abstract fire form on black with gold, red, and white flow"
+              alt="Flaming — abstract pour on black"
+              style={{ width: "100%", height: "auto", display: "block", borderRadius: "14px" }}
               loading="lazy"
             />
             <figcaption>Flaming</figcaption>
           </figure>
         </div>
-
-        <div className="linkRow">
-          <a
-            className="btn primary"
-            href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
-            target="_blank"
-            rel="noreferrer"
-          >
-            🛒 Visit My Etsy Shop
-          </a>
-        </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="footer">
-        <p>© {new Date().getFullYear()} Gary Thomas Whitehead • All rights reserved</p>
+        © {new Date().getFullYear()} Gary Thomas Whitehead • All rights reserved.
       </footer>
 
-      {/* STYLES */}
+      {/* ===== STYLES ===== */}
       <style jsx>{`
-        :root { --max: 1120px; --pad: 20px; }
-
-        .page {
-          font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-          font-weight: 600;
-          color: #111;
-          line-height: 1.6;
-          background: linear-gradient(180deg, #f9f2e2 0%, #f7e7c8 40%, #f4e9d6 100%);
-          min-height: 100vh;
+        :root {
+          --ink: #222;
+          --ink-soft: #333;
+          --paper: #fffdf7;
+          --card: #fffaf0;
+          --accent: #6b4cff;
+          --muted: #e9e2d9;
         }
 
-        /* HEADER — original frame height, image stretched to fit */
-        .topbar {
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+          color: var(--ink);
+          background: var(--paper);
+          font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+          line-height: 1.55;
+        }
+
+        main { padding-bottom: 60px; }
+
+        /* ===== Hero ===== */
+        .hero {
           position: relative;
-          width: 100%;
-          height: 320px;           /* original size restored */
-          overflow: hidden;
-          border-bottom: 2px solid #ccc;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
+          min-height: 260px;
+          background: center/cover no-repeat url("/20251105_073045.jpg");
+          display: grid;
+          place-items: center;
         }
-
-        .headerImage {
+        .heroOverlay {
           position: absolute;
           inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: fill;       /* <-- shows the WHOLE picture, stretched to the frame */
-          z-index: 0;
+          background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.25));
         }
-
-        .headerOverlay {
+        .heroInner {
           position: relative;
           z-index: 1;
-          background: rgba(0, 0, 0, 0.45);
-          backdrop-filter: blur(3px);
-          padding: 20px 40px;
-          border-radius: 16px;
+          display: grid;
+          place-items: center;
+          gap: 16px;
+          padding: 40px 16px;
+          width: 100%;
+          max-width: 1100px;
         }
-
-        .brand {
-          font-size: 32px;
-          font-weight: 900;
-          letter-spacing: 0.12em;
-          margin-bottom: 10px;
+        .siteTitle {
+          margin: 0;
           color: #fff;
-          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+          letter-spacing: 0.15em;
+          font-weight: 800;
+          text-align: center;
+          text-shadow: 0 2px 12px rgba(0,0,0,.45);
         }
-
-        .garyPhoto {
-          width: 130px;
-          height: 130px;
-          border-radius: 50%;
-          border: 3px solid rgba(255, 255, 255, 0.8);
-          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        @media (min-width: 640px) {
+          .siteTitle { font-size: 36px; }
+        }
+        @media (max-width: 639px) {
+          .siteTitle { font-size: 22px; }
+        }
+        .headshotWrap {
+          width: 92px; height: 92px;
+          border-radius: 999px;
+          border: 4px solid rgba(255,255,255,.95);
+          box-shadow: 0 10px 30px rgba(0,0,0,.35);
+          overflow: hidden;
+        }
+        .headshot {
+          width: 100%;
+          height: 100%;
           object-fit: cover;
+          display: block;
         }
 
-        .card {
-          background: rgba(255, 253, 248, 0.92);
-          border-radius: 16px;
-          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-          padding: 24px;
-          margin: 28px auto;
-          max-width: var(--max);
+        /* ===== Sections ===== */
+        .section {
+          padding: 36px 16px 6px;
+          margin: 24px auto 6px;
+          max-width: 1100px;
+          background: var(--card);
+          border: 1px solid #f1eadf;
+          border-radius: 18px;
+          box-shadow: 0 10px 24px rgba(0,0,0,.05);
+        }
+        .sectionTag {
+          display: inline-block;
+          font-size: 12px;
+          letter-spacing: .14em;
+          text-transform: uppercase;
+          color: #7e6d5a;
+          background: #fff7ea;
+          border: 1px solid #ecdcc6;
+          padding: 6px 10px;
+          border-radius: 999px;
+          margin-bottom: 10px;
+        }
+        .h2 {
+          margin: 8px 0 16px;
+          font-size: clamp(22px, 2.8vw, 30px);
+        }
+        .lede {
+          font-size: 17px;
+          color: var(--ink-soft);
+          margin: 10px 0 10px;
         }
 
-        h2 { text-transform: uppercase; font-size: 14px; letter-spacing: 0.12em; color: #444; margin-bottom: 6px; }
-        h3 { font-weight: 800; font-size: clamp(24px, 2.5vw, 30px); margin-bottom: 10px; }
-        p { font-weight: 600; color: #222; }
-
-        .bookLayout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; margin-top: 20px; }
-        .bookImage { display: flex; justify-content: center; perspective: 1000px; }
-        .bookCover {
-          width: 80%; max-width: 360px; border-radius: 12px; border: 1px solid #e8e2d6;
-          background: #fff; transform-style: preserve-3d;
-          transition: transform 320ms ease, box-shadow 320ms ease;
-          box-shadow: 0 10px 22px rgba(0,0,0,.22), 0 4px 10px rgba(0,0,0,.12);
+        /* ===== Book layout ===== */
+        .bookLayout {
+          display: grid;
+          gap: 24px;
         }
-        .bookImage:hover .bookCover {
-          transform: rotateY(-7deg) rotateX(4deg) translateY(-2px);
-          box-shadow: 0 18px 36px rgba(0,0,0,.28), 0 8px 16px rgba(0,0,0,.18);
+        @media (min-width: 920px) {
+          .bookLayout {
+            grid-template-columns: 320px 1fr;
+            align-items: start;
+          }
         }
+        .bookCard {
+          margin: 0;
+          text-align: center;
+        }
+        .bookImage {
+          width: 100%;
+          max-width: 320px;
+          height: auto;
+          display: block;
+          margin: 0 auto;
+          border-radius: 14px;
+          box-shadow: 0 18px 36px rgba(0,0,0,.18), 0 8px 18px rgba(0,0,0,.08);
+          transition: transform .25s ease, box-shadow .25s ease;
+          transform: perspective(900px) rotateX(0) rotateY(0);
+        }
+        .bookImage:hover {
+          transform: perspective(900px) rotateX(4deg) rotateY(-6deg) translateY(-2px);
+          box-shadow: 0 26px 44px rgba(0,0,0,.22), 0 14px 24px rgba(0,0,0,.12);
+        }
+        .bookCaption {
+          margin-top: 10px;
+          font-size: 14px;
+          color: #705e4a;
+        }
+        .bookInfo { padding: 4px 2px; }
+        .bookBullets {
+          margin: 0 0 14px;
+          padding-left: 18px;
+        }
+        .bookBullets li { margin: 6px 0; }
 
+        /* ===== Buttons / Links ===== */
+        .linkRow {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
         .btn {
-          display: inline-block; padding: 10px 16px; border-radius: 10px;
-          text-decoration: none; font-weight: 700; color: #222;
+          display: inline-block;
+          background: #111;
+          color: #fff;
+          text-decoration: none;
+          padding: 11px 16px;
+          border-radius: 999px;
+          font-weight: 700;
+          border: 1px solid #111;
+          transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
         }
-        .btn.primary { background: #2b5cff; color: #fff; }
-        .btn.youtube  { background: #ff0000; color: #fff; }
-        .btn.spotify  { background: #1db954; color: #fff; }
-        .btn.facebook { background: #1877f2; color: #fff; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); opacity: .9; }
 
-        .linkRow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+        .btn.youtube { background: #ff0000; border-color: #ff0000; }
+        .btn.spotify { background: #1db954; border-color: #1db954; color: #002a12; }
+        .btn.facebook { background: #1877f2; border-color: #1877f2; }
 
-        .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px; }
+        /* ===== Gallery ===== */
+        .gallery {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 18px;
+          margin-top: 6px;
+        }
+        @media (min-width: 900px) {
+          .gallery { grid-template-columns: 1fr 1fr; }
+        }
         .artCard {
-          padding: 12px; border-radius: 14px; background: #fff; border: 1px solid #eee;
-          box-shadow: 0 4px 12px rgba(0,0,0,.08); transition: transform .25s ease;
+          margin: 0;
+          background: #fffdf8;
+          border: 1px solid #efe5d7;
+          border-radius: 18px;
+          padding: 12px;
+          box-shadow: 0 8px 20px rgba(0,0,0,.06);
         }
-        .artCard:hover { transform: translateY(-4px); box-shadow: 0 10px 22px rgba(0,0,0,.15); }
-        .artCard img { width: 100%; border-radius: 10px; }
-        .artCard figcaption { margin-top: 10px; text-align: center; font-weight: 700; color: #333; }
+        .artCard img {
+          box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        }
+        .artCard figcaption {
+          margin-top: 10px;
+          text-align: center;
+          font-weight: 700;
+          color: #533e2b;
+        }
 
+        /* ===== Footer ===== */
         .footer {
-          text-align: center; padding: 18px var(--pad); color: #333;
-          border-top: 1px solid #ddd; margin-top: 40px;
-          background: rgba(255,255,255,.7); font-weight: 700;
-        }
-
-        @media (max-width: 900px) {
-          .bookLayout { grid-template-columns: 1fr; text-align: center; }
-        }
-        @media (max-width: 700px) {
-          .gallery { grid-template-columns: 1fr; }
+          max-width: 1100px;
+          margin: 34px auto 0;
+          padding: 22px 16px;
+          color: #7a6a58;
+          font-size: 14px;
+          text-align: center;
         }
       `}</style>
     </main>
