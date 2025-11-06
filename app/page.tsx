@@ -235,7 +235,7 @@ export default function Home() {
 
         <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Art</h3>
         <p style={{ marginTop: 0, marginBottom: 18 }}>
-          Original paintings and fine-art prints by Gary Whitehead. Browse a few favorites below.
+          Original paintings by Gary Whitehead. Browse a few favorites below.
         </p>
 
         <div
