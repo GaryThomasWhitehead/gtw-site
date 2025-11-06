@@ -133,8 +133,9 @@ export default function Home() {
               <li>Genre: Christian theology / spiritual reflection</li>
               <li>
                 The book offers an in-depth scriptural study on Jesus’ role as both mediator and
-                divine son, written in a devotional, reflective tone — consistent with his artistic
-                and musical expression.
+                divine son, written in a devotional, reflective tone and well-suited for chruch Bible studies
+                and group studies providing a framework where discussion and reflection can build
+                stronger communities of faith.
               </li>
             </ul>
 
