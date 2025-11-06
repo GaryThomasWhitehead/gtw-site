@@ -88,7 +88,55 @@ section[aria-labelledby="music"] a.btn[href^="mailto"]   { background:#333; }
 /* Hover/active polish */
 section[aria-labelledby="music"] a.btn:hover  { filter: brightness(.95); transform: translateY(-1px); }
 section[aria-labelledby="music"] a.btn:active { transform: translateY(0); filter: brightness(.9); }
+/* Music section: two-column layout */
+.musicGrid{
+  display: grid;
+  grid-template-columns: 1fr 280px; /* text/buttons | release image */
+  gap: 24px;
+  align-items: start;
+}
 
+.musicLeft{
+  min-width: 0; /* prevents overflow in some browsers */
+}
+
+/* Latest release card */
+.releaseCard{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.releaseCard img{
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.12);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.releaseCard span{
+  font-size: .9rem;
+  font-weight: 600;
+  color: #1877f2; /* link-blue label; tweak if you'd like */
+}
+
+.releaseCard:hover img{
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,.16);
+}
+
+/* Stack on mobile */
+@media (max-width: 820px){
+  .musicGrid{
+    grid-template-columns: 1fr;
+  }
+  .releaseCard{
+    justify-self: start;
+  }
+}
 
 /* ==== Link Row ==== */
 .linkRow {

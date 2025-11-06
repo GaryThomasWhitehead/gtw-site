@@ -133,7 +133,7 @@ export default function Home() {
               <li>Genre: Christian theology / spiritual reflection</li>
               <li>
                 The book offers an in-depth scriptural study on Jesus’ role as both mediator and
-                divine son, written in a devotional, reflective tone and well-suited for chruch Bible studies
+                divine son, written in a devotional, reflective tone and well-suited for church Bible studies
                 and group studies providing a framework where discussion and reflection can build
                 stronger communities of faith.
               </li>
@@ -162,7 +162,7 @@ export default function Home() {
         </div>
       </section>
 
-  {/* ===== MUSIC (SECOND) ===== */}
+{/* ====== MUSIC (SECOND) ====== */}
 <section
   aria-labelledby="music"
   style={{
@@ -173,50 +173,66 @@ export default function Home() {
     border: '1px solid #eee',
   }}
 >
-  {/* Use the title class, no inline styles */}
-  <h2 className="sectionTitle">Gary’s Original Music</h2>
+  <h2 id="music" className="sectionTitle">Gary’s Original Music</h2>
 
-  <p style={{ marginTop: 8, marginBottom: 14 }}>
-    Listen to Gary’s music and follow along:
-  </p>
+  <div className="musicGrid">
+    {/* LEFT: description + buttons */}
+    <div className="musicLeft">
+      <p style={{ marginTop: 8, marginBottom: 14 }}>
+        Listen to Gary’s music and follow along:
+      </p>
 
-  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-    {/* YouTube */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {/* YouTube */}
+        <a
+          className="btn"
+          href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
+          target="_blank"
+          rel="noopener"
+        >
+          YouTube
+        </a>
+
+        {/* Spotify variations (keep your existing links) */}
+        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+          Spotify (1)
+        </a>
+        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+          Spotify (2)
+        </a>
+        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+          Spotify (3)
+        </a>
+        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+          Spotify (4)
+        </a>
+
+        {/* Facebook */}
+        <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener">
+          Facebook Page
+        </a>
+
+        {/* Email */}
+        <a className="btn" href="mailto:..." target="_blank" rel="noopener">
+          Email Gary
+        </a>
+      </div>
+    </div>
+
+    {/* RIGHT: latest release card */}
     <a
-      className="btn"
-      href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmK3qvVg"
+      className="releaseCard"
+      href="https://soundcloud.com/user-747949669/mirrors-of-the-mind"
       target="_blank"
       rel="noopener"
+      aria-label="Mirrors of the Mind — listen on SoundCloud"
     >
-      YouTube
-    </a>
-
-    {/* Spotify links */}
-    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-      Spotify (1)
-    </a>
-    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-      Spotify (2)
-    </a>
-    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-      Spotify (3)
-    </a>
-    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-      Spotify (4)
-    </a>
-
-    {/* Facebook */}
-    <a className="btn btn-blue" href="https://www.facebook.com/..." target="_blank" rel="noopener">
-      Facebook Page
-    </a>
-
-    {/* Email */}
-    <a className="btn btn-dark" href="mailto:youremail@domain.com">
-      Email Gary
+      {/* NOTE: If your file is /public/mirrors.jpg (or .jpeg/.webp), change the extension below */}
+      <img src="/mirrors.png" alt="Latest release: Mirrors of the Mind" />
+      <span>Mirrors of the Mind — listen on SoundCloud</span>
     </a>
   </div>
 </section>
-
 
       {/* ====== ART (THIRD) ====== */}
       <section
