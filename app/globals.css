@@ -66,23 +66,29 @@ h1, h2, h3, h4 {
   font-size: 1.05rem;
 }
 
-/* ==== Buttons ==== */
-.btn {
-  display: inline-block;
-  padding: 10px 18px;
+/* Base button (keep or tweak yours) */
+.btn{
+  display:inline-block;
+  padding:10px 16px;
   border-radius: 10px;
   font-weight: 700;
   text-decoration: none;
-  border: 1px solid #111;
-  color: #111;
-  background: #fff;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  line-height: 1;
+  box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06);
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+  color:#fff;            /* default text color on colored buttons */
 }
-.btn:hover {
-  background: #f3f3f3;
-  transform: translateY(-2px);
-}
+
+/* Scope to the music section so we only color those buttons */
+section[aria-labelledby="music"] a.btn[href*="youtube"]  { background:#ff2d2d; }
+section[aria-labelledby="music"] a.btn[href*="spotify"]  { background:#1db954; }
+section[aria-labelledby="music"] a.btn[href*="facebook"] { background:#1877f2; }
+section[aria-labelledby="music"] a.btn[href^="mailto"]   { background:#333; }
+
+/* Hover/active polish */
+section[aria-labelledby="music"] a.btn:hover  { filter: brightness(.95); transform: translateY(-1px); }
+section[aria-labelledby="music"] a.btn:active { transform: translateY(0); filter: brightness(.9); }
+
 
 /* ==== Link Row ==== */
 .linkRow {
