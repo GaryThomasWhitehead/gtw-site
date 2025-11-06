@@ -162,144 +162,61 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== MUSIC (SECOND) ====== */}
-      <section
-        aria-labelledby="music"
-        style={{
-          marginTop: 24,
-          background: "#fff",
-          borderRadius: "12px",
-          padding: "20px",
-          border: "1px solid #eee",
-        }}
-      >
-        <h2 id="music" style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}>
-          MUSIC
-        </h2>
+  {/* ===== MUSIC (SECOND) ===== */}
+<section
+  aria-labelledby="music"
+  style={{
+    marginTop: 24,
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '20px',
+    border: '1px solid #eee',
+  }}
+>
+  {/* Use the title class, no inline styles */}
+  <h2 className="sectionTitle">Gary’s Original Music</h2>
 
-        <p style={{ marginTop: 8, marginBottom: 14 }}>
-          Listen to Gary’s music and follow along:
-        </p>
+  <p style={{ marginTop: 8, marginBottom: 14 }}>
+    Listen to Gary’s music and follow along:
+  </p>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a
-            href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
-            target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#FF0000", // YouTube red
-              color: "#fff",
-            }}
-          >
-            YouTube
-          </a>
+  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+    {/* YouTube */}
+    <a
+      className="btn"
+      href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmK3qvVg"
+      target="_blank"
+      rel="noopener"
+    >
+      YouTube
+    </a>
 
-          {/* Spotify artists you mentioned */}
-          <a
-            href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX"
-            target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#1DB954", // Spotify green
-              color: "#fff",
-            }}
-          >
-            Spotify (1)
-          </a>
-          <a
-            href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o"
-            target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#1DB954",
-              color: "#fff",
-            }}
-          >
-            Spotify (2)
-          </a>
-          <a
-            href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN"
-            target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#1DB954",
-              color: "#fff",
-            }}
-          >
-            Spotify (3)
-          </a>
-          <a
-            href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP"
-            target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#1DB954",
-              color: "#fff",
-            }}
-          >
-            Spotify (4)
-          </a>
+    {/* Spotify links */}
+    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+      Spotify (1)
+    </a>
+    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+      Spotify (2)
+    </a>
+    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+      Spotify (3)
+    </a>
+    <a className="btn btn-green" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+      Spotify (4)
+    </a>
 
-          {/* Facebook Fan Page */}
-          <a
-            href="https://www.facebook.com/profile.php?id=61556807271098"
-            target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#1877F2", // Facebook blue
-              color: "#fff",
-            }}
-          >
-            Facebook Page
-          </a>
+    {/* Facebook */}
+    <a className="btn btn-blue" href="https://www.facebook.com/..." target="_blank" rel="noopener">
+      Facebook Page
+    </a>
 
-          {/* Contact email */}
-          <a
-            href="mailto:Gary's_new_music@yahoo.com"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#333",
-              color: "#fff",
-            }}
-          >
-            Email Gary
-          </a>
-        </div>
-      </section>
+    {/* Email */}
+    <a className="btn btn-dark" href="mailto:youremail@domain.com">
+      Email Gary
+    </a>
+  </div>
+</section>
+
 
       {/* ====== ART (THIRD) ====== */}
       <section
