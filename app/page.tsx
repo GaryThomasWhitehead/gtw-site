@@ -228,8 +228,12 @@ export default function Home() {
       aria-label="Mirrors of the Mind — listen on SoundCloud"
     >
       {/* NOTE: If your file is /public/mirrors.jpg (or .jpeg/.webp), change the extension below */}
-      <img src="/mirrors.png" alt="Latest release: Mirrors of the Mind" />
-      <span>Mirrors of the Mind — listen on SoundCloud</span>
+      <img src="/mirrors.png" alt="Mirrors of the Mind cover art" />
+   <span>
+  Mirrors of the Mind<br />
+  <small>Listen on SoundCloud</small>
+</span>
+
     </a>
   </div>
 </section>
