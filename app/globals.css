@@ -26,14 +26,17 @@ main {
   padding: 24px 32px;
 }
 
-/* ==== Section Titles ==== */
 .sectionTitle {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: #b57b17;
-  text-transform: uppercase;
-  margin: 48px 0 16px;
+  font-size: 1.5rem;          /* Larger like “Art” */
+  font-weight: 700;           /* Bold */
+  color: #111;                /* Deep black text */
+  text-transform: none;       /* Keep normal capitalization */
+  letter-spacing: -0.01em;    /* Slightly tighter kerning */
+  margin-top: 48px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #b57b17; /* Optional gold underline for consistency */
+  display: inline-block;
+  padding-bottom: 4px;
 }
 
 /* ==== Hero / Banner ==== */
