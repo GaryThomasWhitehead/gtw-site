@@ -167,6 +167,7 @@ export default function Home() {
                 href="/Part of Chapter 1.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
+                style={{ background: "#111", color: "#fff" }}   {/* FIX: visible/book button */}
               >
                 Read a Sample (PDF)
               </a>
@@ -190,83 +191,67 @@ export default function Home() {
         <h2 id="music" className="sectionTitle">🎵 LISTEN</h2>
         <h3>Music</h3>
 
-        <div className="musicGrid">
-          {/* LEFT: description + embed + buttons */}
-          <div className="musicLeft">
-            <p style={{ marginTop: 8, marginBottom: 14 }}>
-              Experience Gary’s original songs of inspiration and storytelling
-              on your favorite streaming platforms.
-            </p>
+        {/* Full-width (removed right-side image/link) */}
+        <div>
+          <p style={{ marginTop: 8, marginBottom: 14 }}>
+            Experience Gary’s original songs of inspiration and storytelling
+            on your favorite streaming platforms.
+          </p>
 
-            <div className="embedWrap" style={{ marginBottom: 12 }}>
-              <iframe
-                title="Gary Whitehead — SoundCloud"
-                width="100%"
-                height="300"
-                scrolling="no"
-                frameBorder="0"
-                allow="autoplay"
-                src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
-              />
-            </div>
-
-            {/* Platform Buttons (record-style) */}
-            <div className="linkRow">
-              <a
-                className="btn"
-                href="https://soundcloud.com/user-747949669"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                🎧 SoundCloud
-              </a>
-
-              <a
-                className="btn"
-                href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                ▶ YouTube
-              </a>
-
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-                🎵 Spotify (1)
-              </a>
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-                🎵 Spotify (2)
-              </a>
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-                🎵 Spotify (3)
-              </a>
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-                🎵 Spotify (4)
-              </a>
-
-              <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener noreferrer">
-                👍 Facebook Page
-              </a>
-
-              <a className="btn" href="mailto:..." target="_blank" rel="noopener noreferrer">
-                ✉ Email Gary
-              </a>
-            </div>
+          <div className="embedWrap" style={{ marginBottom: 12 }}>
+            <iframe
+              title="Gary Whitehead — SoundCloud"
+              width="100%"
+              height="300"
+              scrolling="no"
+              frameBorder="0"
+              allow="autoplay"
+              src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+            />
           </div>
 
-          {/* RIGHT: latest release card */}
-          <a
-            className="releaseCard"
-            href="https://soundcloud.com/user-747949669/mirrors-of-the-mind"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Mirrors of the Mind — listen on SoundCloud"
-          >
-            <img src="/mirrors.png" alt="Mirrors of the Mind cover art" />
-            <span>
-              Mirrors of the Mind<br />
-              <small>Listen on SoundCloud</small>
-            </span>
-          </a>
+          {/* Platform Buttons */}
+          <div className="linkRow">
+            <a
+              className="btn"
+              href="https://soundcloud.com/user-747949669"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ background: "#ff5500", color: "#fff" }}  {/* FIX: visible/SoundCloud */}
+            >
+              🎧 SoundCloud
+            </a>
+
+            <a
+              className="btn"
+              href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ▶ YouTube
+            </a>
+
+            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
+              🎵 Spotify (1)
+            </a>
+            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
+              🎵 Spotify (2)
+            </a>
+            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
+              🎵 Spotify (3)
+            </a>
+            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
+              🎵 Spotify (4)
+            </a>
+
+            <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener noreferrer">
+              👍 Facebook Page
+            </a>
+
+            <a className="btn" href="mailto:..." target="_blank" rel="noopener noreferrer">
+              ✉ Email Gary
+            </a>
+          </div>
         </div>
       </section>
 
@@ -331,6 +316,7 @@ export default function Home() {
             href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
             target="_blank"
             rel="noopener noreferrer"
+            style={{ background: "#111", color: "#fff" }}
           >
             Visit My Etsy Shop
           </a>
