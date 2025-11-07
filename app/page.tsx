@@ -2,12 +2,11 @@
 export default function Home() {
   return (
     <main>
-
       {/* ====== HEADER ====== */}
       <header
         className="hero"
         style={{
-          backgroundImage: "url('/20251105_073045.jpg')", // header bg you added
+          backgroundImage: "url('/20251105_073045.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -44,8 +43,12 @@ export default function Home() {
             loading="lazy"
           />
           <div>
-            <div style={{ fontSize: "18px", opacity: 0.9 }}>GARY THOMAS WHITEHEAD</div>
-            <div style={{ fontSize: "14px", opacity: 0.8 }}>Author • Songwriter • Painter</div>
+            <div style={{ fontSize: "18px", opacity: 0.9 }}>
+              GARY THOMAS WHITEHEAD
+            </div>
+            <div style={{ fontSize: "14px", opacity: 0.8 }}>
+              Author • Songwriter • Painter
+            </div>
           </div>
         </div>
       </header>
@@ -61,28 +64,34 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        <h2 id="bio" style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}>
+        <h2
+          id="bio"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
           AUTHOR BIO
         </h2>
         <h3 style={{ margin: "8px 0 12px", fontSize: 22, fontWeight: 700 }}>
           Gary Thomas Whitehead
         </h3>
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
-          Gary Thomas Whitehead is a multidisciplinary artist whose heart beats through music,
-          painting, and words of faith. As a Christian songwriter and painter, Gary’s work carries
-          a single theme—the beauty of divine connection. Whether through the strokes of a brush,
-          the lyrics of a song, or the pages of a book, he strives to awaken hope and remind others
-          that light always finds its way through.
+          Gary Thomas Whitehead is a multidisciplinary artist whose heart beats
+          through music, painting, and words of faith. As a Christian songwriter
+          and painter, Gary’s work carries a single theme—the beauty of divine
+          connection. Whether through the strokes of a brush, the lyrics of a
+          song, or the pages of a book, he strives to awaken hope and remind
+          others that light always finds its way through.
         </p>
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
-          His newest work, <em>The Sent Son: A Biblical Perspective on Jesus as Mediator and Divine
-          Sonship</em>, reflects years of reflection, prayer, and study. Gary writes in this genre
-          because faith has shaped every part of his life—and he believes theology should feel alive,
+          His newest work, <em>The Sent Son: A Biblical Perspective on Jesus as
+          Mediator and Divine Sonship</em>, reflects years of reflection,
+          prayer, and study. Gary writes in this genre because faith has shaped
+          every part of his life—and he believes theology should feel alive,
           personal, and artful, not distant or academic.
         </p>
         <p style={{ lineHeight: 1.7 }}>
-          A fun fact? When he’s not painting or writing, Gary has often been found recording melodies
-          in his home studio, surrounded by canvases still drying on the walls.
+          A fun fact? When he’s not painting or writing, Gary has often been
+          found recording melodies in his home studio, surrounded by canvases
+          still drying on the walls.
         </p>
       </section>
 
@@ -94,10 +103,13 @@ export default function Home() {
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
-          border: "1px solid #eee",
+          border: "1px solid "#eee",
         }}
       >
-        <h2 id="book" style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}>
+        <h2
+          id="book"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
           BOOK
         </h2>
 
@@ -109,6 +121,7 @@ export default function Home() {
           }}
         >
           <figure
+            className="bookCard"
             style={{
               borderRadius: "12px",
               overflow: "hidden",
@@ -126,34 +139,34 @@ export default function Home() {
 
           <div>
             <h3 style={{ fontSize: 22, marginTop: 0, marginBottom: 8 }}>
-              The Sent Son — A Biblical Perspective on Jesus as Mediator and Divine Sonship
+              The Sent Son — A Biblical Perspective on Jesus as Mediator and
+              Divine Sonship
             </h3>
-            <ul style={{ lineHeight: 1.7, marginTop: 12, marginBottom: 16, paddingLeft: 18 }}>
+            <ul
+              style={{
+                lineHeight: 1.7,
+                marginTop: 12,
+                marginBottom: 16,
+                paddingLeft: 18,
+              }}
+            >
               <li>Author: Gary Thomas Whitehead</li>
               <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
-                The book offers an in-depth scriptural study on Jesus’ role as both mediator and
-                divine son, written in a devotional, reflective tone and well-suited for church Bible studies
-                and group studies providing a framework where discussion and reflection can build
-                stronger communities of faith.
+                The book offers an in-depth scriptural study on Jesus’ role as
+                both mediator and divine son, written in a devotional,
+                reflective tone and well-suited for church Bible studies and
+                group studies providing a framework where discussion and
+                reflection can build stronger communities of faith.
               </li>
             </ul>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div className="linkRow">
               <a
                 className="btn"
                 href="/Part of Chapter 1.pdf"
                 target="_blank"
                 rel="noopener"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "#111",
-                  color: "#fff",
-                }}
               >
                 Read a Sample (PDF)
               </a>
@@ -162,94 +175,100 @@ export default function Home() {
         </div>
       </section>
 
-{/* ===== MUSIC SECTION ===== */}
-<section id="music" className="block card">
-  <h2>🎵 LISTEN</h2>
-  <h3>Music</h3>
-  <p>
-    Experience Gary’s original songs of inspiration and storytelling on your favorite
-    streaming platforms.
-  </p>
+      {/* ===== MUSIC SECTION ===== */}
+      <section
+        aria-labelledby="music"
+        className="block card"
+        style={{
+          marginTop: 24,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2 id="music" className="sectionTitle">🎵 LISTEN</h2>
+        <h3>Music</h3>
 
-  <div className="embedWrap">
-    <iframe
-      title="Gary Whitehead — SoundCloud"
-      width="100%"
-      height="300"
-      scrolling="no"
-      frameBorder="0"
-      allow="autoplay"
-      src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
-    />
-  </div>
+        <div className="musicGrid">
+          {/* LEFT: description + embed + buttons */}
+          <div className="musicLeft">
+            <p style={{ marginTop: 8, marginBottom: 14 }}>
+              Experience Gary’s original songs of inspiration and storytelling
+              on your favorite streaming platforms.
+            </p>
 
-  <div className="linkRow">
-    <a
-      className="btn primary"
-      href="https://soundcloud.com/user-747949669"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      🎧 SoundCloud
-    </a>
-  </div>
-</section>
+            <div className="embedWrap" style={{ marginBottom: 12 }}>
+              <iframe
+                title="Gary Whitehead — SoundCloud"
+                width="100%"
+                height="300"
+                scrolling="no"
+                frameBorder="0"
+                allow="autoplay"
+                src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+              />
+            </div>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {/* YouTube */}
-        <a
-          className="btn"
-          href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
-          target="_blank"
-          rel="noopener"
-        >
-          YouTube
-        </a>
+            {/* Platform Buttons (record-style) */}
+            <div className="linkRow">
+              <a
+                className="btn"
+                href="https://soundcloud.com/user-747949669"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                🎧 SoundCloud
+              </a>
 
-        {/* Spotify variations (keep your existing links) */}
-        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-          Spotify (1)
-        </a>
-        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-          Spotify (2)
-        </a>
-        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-          Spotify (3)
-        </a>
-        <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
-          Spotify (4)
-        </a>
+              <a
+                className="btn"
+                href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
+                target="_blank"
+                rel="noopener"
+              >
+                ▶ YouTube
+              </a>
 
-        {/* Facebook */}
-        <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener">
-          Facebook Page
-        </a>
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+                🎵 Spotify (1)
+              </a>
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+                🎵 Spotify (2)
+              </a>
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+                🎵 Spotify (3)
+              </a>
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+                🎵 Spotify (4)
+              </a>
 
-        {/* Email */}
-        <a className="btn" href="mailto:..." target="_blank" rel="noopener">
-          Email Gary
-        </a>
-      </div>
-    </div>
+              <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener">
+                👍 Facebook Page
+              </a>
 
-    {/* RIGHT: latest release card */}
-    <a
-      className="releaseCard"
-      href="https://soundcloud.com/user-747949669/mirrors-of-the-mind"
-      target="_blank"
-      rel="noopener"
-      aria-label="Mirrors of the Mind — listen on SoundCloud"
-    >
-      {/* NOTE: If your file is /public/mirrors.jpg (or .jpeg/.webp), change the extension below */}
-      <img src="/mirrors.png" alt="Mirrors of the Mind cover art" />
-   <span>
-  Mirrors of the Mind<br />
-  <small>Listen on SoundCloud</small>
-</span>
+              <a className="btn" href="mailto:..." target="_blank" rel="noopener">
+                ✉ Email Gary
+              </a>
+            </div>
+          </div>
 
-    </a>
-  </div>
-</section>
+          {/* RIGHT: latest release card */}
+          <a
+            className="releaseCard"
+            href="https://soundcloud.com/user-747949669/mirrors-of-the-mind"
+            target="_blank"
+            rel="noopener"
+            aria-label="Mirrors of the Mind — listen on SoundCloud"
+          >
+            <img src="/mirrors.png" alt="Mirrors of the Mind cover art" />
+            <span>
+              Mirrors of the Mind<br />
+              <small>Listen on SoundCloud</small>
+            </span>
+          </a>
+        </div>
+      </section>
 
       {/* ====== ART (THIRD) ====== */}
       <section
@@ -262,7 +281,10 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        <h2 id="art" style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}>
+        <h2
+          id="art"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
           GALLERY &amp; SHOP
         </h2>
 
@@ -279,67 +301,36 @@ export default function Home() {
             gap: "16px",
           }}
         >
-          {/* Up Through the Trees — fixed to /trees.png?v=1 */}
-          <figure
-            className="artCard"
-            style={{
-              padding: "12px",
-              borderRadius: "12px",
-              border: "1px solid #eee",
-              background: "#fff",
-              margin: 0,
-            }}
-          >
+          {/* Up Through the Trees */}
+          <figure className="artCard">
             <img
               src="/trees.png?v=1"
               alt="Up Through the Trees — branches against a sunrise sky"
               style={{ width: "100%", height: "auto", display: "block", borderRadius: "10px" }}
               loading="lazy"
             />
-            <figcaption style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}>
-              Up Through the Trees
-            </figcaption>
+            <figcaption>Up Through the Trees</figcaption>
           </figure>
 
           {/* Flaming */}
-          <figure
-            className="artCard"
-            style={{
-              padding: "12px",
-              borderRadius: "12px",
-              border: "1px solid #eee",
-              background: "#fff",
-              margin: 0,
-            }}
-          >
+          <figure className="artCard">
             <img
               src="/Flames.png"
               alt="Flaming — abstract pour on black"
               style={{ width: "100%", height: "auto", display: "block", borderRadius: "10px" }}
               loading="lazy"
             />
-            <figcaption style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}>
-              Flaming
-            </figcaption>
+            <figcaption>Flaming</figcaption>
           </figure>
         </div>
 
         {/* Etsy link row */}
-        <div style={{ display: "flex", marginTop: 16 }}>
+        <div className="linkRow" style={{ marginTop: 16 }}>
           <a
             className="btn"
             href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
             target="_blank"
             rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#111",
-              color: "#fff",
-            }}
           >
             Visit My Etsy Shop
           </a>
