@@ -162,25 +162,39 @@ export default function Home() {
         </div>
       </section>
 
-{/* ====== MUSIC (SECOND) ====== */}
-<section
-  aria-labelledby="music"
-  style={{
-    marginTop: 24,
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '20px',
-    border: '1px solid #eee',
-  }}
->
-  <h2 id="music" className="sectionTitle">Gary’s Original Music</h2>
+{/* ====== MUSIC SECTION ====== */}
+<section id="music" className="block card">
+  <h2>🎵 LISTEN</h2>
+  <h3>Music</h3>
+  <p>
+    Experience Gary’s original songs of inspiration and storytelling on your favorite
+    streaming platforms.
+  </p>
 
-  <div className="musicGrid">
-    {/* LEFT: description + buttons */}
-    <div className="musicLeft">
-      <p style={{ marginTop: 8, marginBottom: 14 }}>
-        Listen to Gary’s music and follow along:
-      </p>
+  <div className="embedWrap">
+    <iframe
+      title="Gary Whitehead — SoundCloud"
+      width="100%"
+      height="300"
+      scrolling="no"
+      frameBorder="0"
+      allow="autoplay"
+      src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+    />
+  </div>
+
+  <div className="linkRow">
+    <a
+      className="btn primary"
+      href="https://soundcloud.com/user-747949669"
+      target="_blank"
+      rel="noreferrer"
+    >
+      🎧 SoundCloud
+    </a>
+  </div>
+</section>
+
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {/* YouTube */}
