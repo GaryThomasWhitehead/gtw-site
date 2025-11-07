@@ -209,6 +209,7 @@ export default function Home() {
         </div>
 
         <div className="linkRow">
+          {/* SoundCloud */}
           <a
             className="btn"
             href="https://soundcloud.com/user-747949669"
@@ -219,6 +220,7 @@ export default function Home() {
             🎧 SoundCloud
           </a>
 
+          {/* YouTube */}
           <a
             className="btn"
             href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
@@ -229,19 +231,54 @@ export default function Home() {
             ▶ YouTube
           </a>
 
+          {/* Spotify 1 */}
           <a
             className="btn"
-            href="https://open.spotify.com/..."
+            href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX"
             target="_blank"
             rel="noopener noreferrer"
             style={{ background: "#1db954", color: "#fff" }}
           >
-            🎵 Spotify
+            🎵 Spotify (1)
           </a>
 
+          {/* Spotify 2 */}
           <a
             className="btn"
-            href="https://facebook.com/..."
+            href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#1db954", color: "#fff" }}
+          >
+            🎵 Spotify (2)
+          </a>
+
+          {/* Spotify 3 */}
+          <a
+            className="btn"
+            href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#1db954", color: "#fff" }}
+          >
+            🎵 Spotify (3)
+          </a>
+
+          {/* Spotify 4 */}
+          <a
+            className="btn"
+            href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#1db954", color: "#fff" }}
+          >
+            🎵 Spotify (4)
+          </a>
+
+          {/* Facebook */}
+          <a
+            className="btn"
+            href="https://www.facebook.com/people/Gary-Whiteheads-Latest-Song-Release/61556807271098/"
             target="_blank"
             rel="noopener noreferrer"
             style={{ background: "#1877f2", color: "#fff" }}
@@ -249,9 +286,10 @@ export default function Home() {
             👍 Facebook Page
           </a>
 
+          {/* Email */}
           <a
             className="btn"
-            href="mailto:..."
+            href="mailto:garys_new_music@yahoo.com"
             target="_blank"
             rel="noopener noreferrer"
             style={{ background: "#333", color: "#fff" }}
