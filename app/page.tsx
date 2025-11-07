@@ -223,7 +223,7 @@ export default function Home() {
 
             <a
               className="btn"
-              href="http://https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVgwww"
+              href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVgwww"
               target="_blank"
               rel="noopener noreferrer"
             >
