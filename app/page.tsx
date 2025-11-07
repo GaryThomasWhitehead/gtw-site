@@ -130,7 +130,7 @@ export default function Home() {
             </h3>
             <ul style={{ lineHeight: 1.7, marginTop: 12, marginBottom: 16, paddingLeft: 18 }}>
               <li>Author: Gary Thomas Whitehead</li>
-              <li>Genre: Christian theology / spiritual reflection</li>
+              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
                 The book offers an in-depth scriptural study on Jesus’ role as both mediator and
                 divine son, written in a devotional, reflective tone and well-suited for church Bible studies
