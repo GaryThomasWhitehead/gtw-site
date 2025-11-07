@@ -167,7 +167,7 @@ export default function Home() {
                 href="/Part of Chapter 1.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ background: "#111", color: "#fff" }}   {/* FIX: visible/book button */}
+                style={{ background: "#111", color: "#fff" }}
               >
                 Read a Sample (PDF)
               </a>
@@ -191,7 +191,7 @@ export default function Home() {
         <h2 id="music" className="sectionTitle">🎵 LISTEN</h2>
         <h3>Music</h3>
 
-        {/* Full-width (removed right-side image/link) */}
+        {/* Full-width (right-side image removed) */}
         <div>
           <p style={{ marginTop: 8, marginBottom: 14 }}>
             Experience Gary’s original songs of inspiration and storytelling
@@ -210,14 +210,13 @@ export default function Home() {
             />
           </div>
 
-          {/* Platform Buttons */}
           <div className="linkRow">
             <a
               className="btn"
               href="https://soundcloud.com/user-747949669"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ background: "#ff5500", color: "#fff" }}  {/* FIX: visible/SoundCloud */}
+              style={{ background: "#ff5500", color: "#fff" }}
             >
               🎧 SoundCloud
             </a>
@@ -309,7 +308,6 @@ export default function Home() {
           </figure>
         </div>
 
-        {/* Etsy link row */}
         <div className="linkRow" style={{ marginTop: 16 }}>
           <a
             className="btn"
