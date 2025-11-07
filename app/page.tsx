@@ -103,7 +103,7 @@ export default function Home() {
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
-          border: "1px solid "#eee",
+          border: "1px solid #eee",
         }}
       >
         <h2
@@ -166,7 +166,7 @@ export default function Home() {
                 className="btn"
                 href="/Part of Chapter 1.pdf"
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
               >
                 Read a Sample (PDF)
               </a>
@@ -225,29 +225,29 @@ export default function Home() {
                 className="btn"
                 href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
               >
                 ▶ YouTube
               </a>
 
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
                 🎵 Spotify (1)
               </a>
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
                 🎵 Spotify (2)
               </a>
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
                 🎵 Spotify (3)
               </a>
-              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener">
+              <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
                 🎵 Spotify (4)
               </a>
 
-              <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener">
+              <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener noreferrer">
                 👍 Facebook Page
               </a>
 
-              <a className="btn" href="mailto:..." target="_blank" rel="noopener">
+              <a className="btn" href="mailto:..." target="_blank" rel="noopener noreferrer">
                 ✉ Email Gary
               </a>
             </div>
@@ -258,7 +258,7 @@ export default function Home() {
             className="releaseCard"
             href="https://soundcloud.com/user-747949669/mirrors-of-the-mind"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             aria-label="Mirrors of the Mind — listen on SoundCloud"
           >
             <img src="/mirrors.png" alt="Mirrors of the Mind cover art" />
@@ -330,7 +330,7 @@ export default function Home() {
             className="btn"
             href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             Visit My Etsy Shop
           </a>
