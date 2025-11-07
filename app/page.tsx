@@ -162,7 +162,7 @@ export default function Home() {
         </div>
       </section>
 
-{/* ====== MUSIC SECTION ====== */}
+{/* ===== MUSIC SECTION ===== */}
 <section id="music" className="block card">
   <h2>🎵 LISTEN</h2>
   <h3>Music</h3>
@@ -188,13 +188,12 @@ export default function Home() {
       className="btn primary"
       href="https://soundcloud.com/user-747949669"
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
     >
       🎧 SoundCloud
     </a>
   </div>
 </section>
-
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {/* YouTube */}
