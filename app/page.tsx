@@ -95,7 +95,7 @@ export default function Home() {
         </p>
       </section>
 
-      {/* ====== BOOK (FIRST) ====== */}
+      {/* ====== BOOK SECTION ====== */}
       <section
         aria-labelledby="book"
         style={{
@@ -191,70 +191,77 @@ export default function Home() {
         <h2 id="music" className="sectionTitle">🎵 LISTEN</h2>
         <h3>Music</h3>
 
-        {/* Full-width (right-side image removed) */}
-        <div>
-          <p style={{ marginTop: 8, marginBottom: 14 }}>
-            Experience Gary’s original songs of inspiration and storytelling
-            on your favorite streaming platforms.
-          </p>
+        <p style={{ marginTop: 8, marginBottom: 14 }}>
+          Experience Gary’s original songs of inspiration and storytelling on
+          your favorite streaming platforms.
+        </p>
 
-          <div className="embedWrap" style={{ marginBottom: 12 }}>
-            <iframe
-              title="Gary Whitehead — SoundCloud"
-              width="100%"
-              height="300"
-              scrolling="no"
-              frameBorder="0"
-              allow="autoplay"
-              src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
-            />
-          </div>
+        <div className="embedWrap" style={{ marginBottom: 12 }}>
+          <iframe
+            title="Gary Whitehead — SoundCloud"
+            width="100%"
+            height="300"
+            scrolling="no"
+            frameBorder="0"
+            allow="autoplay"
+            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+          />
+        </div>
 
-          <div className="linkRow">
-            <a
-              className="btn"
-              href="https://soundcloud.com/user-747949669"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ background: "#ff5500", color: "#fff" }}
-            >
-              🎧 SoundCloud
-            </a>
+        <div className="linkRow">
+          <a
+            className="btn"
+            href="https://soundcloud.com/user-747949669"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#ff5500", color: "#fff" }}
+          >
+            🎧 SoundCloud
+          </a>
 
-            <a
-              className="btn"
-              href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ▶ YouTube
-            </a>
+          <a
+            className="btn"
+            href="https://www.youtube.com/channel/UC8sxDC0cVnLnuER2VQmk3qvVg"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#ff2d2d", color: "#fff" }}
+          >
+            ▶ YouTube
+          </a>
 
-            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-              🎵 Spotify (1)
-            </a>
-            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-              🎵 Spotify (2)
-            </a>
-            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-              🎵 Spotify (3)
-            </a>
-            <a className="btn" href="https://open.spotify.com/..." target="_blank" rel="noopener noreferrer">
-              🎵 Spotify (4)
-            </a>
+          <a
+            className="btn"
+            href="https://open.spotify.com/..."
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#1db954", color: "#fff" }}
+          >
+            🎵 Spotify
+          </a>
 
-            <a className="btn" href="https://facebook.com/..." target="_blank" rel="noopener noreferrer">
-              👍 Facebook Page
-            </a>
+          <a
+            className="btn"
+            href="https://facebook.com/..."
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#1877f2", color: "#fff" }}
+          >
+            👍 Facebook Page
+          </a>
 
-            <a className="btn" href="mailto:..." target="_blank" rel="noopener noreferrer">
-              ✉ Email Gary
-            </a>
-          </div>
+          <a
+            className="btn"
+            href="mailto:..."
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ background: "#333", color: "#fff" }}
+          >
+            ✉ Email Gary
+          </a>
         </div>
       </section>
 
-      {/* ====== ART (THIRD) ====== */}
+      {/* ====== ART SECTION ====== */}
       <section
         aria-labelledby="art"
         style={{
@@ -285,23 +292,21 @@ export default function Home() {
             gap: "16px",
           }}
         >
-          {/* Up Through the Trees */}
           <figure className="artCard">
             <img
               src="/trees.png?v=1"
               alt="Up Through the Trees — branches against a sunrise sky"
-              style={{ width: "100%", height: "auto", display: "block", borderRadius: "10px" }}
+              style={{ width: "100%", height: "auto", borderRadius: "10px" }}
               loading="lazy"
             />
             <figcaption>Up Through the Trees</figcaption>
           </figure>
 
-          {/* Flaming */}
           <figure className="artCard">
             <img
               src="/Flames.png"
               alt="Flaming — abstract pour on black"
-              style={{ width: "100%", height: "auto", display: "block", borderRadius: "10px" }}
+              style={{ width: "100%", height: "auto", borderRadius: "10px" }}
               loading="lazy"
             />
             <figcaption>Flaming</figcaption>
@@ -314,7 +319,7 @@ export default function Home() {
             href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ background: "#111", color: "#fff" }}
+            style={{ background: "#b57b17", color: "#fff" }}
           >
             Visit My Etsy Shop
           </a>
