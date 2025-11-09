@@ -6,7 +6,7 @@ export default function Home() {
       <header
         className="hero"
         style={{
-          backgroundImage: "url('/20251105_073045.jpg')",
+          backgroundImage: "url('/new.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
