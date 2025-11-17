@@ -289,7 +289,7 @@ export default function Home() {
           {/* Email */}
           <a
             className="btn"
-            href="mailto:garys_new_music@yahoo.com"
+            href="mailto:thesentson@yahoo.com"
             target="_blank"
             rel="noopener noreferrer"
             style={{ background: "#333", color: "#fff" }}
