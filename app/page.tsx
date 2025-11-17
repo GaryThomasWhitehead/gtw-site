@@ -2,11 +2,12 @@
 export default function Home() {
   return (
     <main>
+
       {/* ====== HEADER ====== */}
       <header
         className="hero"
         style={{
-          backgroundImage: "url('/new.jpg')",
+          backgroundImage: "url('/new.jpg')", // <-- update your file here
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -64,15 +65,18 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        <h2
-          id="bio"
-          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
-        >
+        <h2 id="bio" style={{
+          fontSize: 14,
+          color: "#7a7a7a",
+          letterSpacing: ".08em"
+        }}>
           AUTHOR BIO
         </h2>
+
         <h3 style={{ margin: "8px 0 12px", fontSize: 22, fontWeight: 700 }}>
           Gary Thomas Whitehead
         </h3>
+
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           Gary Thomas Whitehead is a multidisciplinary artist whose heart beats
           through music, painting, and words of faith. As a Christian songwriter
@@ -81,6 +85,7 @@ export default function Home() {
           song, or the pages of a book, he strives to awaken hope and remind
           others that light always finds its way through.
         </p>
+
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           His newest work, <em>The Sent Son: A Biblical Perspective on Jesus as
           Mediator and Divine Sonship</em>, reflects years of reflection,
@@ -88,6 +93,7 @@ export default function Home() {
           every part of his life—and he believes theology should feel alive,
           personal, and artful, not distant or academic.
         </p>
+
         <p style={{ lineHeight: 1.7 }}>
           A fun fact? When he’s not painting or writing, Gary has often been
           found recording melodies in his home studio, surrounded by canvases
@@ -108,7 +114,11 @@ export default function Home() {
       >
         <h2
           id="book"
-          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+          style={{
+            fontSize: 14,
+            color: "#7a7a7a",
+            letterSpacing: ".08em"
+          }}
         >
           BOOK
         </h2>
@@ -142,14 +152,13 @@ export default function Home() {
               The Sent Son — A Biblical Perspective on Jesus as Mediator and
               Divine Sonship
             </h3>
-            <ul
-              style={{
-                lineHeight: 1.7,
-                marginTop: 12,
-                marginBottom: 16,
-                paddingLeft: 18,
-              }}
-            >
+
+            <ul style={{
+              lineHeight: 1.7,
+              marginTop: 12,
+              marginBottom: 16,
+              paddingLeft: 18
+            }}>
               <li>Author: Gary Thomas Whitehead</li>
               <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
@@ -162,6 +171,8 @@ export default function Home() {
             </ul>
 
             <div className="linkRow">
+
+              {/* PDF SAMPLE */}
               <a
                 className="btn"
                 href="/Part of Chapter 1.pdf"
@@ -171,6 +182,18 @@ export default function Home() {
               >
                 Read a Sample (PDF)
               </a>
+
+              {/* EMAIL BUTTON MOVED HERE */}
+              <a
+                className="btn"
+                href="mailto:garys_new_music@yahoo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ background: "#333", color: "#fff" }}
+              >
+                ✉ Email Gary
+              </a>
+
             </div>
           </div>
         </div>
@@ -209,6 +232,7 @@ export default function Home() {
         </div>
 
         <div className="linkRow">
+
           {/* SoundCloud */}
           <a
             className="btn"
@@ -286,16 +310,6 @@ export default function Home() {
             👍 Facebook Page
           </a>
 
-          {/* Email */}
-          <a
-            className="btn"
-            href="mailto:thesentson@yahoo.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#333", color: "#fff" }}
-          >
-            ✉ Email Gary
-          </a>
         </div>
       </section>
 
@@ -310,14 +324,16 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        <h2
-          id="art"
-          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
-        >
-          GALLERY &amp; SHOP
+        <h2 id="art" style={{
+          fontSize: 14,
+          color: "#7a7a7a",
+          letterSpacing: ".08em"
+        }}>
+          GALLERY & SHOP
         </h2>
 
         <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Art</h3>
+
         <p style={{ marginTop: 0, marginBottom: 18 }}>
           Original paintings by Gary Whitehead. Browse a few favorites below.
         </p>
@@ -379,6 +395,7 @@ export default function Home() {
       >
         © {new Date().getFullYear()} Gary Thomas Whitehead
       </footer>
+
     </main>
   );
 }
