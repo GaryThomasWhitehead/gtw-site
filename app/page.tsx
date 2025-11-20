@@ -7,7 +7,7 @@ export default function Home() {
       <header
         className="hero"
         style={{
-          backgroundImage: "url('/new.jpg')", // <-- update your file here
+          backgroundImage: "url('/new.jpg')", // update your hero image name here
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -79,25 +79,15 @@ export default function Home() {
 
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           Gary Thomas Whitehead is a multidisciplinary artist whose heart beats
-          through music, painting, and words of faith. As a Christian songwriter
-          and painter, Gary’s work carries a single theme—the beauty of divine
-          connection. Whether through the strokes of a brush, the lyrics of a
-          song, or the pages of a book, he strives to awaken hope and remind
-          others that light always finds its way through.
+          through music, painting, and words of faith...
         </p>
 
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
-          His newest work, <em>The Sent Son: A Biblical Perspective on Jesus as
-          Mediator and Divine Sonship</em>, reflects years of reflection,
-          prayer, and study. Gary writes in this genre because faith has shaped
-          every part of his life—and he believes theology should feel alive,
-          personal, and artful, not distant or academic.
+          His newest work, <em>The Sent Son</em>, reflects years of reflection...
         </p>
 
         <p style={{ lineHeight: 1.7 }}>
-          A fun fact? When he’s not painting or writing, Gary has often been
-          found recording melodies in his home studio, surrounded by canvases
-          still drying on the walls.
+          A fun fact? When he’s not painting or writing...
         </p>
       </section>
 
@@ -112,14 +102,11 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        <h2
-          id="book"
-          style={{
-            fontSize: 14,
-            color: "#7a7a7a",
-            letterSpacing: ".08em"
-          }}
-        >
+        <h2 id="book" style={{
+          fontSize: 14,
+          color: "#7a7a7a",
+          letterSpacing: ".08em"
+        }}>
           BOOK
         </h2>
 
@@ -162,17 +149,13 @@ export default function Home() {
               <li>Author: Gary Thomas Whitehead</li>
               <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
-                The book offers an in-depth scriptural study on Jesus’ role as
-                both mediator and divine son, written in a devotional,
-                reflective tone and well-suited for church Bible studies and
-                group studies providing a framework where discussion and
-                reflection can build stronger communities of faith.
+                The book offers an in-depth scriptural study...
               </li>
             </ul>
 
             <div className="linkRow">
 
-              {/* PDF SAMPLE */}
+              {/* PDF BUTTON */}
               <a
                 className="btn"
                 href="/Part of Chapter 1.pdf"
@@ -183,15 +166,26 @@ export default function Home() {
                 Read a Sample (PDF)
               </a>
 
-              {/* EMAIL BUTTON MOVED HERE */}
+              {/* EMAIL BUTTON */}
               <a
                 className="btn"
-                href="mailto:thesentson@yahoo.com"
+                href="mailto:garys_new_music@yahoo.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ background: "#333", color: "#fff" }}
               >
                 ✉ Email Gary
+              </a>
+
+              {/* NEW X BUTTON */}
+              <a
+                className="btn"
+                href="https://twitter.com/BookTheSentSon"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ background: "#000", color: "#fff" }}
+              >
+                🐦 Follow on X (@BookTheSentSon)
               </a>
 
             </div>
@@ -215,8 +209,7 @@ export default function Home() {
         <h3>Music</h3>
 
         <p style={{ marginTop: 8, marginBottom: 14 }}>
-          Experience Gary’s original songs of inspiration and storytelling on
-          your favorite streaming platforms.
+          Experience Gary’s original songs...
         </p>
 
         <div className="embedWrap" style={{ marginBottom: 12 }}>
@@ -227,88 +220,26 @@ export default function Home() {
             scrolling="no"
             frameBorder="0"
             allow="autoplay"
-            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669"
           />
         </div>
 
         <div className="linkRow">
 
           {/* SoundCloud */}
-          <a
-            className="btn"
-            href="https://soundcloud.com/user-747949669"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#ff5500", color: "#fff" }}
-          >
-            🎧 SoundCloud
-          </a>
+          <a className="btn" href="https://soundcloud.com/user-747949669" target="_blank" rel="noopener noreferrer" style={{ background: "#ff5500", color: "#fff" }}>🎧 SoundCloud</a>
 
           {/* YouTube */}
-          <a
-            className="btn"
-            href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#ff2d2d", color: "#fff" }}
-          >
-            ▶ YouTube
-          </a>
+          <a className="btn" href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg" target="_blank" rel="noopener noreferrer" style={{ background: "#ff2d2d", color: "#fff" }}>▶ YouTube</a>
 
-          {/* Spotify 1 */}
-          <a
-            className="btn"
-            href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#1db954", color: "#fff" }}
-          >
-            🎵 Spotify (1)
-          </a>
-
-          {/* Spotify 2 */}
-          <a
-            className="btn"
-            href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#1db954", color: "#fff" }}
-          >
-            🎵 Spotify (2)
-          </a>
-
-          {/* Spotify 3 */}
-          <a
-            className="btn"
-            href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#1db954", color: "#fff" }}
-          >
-            🎵 Spotify (3)
-          </a>
-
-          {/* Spotify 4 */}
-          <a
-            className="btn"
-            href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#1db954", color: "#fff" }}
-          >
-            🎵 Spotify (4)
-          </a>
+          {/* Spotify */}
+          <a className="btn" href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX" target="_blank" rel="noopener noreferrer" style={{ background: "#1db954", color: "#fff" }}>🎵 Spotify (1)</a>
+          <a className="btn" href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o" target="_blank" rel="noopener noreferrer" style={{ background: "#1db954", color: "#fff" }}>🎵 Spotify (2)</a>
+          <a className="btn" href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP" target="_blank" rel="noopener noreferrer" style={{ background: "#1db954", color: "#fff" }}>🎵 Spotify (3)</a>
+          <a className="btn" href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN" target="_blank" rel="noopener noreferrer" style={{ background: "#1db954", color: "#fff" }}>🎵 Spotify (4)</a>
 
           {/* Facebook */}
-          <a
-            className="btn"
-            href="https://www.facebook.com/people/Gary-Whiteheads-Latest-Song-Release/61556807271098/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ background: "#1877f2", color: "#fff" }}
-          >
-            👍 Facebook Page
-          </a>
+          <a className="btn" href="https://www.facebook.com/people/Gary-Whiteheads-Latest-Song-Release/61556807271098/" target="_blank" rel="noopener noreferrer" style={{ background: "#1877f2", color: "#fff" }}>👍 Facebook Page</a>
 
         </div>
       </section>
@@ -335,7 +266,7 @@ export default function Home() {
         <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Art</h3>
 
         <p style={{ marginTop: 0, marginBottom: 18 }}>
-          Original paintings by Gary Whitehead. Browse a few favorites below.
+          Original paintings by Gary Whitehead...
         </p>
 
         <div
@@ -347,22 +278,12 @@ export default function Home() {
           }}
         >
           <figure className="artCard">
-            <img
-              src="/trees.png?v=1"
-              alt="Up Through the Trees — branches against a sunrise sky"
-              style={{ width: "100%", height: "auto", borderRadius: "10px" }}
-              loading="lazy"
-            />
+            <img src="/trees.png?v=1" alt="Up Through the Trees" style={{ width: "100%", borderRadius: "10px" }} loading="lazy" />
             <figcaption>Up Through the Trees</figcaption>
           </figure>
 
           <figure className="artCard">
-            <img
-              src="/Flames.png"
-              alt="Flaming — abstract pour on black"
-              style={{ width: "100%", height: "auto", borderRadius: "10px" }}
-              loading="lazy"
-            />
+            <img src="/Flames.png" alt="Flaming" style={{ width: "100%", borderRadius: "10px" }} loading="lazy" />
             <figcaption>Flaming</figcaption>
           </figure>
         </div>
