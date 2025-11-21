@@ -2,7 +2,6 @@
 export default function Home() {
   return (
     <main>
-
       {/* ====== HEADER ====== */}
       <header
         className="hero"
@@ -87,11 +86,14 @@ export default function Home() {
 
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           His newest work,{" "}
-          <em>The Sent Son: A Biblical Perspective on Jesus as Mediator and
-          Divine Sonship</em>, reflects years of reflection, prayer, and study.
-          Gary writes in this genre because faith has shaped every part of his
-          life—and he believes theology should feel alive, personal, and artful,
-          not distant or academic.
+          <em>
+            The Sent Son: A Biblical Perspective on Jesus as Mediator and Divine
+            Sonship
+          </em>
+          , reflects years of reflection, prayer, and study. Gary writes in this
+          genre because faith has shaped every part of his life—and he believes
+          theology should feel alive, personal, and artful, not distant or
+          academic.
         </p>
 
         <p style={{ lineHeight: 1.7 }}>
@@ -193,7 +195,7 @@ export default function Home() {
                 ✉ Email Gary
               </a>
 
-              {/* X (TWITTER) */}
+              {/* X / TWITTER */}
               <a
                 className="btn"
                 href="https://twitter.com/Bookthesentson"
@@ -330,7 +332,7 @@ export default function Home() {
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
-          border: "1px solid "#eee",
+          border: "1px solid #eee", // <-- fixed here
         }}
       >
         <h2
