@@ -165,14 +165,39 @@ export default function Home() {
               </li>
               <li>
                 The book offers an in-depth scriptural study on Jesus’ role as
-                both mediator and divine son, written in a devotional,
-                reflective tone and well-suited for church Bible studies and
-                group studies, providing a framework where discussion and
-                reflection can build stronger communities of faith.
+                both mediator and divine son. It is written in a devotional,
+                reflective tone suitable for both personal and group study
+                environments.
               </li>
             </ul>
 
-            <div className="linkRow">
+            {/* ==== RECOMMENDATIONS BOX ==== */}
+            <div
+              style={{
+                background: "#f8f8f8",
+                padding: "14px",
+                borderRadius: "8px",
+                marginBottom: "16px",
+                border: "1px solid #e5e5e5",
+              }}
+            >
+              <p style={{ margin: 0, lineHeight: 1.6 }}>
+                📘 <strong>Recommendation:</strong>
+                <br />
+                • <strong>Kindle Edition</strong> — Best for{" "}
+                <em>personal Bible study</em> (does not include the note
+                section).
+                <br />
+                • <strong>Paperback Edition</strong> — Best for{" "}
+                <em>personal AND group Bible study</em> (includes the full note
+                section).
+              </p>
+            </div>
+
+            <div
+              className="linkRow"
+              style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}
+            >
               {/* PDF SAMPLE */}
               <a
                 className="btn"
@@ -204,6 +229,28 @@ export default function Home() {
                 style={{ background: "#000", color: "#fff" }}
               >
                 🐦 Follow on X (@Bookthesentson)
+              </a>
+
+              {/* KINDLE BUTTON */}
+              <a
+                className="btn"
+                href="https://www.amazon.com/dp/B0G4NQ1SF3"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ background: "#ff9900", color: "#fff" }}
+              >
+                📱 Buy on Kindle
+              </a>
+
+              {/* PAPERBACK BUTTON */}
+              <a
+                className="btn"
+                href="https://www.amazon.com/dp/B0G4KJHKK6"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ background: "#cc5500", color: "#fff" }}
+              >
+                📘 Buy Paperback
               </a>
             </div>
           </div>
@@ -332,7 +379,7 @@ export default function Home() {
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
-          border: "1px solid #eee", // <-- fixed here
+          border: "1px solid #eee",
         }}
       >
         <h2
