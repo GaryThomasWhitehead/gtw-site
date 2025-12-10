@@ -1,8 +1,7 @@
 import "./globals.css";
-import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Gary Thomas Whitehead",
   description: "Author • Songwriter • Painter",
 };
@@ -17,8 +16,8 @@ export default function RootLayout({
       <body>
         {children}
 
-        {/* Vercel Analytics Tracking */}
-        <Analytics />
+        {/* ✅ Vercel Speed Insights */}
+        <SpeedInsights />
       </body>
     </html>
   );
