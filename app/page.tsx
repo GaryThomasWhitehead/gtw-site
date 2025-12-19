@@ -1,138 +1,124 @@
 import TrackedLink from "../components/TrackedLink";
 
 export default function Home() {
+  // LINKS
+  const KINDLE = "https://www.amazon.com/dp/B0G4NQ1SF3";
+  const PAPERBACK = "https://www.amazon.com/dp/B0G4KJHKK6";
+  const SOUNDCLOUD_PROFILE = "https://soundcloud.com/user-747949669";
+  const ETSY = "https://www.etsy.com/shop/GaryCreatedArt";
+
+  // STYLES
+  const page = { maxWidth: 1100, margin: "0 auto", padding: "48px 20px" };
+  const section = { marginTop: 48 };
+  const h1 = { fontSize: 56, marginBottom: 12 };
+  const h2 = { fontSize: 36, marginBottom: 18 };
+  const card = {
+    background: "#fff",
+    border: "1px solid #eee",
+    borderRadius: 14,
+    padding: 24,
+    boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
+  };
+  const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 };
+  const btn = {
+    padding: "10px 16px",
+    borderRadius: 10,
+    fontWeight: 700,
+    display: "inline-block",
+    textDecoration: "none",
+  };
+  const dark = { ...btn, background: "#111", color: "#fff" };
+  const blue = { ...btn, background: "#3b5bff", color: "#fff" };
+
   return (
-    <main
-      style={{
-        maxWidth: "1100px",
-        margin: "0 auto",
-        padding: "32px 20px",
-      }}
-    >
-      {/* ================= HERO ================= */}
-      <section style={{ marginBottom: "60px" }}>
-        <h1 style={{ fontSize: "2.6rem", marginBottom: "12px" }}>
-          The Sent Son
-        </h1>
+    <main style={page}>
+      {/* HEADER */}
+      <h1 style={h1}>The Sent Son</h1>
+      <p>
+        A scripture-centered journey through the life, purpose, and message of Jesus Christ.
+      </p>
 
-        <p style={{ fontSize: "1.2rem", opacity: 0.85 }}>
-          A scripture-centered journey through the life, purpose, and message of
-          Jesus Christ.
-        </p>
-      </section>
+      {/* BOOK */}
+      <section style={section}>
+        <h2 style={h2}>📖 Get the Book</h2>
 
-      {/* ================= BOOK SECTION ================= */}
-      <section style={{ marginBottom: "60px" }}>
-        <h2 style={{ fontSize: "2rem", marginBottom: "16px" }}>
-          📖 Get the Book
-        </h2>
+        <div style={grid}>
+          <div style={card}>
+            <h3>Kindle Edition</h3>
+            <p>Recommended for <b>personal Bible study</b>.</p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "24px",
-          }}
-        >
-          {/* Kindle */}
-          <div
-            className="bookCard shadow rounded"
-            style={{
-              padding: "24px",
-              border: "1px solid #eee",
-            }}
-          >
-            <h3 style={{ fontSize: "1.4rem" }}>Kindle Edition</h3>
-
-            <p className="muted" style={{ marginTop: "10px" }}>
-              Recommended for <strong>personal Bible study</strong>.
-              <br />
-              Text-focused and distraction-free, without the note section.
-            </p>
-
-            <TrackedLink
-              href="https://www.amazon.com/dp/B0G4NQ1SF3"
-              eventName="click_kindle_book"
-              className="btn"
-              style={{
-                display: "inline-block",
-                marginTop: "16px",
-                background: "#000",
-                color: "#fff",
-                padding: "10px 16px",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}
-            >
+            <TrackedLink href={KINDLE} eventName="buy_kindle" style={dark}>
               Buy Kindle Edition
             </TrackedLink>
           </div>
 
-          {/* Paperback */}
-          <div
-            className="bookCard shadow rounded"
-            style={{
-              padding: "24px",
-              border: "1px solid #eee",
-            }}
-          >
-            <h3 style={{ fontSize: "1.4rem" }}>Paperback Edition</h3>
+          <div style={card}>
+            <h3>Paperback Edition</h3>
+            <p>Recommended for <b>personal and group Bible study</b>.</p>
 
-            <p className="muted" style={{ marginTop: "10px" }}>
-              Recommended for <strong>personal and group Bible study</strong>.
-              <br />
-              Includes a dedicated note section for reflection and discussion.
-            </p>
-
-            <TrackedLink
-              href="https://www.amazon.com/dp/B0G4KJHKK6"
-              eventName="click_paperback_book"
-              className="btn"
-              style={{
-                display: "inline-block",
-                marginTop: "16px",
-                background: "#1a5cff",
-                color: "#fff",
-                padding: "10px 16px",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}
-            >
+            <TrackedLink href={PAPERBACK} eventName="buy_paperback" style={blue}>
               Buy Paperback Edition
             </TrackedLink>
           </div>
         </div>
       </section>
 
-      {/* ================= AUTHOR ================= */}
-      <section style={{ marginBottom: "60px" }}>
-        <h2 style={{ fontSize: "2rem", marginBottom: "16px" }}>
-          About the Author
-        </h2>
+      {/* ABOUT */}
+      <section style={section}>
+        <h2 style={h2}>About the Author</h2>
 
-        <p style={{ maxWidth: "720px", lineHeight: 1.6 }}>
-          Gary Thomas Whitehead is an author, songwriter, and visual artist whose
-          work centers on faith, reflection, and spiritual clarity.
-        </p>
+        <div style={card}>
+          <p>
+            Gary Thomas Whitehead is an author, songwriter, and visual artist whose work centers on
+            faith, reflection, and spiritual clarity.
+          </p>
 
-        <p style={{ marginTop: "12px", fontStyle: "italic", opacity: 0.85 }}>
-          A fun fact? When he’s not painting or writing, he’s often composing
-          music inspired by scripture and personal prayer.
-        </p>
+          <p style={{ fontStyle: "italic", marginTop: 14 }}>
+            A fun fact? When he’s not painting or writing, he’s often composing music inspired by
+            scripture and personal prayer.
+          </p>
+        </div>
       </section>
 
-      {/* ================= FOOTER ================= */}
-      <footer
-        style={{
-          textAlign: "center",
-          padding: "18px",
-          borderTop: "1px solid #eee",
-          opacity: 0.8,
-          fontSize: "0.95rem",
-        }}
-      >
+      {/* MUSIC — RESTORED SOUNDCLOUD PLAYER */}
+      <section style={section}>
+        <h2 style={h2}>🎵 Gary’s Original Music</h2>
+
+        <div style={grid}>
+          <div style={card}>
+            <p>Listen directly on SoundCloud:</p>
+
+            <TrackedLink href={SOUNDCLOUD_PROFILE} eventName="soundcloud_profile" style={dark}>
+              Visit My SoundCloud
+            </TrackedLink>
+          </div>
+
+          <div style={card}>
+            <iframe
+              width="100%"
+              height="300"
+              scrolling="no"
+              frameBorder="no"
+              allow="autoplay"
+              src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&auto_play=false&visual=true"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ART */}
+      <section style={section}>
+        <h2 style={h2}>🎨 Original Art</h2>
+
+        <div style={card}>
+          <TrackedLink href={ETSY} eventName="etsy_click" style={dark}>
+            Visit My Etsy Shop
+          </TrackedLink>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ textAlign: "center", marginTop: 48, fontWeight: 700 }}>
         © {new Date().getFullYear()} Gary Thomas Whitehead
       </footer>
     </main>

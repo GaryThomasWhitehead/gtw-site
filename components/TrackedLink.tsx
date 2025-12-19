@@ -6,10 +6,9 @@ type TrackedLinkProps = {
   href: string;
   children: React.ReactNode;
   eventName?: string;
-
   className?: string;
   style?: React.CSSProperties;
-  target?: string;
+  target?: "_blank" | "_self";
   rel?: string;
 };
 
@@ -23,18 +22,16 @@ export default function TrackedLink({
   rel = "noopener noreferrer",
 }: TrackedLinkProps) {
   const handleClick = () => {
-    if (!eventName) return;
-
     // Google Analytics (gtag)
-    const gtag = (window as any).gtag;
-    if (typeof gtag === "function") {
-      gtag("event", eventName, { link_url: href });
+    if (eventName && typeof window !== "undefined" && typeof (window as any).gtag === "function") {
+      (window as any).gtag("event", eventName, {
+        link_url: href,
+      });
     }
 
-    // Vercel Analytics (va.track) - do NOT redeclare window.va types
-    const va = (window as any).va;
-    if (va && typeof va.track === "function") {
-      va.track(eventName, { href });
+    // Vercel Analytics (safe optional)
+    if (eventName && typeof window !== "undefined" && (window as any).va?.track) {
+      (window as any).va.track(eventName, { href });
     }
   };
 
