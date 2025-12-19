@@ -1,10 +1,7 @@
-// app/layout.tsx
 import "./globals.css";
-import type { Metadata } from "next";
-import Script from "next/script";
-import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Gary Thomas Whitehead",
   description: "Author • Songwriter • Painter",
 };
@@ -14,35 +11,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID; // set this in Vercel + your local .env
-
   return (
     <html lang="en">
-      <head>
-        {/* Google Analytics (optional) */}
-        {gaId ? (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga-setup" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${gaId}', { anonymize_ip: true });
-              `}
-            </Script>
-          </>
-        ) : null}
-      </head>
-
-      <body>
+      <body
+        style={{
+          margin: 0,
+          backgroundColor: "#faf9f6",
+          fontFamily: '"Georgia", "Times New Roman", serif',
+          color: "#111",
+        }}
+      >
         {children}
 
-        {/* Vercel Analytics (visitor tracking) */}
-        <Analytics />
+        {/* ✅ Vercel Speed Insights */}
+        <SpeedInsights />
       </body>
     </html>
   );

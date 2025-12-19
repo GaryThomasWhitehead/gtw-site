@@ -1,484 +1,680 @@
-// app/page.tsx
-"use client";
+'use client';
 
-import Image from "next/image";
-import TrackedLink from "../components/TrackedLink";
+import { useEffect, useState } from "react";
+import { track } from "@vercel/analytics";
 
 export default function Home() {
-  // ===== Links =====
-  const links = {
-    kindle: "https://www.amazon.com/dp/B0G4NQ1SF3",
-    paperback: "https://www.amazon.com/dp/B0G4KJHKK6",
-    soundcloudTrack: "https://soundcloud.com/user-747949669/mirrors-of-the-mind",
-    soundcloudProfile: "https://soundcloud.com/user-747949669",
+  const [visits, setVisits] = useState<number | null>(null);
 
-    // NOTE: replace these with your real links (or leave them out if you don’t want them)
-    youtube: "https://www.youtube.com/",
-    spotify: "https://open.spotify.com/",
+  // Simple public visitor counter (total visits, not unique people)
+  useEffect(() => {
+    async function incrementVisitorCounter() {
+      try {
+        // namespace: garythomaswhitehead-com, key: home
+        const res = await fetch(
+          "https://api.countapi.xyz/hit/garythomaswhitehead-com/home"
+        );
+        const data = await res.json();
+        if (typeof data.value === "number") {
+          setVisits(data.value);
+        }
+      } catch (err) {
+        console.error("Visitor counter error", err);
+      }
+    }
 
-    etsy: "https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header",
-
-    sampleChapterPdf: "/Part-of-Chapter-1.pdf",
-  };
-
-  // ===== Styles =====
-  const page = {
-    background: "#fbf7f1",
-    minHeight: "100vh",
-    padding: "48px 18px 70px",
-    fontFamily:
-      'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-    color: "#1f1f1f",
-  } as const;
-
-  const container = {
-    maxWidth: 1100,
-    margin: "0 auto",
-  } as const;
-
-  const hero = {
-    display: "grid",
-    gridTemplateColumns: "1.2fr 0.8fr",
-    gap: 24,
-    alignItems: "center",
-    marginBottom: 38,
-  } as const;
-
-  const heroTitle = {
-    fontSize: 56,
-    lineHeight: 1.05,
-    margin: "0 0 10px",
-    letterSpacing: "-0.5px",
-  } as const;
-
-  const heroSubtitle = {
-    margin: 0,
-    fontSize: 18,
-    color: "#444",
-    maxWidth: 680,
-  } as const;
-
-  const heroCard = {
-    background: "rgba(255,255,255,.75)",
-    border: "1px solid #eee",
-    borderRadius: 18,
-    padding: 18,
-    boxShadow: "0 10px 22px rgba(0,0,0,.06)",
-  } as const;
-
-  const section = {
-    marginTop: 34,
-    marginBottom: 46,
-  } as const;
-
-  const sectionTitle = {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    fontSize: 34,
-    margin: "0 0 14px",
-    letterSpacing: "-0.2px",
-  } as const;
-
-  const grid2 = {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 20,
-  } as const;
-
-  const card = {
-    background: "rgba(255,255,255,.78)",
-    border: "1px solid #eee",
-    borderRadius: 16,
-    padding: 22,
-    boxShadow: "0 10px 20px rgba(0,0,0,.06)",
-  } as const;
-
-  const small = { color: "#555", lineHeight: 1.6 } as const;
-
-  const btnRow = { display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14 } as const;
-
-  const btnBase = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 700,
-    textDecoration: "none",
-    border: "1px solid transparent",
-    cursor: "pointer",
-    whiteSpace: "nowrap" as const,
-  };
-
-  const btnDark = {
-    ...btnBase,
-    background: "#111",
-    color: "#fff",
-  } as const;
-
-  const btnBlue = {
-    ...btnBase,
-    background: "#2f66ff",
-    color: "#fff",
-  } as const;
-
-  const btnLight = {
-    ...btnBase,
-    background: "rgba(255,255,255,.9)",
-    color: "#111",
-    border: "1px solid #ddd",
-  } as const;
-
-  const divider = {
-    height: 1,
-    background: "rgba(0,0,0,.06)",
-    margin: "24px 0",
-  } as const;
-
-  const artGrid = {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 14,
-    marginTop: 14,
-  } as const;
-
-  const imgWrap = {
-    background: "rgba(255,255,255,.9)",
-    border: "1px solid #eee",
-    borderRadius: 14,
-    overflow: "hidden",
-    boxShadow: "0 8px 16px rgba(0,0,0,.05)",
-  } as const;
-
-  const caption = {
-    padding: "10px 12px",
-    color: "#444",
-    fontWeight: 700,
-    fontSize: 14,
-  } as const;
-
-  const footer = {
-    textAlign: "center" as const,
-    marginTop: 32,
-    color: "#333",
-    opacity: 0.9,
-  };
+    incrementVisitorCounter();
+  }, []);
 
   return (
-    <main style={page}>
-      <div style={container}>
-        {/* ===== HERO ===== */}
-        <header style={hero}>
+    <main
+      style={{
+        maxWidth: "1360px",
+        margin: "0 auto",
+        padding: "24px 32px",
+        fontFamily: '"Georgia", "Times New Roman", serif',
+        color: "#111",
+        backgroundColor: "#faf9f6",
+        lineHeight: 1.6,
+      }}
+    >
+      {/* ====== HEADER ====== */}
+      <header
+        className="hero"
+        style={{
+          backgroundImage: "url('/new.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          minHeight: "260px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          borderRadius: "12px",
+          marginBottom: 40,
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "72px auto",
+            gap: "16px",
+            alignItems: "center",
+            background: "rgba(0,0,0,.55)",
+            color: "#fff",
+            padding: "12px 16px",
+            borderRadius: "9999px",
+          }}
+        >
+          <img
+            src="/Gary.png"
+            alt="Gary Thomas Whitehead"
+            style={{
+              width: "72px",
+              height: "72px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #fff",
+            }}
+            loading="lazy"
+          />
           <div>
-            <h1 style={heroTitle}>The Sent Son</h1>
-            <p style={heroSubtitle}>
-              A scripture-centered journey through the life, purpose, and message of Jesus Christ.
+            <div style={{ fontSize: "18px", opacity: 0.9 }}>
+              GARY THOMAS WHITEHEAD
+            </div>
+            <div style={{ fontSize: "14px", opacity: 0.8 }}>
+              Author • Songwriter • Painter
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ====== AUTHOR BIO ====== */}
+      <section
+        aria-labelledby="bio"
+        style={{
+          marginTop: 0,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="bio"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          AUTHOR BIO
+        </h2>
+        <h3 style={{ margin: "8px 0 12px", fontSize: 22, fontWeight: 700 }}>
+          Gary Thomas Whitehead
+        </h3>
+        <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
+          Gary Thomas Whitehead is a multidisciplinary artist whose heart beats
+          through music, painting, and words of faith. As a Christian songwriter
+          and painter, Gary&apos;s work carries a single theme—the beauty of
+          divine connection. Whether through the strokes of a brush, the lyrics
+          of a song, or the pages of a book, he strives to awaken hope and
+          remind others that light always finds its way through.
+        </p>
+        <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
+          His newest work,{" "}
+          <em>
+            The Sent Son: A Biblical Perspective on Jesus as Mediator and Divine
+            Sonship
+          </em>
+          , reflects years of reflection, prayer, and study. Gary writes in this
+          genre because faith has shaped every part of his life—and he believes
+          theology should feel alive, personal, and artful, not distant or
+          academic.
+        </p>
+        <p style={{ lineHeight: 1.7 }}>
+          A fun fact? When he&apos;s not painting or writing, Gary is often in
+          his home studio recording new melodies, with fresh canvases drying on
+          the walls around him.
+        </p>
+      </section>
+
+      {/* ====== BOOK (FIRST) ====== */}
+      <section
+        aria-labelledby="book"
+        style={{
+          marginTop: 24,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="book"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          BOOK
+        </h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "260px 1fr",
+            gap: "20px",
+          }}
+        >
+          <figure
+            className="bookCard"
+            style={{
+              borderRadius: "12px",
+              overflow: "hidden",
+              border: "1px solid #eee",
+              margin: 0,
+              background: "#fff",
+              padding: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            <img
+              src="/Cover.png"
+              alt="The Sent Son book cover"
+              style={{ width: "100%", height: "auto", display: "block" }}
+              loading="lazy"
+            />
+          </figure>
+
+          <div>
+            <h3 style={{ fontSize: 22, marginTop: 0, marginBottom: 8 }}>
+              The Sent Son — A Biblical Perspective on Jesus as Mediator and
+              Divine Sonship
+            </h3>
+            <ul
+              style={{
+                lineHeight: 1.7,
+                marginTop: 12,
+                marginBottom: 16,
+                paddingLeft: 18,
+              }}
+            >
+              <li>Author: Gary Thomas Whitehead</li>
+              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
+              <li>
+                An in-depth scriptural study on Jesus&apos; role as both
+                mediator and divine Son, written in a devotional, reflective
+                tone—ideal for church Bible studies and small groups.
+              </li>
+            </ul>
+
+            <p style={{ marginBottom: 16 }}>
+              <strong>Recommendation:</strong> The <em>Kindle edition</em> is perfect for{" "}
+              <strong>personal Bible study</strong>, while the <em>paperback</em>{" "}
+              works beautifully for both <strong>personal and group study</strong>{" "}
+              with its full layout and space for notes.
             </p>
 
-            <div style={{ ...btnRow, marginTop: 18 }}>
-              <a href="#book" style={btnDark}>Get the Book</a>
-              <a href="#music" style={btnLight}>Music</a>
-              <a href="#art" style={btnLight}>Art</a>
-              <a href="#about" style={btnLight}>About</a>
+            <div
+              className="linkRow"
+              style={{
+                marginTop: 16,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
+              {/* Sample PDF (YOUR FILE NAME IN PUBLIC: Part-of-Chapter-1.pdf) */}
+              <a
+                className="btn"
+                href="/Part-of-Chapter-1.pdf"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: "#111",
+                  color: "#fff",
+                  boxShadow:
+                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+                }}
+              >
+                Read a Sample (PDF)
+              </a>
+
+              {/* Email Gary */}
+              <a
+                className="btn"
+                href="mailto:garys_new_music@yahoo.com"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: "#333",
+                  color: "#fff",
+                  boxShadow:
+                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+                }}
+              >
+                Email Gary
+              </a>
+
+              {/* X / Twitter */}
+              <a
+                className="btn"
+                href="https://x.com/Bookthesentson"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: "#000",
+                  color: "#fff",
+                  boxShadow:
+                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+                }}
+              >
+                Follow @Bookthesentson on X
+              </a>
+
+              {/* Kindle */}
+              <a
+                className="btn"
+                href="https://www.amazon.com/dp/B0G4NQ1SF3"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: "#2563eb",
+                  color: "#fff",
+                  boxShadow:
+                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+                }}
+                onClick={() =>
+                  track("BookClick", {
+                    format: "Kindle",
+                  })
+                }
+              >
+                Buy on Kindle (personal study)
+              </a>
+
+              {/* Paperback */}
+              <a
+                className="btn"
+                href="https://www.amazon.com/dp/B0G4KJHKK6"
+                target="_blank"
+                rel="noopener"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: "#b45309",
+                  color: "#fff",
+                  boxShadow:
+                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+                }}
+                onClick={() =>
+                  track("BookClick", {
+                    format: "Paperback",
+                  })
+                }
+              >
+                Buy Paperback (personal & group study)
+              </a>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Book image card */}
-          <div style={heroCard}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-              <div style={{ ...imgWrap, borderRadius: 16 }}>
-                <Image
-                  src="/Cover.png"
-                  alt="The Sent Son book cover"
-                  width={900}
-                  height={1200}
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                  priority
-                />
-              </div>
+      {/* ===== MUSIC SECTION ===== */}
+      <section
+        aria-labelledby="music"
+        className="block card"
+        style={{
+          marginTop: 24,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="music"
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: 8,
+            borderBottom: "2px solid #b57b17",
+            display: "inline-block",
+            paddingBottom: 4,
+          }}
+        >
+          🎵 LISTEN
+        </h2>
+        <h3 style={{ marginTop: 8, marginBottom: 8 }}>Music</h3>
 
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <TrackedLink
-                  href={links.kindle}
-                  eventName="book_kindle_hero_click"
-                  style={btnDark}
-                >
-                  Buy Kindle
-                </TrackedLink>
+        <div
+          className="musicGrid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: 24,
+          }}
+        >
+          <div className="musicLeft">
+            <p style={{ marginTop: 8, marginBottom: 14 }}>
+              Experience Gary&apos;s original songs of inspiration and
+              storytelling on your favorite streaming platforms.
+            </p>
 
-                <TrackedLink
-                  href={links.paperback}
-                  eventName="book_paperback_hero_click"
-                  style={btnBlue}
-                >
-                  Buy Paperback
-                </TrackedLink>
-
-                <TrackedLink
-                  href={links.sampleChapterPdf}
-                  eventName="sample_chapter_hero_click"
-                  style={btnLight}
-                  target="_blank"
-                >
-                  Read Sample Chapter (PDF)
-                </TrackedLink>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* ===== BOOK SECTION ===== */}
-        <section id="book" style={section}>
-          <h2 style={sectionTitle}>📖 Get the Book</h2>
-
-          <div style={grid2}>
-            <div style={card}>
-              <h3 style={{ margin: "0 0 6px", fontSize: 22 }}>Kindle Edition</h3>
-              <p style={{ ...small, margin: "0 0 10px" }}>
-                <strong>Recommended for personal Bible study.</strong>
-                <br />
-                Text-focused and distraction-free, without the note section.
-              </p>
-
-              <div style={btnRow}>
-                <TrackedLink
-                  href={links.kindle}
-                  eventName="book_kindle_click"
-                  style={btnDark}
-                >
-                  Buy Kindle Edition
-                </TrackedLink>
-
-                <TrackedLink
-                  href={links.sampleChapterPdf}
-                  eventName="sample_chapter_click_kindle_card"
-                  style={btnLight}
-                  target="_blank"
-                >
-                  Sample Chapter (PDF)
-                </TrackedLink>
-              </div>
-            </div>
-
-            <div style={card}>
-              <h3 style={{ margin: "0 0 6px", fontSize: 22 }}>Paperback Edition</h3>
-              <p style={{ ...small, margin: "0 0 10px" }}>
-                <strong>Recommended for personal and group Bible study.</strong>
-                <br />
-                Includes a dedicated note section for reflection and discussion.
-              </p>
-
-              <div style={btnRow}>
-                <TrackedLink
-                  href={links.paperback}
-                  eventName="book_paperback_click"
-                  style={btnBlue}
-                >
-                  Buy Paperback Edition
-                </TrackedLink>
-
-                <TrackedLink
-                  href={links.sampleChapterPdf}
-                  eventName="sample_chapter_click_paperback_card"
-                  style={btnLight}
-                  target="_blank"
-                >
-                  Sample Chapter (PDF)
-                </TrackedLink>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== ABOUT ===== */}
-        <section id="about" style={section}>
-          <h2 style={sectionTitle}>✍️ About the Author</h2>
-
-          <div style={{ ...card, display: "grid", gridTemplateColumns: "140px 1fr", gap: 18, alignItems: "center" }}>
-            <div style={{ ...imgWrap, borderRadius: 999 }}>
-              <Image
-                src="/Gary.png"
-                alt="Gary Thomas Whitehead"
-                width={500}
-                height={500}
-                style={{ width: "100%", height: "auto", display: "block" }}
+            <div className="embedWrap" style={{ marginBottom: 12 }}>
+              <iframe
+                title="Gary Whitehead — SoundCloud"
+                width="100%"
+                height="300"
+                scrolling="no"
+                frameBorder={0}
+                allow="autoplay"
+                src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
               />
             </div>
 
-            <div>
-              <p style={{ ...small, margin: 0 }}>
-                Gary Thomas Whitehead is an author, songwriter, and visual artist whose work centers on faith,
-                reflection, and spiritual clarity.
-              </p>
-
-              {/* This is the “fun fact” line you wanted fixed/complete */}
-              <p style={{ ...small, margin: "10px 0 0", fontStyle: "italic" }}>
-                A fun fact? When he’s not painting or writing, he’s often composing original music inspired by
-                scripture and personal prayer.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== MUSIC ===== */}
-        <section id="music" style={section}>
-          <h2 style={sectionTitle}>🎵 Gary’s Original Music</h2>
-
-          <div style={grid2}>
-            <div style={card}>
-              <p style={{ ...small, margin: 0 }}>
-                Listen directly on SoundCloud (featured track and playlist embed).
-              </p>
-
-              <div style={btnRow}>
-                <TrackedLink
-                  href={links.soundcloudTrack}
-                  eventName="soundcloud_mirrors_click"
-                  style={btnDark}
-                >
-                  Mirrors of the Mind
-                </TrackedLink>
-
-                <TrackedLink
-                  href={links.soundcloudProfile}
-                  eventName="soundcloud_profile_click"
-                  style={btnLight}
-                >
-                  SoundCloud Profile
-                </TrackedLink>
-
-                <TrackedLink
-                  href={links.spotify}
-                  eventName="spotify_click"
-                  style={btnLight}
-                >
-                  Spotify
-                </TrackedLink>
-
-                <TrackedLink
-                  href={links.youtube}
-                  eventName="youtube_click"
-                  style={btnLight}
-                >
-                  YouTube
-                </TrackedLink>
-              </div>
-
-              <div style={divider} />
-
-              {/* Optional: the cover image for the latest release (you have mirrors.png in /public) */}
-              <div style={{ ...imgWrap }}>
-                <TrackedLink
-                  href={links.soundcloudTrack}
-                  eventName="mirrors_image_click"
-                  style={{ display: "block", textDecoration: "none", color: "inherit" }}
-                >
-                  <Image
-                    src="/mirrors.png"
-                    alt="Mirrors of the Mind cover"
-                    width={1200}
-                    height={1200}
-                    style={{ width: "100%", height: "auto", display: "block" }}
-                  />
-                  <div style={caption}>Click the cover to listen: Mirrors of the Mind</div>
-                </TrackedLink>
-              </div>
-            </div>
-
-            <div style={card}>
-              {/* SoundCloud embed */}
-              <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #eee" }}>
-                <iframe
-                  title="SoundCloud Player"
-                  width="100%"
-                  height="360"
-                  scrolling="no"
-                  frameBorder="no"
-                  allow="autoplay"
-                  src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%23111&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
-                />
-              </div>
-
-              <p style={{ ...small, margin: "10px 0 0" }}>
-                (If you want this embed to show a specific playlist/track instead of your profile, tell me which
-                SoundCloud URL and I’ll swap the embed URL.)
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== ART ===== */}
-        <section id="art" style={section}>
-          <h2 style={sectionTitle}>🎨 Original Art</h2>
-
-          <div style={card}>
-            <p style={{ ...small, margin: 0 }}>
-              Explore my paintings and art listings:
-            </p>
-
-            <div style={btnRow}>
-              <TrackedLink
-                href={links.etsy}
-                eventName="etsy_click"
-                style={btnDark}
+            <div
+              className="linkRow"
+              style={{
+                marginTop: 16,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
+              <a
+                className="btn"
+                href="https://soundcloud.com/user-747949669"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#ff5500",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
               >
-                Visit My Etsy Shop
-              </TrackedLink>
-            </div>
+                🎧 SoundCloud
+              </a>
 
-            {/* Art images (based on what you showed in /public) */}
-            <div style={artGrid}>
-              <div style={imgWrap}>
-                <Image
-                  src="/Flames.png"
-                  alt="Flames painting"
-                  width={1200}
-                  height={900}
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                />
-                <div style={caption}>Flames</div>
-              </div>
+              <a
+                className="btn"
+                href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#ff0000",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                ▶ YouTube
+              </a>
 
-              <div style={imgWrap}>
-                <Image
-                  src="/trees.png"
-                  alt="Up Through the Trees painting"
-                  width={1200}
-                  height={900}
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                />
-                <div style={caption}>Up Through the Trees</div>
-              </div>
+              <a
+                className="btn"
+                href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#1db954",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                🎵 Spotify (1)
+              </a>
 
-              <div style={imgWrap}>
-                <Image
-                  src="/image.jpg"
-                  alt="Artwork preview"
-                  width={1200}
-                  height={900}
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                />
-                <div style={caption}>Featured Piece</div>
-              </div>
+              <a
+                className="btn"
+                href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#1db954",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                🎵 Spotify (2)
+              </a>
+
+              <a
+                className="btn"
+                href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#1db954",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                🎵 Spotify (3)
+              </a>
+
+              <a
+                className="btn"
+                href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#1db954",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                🎵 Spotify (4)
+              </a>
+
+              <a
+                className="btn"
+                href="https://www.facebook.com/people/Gary-Whiteheads-Latest-Song-Release/61556807271098/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#1877f2",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                👍 Facebook Page
+              </a>
+
+              <a
+                className="btn"
+                href="mailto:garys_new_music@yahoo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#333",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                ✉ Email Gary
+              </a>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== FOOTER ===== */}
-        <footer style={footer}>
+      {/* ====== ART (THIRD) ====== */}
+      <section
+        aria-labelledby="art"
+        style={{
+          marginTop: 24,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="art"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          GALLERY &amp; SHOP
+        </h2>
+
+        <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Art</h3>
+        <p style={{ marginTop: 0, marginBottom: 18 }}>
+          Original paintings by Gary Whitehead. Browse a few favorites below.
+        </p>
+
+        <div
+          className="gallery"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "16px",
+          }}
+        >
+          <figure
+            className="artCard"
+            style={{
+              padding: "12px",
+              borderRadius: "12px",
+              border: "1px solid #eee",
+              background: "#fff",
+              margin: 0,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            <img
+              src="/trees.png?v=1"
+              alt="Up Through the Trees — branches against a sunrise sky"
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                borderRadius: "10px",
+              }}
+              loading="lazy"
+            />
+            <figcaption
+              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
+            >
+              Up Through the Trees
+            </figcaption>
+          </figure>
+
+          <figure
+            className="artCard"
+            style={{
+              padding: "12px",
+              borderRadius: "12px",
+              border: "1px solid #eee",
+              background: "#fff",
+              margin: 0,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            <img
+              src="/Flames.png"
+              alt="Flaming — abstract pour on black"
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                borderRadius: "10px",
+              }}
+              loading="lazy"
+            />
+            <figcaption
+              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
+            >
+              Flaming
+            </figcaption>
+          </figure>
+        </div>
+
+        <div className="linkRow" style={{ marginTop: 16 }}>
+          <a
+            className="btn"
+            href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
+            target="_blank"
+            rel="noopener"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 700,
+              textDecoration: "none",
+              background: "#b57b17",
+              color: "#fff",
+              boxShadow:
+                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+          >
+            Visit My Etsy Shop
+          </a>
+        </div>
+      </section>
+
+      {/* ====== FOOTER ====== */}
+      <footer
+        style={{
+          textAlign: "center",
+          padding: "18px",
+          background: "rgba(255,255,255,.7)",
+          border: "1px solid #eee",
+          borderRadius: "12px",
+          marginTop: 24,
+          fontWeight: 700,
+          color: "#333",
+        }}
+      >
+        <div style={{ marginBottom: 6 }}>
           © {new Date().getFullYear()} Gary Thomas Whitehead
-        </footer>
-      </div>
-
-      {/* Responsive tweak */}
-      <style jsx>{`
-        @media (max-width: 900px) {
-          header {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 400, color: "#666" }}>
+          {visits === null
+            ? "Counting visitors…"
+            : `Total visits recorded: ${visits.toLocaleString()}`}
+        </div>
+      </footer>
     </main>
   );
 }
