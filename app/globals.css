@@ -21,20 +21,19 @@ img {
 
 /* ==== Layout / Container ==== */
 main {
-  max-width: 1360px; /* Wider layout */
+  max-width: 1360px;
   margin: 0 auto;
   padding: 24px 32px;
 }
 
 .sectionTitle {
-  font-size: 1.5rem;          /* Larger like “Art” */
-  font-weight: 700;           /* Bold */
-  color: #111;                /* Deep black text */
-  text-transform: none;       /* Keep normal capitalization */
-  letter-spacing: -0.01em;    /* Slightly tighter kerning */
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -0.01em;
   margin-top: 48px;
   margin-bottom: 16px;
-  border-bottom: 2px solid #b57b17; /* Optional gold underline for consistency */
+  border-bottom: 2px solid #b57b17;
   display: inline-block;
   padding-bottom: 4px;
 }
@@ -43,14 +42,6 @@ main {
 .hero {
   margin: 0;
   padding: 0;
-}
-
-.hero img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* ==== Typography ==== */
@@ -66,7 +57,7 @@ h1, h2, h3, h4 {
   font-size: 1.05rem;
 }
 
-/* Base button (keep or tweak yours) */
+/* ==== Buttons ==== */
 .btn{
   display:inline-block;
   padding:10px 16px;
@@ -76,67 +67,28 @@ h1, h2, h3, h4 {
   line-height: 1;
   box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06);
   transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
-  color:#fff;            /* default text color on colored buttons */
+  color:#fff;
 }
 
-/* Scope to the music section so we only color those buttons */
+/* FIX: Make sure these two are always visible */
+.btnPrimary { background: #111; color: #fff; }     /* Book sample button */
+.btnSoundcloud { background: #ff5500; color: #fff; } /* SoundCloud button */
+
+/* Book extra buttons */
+.btnKindle { background: #2a7ae2; color:#fff; }
+.btnPaperback { background: #0f7a3a; color:#fff; }
+.btnEmail { background: #333; color:#fff; }
+.btnX { background: #000; color:#fff; }
+.btnEtsy { background: #b57b17; color:#fff; }
+
+/* Scope music platform colors too (keeps your earlier idea) */
 section[aria-labelledby="music"] a.btn[href*="youtube"]  { background:#ff2d2d; }
 section[aria-labelledby="music"] a.btn[href*="spotify"]  { background:#1db954; }
 section[aria-labelledby="music"] a.btn[href*="facebook"] { background:#1877f2; }
-section[aria-labelledby="music"] a.btn[href^="mailto"]   { background:#333; }
 
 /* Hover/active polish */
-section[aria-labelledby="music"] a.btn:hover  { filter: brightness(.95); transform: translateY(-1px); }
-section[aria-labelledby="music"] a.btn:active { transform: translateY(0); filter: brightness(.9); }
-/* Music section: two-column layout */
-.musicGrid{
-  display: grid;
-  grid-template-columns: 1fr 280px; /* text/buttons | release image */
-  gap: 24px;
-  align-items: start;
-}
-
-.musicLeft{
-  min-width: 0; /* prevents overflow in some browsers */
-}
-
-/* Latest release card */
-.releaseCard{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  text-decoration: none;
-}
-
-.releaseCard img{
-  width: 100%;
-  max-width: 280px;
-  height: auto;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,.12);
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
-.releaseCard span{
-  font-size: .9rem;
-  font-weight: 600;
-  color: #1877f2; /* link-blue label; tweak if you'd like */
-}
-
-.releaseCard:hover img{
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,.16);
-}
-
-/* Stack on mobile */
-@media (max-width: 820px){
-  .musicGrid{
-    grid-template-columns: 1fr;
-  }
-  .releaseCard{
-    justify-self: start;
-  }
-}
+a.btn:hover  { filter: brightness(.95); transform: translateY(-1px); }
+a.btn:active { transform: translateY(0); filter: brightness(.9); }
 
 /* ==== Link Row ==== */
 .linkRow {
@@ -144,6 +96,26 @@ section[aria-labelledby="music"] a.btn:active { transform: translateY(0); filter
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* ==== Music section layout ==== */
+/* Keep 2 cols on desktop, but right side is empty now; still OK */
+.musicGrid{
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+.musicLeft{
+  min-width: 0;
+}
+
+/* Stack on mobile */
+@media (max-width: 820px){
+  .musicGrid{
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ==== Cards (Books / Art) ==== */
@@ -186,7 +158,7 @@ figcaption {
   }
 }
 
-/* ==== Section / Card Wrappers ==== */
+/* ==== Section spacing ==== */
 section {
   margin-bottom: 60px;
 }
@@ -197,18 +169,7 @@ section {
 }
 
 /* ==== Utilities ==== */
-.muted {
-  color: #666;
-}
-
-.center {
-  text-align: center;
-}
-
-.rounded {
-  border-radius: 10px;
-}
-
-.shadow {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
+.muted { color: #666; }
+.center { text-align: center; }
+.rounded { border-radius: 10px; }
+.shadow { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }

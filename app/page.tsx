@@ -1,44 +1,16 @@
-'use client';
-
-import { useEffect, useState } from "react";
-import { track } from "@vercel/analytics";
-
+// app/page.tsx
 export default function Home() {
-  const [visits, setVisits] = useState<number | null>(null);
-
-  // Simple public visitor counter (total visits, not unique people)
-  useEffect(() => {
-    async function incrementVisitorCounter() {
-      try {
-        // namespace: garythomaswhitehead-com, key: home
-        const res = await fetch(
-          "https://api.countapi.xyz/hit/garythomaswhitehead-com/home"
-        );
-        const data = await res.json();
-        if (typeof data.value === "number") {
-          setVisits(data.value);
-        }
-      } catch (err) {
-        console.error("Visitor counter error", err);
-      }
+  // --- Simple click tracking (works with Google Analytics if enabled in layout.tsx) ---
+  const track = (eventName: string, params: Record<string, any> = {}) => {
+    // Google Analytics gtag event (only runs if GA is installed and loaded)
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", eventName, params);
     }
-
-    incrementVisitorCounter();
-  }, []);
+  };
 
   return (
-    <main
-      style={{
-        maxWidth: "1360px",
-        margin: "0 auto",
-        padding: "24px 32px",
-        fontFamily: '"Georgia", "Times New Roman", serif',
-        color: "#111",
-        backgroundColor: "#faf9f6",
-        lineHeight: 1.6,
-      }}
-    >
-      {/* ====== HEADER ====== */}
+    <main>
+      {/* ====== HERO / HEADER ====== */}
       <header
         className="hero"
         style={{
@@ -52,7 +24,6 @@ export default function Home() {
           justifyContent: "center",
           padding: "24px",
           borderRadius: "12px",
-          marginBottom: 40,
         }}
       >
         <div
@@ -83,7 +54,7 @@ export default function Home() {
             <div style={{ fontSize: "18px", opacity: 0.9 }}>
               GARY THOMAS WHITEHEAD
             </div>
-            <div style={{ fontSize: "14px", opacity: 0.8 }}>
+            <div style={{ fontSize: "14px", opacity: 0.85 }}>
               Author • Songwriter • Painter
             </div>
           </div>
@@ -94,7 +65,7 @@ export default function Home() {
       <section
         aria-labelledby="bio"
         style={{
-          marginTop: 0,
+          marginTop: 24,
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
@@ -107,17 +78,20 @@ export default function Home() {
         >
           AUTHOR BIO
         </h2>
+
         <h3 style={{ margin: "8px 0 12px", fontSize: 22, fontWeight: 700 }}>
           Gary Thomas Whitehead
         </h3>
+
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           Gary Thomas Whitehead is a multidisciplinary artist whose heart beats
           through music, painting, and words of faith. As a Christian songwriter
-          and painter, Gary&apos;s work carries a single theme—the beauty of
-          divine connection. Whether through the strokes of a brush, the lyrics
-          of a song, or the pages of a book, he strives to awaken hope and
-          remind others that light always finds its way through.
+          and painter, Gary’s work carries a single theme—the beauty of divine
+          connection. Whether through the strokes of a brush, the lyrics of a
+          song, or the pages of a book, he strives to awaken hope and remind
+          others that light always finds its way through.
         </p>
+
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           His newest work,{" "}
           <em>
@@ -129,10 +103,11 @@ export default function Home() {
           theology should feel alive, personal, and artful, not distant or
           academic.
         </p>
+
         <p style={{ lineHeight: 1.7 }}>
-          A fun fact? When he&apos;s not painting or writing, Gary is often in
-          his home studio recording new melodies, with fresh canvases drying on
-          the walls around him.
+          A fun fact? When he’s not painting or writing, Gary has often been
+          found recording melodies in his home studio, surrounded by canvases
+          still drying on the walls.
         </p>
       </section>
 
@@ -168,9 +143,6 @@ export default function Home() {
               overflow: "hidden",
               border: "1px solid #eee",
               margin: 0,
-              background: "#fff",
-              padding: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
             <img
@@ -186,154 +158,105 @@ export default function Home() {
               The Sent Son — A Biblical Perspective on Jesus as Mediator and
               Divine Sonship
             </h3>
+
             <ul
               style={{
                 lineHeight: 1.7,
                 marginTop: 12,
-                marginBottom: 16,
+                marginBottom: 10,
                 paddingLeft: 18,
               }}
             >
               <li>Author: Gary Thomas Whitehead</li>
-              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
-                An in-depth scriptural study on Jesus&apos; role as both
-                mediator and divine Son, written in a devotional, reflective
-                tone—ideal for church Bible studies and small groups.
+                Genre: Christian theology / spiritual reflection / Bible study
+              </li>
+              <li>
+                <strong>Kindle</strong> is recommended for personal Bible study
+                (text-focused; no note section).
+              </li>
+              <li>
+                <strong>Paperback</strong> is recommended for personal and group
+                Bible study (includes the note section).
               </li>
             </ul>
 
-            <p style={{ marginBottom: 16 }}>
-              <strong>Recommendation:</strong> The{" "}
-              <em>Kindle edition</em> is perfect for{" "}
-              <strong>personal Bible study</strong>, while the{" "}
-              <em>paperback</em> works beautifully for both{" "}
-              <strong>personal and group study</strong> with its full layout
-              and space for notes.
-            </p>
-
-            <div
-              className="linkRow"
-              style={{
-                marginTop: 16,
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 12,
-              }}
-            >
-              {/* Sample PDF */}
+            {/* BOOK BUTTONS */}
+            <div className="linkRow">
               <a
-                className="btn"
+                className="btn btnPrimary"
                 href="/Part of Chapter 1.pdf"
                 target="_blank"
-                rel="noopener"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "#111",
-                  color: "#fff",
-                  boxShadow:
-                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-                }}
+                rel="noopener noreferrer"
+                onClick={() =>
+                  track("book_sample_pdf_click", {
+                    section: "book",
+                    label: "Read a Sample (PDF)",
+                  })
+                }
               >
                 Read a Sample (PDF)
               </a>
 
-              {/* Email Gary */}
               <a
-                className="btn"
-                href="mailto:garys_new_music@yahoo.com"
-                target="_blank"
-                rel="noopener"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "#333",
-                  color: "#fff",
-                  boxShadow:
-                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-                }}
-              >
-                Email Gary
-              </a>
-
-              {/* X / Twitter for the book */}
-              <a
-                className="btn"
-                href="https://x.com/Bookthesentson"
-                target="_blank"
-                rel="noopener"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "#000",
-                  color: "#fff",
-                  boxShadow:
-                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-                }}
-              >
-                Follow @Bookthesentson on X
-              </a>
-
-              {/* Kindle – recommended for personal study */}
-              <a
-                className="btn"
+                className="btn btnKindle"
                 href="https://www.amazon.com/dp/B0G4NQ1SF3"
                 target="_blank"
-                rel="noopener"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "#2563eb",
-                  color: "#fff",
-                  boxShadow:
-                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-                }}
+                rel="noopener noreferrer"
                 onClick={() =>
-                  track("BookClick", {
-                    format: "Kindle",
+                  track("book_purchase_click", {
+                    format: "kindle",
+                    destination: "amazon",
+                    asin: "B0G4NQ1SF3",
                   })
                 }
               >
-                Buy on Kindle (personal study)
+                Buy Kindle (Personal Study)
               </a>
 
-              {/* Paperback – recommended for personal & group study */}
               <a
-                className="btn"
+                className="btn btnPaperback"
                 href="https://www.amazon.com/dp/B0G4KJHKK6"
                 target="_blank"
-                rel="noopener"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  background: "#b45309",
-                  color: "#fff",
-                  boxShadow:
-                    "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-                }}
+                rel="noopener noreferrer"
                 onClick={() =>
-                  track("BookClick", {
-                    format: "Paperback",
+                  track("book_purchase_click", {
+                    format: "paperback",
+                    destination: "amazon",
+                    asin: "B0G4KJHKK6",
                   })
                 }
               >
-                Buy Paperback (personal & group study)
+                Buy Paperback (Group Study)
+              </a>
+
+              <a
+                className="btn btnX"
+                href="https://x.com/Bookthesentson"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  track("social_click", {
+                    platform: "x",
+                    handle: "@Bookthesentson",
+                    section: "book",
+                  })
+                }
+              >
+                @Bookthesentson on X
+              </a>
+
+              <a
+                className="btn btnEmail"
+                href="mailto:garys_new_music@yahoo.com"
+                onClick={() =>
+                  track("email_click", {
+                    section: "book",
+                    address: "garys_new_music@yahoo.com",
+                  })
+                }
+              >
+                ✉ Email Gary
               </a>
             </div>
           </div>
@@ -343,7 +266,6 @@ export default function Home() {
       {/* ===== MUSIC SECTION ===== */}
       <section
         aria-labelledby="music"
-        className="block card"
         style={{
           marginTop: 24,
           background: "#fff",
@@ -352,33 +274,16 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        <h2
-          id="music"
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 8,
-            borderBottom: "2px solid #b57b17",
-            display: "inline-block",
-            paddingBottom: 4,
-          }}
-        >
+        <h2 id="music" className="sectionTitle">
           🎵 LISTEN
         </h2>
-        <h3 style={{ marginTop: 8, marginBottom: 8 }}>Music</h3>
+        <h3 style={{ marginTop: 8, marginBottom: 8 }}>Gary’s Original Music</h3>
 
-        <div
-          className="musicGrid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 24,
-          }}
-        >
+        <div className="musicGrid">
           <div className="musicLeft">
             <p style={{ marginTop: 8, marginBottom: 14 }}>
-              Experience Gary&apos;s original songs of inspiration and
-              storytelling on your favorite streaming platforms.
+              Experience Gary’s original songs of inspiration and storytelling
+              on your favorite streaming platforms.
             </p>
 
             <div className="embedWrap" style={{ marginBottom: 12 }}>
@@ -387,34 +292,25 @@ export default function Home() {
                 width="100%"
                 height="300"
                 scrolling="no"
-                frameBorder={0}
+                frameBorder="0"
                 allow="autoplay"
-                src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&color=%230055ff&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+                src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/user-747949669&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
               />
             </div>
 
-            <div
-              className="linkRow"
-              style={{
-                marginTop: 16,
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 12,
-              }}
-            >
+            {/* Platform Buttons */}
+            <div className="linkRow">
               <a
-                className="btn"
+                className="btn btnSoundcloud"
                 href="https://soundcloud.com/user-747949669"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#ff5500",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "soundcloud",
+                    section: "music",
+                  })
+                }
               >
                 🎧 SoundCloud
               </a>
@@ -424,14 +320,12 @@ export default function Home() {
                 href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#ff0000",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "youtube",
+                    section: "music",
+                  })
+                }
               >
                 ▶ YouTube
               </a>
@@ -441,62 +335,61 @@ export default function Home() {
                 href="https://open.spotify.com/artist/0Ffx93cnY4aH22LsxbNmPX"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#1db954",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "spotify",
+                    section: "music",
+                    artist: "0Ffx93cnY4aH22LsxbNmPX",
+                  })
+                }
               >
                 🎵 Spotify (1)
               </a>
+
               <a
                 className="btn"
                 href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#1db954",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "spotify",
+                    section: "music",
+                    artist: "2MhxbQJUh5pctqpUcpNg5o",
+                  })
+                }
               >
                 🎵 Spotify (2)
               </a>
+
               <a
                 className="btn"
                 href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#1db954",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "spotify",
+                    section: "music",
+                    artist: "3sxMPsVrsSbsOEEmhdZosP",
+                  })
+                }
               >
                 🎵 Spotify (3)
               </a>
+
               <a
                 className="btn"
                 href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#1db954",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "spotify",
+                    section: "music",
+                    artist: "6U1wxC6Wv6nUbBEGv3nhXN",
+                  })
+                }
               >
                 🎵 Spotify (4)
               </a>
@@ -506,36 +399,20 @@ export default function Home() {
                 href="https://www.facebook.com/people/Gary-Whiteheads-Latest-Song-Release/61556807271098/"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  background: "#1877f2",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
+                onClick={() =>
+                  track("music_platform_click", {
+                    platform: "facebook",
+                    section: "music",
+                  })
+                }
               >
                 👍 Facebook Page
               </a>
-
-              <a
-                className="btn"
-                href="mailto:garys_new_music@yahoo.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: "#333",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
-              >
-                ✉ Email Gary
-              </a>
             </div>
           </div>
+
+          {/* RIGHT column intentionally empty now (image/link removed) */}
+          <div />
         </div>
       </section>
 
@@ -562,93 +439,35 @@ export default function Home() {
           Original paintings by Gary Whitehead. Browse a few favorites below.
         </p>
 
-        <div
-          className="gallery"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          {/* Up Through the Trees */}
-          <figure
-            className="artCard"
-            style={{
-              padding: "12px",
-              borderRadius: "12px",
-              border: "1px solid #eee",
-              background: "#fff",
-              margin: 0,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}
-          >
+        <div className="gallery">
+          <figure className="artCard">
             <img
               src="/trees.png?v=1"
               alt="Up Through the Trees — branches against a sunrise sky"
-              style={{
-                width: "100%",
-                height: "auto",
-                display: "block",
-                borderRadius: "10px",
-              }}
               loading="lazy"
             />
-            <figcaption
-              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
-            >
-              Up Through the Trees
-            </figcaption>
+            <figcaption>Up Through the Trees</figcaption>
           </figure>
 
-          {/* Flaming */}
-          <figure
-            className="artCard"
-            style={{
-              padding: "12px",
-              borderRadius: "12px",
-              border: "1px solid #eee",
-              background: "#fff",
-              margin: 0,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}
-          >
+          <figure className="artCard">
             <img
               src="/Flames.png"
               alt="Flaming — abstract pour on black"
-              style={{
-                width: "100%",
-                height: "auto",
-                display: "block",
-                borderRadius: "10px",
-              }}
               loading="lazy"
             />
-            <figcaption
-              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
-            >
-              Flaming
-            </figcaption>
+            <figcaption>Flaming</figcaption>
           </figure>
         </div>
 
-        {/* Etsy link row */}
         <div className="linkRow" style={{ marginTop: 16 }}>
           <a
-            className="btn"
+            className="btn btnEtsy"
             href="https://www.etsy.com/shop/GaryCreatedArt?ref=profile_header"
             target="_blank"
-            rel="noopener"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#b57b17",
-              color: "#fff",
-              boxShadow:
-                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-            }}
+            rel="noopener noreferrer"
+            onClick={() =>
+              track("shop_click", { platform: "etsy", section: "art" })
+            }
           >
             Visit My Etsy Shop
           </a>
@@ -668,14 +487,7 @@ export default function Home() {
           color: "#333",
         }}
       >
-        <div style={{ marginBottom: 6 }}>
-          © {new Date().getFullYear()} Gary Thomas Whitehead
-        </div>
-        <div style={{ fontSize: 12, fontWeight: 400, color: "#666" }}>
-          {visits === null
-            ? "Counting visitors…"
-            : `Total visits recorded: ${visits.toLocaleString()}`}
-        </div>
+        © {new Date().getFullYear()} Gary Thomas Whitehead
       </footer>
     </main>
   );
