@@ -4,37 +4,37 @@ import React from "react";
 
 type TrackedLinkProps = {
   href: string;
+  children: React.ReactNode;
+  eventName?: string;
+
   className?: string;
   style?: React.CSSProperties;
   target?: string;
   rel?: string;
-  eventName?: string;
-  children: React.ReactNode;
 };
-
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-    va?: { track?: (event: string, data?: Record<string, any>) => void };
-  }
-}
 
 export default function TrackedLink({
   href,
+  children,
+  eventName,
   className,
   style,
   target = "_blank",
   rel = "noopener noreferrer",
-  eventName,
-  children,
 }: TrackedLinkProps) {
   const handleClick = () => {
-    if (eventName && typeof window.gtag === "function") {
-      window.gtag("event", eventName, { link_url: href });
+    if (!eventName) return;
+
+    // Google Analytics (gtag)
+    const gtag = (window as any).gtag;
+    if (typeof gtag === "function") {
+      gtag("event", eventName, { link_url: href });
     }
 
-    if (eventName && window.va?.track) {
-      window.va.track(eventName, { href });
+    // Vercel Analytics (va.track) - do NOT redeclare window.va types
+    const va = (window as any).va;
+    if (va && typeof va.track === "function") {
+      va.track(eventName, { href });
     }
   };
 
