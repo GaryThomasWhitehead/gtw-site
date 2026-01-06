@@ -221,7 +221,7 @@ export default function Home() {
                 gap: 12,
               }}
             >
-              {/* Sample PDF (FIXED) */}
+              {/* Sample PDF (space-safe URL so it works on production) */}
               <a
                 className="btn"
                 href="/Part%20of%20Chapter%201.pdf"
@@ -242,7 +242,7 @@ export default function Home() {
                 Read a Sample (PDF)
               </a>
 
-              {/* Email Gary (BOOK section) */}
+              {/* Email Gary */}
               <a
                 className="btn"
                 href="mailto:garys_new_music@yahoo.com"
@@ -452,6 +452,7 @@ export default function Home() {
               >
                 🎵 Spotify (1)
               </a>
+
               <a
                 className="btn"
                 href="https://open.spotify.com/artist/2MhxbQJUh5pctqpUcpNg5o"
@@ -468,6 +469,7 @@ export default function Home() {
               >
                 🎵 Spotify (2)
               </a>
+
               <a
                 className="btn"
                 href="https://open.spotify.com/artist/3sxMPsVrsSbsOEEmhdZosP"
@@ -484,6 +486,7 @@ export default function Home() {
               >
                 🎵 Spotify (3)
               </a>
+
               <a
                 className="btn"
                 href="https://open.spotify.com/artist/6U1wxC6Wv6nUbBEGv3nhXN"
@@ -518,9 +521,133 @@ export default function Home() {
                 👍 Facebook Page
               </a>
 
-              {/* NOTE: Email is intentionally NOT here anymore since you wanted it moved to BOOK */}
+              <a
+                className="btn"
+                href="mailto:garys_new_music@yahoo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#333",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                ✉ Email Gary
+              </a>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ====== NEW SECTION: NOT FOR SALE (added today) ====== */}
+      <section
+        aria-labelledby="not-for-sale"
+        style={{
+          marginTop: 24,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="not-for-sale"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          AWARENESS
+        </h2>
+
+        <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Not for Sale</h3>
+
+        <p style={{ marginTop: 0, marginBottom: 12, lineHeight: 1.7 }}>
+          “Not for Sale” is a video message created to raise awareness about
+          human and child trafficking. Our purpose is to help shine a light on
+          trafficking, encourage action, and support organizations working to
+          combat trafficking and bring families back together.
+        </p>
+
+        <p style={{ marginTop: 0, marginBottom: 18, lineHeight: 1.7 }}>
+          If you’d like to help, you can donate directly using the secure Square
+          link below. Every contribution helps support anti-trafficking efforts.
+        </p>
+
+        <div
+          style={{
+            borderRadius: "12px",
+            overflow: "hidden",
+            border: "1px solid #eee",
+            background: "#000",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            marginBottom: 16,
+          }}
+        >
+          <video
+            controls
+            preload="metadata"
+            style={{ width: "100%", height: "auto", display: "block" }}
+          >
+            <source src="/videos/not-for-sale.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <div
+          className="linkRow"
+          style={{
+            marginTop: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <a
+            className="btn"
+            href="https://square.link/u/nT8KgBJA"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 700,
+              textDecoration: "none",
+              background: "#111",
+              color: "#fff",
+              boxShadow:
+                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+            onClick={() =>
+              track("DonateClick", {
+                campaign: "NotForSale",
+                provider: "Square",
+              })
+            }
+          >
+            Donate (Square)
+          </a>
+
+          <a
+            className="btn"
+            href="mailto:garys_new_music@yahoo.com?subject=Not%20for%20Sale%20Donation%20and%20Awareness"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 700,
+              textDecoration: "none",
+              background: "#333",
+              color: "#fff",
+              boxShadow:
+                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+          >
+            Contact Gary
+          </a>
         </div>
       </section>
 
