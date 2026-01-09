@@ -1,5 +1,6 @@
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {
   title: "Gary Thomas Whitehead",
@@ -13,17 +14,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        style={{
-          margin: 0,
-          backgroundColor: "#faf9f6",
-          fontFamily: '"Georgia", "Times New Roman", serif',
-          color: "#111",
-        }}
-      >
+      <body>
         {children}
 
-        {/* ✅ Vercel Speed Insights */}
+        {/* Vercel Web Analytics (page views) */}
+        <Analytics />
+
+        {/* Vercel Speed Insights */}
         <SpeedInsights />
       </body>
     </html>
