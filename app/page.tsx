@@ -136,7 +136,103 @@ export default function Home() {
         </p>
       </section>
 
-      {/* ====== BOOK (FIRST) ====== */}
+      {/* ====== NOT FOR SALE (MOVE ABOVE BOOK) ====== */}
+      <section
+        aria-labelledby="not-for-sale"
+        style={{
+          marginTop: 24,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="not-for-sale"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          AWARENESS
+        </h2>
+
+        <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Not for Sale</h3>
+
+        <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
+          <strong>Human trafficking is real.</strong> It is happening now. And it
+          can be stopped.
+        </p>
+
+        <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
+          <strong>Not for Sale</strong> was created to raise awareness and
+          support organizations that rescue victims of human and child
+          trafficking and help restore families.
+        </p>
+
+        <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
+          Your donation helps fund rescue, protection, and recovery efforts for
+          those who need it most.
+        </p>
+
+        <p style={{ marginTop: 0, marginBottom: 16, lineHeight: 1.7 }}>
+          <strong>Human lives are not for sale.</strong>
+          <br />
+          <strong>Your action matters.</strong>
+        </p>
+
+        <div
+          style={{
+            borderRadius: "12px",
+            overflow: "hidden",
+            border: "1px solid #eee",
+            background: "#000",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            marginBottom: 12,
+          }}
+        >
+          <video
+            controls
+            preload="metadata"
+            style={{ width: "100%", height: "auto", display: "block" }}
+          >
+            {/* IMPORTANT: file name + casing must match what’s in /public/videos */}
+            <source src="/videos/Not-for-Sale.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        {/* Donate button directly below message/video */}
+        <div
+          className="linkRow"
+          style={{
+            marginTop: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <a
+            className="btn"
+            href="https://square.link/u/nT8KgBJA"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 700,
+              textDecoration: "none",
+              background: "#111",
+              color: "#fff",
+              boxShadow:
+                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+            onClick={() => track("DonateClick", { campaign: "NotForSale" })}
+          >
+            Donate (Square)
+          </a>
+        </div>
+      </section>
+
+      {/* ====== BOOK (NOW BELOW NOT FOR SALE) ====== */}
       <section
         aria-labelledby="book"
         style={{
@@ -173,6 +269,7 @@ export default function Home() {
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
+            {/* IMPORTANT: file name + casing must match /public */}
             <img
               src="/Cover.png"
               alt="The Sent Son book cover"
@@ -195,7 +292,9 @@ export default function Home() {
               }}
             >
               <li>Author: Gary Thomas Whitehead</li>
-              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
+              <li>
+                Genre: Christian theology / spiritual reflection / Bible Study
+              </li>
               <li>
                 An in-depth scriptural study on Jesus&apos; role as both
                 mediator and divine Son, written in a devotional, reflective
@@ -204,12 +303,11 @@ export default function Home() {
             </ul>
 
             <p style={{ marginBottom: 16 }}>
-              <strong>Recommendation:</strong> The{" "}
-              <em>Kindle edition</em> is perfect for{" "}
-              <strong>personal Bible study</strong>, while the{" "}
+              <strong>Recommendation:</strong> The <em>Kindle edition</em> is
+              perfect for <strong>personal Bible study</strong>, while the{" "}
               <em>paperback</em> works beautifully for both{" "}
-              <strong>personal and group study</strong> with its full layout
-              and space for notes.
+              <strong>personal and group study</strong> with its full layout and
+              space for notes.
             </p>
 
             <div
@@ -284,7 +382,7 @@ export default function Home() {
                 Follow @Bookthesentson on X
               </a>
 
-              {/* Kindle – recommended for personal study */}
+              {/* Kindle */}
               <a
                 className="btn"
                 href="https://www.amazon.com/dp/B0G4NQ1SF3"
@@ -301,16 +399,12 @@ export default function Home() {
                   boxShadow:
                     "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
                 }}
-                onClick={() =>
-                  track("BookClick", {
-                    format: "Kindle",
-                  })
-                }
+                onClick={() => track("BookClick", { format: "Kindle" })}
               >
                 Buy on Kindle (personal study)
               </a>
 
-              {/* Paperback – recommended for personal & group study */}
+              {/* Paperback */}
               <a
                 className="btn"
                 href="https://www.amazon.com/dp/B0G4KJHKK6"
@@ -327,13 +421,9 @@ export default function Home() {
                   boxShadow:
                     "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
                 }}
-                onClick={() =>
-                  track("BookClick", {
-                    format: "Paperback",
-                  })
-                }
+                onClick={() => track("BookClick", { format: "Paperback" })}
               >
-                Buy Paperback (personal & group study)
+                Buy Paperback (personal &amp; group study)
               </a>
             </div>
           </div>
@@ -381,6 +471,7 @@ export default function Home() {
               storytelling on your favorite streaming platforms.
             </p>
 
+            {/* SoundCloud player restored */}
             <div className="embedWrap" style={{ marginBottom: 12 }}>
               <iframe
                 title="Gary Whitehead — SoundCloud"
@@ -542,115 +633,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== NEW SECTION: NOT FOR SALE (added today) ====== */}
-      <section
-        aria-labelledby="not-for-sale"
-        style={{
-          marginTop: 24,
-          background: "#fff",
-          borderRadius: "12px",
-          padding: "20px",
-          border: "1px solid #eee",
-        }}
-      >
-        <h2
-          id="not-for-sale"
-          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
-        >
-          AWARENESS
-        </h2>
-
-        <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Not for Sale</h3>
-
-        <p style={{ marginTop: 0, marginBottom: 12, lineHeight: 1.7 }}>
-          “Not for Sale” is a video message created to raise awareness about
-          human and child trafficking. Our purpose is to help shine a light on
-          trafficking, encourage action, and support organizations working to
-          combat trafficking and bring families back together.
-        </p>
-
-        <p style={{ marginTop: 0, marginBottom: 18, lineHeight: 1.7 }}>
-          If you’d like to help, you can donate directly using the secure Square
-          link below. Every contribution helps support anti-trafficking efforts.
-        </p>
-
-        <div
-          style={{
-            borderRadius: "12px",
-            overflow: "hidden",
-            border: "1px solid #eee",
-            background: "#000",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            marginBottom: 16,
-          }}
-        >
-          <video
-            controls
-            preload="metadata"
-            style={{ width: "100%", height: "auto", display: "block" }}
-          >
-            <source src="/videos/not-for-sale.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-
-        <div
-          className="linkRow"
-          style={{
-            marginTop: 4,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <a
-            className="btn"
-            href="https://square.link/u/nT8KgBJA"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#111",
-              color: "#fff",
-              boxShadow:
-                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-            }}
-            onClick={() =>
-              track("DonateClick", {
-                campaign: "NotForSale",
-                provider: "Square",
-              })
-            }
-          >
-            Donate (Square)
-          </a>
-
-          <a
-            className="btn"
-            href="mailto:garys_new_music@yahoo.com?subject=Not%20for%20Sale%20Donation%20and%20Awareness"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              background: "#333",
-              color: "#fff",
-              boxShadow:
-                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-            }}
-          >
-            Contact Gary
-          </a>
-        </div>
-      </section>
-
       {/* ====== ART (THIRD) ====== */}
       <section
         aria-labelledby="art"
@@ -758,8 +740,7 @@ export default function Home() {
               textDecoration: "none",
               background: "#b57b17",
               color: "#fff",
-              boxShadow:
-                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+              boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
             }}
           >
             Visit My Etsy Shop
