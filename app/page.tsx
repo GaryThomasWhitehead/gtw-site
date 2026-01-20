@@ -194,7 +194,7 @@ export default function Home() {
             style={{ width: "100%", height: "auto", display: "block" }}
           >
             {/* IMPORTANT: file name + casing must match what’s in /public/videos */}
-            <source src="/videos/Not-for-Sale.mp4" type="video/mp4" />
+            <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
@@ -768,6 +768,11 @@ export default function Home() {
           {visits === null
             ? "Counting visitors…"
             : `Total visits recorded: ${visits.toLocaleString()}`}
+        </div>
+
+        {/* 🔍 DEPLOY CHECK (TEMPORARY) */}
+        <div style={{ fontSize: 12, opacity: 0.7, marginTop: 10 }}>
+          Deploy check: {new Date().toISOString()}
         </div>
       </footer>
     </main>
