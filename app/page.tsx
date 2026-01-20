@@ -190,10 +190,11 @@ export default function Home() {
         >
           <video
             controls
+            playsInline
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
-            {/* IMPORTANT: file name + casing must match what’s in /public/videos */}
+            {/* Must match EXACT filename in /public/videos (case-sensitive on Vercel) */}
             <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
@@ -269,7 +270,6 @@ export default function Home() {
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
-            {/* IMPORTANT: file name + casing must match /public */}
             <img
               src="/Cover.png"
               alt="The Sent Son book cover"
@@ -292,13 +292,11 @@ export default function Home() {
               }}
             >
               <li>Author: Gary Thomas Whitehead</li>
+              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
-                Genre: Christian theology / spiritual reflection / Bible Study
-              </li>
-              <li>
-                An in-depth scriptural study on Jesus&apos; role as both
-                mediator and divine Son, written in a devotional, reflective
-                tone—ideal for church Bible studies and small groups.
+                An in-depth scriptural study on Jesus&apos; role as both mediator
+                and divine Son, written in a devotional, reflective tone—ideal
+                for church Bible studies and small groups.
               </li>
             </ul>
 
@@ -319,7 +317,6 @@ export default function Home() {
                 gap: 12,
               }}
             >
-              {/* Sample PDF (space-safe URL so it works on production) */}
               <a
                 className="btn"
                 href="/Part%20of%20Chapter%201.pdf"
@@ -340,7 +337,6 @@ export default function Home() {
                 Read a Sample (PDF)
               </a>
 
-              {/* Email Gary */}
               <a
                 className="btn"
                 href="mailto:garys_new_music@yahoo.com"
@@ -361,7 +357,6 @@ export default function Home() {
                 Email Gary
               </a>
 
-              {/* X / Twitter for the book */}
               <a
                 className="btn"
                 href="https://x.com/Bookthesentson"
@@ -382,7 +377,6 @@ export default function Home() {
                 Follow @Bookthesentson on X
               </a>
 
-              {/* Kindle */}
               <a
                 className="btn"
                 href="https://www.amazon.com/dp/B0G4NQ1SF3"
@@ -404,7 +398,6 @@ export default function Home() {
                 Buy on Kindle (personal study)
               </a>
 
-              {/* Paperback */}
               <a
                 className="btn"
                 href="https://www.amazon.com/dp/B0G4KJHKK6"
@@ -467,11 +460,10 @@ export default function Home() {
         >
           <div className="musicLeft">
             <p style={{ marginTop: 8, marginBottom: 14 }}>
-              Experience Gary&apos;s original songs of inspiration and
-              storytelling on your favorite streaming platforms.
+              Experience Gary&apos;s original songs of inspiration and storytelling
+              on your favorite streaming platforms.
             </p>
 
-            {/* SoundCloud player restored */}
             <div className="embedWrap" style={{ marginBottom: 12 }}>
               <iframe
                 title="Gary Whitehead — SoundCloud"
@@ -664,7 +656,6 @@ export default function Home() {
             gap: "16px",
           }}
         >
-          {/* Up Through the Trees */}
           <figure
             className="artCard"
             style={{
@@ -687,14 +678,11 @@ export default function Home() {
               }}
               loading="lazy"
             />
-            <figcaption
-              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
-            >
+            <figcaption style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}>
               Up Through the Trees
             </figcaption>
           </figure>
 
-          {/* Flaming */}
           <figure
             className="artCard"
             style={{
@@ -717,15 +705,12 @@ export default function Home() {
               }}
               loading="lazy"
             />
-            <figcaption
-              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
-            >
+            <figcaption style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}>
               Flaming
             </figcaption>
           </figure>
         </div>
 
-        {/* Etsy link row */}
         <div className="linkRow" style={{ marginTop: 16 }}>
           <a
             className="btn"
@@ -768,11 +753,6 @@ export default function Home() {
           {visits === null
             ? "Counting visitors…"
             : `Total visits recorded: ${visits.toLocaleString()}`}
-        </div>
-
-        {/* 🔍 DEPLOY CHECK (TEMPORARY) */}
-        <div style={{ fontSize: 12, opacity: 0.7, marginTop: 10 }}>
-          Deploy check: {new Date().toISOString()}
         </div>
       </footer>
     </main>
