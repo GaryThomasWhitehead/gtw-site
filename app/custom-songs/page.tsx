@@ -25,18 +25,28 @@ export default function CustomSongsLanding() {
           <div style={styles.progressText}>20% Complete</div>
         </div>
 
-        <h1 style={styles.title}>Let’s start with the basics</h1>
+        <h1 style={styles.title}>Order a Custom Song</h1>
+
+        {/* 🔥 NEW PREMIUM DIFFERENTIATOR */}
+        <div style={styles.heroHighlight}>
+          <strong>
+            Most custom song services stop at audio — I also create personalized{" "}
+            <span style={styles.gold}>Photo Music Videos</span> where your pictures
+            play beautifully while your song plays.
+          </strong>
+        </div>
 
         <div style={styles.notice}>
           <div style={styles.noticeTitle}>
             ⭐ You selected:{" "}
             {packageChoice === "song+video"
-              ? "Song + Photo Music Video (your photos play with the music)"
+              ? "Song + Photo Music Video (photos play with the music)"
               : "Song Only"}
           </div>
           <div style={styles.noticeText}>
-            Many services do custom songs. The <strong>Photo Music Video</strong>{" "}
-            is the unique add-on that makes your gift unforgettable.
+            A custom song is meaningful. A <strong>Photo Music Video</strong>{" "}
+            turns it into a keepsake your loved one can watch, replay, and cherish
+            forever.
           </div>
         </div>
 
@@ -47,14 +57,14 @@ export default function CustomSongsLanding() {
             onClick={() => setPackageChoice("song+video")}
             style={pillStyle(packageChoice === "song+video")}
           >
-            Song + Photo Music Video
+            🎵 Song + Photo Music Video
           </button>
           <button
             type="button"
             onClick={() => setPackageChoice("song")}
             style={pillStyle(packageChoice === "song")}
           >
-            Song Only
+            🎶 Song Only
           </button>
         </div>
 
@@ -62,17 +72,18 @@ export default function CustomSongsLanding() {
           <div style={styles.infoCard}>
             <div style={styles.infoHeadline}>Custom Song</div>
             <p style={styles.infoText}>
-              A personal song written from your story—perfect for birthdays,
-              anniversaries, tributes, faith encouragement, or “just because.”
+              A personal song written from your story — perfect for birthdays,
+              anniversaries, tributes, love stories, faith encouragement, or
+              heartfelt gifts.
             </p>
           </div>
 
-          <div style={styles.infoCard}>
-            <div style={styles.infoHeadline}>Photo Music Video (highlight)</div>
+          <div style={styles.infoCardHighlight}>
+            <div style={styles.infoHeadline}>🌟 Photo Music Video (Rare Offering)</div>
             <p style={styles.infoText}>
-              Your photos play in a simple, beautiful video while the song plays.
-              This is the part most competitors don’t offer—especially customized
-              to match the lyrics and emotion.
+              Your photos appear in a simple cinematic video timed to the music.
+              This is the feature most competitors <strong>do not offer</strong>{" "}
+              — and it transforms your song into an unforgettable visual memory.
             </p>
           </div>
         </div>
@@ -91,7 +102,7 @@ export default function CustomSongsLanding() {
         <footer style={styles.footer}>
           <div>© {new Date().getFullYear()} Gary Thomas Whitehead</div>
           <div style={styles.footerSmall}>
-            Need help?{" "}
+            Questions?{" "}
             <a href="mailto:garys_new_music@yahoo.com" style={styles.footerLink}>
               Email Gary
             </a>
@@ -142,7 +153,20 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
   },
   progressText: { fontWeight: 800, color: "#444" },
-  title: { fontSize: 36, margin: "10px 0 16px", fontWeight: 900 },
+  title: { fontSize: 38, margin: "10px 0 12px", fontWeight: 900 },
+
+  heroHighlight: {
+    background: "#111",
+    color: "#fff",
+    borderRadius: 14,
+    padding: "14px 16px",
+    fontSize: 17,
+    lineHeight: 1.6,
+    marginBottom: 16,
+  },
+
+  gold: { color: "#f5c36a", fontWeight: 900 },
+
   notice: {
     background: "#fff7ea",
     border: "1px solid #f2e2c8",
@@ -152,28 +176,42 @@ const styles: Record<string, React.CSSProperties> = {
   },
   noticeTitle: { fontWeight: 900, fontSize: 16, marginBottom: 6 },
   noticeText: { fontSize: 16, color: "#333", lineHeight: 1.6 },
+
   label: { fontWeight: 900, marginTop: 10, display: "block", fontSize: 16 },
   pillRow: { display: "flex", flexWrap: "wrap", gap: 12, marginTop: 10 },
+
   infoGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 14,
     marginTop: 18,
   },
+
   infoCard: {
     border: "1px solid #eee",
     borderRadius: 14,
     padding: 14,
     background: "#fff",
   },
+
+  infoCardHighlight: {
+    border: "2px solid #b57b17",
+    borderRadius: 14,
+    padding: 14,
+    background: "#fffaf1",
+  },
+
   infoHeadline: { fontWeight: 900, fontSize: 16, marginBottom: 6 },
+
   infoText: { margin: 0, fontSize: 16, lineHeight: 1.6, color: "#333" },
+
   navRow: {
     marginTop: 22,
     display: "flex",
     justifyContent: "space-between",
     gap: 12,
   },
+
   btnPrimary: {
     background: "#b57b17",
     color: "#fff",
@@ -185,6 +223,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
   },
+
   footer: {
     marginTop: 22,
     borderTop: "1px solid #eee",
@@ -193,7 +232,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 900,
     color: "#333",
   },
+
   footerSmall: { fontWeight: 500, marginTop: 6, color: "#666" },
+
   footerLink: { color: "#111", fontWeight: 800, textDecoration: "none" },
 };
 
