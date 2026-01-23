@@ -5,103 +5,105 @@ import Link from "next/link";
 
 export default function ThankYouPage() {
   return (
-    <main style={styles.page}>
-      <section style={styles.card}>
-        <h1 style={styles.title}>Thank you — I’ve got it.</h1>
+    <main style={pageStyle}>
+      <section style={cardStyle}>
+        <h1 style={titleStyle}>✅ Thank you!</h1>
 
-        <p style={styles.text}>
-          Your request has been submitted. Next, I’ll reach out by email to confirm
-          details and give you the easiest way to send photos (for the optional
-          <strong> Photo Music Video</strong>).
-        </p>
-
-        <div style={styles.highlight}>
-          <div style={styles.highlightTitle}>What happens next</div>
-          <ul style={styles.ul}>
-            <li>I confirm your details (names, vibe, genre, timeline).</li>
-            <li>You send photos (Drive/Dropbox link or email attachments).</li>
-            <li>I write + produce your custom song.</li>
-            <li>
-              If you chose it: I create your <strong>Photo Music Video</strong>{" "}
-              where your pictures play while the music plays.
-            </li>
-          </ul>
+        <div style={box}>
+          <div style={boxTitle}>Your request is ready.</div>
+          <div style={boxText}>
+            I’ll follow up by email about next steps and any details.
+            <br />
+            If you selected the <b>Photo Music Video</b>, we’ll make sure your photos and story
+            come together in a cinematic keepsake.
+          </div>
         </div>
 
-        <div style={styles.ctaRow}>
-          <a
-            href="mailto:garys_new_music@yahoo.com?subject=Custom%20Song%20Request%20from%20Website"
-            style={styles.btnPrimary}
-          >
-            Email Gary (Add details)
-          </a>
-          <Link href="/" style={styles.btnSecondary}>
+        <div style={actions}>
+          <Link href="/" style={btnSecondary}>
             Back to Home
           </Link>
+          <a href="mailto:gary@example.com" style={btnPrimary}>
+            Email Gary
+          </a>
         </div>
 
-        <p style={styles.small}>
-          If you don’t see my email reply soon, check spam/junk.
-        </p>
+        <footer style={footer}>
+          <div>© {new Date().getFullYear()} Gary Thomas Whitehead</div>
+        </footer>
       </section>
     </main>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#faf9f6",
-    padding: 30,
-    fontFamily: "Georgia, serif",
-  },
-  card: {
-    maxWidth: 900,
-    margin: "0 auto",
-    background: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    border: "1px solid #eee",
-    boxShadow: "0 10px 25px rgba(0,0,0,.06)",
-  },
-  title: { fontSize: 36, marginBottom: 10, fontWeight: 900 },
-  text: { fontSize: 16, lineHeight: 1.7, color: "#333", marginTop: 0 },
-  highlight: {
-    marginTop: 18,
-    background: "#fff7ea",
-    border: "1px solid #f2e2c8",
-    borderRadius: 14,
-    padding: "14px 14px",
-  },
-  highlightTitle: { fontWeight: 900, fontSize: 16, marginBottom: 6 },
-  ul: { margin: 0, paddingLeft: 18, lineHeight: 1.7, fontSize: 16 },
-  ctaRow: {
-    marginTop: 18,
-    display: "flex",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  btnPrimary: {
-    background: "#b57b17",
-    color: "#fff",
-    padding: "12px 18px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnSecondary: {
-    background: "#eee",
-    color: "#111",
-    padding: "12px 18px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  small: { marginTop: 16, color: "#666", fontSize: 14 },
+const pageStyle: React.CSSProperties = {
+  minHeight: "100vh",
+  background: "transparent",
+  padding: "30px",
+  fontFamily: "Georgia, serif",
+};
+
+const cardStyle: React.CSSProperties = {
+  maxWidth: 860,
+  margin: "0 auto",
+  background: "rgba(255,255,255,0.92)",
+  borderRadius: 18,
+  padding: 24,
+  border: "1px solid rgba(0,0,0,0.06)",
+  boxShadow: "0 14px 34px rgba(0,0,0,.10)",
+  backdropFilter: "blur(2px)",
+  textAlign: "center",
+};
+
+const titleStyle: React.CSSProperties = {
+  fontSize: 38,
+  margin: "10px 0 12px",
+};
+
+const box: React.CSSProperties = {
+  background: "#fff6ea",
+  border: "1px solid #f1d7b0",
+  borderRadius: 12,
+  padding: 14,
+  marginTop: 12,
+};
+
+const boxTitle: React.CSSProperties = { fontWeight: 900, marginBottom: 6 };
+const boxText: React.CSSProperties = { fontSize: 16, lineHeight: 1.45 };
+
+const actions: React.CSSProperties = {
+  marginTop: 16,
+  display: "flex",
+  justifyContent: "center",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const btnPrimary: React.CSSProperties = {
+  background: "#b57b17",
+  color: "#fff",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  display: "inline-block",
+  boxShadow: "0 8px 18px rgba(181,123,23,.25)",
+};
+
+const btnSecondary: React.CSSProperties = {
+  background: "rgba(0,0,0,0.08)",
+  color: "#111",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  display: "inline-block",
+};
+
+const footer: React.CSSProperties = {
+  marginTop: 22,
+  borderTop: "1px solid rgba(0,0,0,0.08)",
+  paddingTop: 14,
+  fontWeight: 900,
+  color: "#333",
 };

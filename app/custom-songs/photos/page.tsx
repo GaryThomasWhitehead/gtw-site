@@ -1,215 +1,273 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+type OrderData = {
+  packageChoice: "song_video" | "song_only";
+  photoNames?: string[];
+};
+
+const STORAGE_KEY = "customSongOrder";
+
+function readStore(): OrderData {
+  if (typeof window === "undefined") return { packageChoice: "song_video" };
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { packageChoice: "song_video" };
+    return { packageChoice: "song_video", ...(JSON.parse(raw) as OrderData) };
+  } catch {
+    return { packageChoice: "song_video" };
+  }
+}
+
+function writeStore(patch: Partial<OrderData>) {
+  const current = readStore();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...patch }));
+}
+
 export default function PhotosPage() {
-  const [photoCount, setPhotoCount] = useState(12);
-  const [notes, setNotes] = useState("");
+  const [photoNames, setPhotoNames] = useState<string[]>([]);
+  const [packageChoice, setPackageChoice] = useState<"song_video" | "song_only">("song_video");
+
+  useEffect(() => {
+    const data = readStore();
+    setPackageChoice(data.packageChoice || "song_video");
+    if (data.photoNames) setPhotoNames(data.photoNames);
+  }, []);
+
+  const isVideo = packageChoice === "song_video";
+
+  const canNext = useMemo(() => {
+    if (!isVideo) return true; // song-only doesn't require photos
+    return photoNames.length >= 3; // recommend at least 3
+  }, [isVideo, photoNames.length]);
+
+  function onPickFiles(files: FileList | null) {
+    if (!files) return;
+    const names = Array.from(files).map((f) => f.name);
+    setPhotoNames(names);
+    writeStore({ photoNames: names });
+  }
 
   return (
-    <main style={styles.page}>
-      <section style={styles.card}>
-        <div style={styles.topRow}>
-          <Link href="/custom-songs/genre" style={styles.backLink}>
+    <main style={pageStyle}>
+      <section style={cardStyle}>
+        <div style={topRow}>
+          <Link href="/custom-songs/genre" style={backLink}>
             ← Back
           </Link>
-          <Link href="/" style={styles.homeLink}>
-            Home
-          </Link>
-        </div>
-
-        <div style={styles.stepRow}>
-          <div style={styles.stepPill}>Step 4 of 5</div>
-          <div style={styles.progressText}>80% Complete</div>
-        </div>
-
-        <h1 style={styles.title}>Photos for the Music Video</h1>
-
-        <div style={styles.notice}>
-          <div style={styles.noticeTitle}>This is the “wow” difference.</div>
-          <div style={styles.noticeText}>
-            Most custom song services stop at the audio. Your package can include
-            a <strong>Photo Music Video</strong>—your pictures play while the song
-            plays, matched to the emotion and story.
+          <div style={topRight}>
+            <div style={topRightTitle}>Home</div>
+            <div style={progressText}>80% Complete</div>
           </div>
         </div>
 
-        <label style={styles.label}>How many photos do you plan to send?</label>
-        <input
-          type="number"
-          min={5}
-          max={60}
-          value={photoCount}
-          onChange={(e) => setPhotoCount(Number(e.target.value))}
-          style={styles.input}
-        />
-        <div style={styles.helper}>
-          Recommendation: <strong>10–25 photos</strong> works great.
-        </div>
+        <div style={stepPill}>Step 4 of 5</div>
 
-        <label style={styles.label}>Photo notes (optional)</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Example: ‘Use wedding photos first, then family photos, end with the sunset picture.’"
-          style={styles.textarea}
-        />
+        <h1 style={titleStyle}>Add Photos (for the music video)</h1>
 
-        <div style={styles.tipBox}>
-          <div style={styles.tipTitle}>How you’ll deliver photos</div>
-          <ul style={styles.ul}>
-            <li>After you submit, I’ll email you a simple upload option.</li>
-            <li>
-              You can also send a share link (Google Drive / Dropbox), or attach
-              a smaller set by email.
-            </li>
-            <li>
-              If you want specific captions or a certain order, tell me here.
-            </li>
-          </ul>
-        </div>
+        {!isVideo ? (
+          <div style={infoBox}>
+            <div style={infoTitle}>🎧 Song Only selected</div>
+            <div style={infoText}>
+              You don’t need to add photos for the Song Only package. Click Next to review.
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={infoBox}>
+              <div style={infoTitle}>✨ Signature Feature</div>
+              <div style={infoText}>
+                Your photos will play in a cinematic <b>Photo Music Video</b> synced to the song.
+                Pick a handful of photos — more is fine.
+              </div>
+            </div>
 
-        <div style={styles.navRow}>
-          <Link href="/custom-songs/genre" style={styles.btnSecondary}>
+            <label style={labelStyle}>Select photos (JPG/PNG) *</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => onPickFiles(e.target.files)}
+              style={fileStyle}
+            />
+
+            <div style={smallNote}>
+              Tip: Choose photos that match the story (and add any pronunciation notes in your story).
+            </div>
+
+            {photoNames.length > 0 && (
+              <div style={listBox}>
+                <div style={{ fontWeight: 900, marginBottom: 8 }}>
+                  Selected ({photoNames.length})
+                </div>
+                <ul style={ul}>
+                  {photoNames.slice(0, 12).map((n) => (
+                    <li key={n} style={li}>
+                      {n}
+                    </li>
+                  ))}
+                  {photoNames.length > 12 && <li style={li}>…and more</li>}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+
+        <div style={navRow}>
+          <Link href="/custom-songs/genre" style={btnSecondary}>
             ← Back
           </Link>
-          <Link href="/custom-songs/review" style={styles.btnPrimary}>
+          <Link
+            href={canNext ? "/custom-songs/review" : "#"}
+            style={canNext ? btnPrimary : btnDisabled}
+            onClick={(e) => {
+              if (!canNext) e.preventDefault();
+            }}
+          >
             Next →
           </Link>
         </div>
 
-        <p style={styles.note}>
-          <strong>Local notes:</strong> {photoCount} photos •{" "}
-          {notes ? "notes added" : "no notes yet"}
-        </p>
+        <footer style={footer}>
+          <div>© {new Date().getFullYear()} Gary Thomas Whitehead</div>
+          <div style={footerSmall}>
+            Questions?{" "}
+            <a href="mailto:gary@example.com" style={footerLink}>
+              Email Gary
+            </a>
+          </div>
+        </footer>
       </section>
     </main>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#faf9f6",
-    padding: "30px",
-    fontFamily: "Georgia, serif",
-  },
-  card: {
-    maxWidth: 900,
-    margin: "0 auto",
-    background: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    border: "1px solid #eee",
-    boxShadow: "0 10px 25px rgba(0,0,0,.06)",
-  },
-  topRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  backLink: { textDecoration: "none", color: "#111", fontWeight: 800 },
-  homeLink: { textDecoration: "none", color: "#111", fontWeight: 800 },
-  stepRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 12,
-  },
-  stepPill: {
-    background: "#fff7ea",
-    border: "1px solid #f2e2c8",
-    padding: "8px 12px",
-    borderRadius: 999,
-    fontWeight: 900,
-    fontSize: 14,
-  },
-  progressText: { fontWeight: 800, color: "#444" },
-  title: { fontSize: 34, marginBottom: 12, fontWeight: 900 },
-  notice: {
-    background: "#fff7ea",
-    border: "1px solid #f2e2c8",
-    borderRadius: 14,
-    padding: "14px 14px",
-    marginBottom: 16,
-  },
-  noticeTitle: { fontWeight: 900, fontSize: 16, marginBottom: 6 },
-  noticeText: { fontSize: 16, color: "#333", lineHeight: 1.6 },
-  label: { fontWeight: 900, marginTop: 16, display: "block", fontSize: 16 },
-  input: {
-    width: "100%",
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #ddd",
-    marginTop: 8,
-    fontSize: 16,
-    outline: "none",
-  },
-  textarea: {
-    width: "100%",
-    minHeight: 120,
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #ddd",
-    marginTop: 8,
-    fontSize: 16,
-    outline: "none",
-    resize: "vertical",
-    lineHeight: 1.5,
-  },
-  helper: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 1.5,
-  },
-  tipBox: {
-    marginTop: 18,
-    borderRadius: 14,
-    border: "1px solid #eee",
-    background: "#fff",
-    padding: 14,
-  },
-  tipTitle: { fontWeight: 900, marginBottom: 8, fontSize: 16 },
-  ul: { margin: 0, paddingLeft: 18, lineHeight: 1.7, fontSize: 16 },
-  navRow: {
-    marginTop: 22,
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  btnPrimary: {
-    background: "#b57b17",
-    color: "#fff",
-    padding: "12px 18px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnSecondary: {
-    background: "#eee",
-    color: "#111",
-    padding: "12px 18px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  note: {
-    marginTop: 18,
-    fontSize: 16,
-    color: "#333",
-    background: "#fff7ea",
-    border: "1px solid #f2e2c8",
-    padding: "12px 14px",
-    borderRadius: 12,
-  },
+const pageStyle: React.CSSProperties = {
+  minHeight: "100vh",
+  background: "transparent",
+  padding: "30px",
+  fontFamily: "Georgia, serif",
 };
+
+const cardStyle: React.CSSProperties = {
+  maxWidth: 980,
+  margin: "0 auto",
+  background: "rgba(255,255,255,0.92)",
+  borderRadius: 18,
+  padding: 24,
+  border: "1px solid rgba(0,0,0,0.06)",
+  boxShadow: "0 14px 34px rgba(0,0,0,.10)",
+  backdropFilter: "blur(2px)",
+};
+
+const topRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+};
+
+const backLink: React.CSSProperties = {
+  textDecoration: "none",
+  color: "#111",
+  fontWeight: 800,
+};
+
+const topRight: React.CSSProperties = { textAlign: "right" };
+const topRightTitle: React.CSSProperties = { fontWeight: 900 };
+const progressText: React.CSSProperties = { opacity: 0.75, fontWeight: 800 };
+
+const stepPill: React.CSSProperties = {
+  display: "inline-block",
+  marginTop: 10,
+  padding: "6px 10px",
+  borderRadius: 999,
+  background: "#fff3df",
+  border: "1px solid #f0d7aa",
+  fontWeight: 900,
+  fontSize: 12,
+};
+
+const titleStyle: React.CSSProperties = { fontSize: 34, margin: "14px 0 12px" };
+
+const infoBox: React.CSSProperties = {
+  background: "#fff6ea",
+  border: "1px solid #f1d7b0",
+  borderRadius: 12,
+  padding: 14,
+  marginBottom: 12,
+};
+
+const infoTitle: React.CSSProperties = { fontWeight: 900, marginBottom: 6 };
+const infoText: React.CSSProperties = { fontSize: 16, lineHeight: 1.35 };
+
+const labelStyle: React.CSSProperties = { fontWeight: 900, marginTop: 14, display: "block" };
+
+const fileStyle: React.CSSProperties = {
+  marginTop: 10,
+  width: "100%",
+};
+
+const smallNote: React.CSSProperties = { marginTop: 8, opacity: 0.9, fontWeight: 700 };
+
+const listBox: React.CSSProperties = {
+  marginTop: 14,
+  padding: 14,
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.10)",
+  background: "rgba(255,255,255,0.92)",
+};
+
+const ul: React.CSSProperties = { margin: 0, paddingLeft: 18 };
+const li: React.CSSProperties = { marginBottom: 6 };
+
+const navRow: React.CSSProperties = {
+  marginTop: 18,
+  display: "flex",
+  justifyContent: "space-between",
+};
+
+const btnPrimary: React.CSSProperties = {
+  background: "#b57b17",
+  color: "#fff",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  display: "inline-block",
+  boxShadow: "0 8px 18px rgba(181,123,23,.25)",
+};
+
+const btnSecondary: React.CSSProperties = {
+  background: "rgba(0,0,0,0.08)",
+  color: "#111",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  display: "inline-block",
+};
+
+const btnDisabled: React.CSSProperties = {
+  background: "rgba(0,0,0,0.15)",
+  color: "rgba(255,255,255,0.9)",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  display: "inline-block",
+  cursor: "not-allowed",
+};
+
+const footer: React.CSSProperties = {
+  marginTop: 22,
+  borderTop: "1px solid rgba(0,0,0,0.08)",
+  paddingTop: 14,
+  textAlign: "center",
+  fontWeight: 900,
+  color: "#333",
+};
+
+const footerSmall: React.CSSProperties = { fontWeight: 600, marginTop: 4, opacity: 0.9 };
+const footerLink: React.CSSProperties = { color: "#111", fontWeight: 900 };

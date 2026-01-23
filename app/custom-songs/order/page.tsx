@@ -1,206 +1,238 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function OrderBasicsPage() {
-  const whoOptions = useMemo(
-    () => [
-      "Myself / Someone I Love",
-      "Husband",
-      "Wife",
-      "Boyfriend",
-      "Girlfriend",
-      "Children",
-      "Father",
-      "Mother",
-      "Sibling",
-      "Friend",
-      "Other",
-    ],
-    []
-  );
+const LS_KEY = "gtw_custom_song_order_v1";
 
-  const [whoFor, setWhoFor] = useState("Myself / Someone I Love");
-  const [name, setName] = useState("Gary");
-  const [email, setEmail] = useState("");
+export default function OrderPage() {
+  const router = useRouter();
+  const [occasion, setOccasion] = useState("Birthday");
+  const [mood, setMood] = useState("Warm & Hopeful");
+  const [story, setStory] = useState("");
+
+  useEffect(() => {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw);
+      if (saved?.occasion) setOccasion(saved.occasion);
+      if (saved?.mood) setMood(saved.mood);
+      if (saved?.story) setStory(saved.story);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(LS_KEY);
+    const prev = raw ? safeParse(raw) : {};
+    localStorage.setItem(
+      LS_KEY,
+      JSON.stringify({
+        ...prev,
+        occasion,
+        mood,
+        story,
+      })
+    );
+  }, [occasion, mood, story]);
 
   return (
-    <main style={styles.page}>
-      <section style={styles.card}>
-        <div style={styles.topRow}>
-          <Link href="/custom-songs" style={styles.backLink}>
+    <main style={pageStyle}>
+      <section style={cardStyle}>
+        <div style={topRow}>
+          <Link href="/custom-songs" style={backLink}>
             ← Back to Options
           </Link>
-          <Link href="/" style={styles.homeLink}>
+          <Link href="/" style={miniLink}>
             Home
           </Link>
         </div>
 
-        <div style={styles.stepRow}>
-          <div style={styles.stepPill}>Step 2 of 5</div>
-          <div style={styles.progressText}>40% Complete</div>
+        <div style={progressRow}>
+          <div style={stepPill}>Step 2 of 5</div>
+          <div style={progressMeta}>40% Complete</div>
         </div>
 
-        <h1 style={styles.title}>Tell me about the song</h1>
+        <h1 style={titleStyle}>Let’s shape the song</h1>
 
-        <label style={styles.label}>Who’s this for? *</label>
-        <div style={styles.pillRow}>
-          {whoOptions.map((w) => (
-            <button
-              key={w}
-              type="button"
-              onClick={() => setWhoFor(w)}
-              style={pillStyle(whoFor === w)}
-            >
-              {w}
-            </button>
-          ))}
-        </div>
-
-        <label style={styles.label}>What’s your name? *</label>
+        <label style={labelStyle}>Occasion *</label>
         <input
-          style={styles.input}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your name"
+          value={occasion}
+          onChange={(e) => setOccasion(e.target.value)}
+          style={inputStyle}
+          placeholder="Birthday, Anniversary, Memorial, Wedding, Faith, etc."
         />
 
-        <div style={styles.helper}>
-          Tip: add pronunciation notes later in the story section (example:
-          “Alicia = ah-lee-sha”).
-        </div>
-
-        <label style={styles.label}>Your email address *</label>
+        <label style={labelStyle}>Mood / vibe *</label>
         <input
-          style={styles.input}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@email.com"
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          style={inputStyle}
+          placeholder="Warm & Hopeful, Funny, Heartbreak, Worship, etc."
         />
 
-        <div style={styles.navRow}>
-          <Link href="/custom-songs" style={styles.btnSecondary}>
+        <label style={labelStyle}>Your story (the more detail, the better) *</label>
+        <textarea
+          value={story}
+          onChange={(e) => setStory(e.target.value)}
+          style={textareaStyle}
+          placeholder="Names, relationship, key memories, phrases you want included, what you want them to feel when they hear it..."
+        />
+
+        <div style={navRow}>
+          <button
+            type="button"
+            onClick={() => router.push("/custom-songs")}
+            style={btnSecondary}
+          >
             ← Back
-          </Link>
-          <Link href="/custom-songs/genre" style={styles.btnPrimary}>
-            Next →
-          </Link>
-        </div>
+          </button>
 
-        <p style={styles.note}>
-          <strong>Saved (local only for now):</strong> {whoFor} • {name} •{" "}
-          {email || "no email yet"}
-        </p>
+          <button
+            type="button"
+            onClick={() => router.push("/custom-songs/genre")}
+            style={btnPrimary}
+          >
+            Next →
+          </button>
+        </div>
       </section>
     </main>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#faf9f6",
-    padding: "30px",
-    fontFamily: "Georgia, serif",
-  },
-  card: {
-    maxWidth: 900,
-    margin: "0 auto",
-    background: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    border: "1px solid #eee",
-    boxShadow: "0 10px 25px rgba(0,0,0,.06)",
-  },
-  topRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  backLink: { textDecoration: "none", color: "#111", fontWeight: 800 },
-  homeLink: { textDecoration: "none", color: "#111", fontWeight: 800 },
-  stepRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 12,
-  },
-  stepPill: {
-    background: "#fff7ea",
-    border: "1px solid #f2e2c8",
-    padding: "8px 12px",
-    borderRadius: 999,
-    fontWeight: 900,
-    fontSize: 14,
-  },
-  progressText: { fontWeight: 800, color: "#444" },
-  title: { fontSize: 34, marginBottom: 10, fontWeight: 900 },
-  label: { fontWeight: 900, marginTop: 16, display: "block", fontSize: 16 },
-  pillRow: { display: "flex", flexWrap: "wrap", gap: 12, marginTop: 10 },
-  input: {
-    width: "100%",
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #ddd",
-    marginTop: 8,
-    fontSize: 16,
-    outline: "none",
-  },
-  helper: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 1.5,
-  },
-  navRow: {
-    marginTop: 22,
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  btnPrimary: {
-    background: "#b57b17",
-    color: "#fff",
-    padding: "12px 18px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnSecondary: {
-    background: "#eee",
-    color: "#111",
-    padding: "12px 18px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  note: {
-    marginTop: 18,
-    fontSize: 16,
-    color: "#333",
-    background: "#fff7ea",
-    border: "1px solid #f2e2c8",
-    padding: "12px 14px",
-    borderRadius: 12,
-  },
+function safeParse(s: string) {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return {};
+  }
+}
+
+const ACCENT = "#b57b17";
+
+const pageStyle: React.CSSProperties = {
+  minHeight: "100vh",
+  background: "transparent",
+  padding: "34px 16px",
+  fontFamily: "Georgia, serif",
 };
 
-function pillStyle(active: boolean): React.CSSProperties {
-  return {
-    padding: "10px 16px",
-    borderRadius: 999,
-    border: active ? "2px solid #b57b17" : "1px solid #ccc",
-    background: active ? "#fff7ea" : "#fff",
-    fontWeight: 900,
-    cursor: "pointer",
-  };
-}
+const cardStyle: React.CSSProperties = {
+  maxWidth: 940,
+  margin: "0 auto",
+  background: "rgba(255,255,255,0.92)",
+  borderRadius: 18,
+  padding: 26,
+  border: "1px solid rgba(0,0,0,0.06)",
+  boxShadow: "0 14px 35px rgba(0,0,0,.10)",
+};
+
+const topRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 10,
+};
+
+const backLink: React.CSSProperties = {
+  color: "#111",
+  textDecoration: "none",
+  fontWeight: 800,
+};
+
+const miniLink: React.CSSProperties = {
+  color: "#111",
+  textDecoration: "none",
+  fontWeight: 800,
+};
+
+const progressRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 10,
+};
+
+const stepPill: React.CSSProperties = {
+  display: "inline-block",
+  padding: "6px 12px",
+  borderRadius: 999,
+  background: "rgba(181,123,23,0.10)",
+  border: "1px solid rgba(181,123,23,0.30)",
+  fontWeight: 900,
+  fontSize: 13,
+};
+
+const progressMeta: React.CSSProperties = {
+  fontWeight: 800,
+  fontSize: 13,
+  color: "#333",
+};
+
+const titleStyle: React.CSSProperties = {
+  fontSize: 34,
+  margin: "6px 0 12px",
+  letterSpacing: -0.2,
+  fontWeight: 900,
+};
+
+const labelStyle: React.CSSProperties = {
+  fontWeight: 900,
+  marginTop: 14,
+  display: "block",
+  fontSize: 16,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.18)",
+  outline: "none",
+  fontSize: 16,
+  background: "rgba(255,255,255,0.92)",
+};
+
+const textareaStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 12,
+  border: "1px solid rgba(0,0,0,0.18)",
+  outline: "none",
+  fontSize: 16,
+  minHeight: 160,
+  background: "rgba(255,255,255,0.92)",
+  marginTop: 8,
+};
+
+const navRow: React.CSSProperties = {
+  marginTop: 18,
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const btnPrimary: React.CSSProperties = {
+  background: ACCENT,
+  color: "#fff",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  border: "none",
+  cursor: "pointer",
+  boxShadow: "0 10px 22px rgba(181,123,23,0.25)",
+};
+
+const btnSecondary: React.CSSProperties = {
+  background: "rgba(255,255,255,0.90)",
+  color: "#111",
+  padding: "12px 18px",
+  borderRadius: 12,
+  textDecoration: "none",
+  fontWeight: 900,
+  border: "1px solid rgba(0,0,0,0.15)",
+  cursor: "pointer",
+};
