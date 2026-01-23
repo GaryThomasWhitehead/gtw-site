@@ -7,23 +7,32 @@ export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
 
   // Simple public visitor counter (total visits, not unique people)
+  // Quiet on failure to avoid noisy dev overlay
   useEffect(() => {
+    let cancelled = false;
+
     async function incrementVisitorCounter() {
       try {
-        // namespace: garythomaswhitehead-com, key: home
         const res = await fetch(
-          "https://api.countapi.xyz/hit/garythomaswhitehead-com/home"
+          "https://api.countapi.xyz/hit/garythomaswhitehead-com/home",
+          { cache: "no-store" }
         );
+        if (!res.ok) return;
+
         const data = await res.json();
-        if (typeof data.value === "number") {
+        if (!cancelled && typeof data.value === "number") {
           setVisits(data.value);
         }
-      } catch (err) {
-        console.error("Visitor counter error", err);
+      } catch {
+        // intentionally quiet
       }
     }
 
     incrementVisitorCounter();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -52,7 +61,7 @@ export default function Home() {
           justifyContent: "center",
           padding: "24px",
           borderRadius: "12px",
-          marginBottom: 40,
+          marginBottom: 24,
         }}
       >
         <div
@@ -90,11 +99,102 @@ export default function Home() {
         </div>
       </header>
 
+      {/* ====== NEW: CUSTOM SONGS / MUSIC VIDEOS (TOP SECTION) ====== */}
+      <section
+        aria-labelledby="custom-songs"
+        style={{
+          marginTop: 0,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="custom-songs"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          CUSTOM MUSIC
+        </h2>
+
+        <h3 style={{ fontSize: 28, margin: "8px 0 12px" }}>
+          Custom Personal Songs &amp; Music Videos
+        </h3>
+
+        <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
+          Turn your story into an original song—written to match the moment,
+          the message, and the emotion.
+        </p>
+
+        <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
+          <strong>Perfect for:</strong> birthdays, anniversaries, weddings,
+          tributes &amp; memorials, faith testimonies, encouragement, “just
+          because,” and more.
+        </p>
+
+        <p style={{ marginTop: 0, marginBottom: 14, lineHeight: 1.7 }}>
+          Want to go further? I can create an optional <strong>music video</strong>{" "}
+          using your photos so the memories play along with the song.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            marginTop: 6,
+          }}
+        >
+          <a
+            href="/custom-songs"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 800,
+              textDecoration: "none",
+              background: "#b57b17",
+              color: "#fff",
+              boxShadow:
+                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+            onClick={() => track("CustomSongsLandingClick")}
+          >
+            View Custom Song Options
+          </a>
+
+          <a
+            href="/custom-songs/order"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 800,
+              textDecoration: "none",
+              background: "#111",
+              color: "#fff",
+              boxShadow:
+                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+            onClick={() => track("CustomSongsOrderClick")}
+          >
+            Start My Song Request
+          </a>
+        </div>
+
+        <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+          Direct link (for sharing):{" "}
+          <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+            /custom-songs
+          </span>
+        </div>
+      </section>
+
       {/* ====== AUTHOR BIO ====== */}
       <section
         aria-labelledby="bio"
         style={{
-          marginTop: 0,
+          marginTop: 24,
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
@@ -136,7 +236,7 @@ export default function Home() {
         </p>
       </section>
 
-      {/* ====== NOT FOR SALE (MOVE ABOVE BOOK) ====== */}
+      {/* ====== NOT FOR SALE ====== */}
       <section
         aria-labelledby="not-for-sale"
         style={{
@@ -194,13 +294,12 @@ export default function Home() {
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
-            {/* Must match EXACT filename in /public/videos (case-sensitive on Vercel) */}
+            {/* IMPORTANT: must match /public/videos exactly */}
             <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
 
-        {/* Donate button directly below message/video */}
         <div
           className="linkRow"
           style={{
@@ -233,7 +332,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== BOOK (NOW BELOW NOT FOR SALE) ====== */}
+      {/* ====== BOOK ====== */}
       <section
         aria-labelledby="book"
         style={{
@@ -292,11 +391,13 @@ export default function Home() {
               }}
             >
               <li>Author: Gary Thomas Whitehead</li>
-              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
-                An in-depth scriptural study on Jesus&apos; role as both mediator
-                and divine Son, written in a devotional, reflective tone—ideal
-                for church Bible studies and small groups.
+                Genre: Christian theology / spiritual reflection / Bible Study
+              </li>
+              <li>
+                An in-depth scriptural study on Jesus&apos; role as both
+                mediator and divine Son, written in a devotional, reflective
+                tone—ideal for church Bible studies and small groups.
               </li>
             </ul>
 
@@ -423,7 +524,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== MUSIC SECTION ===== */}
+      {/* ===== MUSIC SECTION (RESTORED: no custom block inside) ===== */}
       <section
         aria-labelledby="music"
         className="block card"
@@ -460,8 +561,8 @@ export default function Home() {
         >
           <div className="musicLeft">
             <p style={{ marginTop: 8, marginBottom: 14 }}>
-              Experience Gary&apos;s original songs of inspiration and storytelling
-              on your favorite streaming platforms.
+              Experience Gary&apos;s original songs of inspiration and
+              storytelling on your favorite streaming platforms.
             </p>
 
             <div className="embedWrap" style={{ marginBottom: 12 }}>
@@ -625,7 +726,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== ART (THIRD) ====== */}
+      {/* ====== ART ====== */}
       <section
         aria-labelledby="art"
         style={{
@@ -678,7 +779,9 @@ export default function Home() {
               }}
               loading="lazy"
             />
-            <figcaption style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}>
+            <figcaption
+              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
+            >
               Up Through the Trees
             </figcaption>
           </figure>
@@ -705,7 +808,9 @@ export default function Home() {
               }}
               loading="lazy"
             />
-            <figcaption style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}>
+            <figcaption
+              style={{ textAlign: "center", marginTop: 10, fontWeight: 700 }}
+            >
               Flaming
             </figcaption>
           </figure>
