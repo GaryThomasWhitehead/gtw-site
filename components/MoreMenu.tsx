@@ -9,64 +9,29 @@ export default function MoreMenu() {
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.target instanceof Node && wrapRef.current.contains(e.target)) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onEsc);
-    };
+    return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
-
-  const btn: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "12px 16px",
-    borderRadius: 10,
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "#fff",
-    color: "#111",
-    fontWeight: 800,
-    cursor: "pointer",
-    boxShadow: "0 1px 0 rgba(0,0,0,.06)",
-  };
-
-  const menu: React.CSSProperties = {
-    position: "absolute",
-    top: "calc(100% + 8px)",
-    left: 0,
-    minWidth: 240,
-    background: "#fff",
-    border: "1px solid rgba(0,0,0,0.12)",
-    borderRadius: 12,
-    boxShadow: "0 18px 40px rgba(0,0,0,0.14)",
-    overflow: "hidden",
-    zIndex: 50,
-  };
-
-  const item: React.CSSProperties = {
-    display: "block",
-    padding: "12px 14px",
-    textDecoration: "none",
-    color: "#111",
-    fontWeight: 700,
-    fontSize: 14,
-    borderBottom: "1px solid rgba(0,0,0,0.06)",
-  };
-
-  const itemLast: React.CSSProperties = { ...item, borderBottom: "none" };
 
   return (
     <div ref={wrapRef} style={{ position: "relative", display: "inline-block" }}>
       <button
         type="button"
-        style={btn}
         onClick={() => setOpen((v) => !v)}
+        style={{
+          padding: "10px 14px",
+          borderRadius: 10,
+          border: "1px solid rgba(0,0,0,0.10)",
+          background: "#fff",
+          cursor: "pointer",
+          fontWeight: 800,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -74,18 +39,48 @@ export default function MoreMenu() {
       </button>
 
       {open && (
-        <div style={menu} role="menu" aria-label="More custom songs links">
-          <a href="/custom-songs/samples" style={item} role="menuitem">
-            Sample Songs &amp; Videos
-          </a>
-          <a href="/custom-songs/reviews" style={item} role="menuitem">
-            Customer Reviews
-          </a>
-          <a href="/custom-songs/faq" style={itemLast} role="menuitem">
-            FAQ
-          </a>
+        <div
+          role="menu"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
+            minWidth: 220,
+            background: "#fff",
+            border: "1px solid rgba(0,0,0,0.10)",
+            borderRadius: 12,
+            boxShadow: "0 14px 28px rgba(0,0,0,0.12)",
+            overflow: "hidden",
+            zIndex: 50,
+          }}
+        >
+          <MenuLink href="/custom-songs/samples" label="Sample Songs & Videos" />
+          <MenuLink href="/custom-songs/reviews" label="Customer Reviews" />
+          <MenuLink href="/custom-songs/faq" label="FAQ" />
         </div>
       )}
     </div>
+  );
+}
+
+function MenuLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      role="menuitem"
+      style={{
+        display: "block",
+        padding: "12px 14px",
+        textDecoration: "none",
+        color: "#111",
+        fontWeight: 800,
+        borderBottom: "1px solid rgba(0,0,0,0.06)",
+      }}
+      onClick={() => {
+        // allow navigation; menu will close via document click
+      }}
+    >
+      {label}
+    </a>
   );
 }
