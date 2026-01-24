@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
+import MoreMenu from "@/components/MoreMenu";
 
 export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
@@ -180,6 +181,11 @@ export default function Home() {
           >
             Start My Song Request
           </a>
+            <MoreMenu />
+
+  <a href="/custom-songs?package=song_video" style={btnSecondary}>
+    Start My Photo Music Video
+  </a>
         </div>
 
         <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
