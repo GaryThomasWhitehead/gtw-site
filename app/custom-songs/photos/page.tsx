@@ -1,188 +1,160 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { track } from "@vercel/analytics";
-
-/**
- * IMPORTANT:
- * This STORAGE_KEY must match whatever your other custom-songs pages use (order/review).
- * If those pages already have a STORAGE_KEY, copy it and paste it here.
- */
-const STORAGE_KEY = "gtw_custom_songs_order_v1";
 
 type PackageChoice = "song" | "song_video";
 
 type OrderData = {
   packageChoice: PackageChoice;
 
-  // Contact
+  // contact
   name?: string;
   email?: string;
   phone?: string;
 
-  // Project
+  // song details
   occasion?: string;
-  recipient?: string;
+  recipientName?: string;
   relationship?: string;
-
-  // Notes / story
+  vibe?: string;
+  genre?: string;
+  tempo?: string;
+  mustInclude?: string;
   notes?: string;
 
-  // Photos (we store only metadata here; actual files are not persisted in localStorage)
+  // photo video details
+  photoCount?: number;
   photoNotes?: string;
+
+  // misc
+  createdAt?: string;
 };
 
-function safeJsonParse<T>(raw: string | null): T | null {
-  if (!raw) return null;
+const STORAGE_KEY = "gtw_custom_song_order_v1";
+const PACKAGE: PackageChoice = "song_video";
+
+function readOrder(): OrderData {
+  if (typeof window === "undefined") return { packageChoice: PACKAGE };
+
   try {
-    return JSON.parse(raw) as T;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { packageChoice: PACKAGE };
+
+    const parsed = JSON.parse(raw) as Partial<OrderData>;
+
+    // IMPORTANT: spread first, then force packageChoice (prevents duplicate key build error)
+    return { ...(parsed as OrderData), packageChoice: PACKAGE };
   } catch {
-    return null;
+    return { packageChoice: PACKAGE };
   }
 }
 
-function loadOrder(): OrderData {
-  // Default for this page is always song_video
-  const defaults: OrderData = { packageChoice: "song_video" };
-
-  const saved = safeJsonParse<Partial<OrderData>>(localStorage.getItem(STORAGE_KEY));
-  if (!saved) return defaults;
-
-  // If saved.packageChoice exists but is invalid, ignore it.
-  const savedChoice =
-    saved.packageChoice === "song" || saved.packageChoice === "song_video"
-      ? saved.packageChoice
-      : undefined;
-
-  // Merge safely (no duplicate keys, and packageChoice remains the union type)
-  return {
-    ...defaults,
-    ...saved,
-    packageChoice: savedChoice ?? "song_video",
-  };
-}
-
-function saveOrder(data: OrderData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+function saveOrder(next: OrderData) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
 }
 
 export default function PhotosPage() {
-  const [mounted, setMounted] = useState(false);
+  const [form, setForm] = useState<OrderData>({ packageChoice: PACKAGE });
 
-  // Form fields
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [occasion, setOccasion] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const [relationship, setRelationship] = useState("");
-  const [notes, setNotes] = useState("");
-  const [photoNotes, setPhotoNotes] = useState("");
-
-  // Photos chosen on this page (NOT persisted to localStorage)
-  const [files, setFiles] = useState<File[]>([]);
-
-  // Load saved data once on mount
   useEffect(() => {
-    setMounted(true);
-    const data = loadOrder();
-
-    setName(data.name ?? "");
-    setEmail(data.email ?? "");
-    setPhone(data.phone ?? "");
-    setOccasion(data.occasion ?? "");
-    setRecipient(data.recipient ?? "");
-    setRelationship(data.relationship ?? "");
-    setNotes(data.notes ?? "");
-    setPhotoNotes(data.photoNotes ?? "");
-
-    // Ensure analytics event
-    track("CustomSongsPhotosView", { package: "song_video" });
+    const existing = readOrder();
+    // ensure the package is locked to song_video for this flow
+    setForm({ ...existing, packageChoice: PACKAGE });
   }, []);
 
-  // Build previews
-  const previews = useMemo(() => {
-    return files.map((f) => ({
-      name: f.name,
-      size: f.size,
-      url: URL.createObjectURL(f),
-    }));
-  }, [files]);
+  const canContinue = useMemo(() => {
+    // minimal requirements (adjust if you want stricter)
+    const emailOk = (form.email || "").trim().length > 3;
+    const nameOk = (form.name || "").trim().length > 1;
+    return emailOk && nameOk;
+  }, [form.email, form.name]);
 
-  // Cleanup blob URLs
-  useEffect(() => {
-    return () => {
-      previews.forEach((p) => URL.revokeObjectURL(p.url));
-    };
-  }, [previews]);
-
-  function persistPartial() {
-    // Keep packageChoice as the UNION type (NOT string)
-    const payload: OrderData = {
-      packageChoice: "song_video",
-      name,
-      email,
-      phone,
-      occasion,
-      recipient,
-      relationship,
-      notes,
-      photoNotes,
-    };
-    saveOrder(payload);
-  }
-
-  function onChooseFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []);
-    setFiles(picked);
-    track("CustomSongsPhotosPicked", { count: picked.length });
+  function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
+    setForm((prev) => {
+      const next: OrderData = { ...prev, [key]: value, packageChoice: PACKAGE };
+      saveOrder(next); // autosave on every change
+      return next;
+    });
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Save typed payload (fixes your Vercel error)
     const payload: OrderData = {
-      packageChoice: "song_video",
-      name,
-      email,
-      phone,
-      occasion,
-      recipient,
-      relationship,
-      notes,
-      photoNotes,
+      ...form,
+      packageChoice: PACKAGE,
+      createdAt: new Date().toISOString(),
     };
 
     saveOrder(payload);
+    track("CustomSongsPhotosSubmit", { package: PACKAGE });
 
-    track("CustomSongsPhotosSubmit", { package: "song_video" });
-
-    // Move forward
-    window.location.href = "/custom-songs/order";
+    // go to review page
+    window.location.href = "/custom-songs/review";
   }
 
-  const pageWrap: React.CSSProperties = {
-    maxWidth: 980,
-    margin: "0 auto",
-    padding: "28px 20px",
-    fontFamily: '"Georgia", "Times New Roman", serif',
+  const page: React.CSSProperties = {
+    background: "#faf9f6",
+    minHeight: "100vh",
+    padding: "26px 18px",
+    fontFamily: '"Georgia","Times New Roman",serif',
     color: "#111",
-    lineHeight: 1.6,
   };
 
   const card: React.CSSProperties = {
+    maxWidth: 980,
+    margin: "0 auto",
+    padding: "22px 22px",
     background: "#fff",
     border: "1px solid #eee",
     borderRadius: 14,
-    padding: 18,
-    boxShadow: "0 2px 10px rgba(0,0,0,.05)",
+    boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
+  };
+
+  const eyebrow: React.CSSProperties = {
+    fontSize: 13,
+    letterSpacing: ".08em",
+    color: "#7a7a7a",
+    fontWeight: 800,
+    marginBottom: 6,
+  };
+
+  const h1: React.CSSProperties = {
+    fontSize: 28,
+    margin: "0 0 8px",
+  };
+
+  const sub: React.CSSProperties = {
+    margin: "0 0 16px",
+    color: "#555",
+    lineHeight: 1.6,
+  };
+
+  const sectionTitle: React.CSSProperties = {
+    marginTop: 18,
+    marginBottom: 10,
+    fontSize: 16,
+    fontWeight: 900,
+    color: "#111",
+  };
+
+  const grid2: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
   };
 
   const labelStyle: React.CSSProperties = {
     display: "block",
-    fontWeight: 700,
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#333",
     marginBottom: 6,
   };
 
@@ -192,236 +164,257 @@ export default function PhotosPage() {
     borderRadius: 10,
     border: "1px solid #ddd",
     outline: "none",
+    fontSize: 15,
+    background: "#fff",
   };
 
   const textareaStyle: React.CSSProperties = {
-    ...inputStyle,
+    width: "100%",
     minHeight: 110,
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    outline: "none",
+    fontSize: 15,
+    background: "#fff",
     resize: "vertical",
+  };
+
+  const btnRow: React.CSSProperties = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 18,
+    alignItems: "center",
   };
 
   const btnPrimary: React.CSSProperties = {
     display: "inline-block",
     padding: "10px 14px",
     borderRadius: 10,
-    fontWeight: 800,
+    fontWeight: 900,
     textDecoration: "none",
-    background: "#b57b17",
+    background: "#111",
     color: "#fff",
     border: "none",
     cursor: "pointer",
-    boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+    boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 10px 18px rgba(0,0,0,.08)",
+  };
+
+  const btnPrimaryDisabled: React.CSSProperties = {
+    ...btnPrimary,
+    opacity: 0.5,
+    cursor: "not-allowed",
   };
 
   const btnSecondary: React.CSSProperties = {
     display: "inline-block",
     padding: "10px 14px",
     borderRadius: 10,
-    fontWeight: 800,
+    fontWeight: 900,
     textDecoration: "none",
-    background: "#111",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+    background: "#fff",
+    color: "#111",
+    border: "1px solid #ddd",
+    boxShadow: "0 1px 0 rgba(0,0,0,.04)",
+  };
+
+  const helper: React.CSSProperties = {
+    marginTop: 8,
+    fontSize: 12,
+    color: "#666",
+    lineHeight: 1.5,
   };
 
   return (
-    <main style={pageWrap}>
-      <div style={{ marginBottom: 14 }}>
-        <Link
-          href="/custom-songs"
-          onClick={() => track("CustomSongsBackToLandingClick")}
-          style={{ textDecoration: "none", fontWeight: 800, color: "#111" }}
-        >
-          ← Back to Custom Songs
-        </Link>
-      </div>
-
-      <h1 style={{ margin: "6px 0 10px", fontSize: 30 }}>
-        Photo Music Video — Add Your Photos
-      </h1>
-
-      <p style={{ marginTop: 0, color: "#444" }}>
-        This page is for the <strong>Photo Music Video</strong> package. You can pick photos now,
-        and we’ll confirm the best way to deliver them (email / shared folder) after you submit.
-      </p>
-
+    <main style={page}>
       <section style={card}>
-        <h2 style={{ margin: "0 0 10px", fontSize: 18, letterSpacing: ".06em", color: "#777" }}>
-          STEP 1 — YOUR DETAILS (saved automatically)
-        </h2>
+        <div style={eyebrow}>CUSTOM SONGS • PHOTO MUSIC VIDEO</div>
+        <h1 style={h1}>Tell me about your Photo Music Video</h1>
+        <p style={sub}>
+          This option includes a custom song plus a video where your photos play
+          beautifully as the music plays. Fill in what you can—if you’re not
+          sure, just leave it blank and we’ll confirm details together.
+        </p>
 
         <form onSubmit={onSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div style={sectionTitle}>Contact</div>
+          <div style={grid2}>
             <div>
-              <label style={labelStyle}>Name</label>
+              <label style={labelStyle}>Your Name *</label>
               <input
                 style={inputStyle}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                }}
-                onBlur={persistPartial}
-                placeholder="Your name"
+                value={form.name || ""}
+                onChange={(e) => update("name", e.target.value)}
+                placeholder="Your full name"
               />
             </div>
+
             <div>
-              <label style={labelStyle}>Email</label>
+              <label style={labelStyle}>Email *</label>
               <input
                 style={inputStyle}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={persistPartial}
-                placeholder="you@example.com"
+                value={form.email || ""}
+                onChange={(e) => update("email", e.target.value)}
+                placeholder="you@email.com"
+                type="email"
+              />
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Phone (optional)</label>
+              <input
+                style={inputStyle}
+                value={form.phone || ""}
+                onChange={(e) => update("phone", e.target.value)}
+                placeholder="(optional)"
               />
             </div>
           </div>
 
-          <div style={{ marginTop: 14 }}>
-            <label style={labelStyle}>Phone (optional)</label>
-            <input
-              style={inputStyle}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              onBlur={persistPartial}
-              placeholder="(555) 555-5555"
-            />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
+          <div style={sectionTitle}>Song details</div>
+          <div style={grid2}>
             <div>
               <label style={labelStyle}>Occasion</label>
               <input
                 style={inputStyle}
-                value={occasion}
-                onChange={(e) => setOccasion(e.target.value)}
-                onBlur={persistPartial}
-                placeholder="Birthday, Anniversary, Memorial..."
+                value={form.occasion || ""}
+                onChange={(e) => update("occasion", e.target.value)}
+                placeholder="Birthday, anniversary, memorial, graduation…"
               />
             </div>
+
             <div>
-              <label style={labelStyle}>Recipient</label>
+              <label style={labelStyle}>Recipient Name</label>
               <input
                 style={inputStyle}
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                onBlur={persistPartial}
+                value={form.recipientName || ""}
+                onChange={(e) => update("recipientName", e.target.value)}
                 placeholder="Who is this for?"
               />
             </div>
-          </div>
 
-          <div style={{ marginTop: 14 }}>
-            <label style={labelStyle}>Your relationship to the recipient</label>
-            <input
-              style={inputStyle}
-              value={relationship}
-              onChange={(e) => setRelationship(e.target.value)}
-              onBlur={persistPartial}
-              placeholder="Father, mother, friend, spouse..."
-            />
-          </div>
+            <div>
+              <label style={labelStyle}>Your Relationship to Recipient</label>
+              <input
+                style={inputStyle}
+                value={form.relationship || ""}
+                onChange={(e) => update("relationship", e.target.value)}
+                placeholder="Father, mother, friend, spouse…"
+              />
+            </div>
 
-          <div style={{ marginTop: 14 }}>
-            <label style={labelStyle}>Story / Notes for the song</label>
-            <textarea
-              style={textareaStyle}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              onBlur={persistPartial}
-              placeholder="Share the story, details, and what you want the listener to feel."
-            />
-          </div>
+            <div>
+              <label style={labelStyle}>Vibe / Mood</label>
+              <input
+                style={inputStyle}
+                value={form.vibe || ""}
+                onChange={(e) => update("vibe", e.target.value)}
+                placeholder="Uplifting, heartfelt, fun, reflective…"
+              />
+            </div>
 
-          <hr style={{ margin: "18px 0", border: "none", borderTop: "1px solid #eee" }} />
+            <div>
+              <label style={labelStyle}>Genre</label>
+              <input
+                style={inputStyle}
+                value={form.genre || ""}
+                onChange={(e) => update("genre", e.target.value)}
+                placeholder="Country, pop, acoustic, worship…"
+              />
+            </div>
 
-          <h2 style={{ margin: "0 0 10px", fontSize: 18, letterSpacing: ".06em", color: "#777" }}>
-            STEP 2 — CHOOSE PHOTOS
-          </h2>
+            <div>
+              <label style={labelStyle}>Tempo</label>
+              <input
+                style={inputStyle}
+                value={form.tempo || ""}
+                onChange={(e) => update("tempo", e.target.value)}
+                placeholder="Slow, mid, upbeat…"
+              />
+            </div>
 
-          <div style={{ marginTop: 10 }}>
-            <label style={labelStyle}>Select photos (optional for now)</label>
-            <input type="file" multiple accept="image/*" onChange={onChooseFiles} />
-            <div style={{ marginTop: 8, fontSize: 12, color: "#666" }}>
-              Tip: If you have lots of photos, you can still continue — we can collect them via a shared folder after you submit.
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Must-include details or phrases</label>
+              <input
+                style={inputStyle}
+                value={form.mustInclude || ""}
+                onChange={(e) => update("mustInclude", e.target.value)}
+                placeholder="Names, dates, places, lines, inside jokes…"
+              />
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Story / notes (optional)</label>
+              <textarea
+                style={textareaStyle}
+                value={form.notes || ""}
+                onChange={(e) => update("notes", e.target.value)}
+                placeholder="Share the story, key moments, and what you want the listener to feel."
+              />
             </div>
           </div>
 
-          {files.length > 0 && (
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontWeight: 800, marginBottom: 8 }}>
-                Selected photos: {files.length}
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-                  gap: 10,
+          <div style={sectionTitle}>Photos for the video</div>
+          <div style={grid2}>
+            <div>
+              <label style={labelStyle}>Approx. number of photos</label>
+              <input
+                style={inputStyle}
+                value={form.photoCount?.toString() || ""}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  update("photoCount", Number.isFinite(n) ? n : undefined);
                 }}
-              >
-                {previews.map((p) => (
-                  <figure
-                    key={p.url}
-                    style={{
-                      margin: 0,
-                      border: "1px solid #eee",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      background: "#fff",
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={p.url}
-                      alt={p.name}
-                      style={{ width: "100%", height: 120, objectFit: "cover", display: "block" }}
-                    />
-                    <figcaption style={{ padding: 8, fontSize: 12 }}>
-                      <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {p.name}
-                      </div>
-                      <div style={{ color: "#666" }}>{Math.round(p.size / 1024)} KB</div>
-                    </figcaption>
-                  </figure>
-                ))}
+                placeholder="Example: 25"
+                inputMode="numeric"
+              />
+              <div style={helper}>
+                You can change this later. I’ll guide you on the best photo
+                count for pacing.
               </div>
             </div>
-          )}
 
-          <div style={{ marginTop: 14 }}>
-            <label style={labelStyle}>Any notes about the photos (order, favorites, timing, etc.)</label>
-            <textarea
-              style={textareaStyle}
-              value={photoNotes}
-              onChange={(e) => setPhotoNotes(e.target.value)}
-              onBlur={persistPartial}
-              placeholder="Example: Start with the childhood photos, then wedding, end with the family group photo…"
-            />
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Photo notes (optional)</label>
+              <textarea
+                style={textareaStyle}
+                value={form.photoNotes || ""}
+                onChange={(e) => update("photoNotes", e.target.value)}
+                placeholder="Any photo order preferences, captions, or moments you want highlighted?"
+              />
+            </div>
           </div>
 
-          <div style={{ marginTop: 18, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button type="submit" style={btnPrimary}>
-              Continue to Order →
+          <div style={btnRow}>
+            <button
+              type="submit"
+              style={canContinue ? btnPrimary : btnPrimaryDisabled}
+              disabled={!canContinue}
+              onClick={() => track("CustomSongsPhotosContinueClick", { package: PACKAGE })}
+            >
+              Continue to Review →
             </button>
 
             <Link
               href="/custom-songs/order"
               style={btnSecondary}
-              onClick={() => {
-                persistPartial();
-                track("CustomSongsSkipToOrderClick", { from: "photos" });
-              }}
+              onClick={() => track("CustomSongsSkipToOrderClick", { from: "photos", package: PACKAGE })}
             >
               Skip (go to Order)
+            </Link>
+
+            <Link
+              href="/custom-songs"
+              style={btnSecondary}
+              onClick={() => track("CustomSongsBackToLandingClick", { from: "photos" })}
+            >
+              Back to Options
             </Link>
           </div>
 
           <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
-            Saved package: <strong>Photo Music Video</strong>{" "}
-            (packageChoice = <code>song_video</code>)
-            {!mounted ? null : ""}
+            Saved packageChoice: <code>{PACKAGE}</code>
           </div>
         </form>
       </section>
