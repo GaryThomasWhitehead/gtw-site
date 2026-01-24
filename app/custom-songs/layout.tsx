@@ -1,3 +1,5 @@
+// app/custom-songs/layout.tsx
+
 import type { ReactNode } from "react";
 
 export default function CustomSongsLayout({ children }: { children: ReactNode }) {
@@ -5,25 +7,19 @@ export default function CustomSongsLayout({ children }: { children: ReactNode })
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#faf9f6",
-        backgroundImage: "url('/new.jpg')",
+        backgroundImage: "url('/custom-songs-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        padding: "24px 16px",
       }}
     >
-      {/* soft overlay so text stays readable */}
+      {/* subtle dark overlay so the white card pops */}
       <div
         style={{
-          minHeight: "calc(100vh - 48px)",
-          background: "rgba(250, 249, 246, 0.88)",
-          borderRadius: "14px",
-          padding: "18px",
-          maxWidth: "1360px",
-          margin: "0 auto",
-          boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
+          minHeight: "100vh",
+          background: "rgba(0,0,0,0.35)",
+          padding: "24px 16px",
         }}
       >
         {children}
