@@ -1,12 +1,18 @@
-// app/custom-songs/layout.tsx
+export const metadata = {
+  title: "Custom Songs | Gary Thomas Whitehead",
+  description: "Custom songs and photo music videos by Gary Thomas Whitehead.",
+};
 
-import type { ReactNode } from "react";
-
-export default function CustomSongsLayout({ children }: { children: ReactNode }) {
+export default function CustomSongsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
         minHeight: "100vh",
+        width: "100%",
         backgroundImage: "url('/custom-songs-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -14,15 +20,25 @@ export default function CustomSongsLayout({ children }: { children: ReactNode })
         backgroundAttachment: "fixed",
       }}
     >
-      {/* subtle dark overlay so the white card pops */}
+      {/* Soft overlay so the form is readable */}
       <div
         style={{
           minHeight: "100vh",
+          width: "100%",
           background: "rgba(0,0,0,0.35)",
-          padding: "24px 16px",
+          padding: "28px 16px",
+          boxSizing: "border-box",
         }}
       >
-        {children}
+        {/* Center content */}
+        <div
+          style={{
+            maxWidth: 980,
+            margin: "0 auto",
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
