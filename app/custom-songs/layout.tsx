@@ -1,48 +1,33 @@
-import React from "react";
+import type { ReactNode } from "react";
 
-export default function CustomSongsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function CustomSongsLayout({ children }: { children: ReactNode }) {
   return (
-    <div style={pageWrap}>
-      <div style={bgImage} aria-hidden="true" />
-      <div style={bgOverlay} aria-hidden="true" />
-      <div style={contentWrap}>{children}</div>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#faf9f6",
+        backgroundImage: "url('/new.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+        padding: "24px 16px",
+      }}
+    >
+      {/* soft overlay so text stays readable */}
+      <div
+        style={{
+          minHeight: "calc(100vh - 48px)",
+          background: "rgba(250, 249, 246, 0.88)",
+          borderRadius: "14px",
+          padding: "18px",
+          maxWidth: "1360px",
+          margin: "0 auto",
+          boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
-
-const pageWrap: React.CSSProperties = {
-  minHeight: "100vh",
-  position: "relative",
-};
-
-const bgImage: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  backgroundImage: `url("/backgrounds/custom-songs-bg.png")`,
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  backgroundRepeat: "no-repeat",
-  filter: "blur(2px)",
-  transform: "scale(1.03)", // prevents blur edge lines
-  opacity: 0.45,
-  pointerEvents: "none",
-  zIndex: 0,
-};
-
-const bgOverlay: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background:
-    "radial-gradient(circle at top, rgba(255,255,255,0.35), rgba(250,249,246,0.90))",
-  pointerEvents: "none",
-  zIndex: 0,
-};
-
-const contentWrap: React.CSSProperties = {
-  position: "relative",
-  zIndex: 1,
-};
