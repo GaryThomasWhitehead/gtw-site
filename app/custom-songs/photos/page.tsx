@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { track } from "@vercel/analytics";
 
-type PackageChoice = "song" | "song_video";
+type PackageChoice = "song_only" | "song_video";
 
 type OrderData = {
-  packageChoice: PackageChoice;
+  packageChoice?: PackageChoice;
 
   // contact
   name?: string;
@@ -25,228 +26,244 @@ type OrderData = {
   notes?: string;
 
   // photo video details
-  photoCount?: number;
+  photoCount?: string;
   photoNotes?: string;
-
-  // misc
-  createdAt?: string;
 };
 
 const STORAGE_KEY = "gtw_custom_song_order_v1";
-const PACKAGE: PackageChoice = "song_video";
 
-function readOrder(): OrderData {
-  if (typeof window === "undefined") return { packageChoice: PACKAGE };
-
+function safeReadOrder(): OrderData {
+  if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { packageChoice: PACKAGE };
-
-    const parsed = JSON.parse(raw) as Partial<OrderData>;
-
-    // IMPORTANT: spread first, then force packageChoice (prevents duplicate key build error)
-    return { ...(parsed as OrderData), packageChoice: PACKAGE };
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as OrderData;
+    return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
-    return { packageChoice: PACKAGE };
+    return {};
   }
 }
 
 function saveOrder(next: OrderData) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // ignore
-  }
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }
 
 export default function PhotosPage() {
-  const [form, setForm] = useState<OrderData>({ packageChoice: PACKAGE });
+  const router = useRouter();
 
+  // ✅ NO autofill defaults — everything starts empty
+  const [form, setForm] = useState<OrderData>({
+    name: "",
+    email: "",
+    phone: "",
+
+    occasion: "",
+    recipientName: "",
+    relationship: "",
+    vibe: "",
+    genre: "",
+    tempo: "",
+    mustInclude: "",
+    notes: "",
+
+    photoCount: "",
+    photoNotes: "",
+  });
+
+  // Load saved values (if user already started)
   useEffect(() => {
-    const existing = readOrder();
-    // ensure the package is locked to song_video for this flow
-    setForm({ ...existing, packageChoice: PACKAGE });
+    const saved = safeReadOrder();
+
+    // Merge saved -> current empty defaults.
+    // IMPORTANT: Spread order ensures saved values win.
+    setForm((prev) => ({
+      ...prev,
+      ...saved,
+      // Force correct package for this page without type errors:
+      packageChoice: "song_video",
+    }));
   }, []);
 
-  const canContinue = useMemo(() => {
-    // minimal requirements (adjust if you want stricter)
-    const emailOk = (form.email || "").trim().length > 3;
-    const nameOk = (form.name || "").trim().length > 1;
-    return emailOk && nameOk;
-  }, [form.email, form.name]);
+  // Save on each change (debounce not necessary; it's small)
+  useEffect(() => {
+    const payload: OrderData = {
+      ...safeReadOrder(),
+      ...form,
+      packageChoice: "song_video",
+    };
+    saveOrder(payload);
+  }, [form]);
 
   function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
-    setForm((prev) => {
-      const next: OrderData = { ...prev, [key]: value, packageChoice: PACKAGE };
-      saveOrder(next); // autosave on every change
-      return next;
-    });
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const pageWrapStyle = useMemo(
+    () => ({
+      minHeight: "100vh",
+      padding: "28px 18px",
+      backgroundImage: "url('/backgrounds/custom-songs-bg.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "center",
+    }),
+    []
+  );
 
-    const payload: OrderData = {
-      ...form,
-      packageChoice: PACKAGE,
-      createdAt: new Date().toISOString(),
-    };
-
-    saveOrder(payload);
-    track("CustomSongsPhotosSubmit", { package: PACKAGE });
-
-    // go to review page
-    window.location.href = "/custom-songs/review";
-  }
-
-  const page: React.CSSProperties = {
-    background: "#faf9f6",
-    minHeight: "100vh",
-    padding: "26px 18px",
-    fontFamily: '"Georgia","Times New Roman",serif',
-    color: "#111",
-  };
-
-  const card: React.CSSProperties = {
-    maxWidth: 980,
-    margin: "0 auto",
-    padding: "22px 22px",
-    background: "#fff",
-    border: "1px solid #eee",
+  const cardStyle: React.CSSProperties = {
+    width: "min(980px, 100%)",
+    background: "rgba(255,255,255,0.92)",
+    border: "1px solid rgba(0,0,0,0.08)",
     borderRadius: 14,
-    boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
+    boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+    padding: 22,
   };
 
-  const eyebrow: React.CSSProperties = {
-    fontSize: 13,
-    letterSpacing: ".08em",
-    color: "#7a7a7a",
-    fontWeight: 800,
-    marginBottom: 6,
+  const subtleTopRow: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 10,
   };
 
-  const h1: React.CSSProperties = {
-    fontSize: 28,
-    margin: "0 0 8px",
+  const smallPill: React.CSSProperties = {
+    display: "inline-block",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: ".04em",
+    border: "1px solid rgba(0,0,0,0.12)",
+    borderRadius: 999,
+    padding: "6px 10px",
+    background: "rgba(255,255,255,0.85)",
   };
 
-  const sub: React.CSSProperties = {
-    margin: "0 0 16px",
-    color: "#555",
+  const h1Style: React.CSSProperties = {
+    fontSize: 34,
+    lineHeight: 1.12,
+    margin: "10px 0 8px",
+    fontFamily: '"Georgia", "Times New Roman", serif',
+  };
+
+  const leadStyle: React.CSSProperties = {
+    marginTop: 0,
+    marginBottom: 18,
+    color: "rgba(0,0,0,0.7)",
     lineHeight: 1.6,
   };
 
   const sectionTitle: React.CSSProperties = {
-    marginTop: 18,
-    marginBottom: 10,
     fontSize: 16,
-    fontWeight: 900,
-    color: "#111",
+    fontWeight: 800,
+    marginTop: 18,
+    marginBottom: 8,
   };
 
   const grid2: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 12,
+    gap: 14,
+  };
+
+  const grid1: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: 14,
   };
 
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: 13,
-    fontWeight: 800,
-    color: "#333",
+    fontWeight: 700,
     marginBottom: 6,
   };
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    padding: "10px 12px",
     borderRadius: 10,
-    border: "1px solid #ddd",
+    border: "1px solid rgba(0,0,0,0.15)",
+    padding: "10px 12px",
+    fontSize: 14,
+    background: "rgba(255,255,255,0.95)",
     outline: "none",
-    fontSize: 15,
-    background: "#fff",
   };
 
   const textareaStyle: React.CSSProperties = {
-    width: "100%",
-    minHeight: 110,
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #ddd",
-    outline: "none",
-    fontSize: 15,
-    background: "#fff",
+    ...inputStyle,
+    minHeight: 120,
     resize: "vertical",
-  };
-
-  const btnRow: React.CSSProperties = {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 12,
-    marginTop: 18,
-    alignItems: "center",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   };
 
   const btnPrimary: React.CSSProperties = {
-    display: "inline-block",
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 900,
-    textDecoration: "none",
-    background: "#111",
-    color: "#fff",
+    appearance: "none",
     border: "none",
+    borderRadius: 10,
+    padding: "10px 16px",
+    fontWeight: 800,
     cursor: "pointer",
-    boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 10px 18px rgba(0,0,0,.08)",
-  };
-
-  const btnPrimaryDisabled: React.CSSProperties = {
-    ...btnPrimary,
-    opacity: 0.5,
-    cursor: "not-allowed",
+    background: "#777",
+    color: "#fff",
   };
 
   const btnSecondary: React.CSSProperties = {
-    display: "inline-block",
-    padding: "10px 14px",
+    appearance: "none",
+    border: "1px solid rgba(0,0,0,0.18)",
     borderRadius: 10,
-    fontWeight: 900,
-    textDecoration: "none",
-    background: "#fff",
+    padding: "10px 14px",
+    fontWeight: 800,
+    cursor: "pointer",
+    background: "rgba(255,255,255,0.75)",
     color: "#111",
-    border: "1px solid #ddd",
-    boxShadow: "0 1px 0 rgba(0,0,0,.04)",
+    textDecoration: "none",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
   };
 
-  const helper: React.CSSProperties = {
-    marginTop: 8,
-    fontSize: 12,
-    color: "#666",
-    lineHeight: 1.5,
-  };
+  function continueToReview(e: React.FormEvent) {
+    e.preventDefault();
+
+    // Ensure latest saved state includes correct package choice:
+    const payload: OrderData = { ...safeReadOrder(), ...form, packageChoice: "song_video" };
+    saveOrder(payload);
+
+    track("CustomSongsPhotosSubmit", { package: "song_video" });
+    router.push("/custom-songs/review");
+  }
 
   return (
-    <main style={page}>
-      <section style={card}>
-        <div style={eyebrow}>CUSTOM SONGS • PHOTO MUSIC VIDEO</div>
-        <h1 style={h1}>Tell me about your Photo Music Video</h1>
-        <p style={sub}>
-          This option includes a custom song plus a video where your photos play
-          beautifully as the music plays. Fill in what you can—if you’re not
-          sure, just leave it blank and we’ll confirm details together.
+    <main style={pageWrapStyle}>
+      <section style={cardStyle}>
+        <div style={subtleTopRow}>
+          <Link href="/custom-songs" style={{ ...btnSecondary }}>
+            ← Back to Options
+          </Link>
+          <span style={smallPill}>CUSTOM SONGS • PHOTO MUSIC VIDEO</span>
+        </div>
+
+        <h1 style={h1Style}>Tell me about your Photo Music Video</h1>
+        <p style={leadStyle}>
+          This option includes a custom song plus a video where your photos play beautifully as the music plays.
+          Fill in what you can—if you&apos;re not sure, just leave it blank and we&apos;ll confirm details together.
         </p>
 
-        <form onSubmit={onSubmit}>
+        <form onSubmit={continueToReview}>
           <div style={sectionTitle}>Contact</div>
+
           <div style={grid2}>
             <div>
               <label style={labelStyle}>Your Name *</label>
               <input
                 style={inputStyle}
-                value={form.name || ""}
+                value={(form.name as string) || ""}
                 onChange={(e) => update("name", e.target.value)}
-                placeholder="Your full name"
+                placeholder="Your name"
+                required
               />
             </div>
 
@@ -254,167 +271,157 @@ export default function PhotosPage() {
               <label style={labelStyle}>Email *</label>
               <input
                 style={inputStyle}
-                value={form.email || ""}
+                type="email"
+                value={(form.email as string) || ""}
                 onChange={(e) => update("email", e.target.value)}
                 placeholder="you@email.com"
-                type="email"
-              />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Phone (optional)</label>
-              <input
-                style={inputStyle}
-                value={form.phone || ""}
-                onChange={(e) => update("phone", e.target.value)}
-                placeholder="(optional)"
+                required
               />
             </div>
           </div>
 
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Phone (optional)</label>
+            <input
+              style={inputStyle}
+              value={(form.phone as string) || ""}
+              onChange={(e) => update("phone", e.target.value)}
+              placeholder="(optional)"
+            />
+          </div>
+
           <div style={sectionTitle}>Song details</div>
+
           <div style={grid2}>
             <div>
               <label style={labelStyle}>Occasion</label>
               <input
                 style={inputStyle}
-                value={form.occasion || ""}
+                value={(form.occasion as string) || ""}
                 onChange={(e) => update("occasion", e.target.value)}
                 placeholder="Birthday, anniversary, memorial, graduation…"
               />
             </div>
-
             <div>
               <label style={labelStyle}>Recipient Name</label>
               <input
                 style={inputStyle}
-                value={form.recipientName || ""}
+                value={(form.recipientName as string) || ""}
                 onChange={(e) => update("recipientName", e.target.value)}
                 placeholder="Who is this for?"
               />
             </div>
+          </div>
 
+          <div style={{ ...grid2, marginTop: 12 }}>
             <div>
               <label style={labelStyle}>Your Relationship to Recipient</label>
               <input
                 style={inputStyle}
-                value={form.relationship || ""}
+                value={(form.relationship as string) || ""}
                 onChange={(e) => update("relationship", e.target.value)}
                 placeholder="Father, mother, friend, spouse…"
               />
             </div>
-
             <div>
               <label style={labelStyle}>Vibe / Mood</label>
               <input
                 style={inputStyle}
-                value={form.vibe || ""}
+                value={(form.vibe as string) || ""}
                 onChange={(e) => update("vibe", e.target.value)}
                 placeholder="Uplifting, heartfelt, fun, reflective…"
               />
             </div>
+          </div>
 
+          <div style={{ ...grid2, marginTop: 12 }}>
             <div>
               <label style={labelStyle}>Genre</label>
               <input
                 style={inputStyle}
-                value={form.genre || ""}
+                value={(form.genre as string) || ""}
                 onChange={(e) => update("genre", e.target.value)}
                 placeholder="Country, pop, acoustic, worship…"
               />
             </div>
-
             <div>
               <label style={labelStyle}>Tempo</label>
               <input
                 style={inputStyle}
-                value={form.tempo || ""}
+                value={(form.tempo as string) || ""}
                 onChange={(e) => update("tempo", e.target.value)}
                 placeholder="Slow, mid, upbeat…"
               />
             </div>
+          </div>
 
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Must-include details or phrases</label>
-              <input
-                style={inputStyle}
-                value={form.mustInclude || ""}
-                onChange={(e) => update("mustInclude", e.target.value)}
-                placeholder="Names, dates, places, lines, inside jokes…"
-              />
-            </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Must-include details or phrases</label>
+            <input
+              style={inputStyle}
+              value={(form.mustInclude as string) || ""}
+              onChange={(e) => update("mustInclude", e.target.value)}
+              placeholder="Names, dates, places, lines, inside jokes…"
+            />
+          </div>
 
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Story / notes (optional)</label>
-              <textarea
-                style={textareaStyle}
-                value={form.notes || ""}
-                onChange={(e) => update("notes", e.target.value)}
-                placeholder="Share the story, key moments, and what you want the listener to feel."
-              />
-            </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Story / notes (optional)</label>
+            <textarea
+              style={textareaStyle}
+              value={(form.notes as string) || ""}
+              onChange={(e) => update("notes", e.target.value)}
+              placeholder="Share the story, key moments, and what you want the listener to feel."
+            />
           </div>
 
           <div style={sectionTitle}>Photos for the video</div>
-          <div style={grid2}>
+
+          <div style={grid1}>
             <div>
               <label style={labelStyle}>Approx. number of photos</label>
               <input
                 style={inputStyle}
-                value={form.photoCount?.toString() || ""}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  update("photoCount", Number.isFinite(n) ? n : undefined);
-                }}
+                value={(form.photoCount as string) || ""}
+                onChange={(e) => update("photoCount", e.target.value)}
                 placeholder="Example: 25"
-                inputMode="numeric"
               />
-              <div style={helper}>
-                You can change this later. I’ll guide you on the best photo
-                count for pacing.
+              <div style={{ fontSize: 12, color: "rgba(0,0,0,0.65)", marginTop: 6 }}>
+                You can change this later. I&apos;ll guide you on the best photo count for pacing.
               </div>
             </div>
 
-            <div style={{ gridColumn: "1 / -1" }}>
+            <div>
               <label style={labelStyle}>Photo notes (optional)</label>
               <textarea
-                style={textareaStyle}
-                value={form.photoNotes || ""}
+                style={{ ...textareaStyle, minHeight: 110 }}
+                value={(form.photoNotes as string) || ""}
                 onChange={(e) => update("photoNotes", e.target.value)}
                 placeholder="Any photo order preferences, captions, or moments you want highlighted?"
               />
             </div>
           </div>
 
-          <div style={btnRow}>
-            <button
-              type="submit"
-              style={canContinue ? btnPrimary : btnPrimaryDisabled}
-              disabled={!canContinue}
-              onClick={() => track("CustomSongsPhotosContinueClick", { package: PACKAGE })}
-            >
+          <div style={{ marginTop: 18, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button type="submit" style={btnPrimary}>
               Continue to Review →
             </button>
 
             <Link
               href="/custom-songs/order"
               style={btnSecondary}
-              onClick={() => track("CustomSongsSkipToOrderClick", { from: "photos", package: PACKAGE })}
+              onClick={() => track("CustomSongsSkipToOrderClick", { from: "photos" })}
             >
               Skip (go to Order)
             </Link>
 
-            <Link
-              href="/custom-songs"
-              style={btnSecondary}
-              onClick={() => track("CustomSongsBackToLandingClick", { from: "photos" })}
-            >
+            <Link href="/custom-songs" style={btnSecondary}>
               Back to Options
             </Link>
           </div>
 
-          <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
-            Saved packageChoice: <code>{PACKAGE}</code>
+          <div style={{ marginTop: 8, fontSize: 12, color: "rgba(0,0,0,0.6)" }}>
+            Saved packageChoice: <code>song_video</code>
           </div>
         </form>
       </section>
