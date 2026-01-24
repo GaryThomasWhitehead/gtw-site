@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
+import MoreMenu from "@/components/MoreMenu";
 
 export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
@@ -90,11 +91,106 @@ export default function Home() {
         </div>
       </header>
 
+      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (RESTORED) ====== */}
+      <section
+        aria-labelledby="custom-songs"
+        style={{
+          marginTop: 0,
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2
+          id="custom-songs"
+          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
+        >
+          CUSTOM SONGS &amp; MUSIC VIDEOS
+        </h2>
+
+        <h3 style={{ fontSize: 34, margin: "8px 0 12px", lineHeight: 1.15 }}>
+          Personal songs for any occasion — and a{" "}
+          <span style={{ color: "#b57b17" }}>Photo Music Video</span> most
+          services don’t offer
+        </h3>
+
+        <p style={{ marginTop: 0, marginBottom: 14, maxWidth: 980 }}>
+          Many custom song services deliver audio only. I can also create a{" "}
+          <strong>personalized Photo Music Video</strong> where your pictures
+          play beautifully as the song plays — turning your story into a
+          keepsake you can share forever.
+        </p>
+
+        <ul
+          style={{
+            marginTop: 0,
+            marginBottom: 16,
+            paddingLeft: 18,
+            lineHeight: 1.7,
+          }}
+        >
+          <li>
+            <strong>Custom Song:</strong> birthdays, anniversaries, weddings,
+            memorials, graduations, faith inspiration, and more
+          </li>
+          <li>
+            <strong>Photo Music Video:</strong> your photos + your song, edited
+            into a heartfelt video presentation
+          </li>
+          <li>
+            <strong>Fast communication:</strong> I’ll confirm details so the
+            lyrics fit your story
+          </li>
+        </ul>
+
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <a
+            className="btn"
+            href="/custom-songs/order"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 800,
+              textDecoration: "none",
+              background: "#b57b17",
+              color: "#fff",
+              boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+            onClick={() => track("CustomSongsOrderClick")}
+          >
+            Start My Song Request
+          </a>
+
+          {/* More dropdown button */}
+          <MoreMenu />
+
+          <a
+            className="btn"
+            href="/custom-songs/photos"
+            style={{
+              display: "inline-block",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              fontWeight: 800,
+              textDecoration: "none",
+              background: "#111",
+              color: "#fff",
+              boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+            }}
+            onClick={() => track("CustomSongsPhotoVideoClick")}
+          >
+            Start My Photo Music Video
+          </a>
+        </div>
+      </section>
+
       {/* ====== AUTHOR BIO ====== */}
       <section
         aria-labelledby="bio"
         style={{
-          marginTop: 0,
+          marginTop: 24,
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
@@ -157,8 +253,8 @@ export default function Home() {
         <h3 style={{ fontSize: 28, margin: "8px 0 16px" }}>Not for Sale</h3>
 
         <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
-          <strong>Human trafficking is real.</strong> It is happening now. And it
-          can be stopped.
+          <strong>Human trafficking is real.</strong> It is happening now. And
+          it can be stopped.
         </p>
 
         <p style={{ marginTop: 0, marginBottom: 10, lineHeight: 1.7 }}>
@@ -193,13 +289,12 @@ export default function Home() {
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
-            {/* ✅ Vercel is case-sensitive; your file is: public/videos/not-for-sale.mp4 */}
+            {/* ✅ file is: public/videos/not-for-sale.mp4 */}
             <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
 
-        {/* Donate button directly below message/video */}
         <div
           className="linkRow"
           style={{
@@ -222,8 +317,7 @@ export default function Home() {
               textDecoration: "none",
               background: "#111",
               color: "#fff",
-              boxShadow:
-                "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
+              boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
             }}
             onClick={() => track("DonateClick", { campaign: "NotForSale" })}
           >
@@ -269,7 +363,6 @@ export default function Home() {
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
-            {/* IMPORTANT: file name + casing must match /public */}
             <img
               src="/Cover.png"
               alt="The Sent Son book cover"
@@ -319,7 +412,6 @@ export default function Home() {
                 gap: 12,
               }}
             >
-              {/* Sample PDF (space-safe URL so it works on production) */}
               <a
                 className="btn"
                 href="/Part%20of%20Chapter%201.pdf"
@@ -340,7 +432,6 @@ export default function Home() {
                 Read a Sample (PDF)
               </a>
 
-              {/* Email Gary */}
               <a
                 className="btn"
                 href="mailto:garys_new_music@yahoo.com"
@@ -361,7 +452,6 @@ export default function Home() {
                 Email Gary
               </a>
 
-              {/* X / Twitter for the book */}
               <a
                 className="btn"
                 href="https://x.com/Bookthesentson"
@@ -382,7 +472,6 @@ export default function Home() {
                 Follow @Bookthesentson on X
               </a>
 
-              {/* Kindle */}
               <a
                 className="btn"
                 href="https://www.amazon.com/dp/B0G4NQ1SF3"
@@ -404,7 +493,6 @@ export default function Home() {
                 Buy on Kindle (personal study)
               </a>
 
-              {/* Paperback */}
               <a
                 className="btn"
                 href="https://www.amazon.com/dp/B0G4KJHKK6"
@@ -471,7 +559,6 @@ export default function Home() {
               storytelling on your favorite streaming platforms.
             </p>
 
-            {/* SoundCloud player restored */}
             <div className="embedWrap" style={{ marginBottom: 12 }}>
               <iframe
                 title="Gary Whitehead — SoundCloud"
@@ -664,7 +751,6 @@ export default function Home() {
             gap: "16px",
           }}
         >
-          {/* Up Through the Trees */}
           <figure
             className="artCard"
             style={{
@@ -694,7 +780,6 @@ export default function Home() {
             </figcaption>
           </figure>
 
-          {/* Flaming */}
           <figure
             className="artCard"
             style={{
@@ -725,7 +810,6 @@ export default function Home() {
           </figure>
         </div>
 
-        {/* Etsy link row */}
         <div className="linkRow" style={{ marginTop: 16 }}>
           <a
             className="btn"
