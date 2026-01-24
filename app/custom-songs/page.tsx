@@ -12,7 +12,7 @@ export default function CustomSongsStartPage() {
   const router = useRouter();
   const [pkg, setPkg] = useState<PackageType>("song+video");
   const [forWho, setForWho] = useState("Myself / Someone I Love");
-  const [name, setName] = useState("Gary");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
   useEffect(() => {

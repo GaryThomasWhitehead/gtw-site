@@ -8,8 +8,8 @@ const LS_KEY = "gtw_custom_song_order_v1";
 
 export default function OrderPage() {
   const router = useRouter();
-  const [occasion, setOccasion] = useState("Birthday");
-  const [mood, setMood] = useState("Warm & Hopeful");
+  const [occasion, setOccasion] = useState("");
+  const [mood, setMood] = useState("");
   const [story, setStory] = useState("");
 
   useEffect(() => {
