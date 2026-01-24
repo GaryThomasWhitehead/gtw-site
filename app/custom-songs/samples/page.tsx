@@ -5,9 +5,9 @@ import { track } from "@vercel/analytics";
 
 export default function SamplesPage() {
   const containerStyle: React.CSSProperties = {
-    maxWidth: 1100,
+    maxWidth: 1150,
     margin: "0 auto",
-    padding: "28px 16px",
+    padding: "36px 18px",
     fontFamily: '"Georgia","Times New Roman",serif',
     color: "#111",
   };
@@ -15,32 +15,33 @@ export default function SamplesPage() {
   const gridStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 18,
-    marginTop: 16,
+    gap: 22,
+    marginTop: 18,
   };
 
   const cardStyle: React.CSSProperties = {
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: "hidden",
-    border: "1px solid rgba(0,0,0,0.12)",
+    border: "1px solid rgba(0,0,0,0.15)",
     background: "#fff",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
   };
 
   const headerStyle: React.CSSProperties = {
-    padding: "10px 12px",
+    padding: "14px 16px",
     fontWeight: 900,
+    fontSize: 18,
     borderBottom: "1px solid rgba(0,0,0,0.08)",
   };
 
   const tagStyle: React.CSSProperties = {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 900,
-    padding: "4px 10px",
+    padding: "5px 12px",
     borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.12)",
+    border: "1px solid rgba(0,0,0,0.2)",
     display: "inline-block",
-    marginLeft: 8,
+    marginLeft: 10,
   };
 
   const yt = (id: string) =>
@@ -48,18 +49,32 @@ export default function SamplesPage() {
 
   return (
     <main style={containerStyle}>
-      <h1 style={{ marginBottom: 8 }}>Sample Songs & Videos</h1>
+      <h1 style={{ marginBottom: 10, fontSize: 42, fontWeight: 900 }}>
+        Sample Songs & Videos
+      </h1>
 
-      <p style={{ color: "#444", lineHeight: 1.7 }}>
-        Here are a few examples of my music and video storytelling — including full video samples and song demos.
+      <p style={{ color: "#333", lineHeight: 1.8, fontSize: 18, fontWeight: 600 }}>
+        Here are a few examples of my music and video storytelling — including full
+        video samples and song demos.
       </p>
 
-      <Link href="/custom-songs" style={{ fontWeight: 900, textDecoration: "none" }}>
+      <Link
+        href="/custom-songs"
+        style={{
+          fontWeight: 900,
+          fontSize: 18,
+          textDecoration: "none",
+          display: "inline-block",
+          marginTop: 10,
+        }}
+      >
         ← Back to Custom Songs
       </Link>
 
       {/* ===== VIDEO SAMPLES ===== */}
-      <h2 style={{ marginTop: 24 }}>Video Samples</h2>
+      <h2 style={{ marginTop: 28, fontSize: 30, fontWeight: 900 }}>
+        Video Samples
+      </h2>
 
       <div style={gridStyle}>
         {/* Not for Sale */}
@@ -79,7 +94,7 @@ export default function SamplesPage() {
           </video>
         </div>
 
-        {/* Still Holding My Hand */}
+        {/* Still Holding My Hand — FIXED PATH */}
         <div style={cardStyle}>
           <div style={headerStyle}>
             Still Holding My Hand <span style={tagStyle}>Video</span>
@@ -100,7 +115,9 @@ export default function SamplesPage() {
       </div>
 
       {/* ===== SONG SAMPLES ===== */}
-      <h2 style={{ marginTop: 28 }}>Song Samples (YouTube)</h2>
+      <h2 style={{ marginTop: 32, fontSize: 30, fontWeight: 900 }}>
+        Song Samples (YouTube)
+      </h2>
 
       <div style={gridStyle}>
         {/* Same Quiet Fire */}
