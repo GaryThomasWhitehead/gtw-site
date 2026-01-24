@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
-import MoreMenu from "@/components/MoreMenu";
 
 export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
@@ -26,30 +25,6 @@ export default function Home() {
 
     incrementVisitorCounter();
   }, []);
-
-  const btnPrimary = {
-    display: "inline-block",
-    padding: "10px 14px",
-    borderRadius: "10px",
-    fontWeight: 800,
-    textDecoration: "none",
-    background: "#b57b17",
-    color: "#fff",
-    boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-    border: "1px solid rgba(0,0,0,.06)",
-  } as const;
-
-  const btnSecondary = {
-    display: "inline-block",
-    padding: "10px 14px",
-    borderRadius: "10px",
-    fontWeight: 800,
-    textDecoration: "none",
-    background: "#111",
-    color: "#fff",
-    boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-    border: "1px solid rgba(0,0,0,.06)",
-  } as const;
 
   return (
     <main
@@ -77,7 +52,7 @@ export default function Home() {
           justifyContent: "center",
           padding: "24px",
           borderRadius: "12px",
-          marginBottom: 24,
+          marginBottom: 40,
         }}
       >
         <div
@@ -115,104 +90,11 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ====== CUSTOM SONGS (TOP SECTION) ====== */}
-      <section
-        aria-labelledby="custom-songs"
-        style={{
-          marginTop: 0,
-          background: "#fff",
-          borderRadius: "12px",
-          padding: "20px",
-          border: "1px solid #eee",
-        }}
-      >
-        <h2
-          id="custom-songs"
-          style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
-        >
-          CUSTOM SONGS &amp; MUSIC VIDEOS
-        </h2>
-
-        <h3 style={{ margin: "8px 0 10px", fontSize: 34, lineHeight: 1.15 }}>
-          Personal songs for any occasion — and a{" "}
-          <span style={{ color: "#b57b17" }}>Photo Music Video</span> most
-          services don&apos;t offer
-        </h3>
-
-        <p style={{ marginTop: 0, marginBottom: 14, lineHeight: 1.7 }}>
-          Many custom song services deliver audio only. I can also create a{" "}
-          <strong>personalized Photo Music Video</strong> where your pictures
-          play beautifully as the song plays — turning your story into a keepsake
-          you can share forever.
-        </p>
-
-        <ul
-          style={{
-            marginTop: 0,
-            marginBottom: 18,
-            paddingLeft: 18,
-            lineHeight: 1.8,
-          }}
-        >
-          <li>
-            <strong>Custom Song:</strong> birthdays, anniversaries, weddings,
-            memorials, graduations, faith inspiration, and more
-          </li>
-          <li>
-            <strong>Photo Music Video:</strong> your photos + your song, edited
-            into a heartfelt video presentation
-          </li>
-          <li>
-            <strong>Fast communication:</strong> I&apos;ll confirm details so
-            the lyrics fit your story
-          </li>
-        </ul>
-
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-            alignItems: "center",
-          }}
-        >
-          <a
-            href="/custom-songs/order"
-            style={btnPrimary}
-            onClick={() => track("CustomSongsOrderClick")}
-          >
-            Start My Song Request
-          </a>
-
-          <MoreMenu />
-
-          <a
-            href="/custom-songs/photos"
-            style={btnSecondary}
-            onClick={() => track("CustomSongsPhotoVideoStartClick")}
-          >
-            Start My Photo Music Video
-          </a>
-        </div>
-
-        <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
-          Direct link (for sharing):{" "}
-          <span
-            style={{
-              fontFamily:
-                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-            }}
-          >
-            /custom-songs
-          </span>
-        </div>
-      </section>
-
       {/* ====== AUTHOR BIO ====== */}
       <section
         aria-labelledby="bio"
         style={{
-          marginTop: 24,
+          marginTop: 0,
           background: "#fff",
           borderRadius: "12px",
           padding: "20px",
@@ -233,8 +115,8 @@ export default function Home() {
           through music, painting, and words of faith. As a Christian songwriter
           and painter, Gary&apos;s work carries a single theme—the beauty of
           divine connection. Whether through the strokes of a brush, the lyrics
-          of a song, or the pages of a book, he strives to awaken hope and remind
-          others that light always finds its way through.
+          of a song, or the pages of a book, he strives to awaken hope and
+          remind others that light always finds its way through.
         </p>
         <p style={{ lineHeight: 1.7, marginBottom: 12 }}>
           His newest work,{" "}
@@ -311,8 +193,8 @@ export default function Home() {
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
-            {/* IMPORTANT: file name + casing must match what’s in /public/videos */}
-            <source src="/videos/Not-for-Sale.mp4" type="video/mp4" />
+            {/* ✅ Vercel is case-sensitive; your file is: public/videos/not-for-sale.mp4 */}
+            <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
@@ -414,9 +296,9 @@ export default function Home() {
                 Genre: Christian theology / spiritual reflection / Bible Study
               </li>
               <li>
-                An in-depth scriptural study on Jesus&apos; role as both mediator
-                and divine Son, written in a devotional, reflective tone—ideal
-                for church Bible studies and small groups.
+                An in-depth scriptural study on Jesus&apos; role as both
+                mediator and divine Son, written in a devotional, reflective
+                tone—ideal for church Bible studies and small groups.
               </li>
             </ul>
 
