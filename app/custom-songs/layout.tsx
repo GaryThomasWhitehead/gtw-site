@@ -1,7 +1,4 @@
-export const metadata = {
-  title: "Custom Songs | Gary Thomas Whitehead",
-  description: "Custom songs and photo music videos by Gary Thomas Whitehead.",
-};
+"use client";
 
 export default function CustomSongsLayout({
   children,
@@ -12,33 +9,23 @@ export default function CustomSongsLayout({
     <div
       style={{
         minHeight: "100vh",
-        width: "100%",
-        backgroundImage: "url('/custom-songs-bg.png')",
+        backgroundImage: "url('/backgrounds/custom-songs-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
+        padding: "32px 0",
       }}
     >
-      {/* Soft overlay so the form is readable */}
+      {/* Center the form card nicely */}
       <div
         style={{
-          minHeight: "100vh",
-          width: "100%",
-          background: "rgba(0,0,0,0.35)",
-          padding: "28px 16px",
-          boxSizing: "border-box",
+          maxWidth: "1100px",
+          margin: "0 auto",
+          padding: "0 20px",
         }}
       >
-        {/* Center content */}
-        <div
-          style={{
-            maxWidth: 980,
-            margin: "0 auto",
-          }}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );
