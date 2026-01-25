@@ -37,84 +37,89 @@ export default function CustomSongsShell({
     background: "rgba(255,255,255,0.92)",
     border: "1px solid rgba(0,0,0,0.10)",
     borderRadius: 18,
-    padding: 28,
+    padding: 30,
     boxShadow: "0 16px 52px rgba(0,0,0,0.20)",
     fontFamily: '"Georgia","Times New Roman",serif',
     color: "#111",
-    backdropFilter: "blur(7px)",
+    backdropFilter: "blur(3px)",
   };
 
-  const pillStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "6px 12px",
-    borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.14)",
-    fontSize: 12,
-    fontWeight: 900,
-    letterSpacing: ".10em",
-    background: "rgba(255,255,255,0.80)",
-    textTransform: "uppercase",
+  const topRow: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+    marginBottom: 10,
   };
 
-  const backStyle: React.CSSProperties = {
+  const pill: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     gap: 10,
-    padding: "10px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "rgba(255,255,255,0.88)",
-    color: "#111",
+    padding: "6px 12px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.14)",
+    background: "rgba(255,255,255,0.70)",
+    fontSize: 12,
+    fontWeight: 900,
+    letterSpacing: ".12em",
+  };
+
+  const backLink: React.CSSProperties = {
     fontWeight: 900,
     textDecoration: "none",
+    color: "#111",
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "rgba(255,255,255,0.85)",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
   };
 
-  const titleStyle: React.CSSProperties = {
-    fontSize: 50,
-    lineHeight: 1.03,
-    margin: "14px 0 10px",
+  const h1: React.CSSProperties = {
+    fontSize: 46,
+    margin: "10px 0 6px",
+    lineHeight: 1.08,
+    fontWeight: 900,
     letterSpacing: "-0.02em",
-    fontWeight: 950,
-    textShadow: "0 1px 0 rgba(255,255,255,.75)",
   };
 
-  const subtitleStyle: React.CSSProperties = {
+  const sub: React.CSSProperties = {
     marginTop: 0,
-    marginBottom: 18,
-    fontSize: 19,
-    lineHeight: 1.8,
+    marginBottom: 20,
+    fontSize: 18,
     fontWeight: 800,
-    color: "#1a1a1a",
-    maxWidth: 980,
+    lineHeight: 1.65,
+    color: "#222",
+    maxWidth: 900,
+    textShadow: "0 1px 0 rgba(255,255,255,0.4)",
+  };
+
+  const divider: React.CSSProperties = {
+    height: 1,
+    background: "rgba(0,0,0,0.10)",
+    margin: "18px 0 22px",
   };
 
   return (
     <main style={bgStyle}>
       <section style={cardStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <Link href={backHref} style={backStyle}>
+        <div style={topRow}>
+          <Link href={backHref} style={backLink}>
             {backLabel}
           </Link>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <div style={pillStyle}>{badge}</div>
+            <div style={pill}>{badge}</div>
             {rightSlot}
           </div>
         </div>
 
-        <h1 style={titleStyle}>{title}</h1>
-        {subtitle ? <p style={subtitleStyle}>{subtitle}</p> : null}
+        <h1 style={h1}>{title}</h1>
+        {subtitle ? <p style={sub}>{subtitle}</p> : null}
 
+        <div style={divider} />
         {children}
       </section>
     </main>

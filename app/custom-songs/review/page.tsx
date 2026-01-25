@@ -2,123 +2,120 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { track } from "@vercel/analytics";
 import CustomSongsShell from "@/components/CustomSongsShell";
-import { loadOrder, OrderData } from "@/lib/customSongsStore";
+import TrackedLink from "@/components/TrackedLink";
 
-function line(label: string, value?: string) {
-  if (!value) return "";
-  return `${label}: ${value}\n`;
+type OrderData = {
+  packageChoice?: "song_only" | "song_video";
+  name?: string;
+  email?: string;
+  phone?: string;
+  occasion?: string;
+  recipientName?: string;
+  relationship?: string;
+  vibe?: string;
+  genre?: string;
+  tempo?: string;
+  mustInclude?: string;
+  notes?: string;
+  photoCount?: string;
+  photoNotes?: string;
+};
+
+const STORAGE_KEY = "customSongsOrder_v3";
+
+function loadOrder(): OrderData {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 export default function ReviewPage() {
-  const [form, setForm] = useState<OrderData>({});
+  const [data, setData] = useState<OrderData>({});
 
-  useEffect(() => {
-    setForm(loadOrder());
-  }, []);
+  useEffect(() => setData(loadOrder()), []);
 
-  const mailto = useMemo(() => {
-    const subject = "Custom Song Request";
-    const body =
-      "CUSTOM SONG REQUEST\n\n" +
-      line("Package", form.packageChoice) +
-      "\nCONTACT\n" +
-      line("Name", form.name) +
-      line("Email", form.email) +
-      line("Phone", form.phone) +
-      "\nSONG DETAILS\n" +
-      line("Occasion", form.occasion) +
-      line("Recipient", form.recipientName) +
-      line("Relationship", form.relationship) +
-      line("Vibe / Mood", form.vibe) +
-      line("Genre", form.genre) +
-      line("Tempo", form.tempo) +
-      line("Must-Include", form.mustInclude) +
-      "\nSTORY / NOTES\n" +
-      (form.notes || "") +
-      "\n\nPHOTO VIDEO\n" +
-      line("Photo Count", form.photoCount) +
-      line("Photo Notes", form.photoNotes);
+  const lines = useMemo(() => {
+    const d = data;
+    const parts: string[] = [];
+    parts.push(`Package: ${d.packageChoice === "song_only" ? "Song Only" : "Song + Photo Music Video"}`);
+    parts.push(`Name: ${d.name ?? ""}`);
+    parts.push(`Email: ${d.email ?? ""}`);
+    parts.push(`Phone: ${d.phone ?? ""}`);
+    parts.push(`Occasion: ${d.occasion ?? ""}`);
+    parts.push(`Recipient: ${d.recipientName ?? ""}`);
+    parts.push(`Relationship: ${d.relationship ?? ""}`);
+    parts.push(`Genre: ${d.genre ?? ""}`);
+    parts.push(`Vibe: ${d.vibe ?? ""}`);
+    parts.push(`Tempo: ${d.tempo ?? ""}`);
+    parts.push(`Must include: ${d.mustInclude ?? ""}`);
+    parts.push(`Story/Notes: ${d.notes ?? ""}`);
+    parts.push(`Photo count: ${d.photoCount ?? ""}`);
+    parts.push(`Photo notes: ${d.photoNotes ?? ""}`);
+    return parts;
+  }, [data]);
 
-    return `mailto:garys_new_music@yahoo.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }, [form]);
-
-  const block: React.CSSProperties = {
-    borderRadius: 18,
+  const box: React.CSSProperties = {
+    borderRadius: 16,
     border: "1px solid rgba(0,0,0,0.12)",
-    background: "rgba(255,255,255,0.88)",
-    boxShadow: "0 14px 34px rgba(0,0,0,0.12)",
+    background: "rgba(255,255,255,0.78)",
     padding: 18,
-    marginBottom: 14,
-    fontWeight: 800,
-    lineHeight: 1.8,
+    boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
   };
 
-  const btnPrimary: React.CSSProperties = {
+  const row: React.CSSProperties = { display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 };
+
+  const btn: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "12px 16px",
+    padding: "10px 16px",
     borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.10)",
-    background: "#b57b17",
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "#111",
     color: "#fff",
     fontWeight: 900,
     textDecoration: "none",
-    boxShadow: "0 10px 22px rgba(0,0,0,0.12)",
   };
 
-  const btnSecondary: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "12px 16px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.14)",
-    background: "rgba(255,255,255,0.90)",
-    color: "#111",
-    fontWeight: 900,
-    textDecoration: "none",
-  };
+  const btnAlt: React.CSSProperties = { ...btn, background: "#b57b17" };
+
+  const mailto = useMemo(() => {
+    const subject = encodeURIComponent("Custom Song Request");
+    const body = encodeURIComponent(lines.join("\n"));
+    return `mailto:garys_new_music@yahoo.com?subject=${subject}&body=${body}`;
+  }, [lines]);
 
   return (
     <CustomSongsShell
-      badge="CUSTOM SONGS • REVIEW"
       title="Review Your Request"
-      subtitle="Quick check before you submit. If anything is missing, that’s fine — we can confirm the details together."
-      backHref="/custom-songs/photos"
-      backLabel="← Back to Details"
+      subtitle="Check everything looks right. Then send it to me — I’ll confirm details and next steps."
+      backHref="/custom-songs"
+      badge="REVIEW"
     >
-      <div style={block}>
-        <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 8 }}>Summary</div>
-        <div>Package: <strong>{form.packageChoice || "—"}</strong></div>
-        <div>Name: <strong>{form.name || "—"}</strong></div>
-        <div>Email: <strong>{form.email || "—"}</strong></div>
-        <div>Occasion: <strong>{form.occasion || "—"}</strong></div>
-        <div>Recipient: <strong>{form.recipientName || "—"}</strong></div>
-        <div>Vibe: <strong>{form.vibe || "—"}</strong></div>
-        <div>Genre: <strong>{form.genre || "—"}</strong></div>
+      <div style={box}>
+        <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7, fontWeight: 700 }}>
+          {lines.join("\n")}
+        </pre>
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <a
-          href={mailto}
-          style={btnPrimary}
-          onClick={() => track("CustomSongsSubmitMailto")}
-        >
-          Submit Request →
-        </a>
+      <div style={row}>
+        <TrackedLink href={mailto} style={btnAlt} eventName="CustomSongsSendEmail">
+          Send Request by Email →
+        </TrackedLink>
 
-        <Link href="/custom-songs/order" style={btnSecondary}>
-          Edit on Order Page
+        <Link href="/custom-songs/order" style={btn}>
+          Edit Order
         </Link>
 
-        <Link href="/custom-songs/samples" style={btnSecondary}>
-          View Samples
+        <Link href="/custom-songs/photos" style={btn}>
+          Edit Photos
         </Link>
 
-        <Link href="/custom-songs/thank-you" style={btnSecondary}>
+        <Link href="/custom-songs/thank-you" style={btn}>
           Continue →
         </Link>
       </div>
