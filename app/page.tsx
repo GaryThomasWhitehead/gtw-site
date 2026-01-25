@@ -1,113 +1,149 @@
 "use client";
 
-import Link from "next/link";
-import CustomSongsShell from "@/components/CustomSongsShell";
+import { useEffect, useState } from "react";
+import { track } from "@vercel/analytics";
+import MoreMenu from "@/components/MoreMenu";
 
-export default function CustomSongsHome() {
-  const grid: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 16,
-  };
+export default function Home() {
+  const [visits, setVisits] = useState<number | null>(null);
 
-  const card: React.CSSProperties = {
-    borderRadius: 16,
-    border: "1px solid rgba(0,0,0,0.10)",
-    background: "rgba(255,255,255,0.75)",
-    padding: 18,
-    boxShadow: "0 10px 26px rgba(0,0,0,0.10)",
-  };
+  useEffect(() => {
+    async function incrementVisitorCounter() {
+      try {
+        const res = await fetch(
+          "https://api.countapi.xyz/hit/garythomaswhitehead-com/home"
+        );
+        const data = await res.json();
+        if (typeof data.value === "number") {
+          setVisits(data.value);
+        }
+      } catch (err) {
+        console.error("Visitor counter error", err);
+      }
+    }
 
-  const h: React.CSSProperties = {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 900,
-  };
-
-  const p: React.CSSProperties = {
-    margin: "8px 0 14px",
-    lineHeight: 1.7,
-    fontSize: 16,
-    fontWeight: 700,
-    color: "#222",
-  };
-
-  const btn: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "10px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "#111",
-    color: "#fff",
-    fontWeight: 900,
-    textDecoration: "none",
-    boxShadow: "0 10px 22px rgba(0,0,0,0.14)",
-  };
-
-  const btnAlt: React.CSSProperties = {
-    ...btn,
-    background: "#b57b17",
-  };
+    incrementVisitorCounter();
+  }, []);
 
   return (
-    <CustomSongsShell
-      title="Custom Songs & Photo Music Videos"
-      subtitle="Order a personalized song for any occasion — and add a Photo Music Video where your pictures play beautifully as the music plays."
-      backHref="/"
-      backLabel="← Back to Home"
-      badge="CUSTOM SONGS"
+    <main
+      style={{
+        maxWidth: "1360px",
+        margin: "0 auto",
+        padding: "24px 32px",
+        fontFamily: '"Georgia", "Times New Roman", serif',
+        color: "#111",
+        backgroundColor: "#faf9f6",
+        lineHeight: 1.6,
+      }}
     >
-      <div style={grid}>
-        <div style={card}>
-          <h3 style={h}>Start a Custom Song</h3>
-          <p style={p}>Tell me the occasion and the story. We’ll shape the lyrics and vibe together.</p>
-          <Link href="/custom-songs/order" style={btnAlt}>
-            Start My Song Request →
-          </Link>
+      {/* HEADER */}
+      <header
+        style={{
+          backgroundImage: "url('/new.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          minHeight: "260px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "12px",
+          marginBottom: 40,
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "72px auto",
+            gap: "16px",
+            alignItems: "center",
+            background: "rgba(0,0,0,.55)",
+            color: "#fff",
+            padding: "12px 16px",
+            borderRadius: "9999px",
+          }}
+        >
+          <img
+            src="/Gary.png"
+            alt="Gary Thomas Whitehead"
+            style={{
+              width: "72px",
+              height: "72px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #fff",
+            }}
+          />
+          <div>
+            <div style={{ fontSize: "18px" }}>GARY THOMAS WHITEHEAD</div>
+            <div style={{ fontSize: "14px" }}>
+              Author • Songwriter • Painter
+            </div>
+          </div>
         </div>
+      </header>
 
-        <div style={card}>
-          <h3 style={h}>Start a Photo Music Video</h3>
-          <p style={p}>Includes a custom song + a polished video with your photos timed to the music.</p>
-          <Link href="/custom-songs/photos" style={btn}>
-            Start My Photo Music Video →
-          </Link>
-        </div>
+      {/* CUSTOM SONGS CTA */}
+      <section
+        style={{
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "20px",
+          border: "1px solid #eee",
+        }}
+      >
+        <h2 style={{ fontSize: 14, color: "#777" }}>
+          CUSTOM SONGS & MUSIC VIDEOS
+        </h2>
 
-        <div style={card}>
-          <h3 style={h}>Samples</h3>
-          <p style={p}>Watch video samples and hear YouTube song demos.</p>
-          <Link href="/custom-songs/samples" style={btn}>
-            View Samples →
-          </Link>
-        </div>
+        <h3 style={{ fontSize: 32, marginTop: 6 }}>
+          Personal songs & Photo Music Videos
+        </h3>
 
-        <div style={card}>
-          <h3 style={h}>Reviews</h3>
-          <p style={p}>See what listeners say about the songs and video keepsakes.</p>
-          <Link href="/custom-songs/reviews" style={btn}>
-            Read Reviews →
-          </Link>
-        </div>
+        <p style={{ maxWidth: 900 }}>
+          Order a personalized song for any occasion — birthdays, weddings,
+          tributes, memorials — and add a Photo Music Video where your pictures
+          play beautifully in sync with your song.
+        </p>
 
-        <div style={card}>
-          <h3 style={h}>FAQ</h3>
-          <p style={p}>Quick answers on turnaround time, revisions, and what you’ll receive.</p>
-          <Link href="/custom-songs/faq" style={btn}>
-            Read FAQ →
-          </Link>
-        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <a
+            href="/custom-songs"
+            style={{
+              padding: "12px 18px",
+              borderRadius: "10px",
+              fontWeight: 900,
+              background: "#b57b17",
+              color: "#fff",
+              textDecoration: "none",
+            }}
+            onClick={() => track("CustomSongsHomeClick")}
+          >
+            View Custom Songs →
+          </a>
 
-        <div style={card}>
-          <h3 style={h}>Pick Genre / Vibe</h3>
-          <p style={p}>Optional: choose a style direction before you order.</p>
-          <Link href="/custom-songs/genre" style={btn}>
-            Choose Options →
-          </Link>
+          <MoreMenu />
         </div>
-      </div>
-    </CustomSongsShell>
+      </section>
+
+      {/* FOOTER */}
+      <footer
+        style={{
+          marginTop: 30,
+          textAlign: "center",
+          padding: 16,
+          background: "#fff",
+          borderRadius: "12px",
+          border: "1px solid #eee",
+        }}
+      >
+        <div>© {new Date().getFullYear()} Gary Thomas Whitehead</div>
+        <div style={{ fontSize: 12, color: "#777" }}>
+          {visits === null
+            ? "Counting visitors..."
+            : `Total visits recorded: ${visits.toLocaleString()}`}
+        </div>
+      </footer>
+    </main>
   );
 }
