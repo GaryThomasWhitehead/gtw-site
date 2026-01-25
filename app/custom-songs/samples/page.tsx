@@ -4,28 +4,47 @@ import React from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function Divider() {
   return (
-    <div style={{ marginTop: 22, marginBottom: 10 }}>
-      <h2
-        style={{
-          margin: 0,
-          fontSize: 22,
-          fontWeight: 950,
-          letterSpacing: 0.2,
-          color: "#111",
-        }}
-      >
-        {children}
-      </h2>
-      <div
-        style={{
-          marginTop: 10,
-          height: 1,
-          background:
-            "linear-gradient(90deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06), rgba(0,0,0,0.18))",
-        }}
-      />
+    <div
+      style={{
+        marginTop: 12,
+        height: 1,
+        background:
+          "linear-gradient(90deg, rgba(0,0,0,0.22), rgba(0,0,0,0.06), rgba(0,0,0,0.22))",
+      }}
+    />
+  );
+}
+
+function SectionTitle({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div style={{ marginTop: 26, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 26,
+            fontWeight: 950,
+            letterSpacing: 0.2,
+            color: "#111",
+          }}
+        >
+          {title}
+        </h2>
+        {subtitle ? (
+          <div style={{ fontSize: 14, fontWeight: 850, color: "rgba(0,0,0,0.60)" }}>
+            {subtitle}
+          </div>
+        ) : null}
+      </div>
+      <Divider />
     </div>
   );
 }
@@ -42,12 +61,21 @@ function MediaCard({
   return (
     <div
       style={{
-        borderRadius: 18,
-        border: "1px solid rgba(0,0,0,0.10)",
-        background: "rgba(255,255,255,0.86)",
-        boxShadow: "0 18px 48px rgba(0,0,0,0.14)",
+        borderRadius: 20,
+        border: "1px solid rgba(0,0,0,0.11)",
+        background: "rgba(255,255,255,0.88)",
+        boxShadow: "0 22px 62px rgba(0,0,0,0.16)",
         overflow: "hidden",
         transform: "translateZ(0)",
+        transition: "transform 180ms ease, box-shadow 180ms ease",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 28px 78px rgba(0,0,0,0.18)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0px)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 22px 62px rgba(0,0,0,0.16)";
       }}
     >
       <div
@@ -58,19 +86,20 @@ function MediaCard({
           padding: "12px 14px",
           borderBottom: "1px solid rgba(0,0,0,0.08)",
           background:
-            "linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.70))",
+            "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.72))",
         }}
       >
         <div style={{ fontSize: 16, fontWeight: 950, color: "#111" }}>{title}</div>
         <div
           style={{
             fontSize: 12,
-            fontWeight: 900,
+            fontWeight: 950,
             padding: "6px 10px",
             borderRadius: 999,
-            border: "1px solid rgba(0,0,0,0.14)",
-            background: "rgba(255,255,255,0.82)",
+            border: "1px solid rgba(0,0,0,0.16)",
+            background: "rgba(255,255,255,0.86)",
             color: "#222",
+            letterSpacing: 0.3,
           }}
         >
           {tag}
@@ -84,7 +113,23 @@ function MediaCard({
 
 function Ratio16x9({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: "#0b0b0b" }}>
+    <div
+      style={{
+        background: "#0b0b0b",
+        position: "relative",
+      }}
+    >
+      {/* subtle cinematic glow */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: -40,
+          background:
+            "radial-gradient(600px 260px at 50% 20%, rgba(255,255,255,0.14), rgba(0,0,0,0) 60%)",
+          pointerEvents: "none",
+        }}
+      />
       <div style={{ position: "relative", width: "100%", paddingTop: "56.25%" }}>
         <div style={{ position: "absolute", inset: 0 }}>{children}</div>
       </div>
@@ -96,7 +141,7 @@ export default function SamplesPage() {
   const grid: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 16,
+    gap: 18,
   };
 
   const videoStyle: React.CSSProperties = {
@@ -115,32 +160,35 @@ export default function SamplesPage() {
       backLabel="← Back to Custom Songs"
       badge="SAMPLES"
     >
-      {/* Stronger, more premium intro */}
+      {/* More premium top copy */}
       <p
         style={{
           margin: "0 0 14px",
           fontSize: 18,
           lineHeight: 1.65,
-          fontWeight: 850,
+          fontWeight: 900,
           color: "rgba(0,0,0,0.78)",
-          maxWidth: 900,
+          maxWidth: 920,
+          textShadow: "0 1px 0 rgba(255,255,255,0.35)",
         }}
       >
-        These are real examples of how I blend songwriting + timing + emotion into a polished keepsake.
+        These are real examples of how I blend songwriting, timing, and emotion into a polished keepsake.
         If you want a story-driven custom song (or a Photo Music Video), this is the level of finish you can expect.
       </p>
 
+      {/* Premium callout */}
       <div
         style={{
           margin: "14px 0 18px",
           padding: "14px 16px",
-          borderRadius: 16,
-          border: "1px solid rgba(0,0,0,0.10)",
-          background: "rgba(255,255,255,0.72)",
-          boxShadow: "0 14px 34px rgba(0,0,0,0.10)",
+          borderRadius: 18,
+          border: "1px solid rgba(0,0,0,0.11)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.60))",
+          boxShadow: "0 18px 44px rgba(0,0,0,0.12)",
           fontSize: 16,
           lineHeight: 1.65,
-          fontWeight: 850,
+          fontWeight: 900,
           color: "rgba(0,0,0,0.74)",
         }}
       >
@@ -148,7 +196,7 @@ export default function SamplesPage() {
         <b>Photo Music Video</b> (your pictures timed to the song).
       </div>
 
-      <SectionTitle>Video Samples</SectionTitle>
+      <SectionTitle title="Video Samples" subtitle="Full-length examples" />
 
       <div style={grid}>
         <MediaCard title="Not for Sale" tag="Video">
@@ -168,7 +216,7 @@ export default function SamplesPage() {
         </MediaCard>
       </div>
 
-      <SectionTitle>Song Samples</SectionTitle>
+      <SectionTitle title="Song Samples" subtitle="YouTube demos" />
 
       <div style={grid}>
         <MediaCard title="Same Quiet Fire" tag="YouTube">
@@ -185,17 +233,6 @@ export default function SamplesPage() {
           />
         </MediaCard>
       </div>
-
-      <p
-        style={{
-          margin: "16px 0 0",
-          fontSize: 14,
-          fontWeight: 800,
-          color: "rgba(0,0,0,0.60)",
-        }}
-      >
-        Tip: if a video ever “loads but won’t play,” it’s usually encoding/codec — the re-encode fix you did is the right move.
-      </p>
     </CustomSongsShell>
   );
 }
