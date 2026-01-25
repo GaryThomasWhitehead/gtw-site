@@ -1,219 +1,209 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { track } from "@vercel/analytics";
 
-const LS_KEY = "gtw_custom_song_order_v1";
+type PackageChoice = "song_only" | "song_video";
 
-export default function GenrePage() {
-  const router = useRouter();
-  const [genre, setGenre] = useState("Country");
-  const [voice, setVoice] = useState("No Preference");
+type OrderData = {
+  packageChoice?: PackageChoice;
+  name?: string;
+  email?: string;
+  phone?: string;
 
-  const genres = ["Country", "Pop", "Worship", "Rock", "R&B", "Jazz", "Hip-Hop"];
+  occasion?: string;
+  vibe?: string;
+  notes?: string;
+};
 
-  useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    try {
-      const saved = JSON.parse(raw);
-      if (saved?.genre) setGenre(saved.genre);
-      if (saved?.voice) setVoice(saved.voice);
-    } catch {}
-  }, []);
+const STORAGE_KEY = "customSongsOrder_v3";
 
-  useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY);
-    const prev = raw ? safeParse(raw) : {};
-    localStorage.setItem(
-      LS_KEY,
-      JSON.stringify({
-        ...prev,
-        genre,
-        voice,
-      })
-    );
-  }, [genre, voice]);
+function sanitize(data: OrderData): OrderData {
+  const out: OrderData = { ...data };
 
-  return (
-    <main style={pageStyle}>
-      <section style={cardStyle}>
-        <div style={topRow}>
-          <Link href="/custom-songs/order" style={backLink}>
-            ← Back
-          </Link>
-          <Link href="/" style={miniLink}>
-            Home
-          </Link>
-        </div>
+  if (out.name?.trim().toLowerCase() === "gary") out.name = "";
+  if (out.occasion?.trim().toLowerCase() === "birthday") out.occasion = "";
+  if (out.vibe?.trim().toLowerCase() === "warm & hopeful") out.vibe = "";
 
-        <div style={progressRow}>
-          <div style={stepPill}>Step 3 of 5</div>
-          <div style={progressMeta}>60% Complete</div>
-        </div>
-
-        <h1 style={titleStyle}>Choose the Musical Style</h1>
-
-        <label style={labelStyle}>Genre</label>
-        <div style={pillRow}>
-          {genres.map((g) => (
-            <button key={g} onClick={() => setGenre(g)} style={pill(genre === g)}>
-              {g}
-            </button>
-          ))}
-        </div>
-
-        <label style={labelStyle}>Preferred Voice</label>
-        <div style={pillRow}>
-          {["Male", "Female", "No Preference"].map((v) => (
-            <button key={v} onClick={() => setVoice(v)} style={pill(voice === v)}>
-              {v}
-            </button>
-          ))}
-        </div>
-
-        <div style={navRow}>
-          <button
-            type="button"
-            onClick={() => router.push("/custom-songs/order")}
-            style={btnSecondary}
-          >
-            ← Back
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/custom-songs/photos")}
-            style={btnPrimary}
-          >
-            Next →
-          </button>
-        </div>
-      </section>
-    </main>
-  );
+  return out;
 }
 
-function safeParse(s: string) {
+function loadOrder(): OrderData {
+  if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(s);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    return sanitize(JSON.parse(raw) as OrderData);
   } catch {
     return {};
   }
 }
 
-const ACCENT = "#b57b17";
+function saveOrder(next: OrderData) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
 
-const pageStyle: React.CSSProperties = {
-  minHeight: "100vh",
-  background: "transparent",
-  padding: "34px 16px",
-  fontFamily: "Georgia, serif",
-};
+export default function GenrePage() {
+  const [form, setForm] = useState<OrderData>({});
+  const [mounted, setMounted] = useState(false);
 
-const cardStyle: React.CSSProperties = {
-  maxWidth: 940,
-  margin: "0 auto",
-  background: "rgba(255,255,255,0.92)",
-  borderRadius: 18,
-  padding: 26,
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 14px 35px rgba(0,0,0,.10)",
-};
+  useEffect(() => {
+    setForm(loadOrder());
+    setMounted(true);
+  }, []);
 
-const topRow: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 10,
-};
+  useEffect(() => {
+    if (!mounted) return;
+    saveOrder(form);
+  }, [form, mounted]);
 
-const backLink: React.CSSProperties = {
-  color: "#111",
-  textDecoration: "none",
-  fontWeight: 800,
-};
+  function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
 
-const miniLink: React.CSSProperties = {
-  color: "#111",
-  textDecoration: "none",
-  fontWeight: 800,
-};
+  const bgStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    backgroundImage: "url('/backgrounds/custom-songs-bg.png')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    padding: "40px 16px",
+  };
 
-const progressRow: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 10,
-};
+  const cardStyle: React.CSSProperties = {
+    maxWidth: 980,
+    margin: "0 auto",
+    background: "rgba(255,255,255,0.92)",
+    border: "1px solid rgba(0,0,0,0.08)",
+    borderRadius: 16,
+    padding: 28,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+    fontFamily: '"Georgia","Times New Roman",serif',
+    color: "#111",
+  };
 
-const stepPill: React.CSSProperties = {
-  display: "inline-block",
-  padding: "6px 12px",
-  borderRadius: 999,
-  background: "rgba(181,123,23,0.10)",
-  border: "1px solid rgba(181,123,23,0.30)",
-  fontWeight: 900,
-  fontSize: 13,
-};
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontWeight: 800,
+    marginBottom: 6,
+  };
 
-const progressMeta: React.CSSProperties = {
-  fontWeight: 800,
-  fontSize: 13,
-  color: "#333",
-};
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 12px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.15)",
+    outline: "none",
+    fontFamily: "inherit",
+    background: "#fff",
+  };
 
-const titleStyle: React.CSSProperties = { fontSize: 34, marginBottom: 16, fontWeight: 900 };
+  const textareaStyle: React.CSSProperties = {
+    ...inputStyle,
+    minHeight: 160,
+    resize: "vertical",
+  };
 
-const labelStyle: React.CSSProperties = {
-  fontWeight: 900,
-  marginTop: 16,
-  display: "block",
-  fontSize: 16,
-};
+  const btnPrimary: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.1)",
+    background: "#b57b17",
+    color: "#fff",
+    fontWeight: 900,
+    textDecoration: "none",
+    cursor: "pointer",
+  };
 
-const pillRow: React.CSSProperties = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: 12,
-  marginTop: 10,
-};
+  const btnSecondary: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "#fff",
+    color: "#111",
+    fontWeight: 900,
+    textDecoration: "none",
+    cursor: "pointer",
+  };
 
-const pill = (active: boolean): React.CSSProperties => ({
-  padding: "10px 16px",
-  borderRadius: 999,
-  border: active ? `2px solid ${ACCENT}` : "1px solid rgba(0,0,0,0.25)",
-  background: active ? "rgba(255, 247, 234, 0.95)" : "rgba(255,255,255,0.90)",
-  fontWeight: 900,
-  cursor: "pointer",
-});
+  return (
+    <main style={bgStyle}>
+      <section style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <Link href="/custom-songs" style={btnSecondary} onClick={() => track("CustomSongsBack", { step: 2 })}>
+            ← Back to Options
+          </Link>
 
-const navRow: React.CSSProperties = {
-  marginTop: 22,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontWeight: 900 }}>Home</div>
+            <div style={{ fontSize: 13, opacity: 0.8 }}>40% Complete</div>
+          </div>
+        </div>
 
-const btnPrimary: React.CSSProperties = {
-  background: ACCENT,
-  color: "#fff",
-  padding: "12px 18px",
-  borderRadius: 12,
-  textDecoration: "none",
-  fontWeight: 900,
-  border: "none",
-  cursor: "pointer",
-  boxShadow: "0 10px 22px rgba(181,123,23,0.25)",
-};
+        <div style={{ marginTop: 14, display: "inline-block", padding: "4px 10px", borderRadius: 999, border: "1px solid rgba(0,0,0,0.12)", fontSize: 12, fontWeight: 900 }}>
+          Step 2 of 5
+        </div>
 
-const btnSecondary: React.CSSProperties = {
-  background: "rgba(255,255,255,0.90)",
-  color: "#111",
-  padding: "12px 18px",
-  borderRadius: 12,
-  textDecoration: "none",
-  fontWeight: 900,
-  border: "1px solid rgba(0,0,0,0.15)",
-  cursor: "pointer",
-};
+        <h1 style={{ fontSize: 44, margin: "14px 0 10px" }}>Let’s shape the song</h1>
+
+        <div style={{ marginTop: 12 }}>
+          <label style={labelStyle}>Occasion *</label>
+          <input
+            style={inputStyle}
+            value={form.occasion ?? ""}
+            onChange={(e) => update("occasion", e.target.value)}
+            placeholder="Birthday, anniversary, memorial, graduation…"
+            autoComplete="off"
+          />
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <label style={labelStyle}>Mood / vibe *</label>
+          <input
+            style={inputStyle}
+            value={form.vibe ?? ""}
+            onChange={(e) => update("vibe", e.target.value)}
+            placeholder="Warm & hopeful, funny, tearjerker, worshipful…"
+            autoComplete="off"
+          />
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <label style={labelStyle}>Your story (the more detail, the better) *</label>
+          <textarea
+            style={textareaStyle}
+            value={form.notes ?? ""}
+            onChange={(e) => update("notes", e.target.value)}
+            placeholder="Names, relationship, key memories, phrases you want included, what you want them to feel when they hear it..."
+          />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
+          <Link href="/custom-songs" style={btnSecondary}>
+            ← Back
+          </Link>
+
+          <Link
+            href="/custom-songs/photos"
+            style={btnPrimary}
+            onClick={() => track("CustomSongsNext", { step: 2 })}
+          >
+            Next →
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
