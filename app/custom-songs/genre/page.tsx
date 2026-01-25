@@ -1,53 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { track } from "@vercel/analytics";
-
-type PackageChoice = "song_only" | "song_video";
-
-type OrderData = {
-  packageChoice?: PackageChoice;
-  name?: string;
-  email?: string;
-  phone?: string;
-
-  occasion?: string;
-  vibe?: string;
-  notes?: string;
-};
-
-const STORAGE_KEY = "customSongsOrder_v3";
-
-function sanitize(data: OrderData): OrderData {
-  const out: OrderData = { ...data };
-
-  if (out.name?.trim().toLowerCase() === "gary") out.name = "";
-  if (out.occasion?.trim().toLowerCase() === "birthday") out.occasion = "";
-  if (out.vibe?.trim().toLowerCase() === "warm & hopeful") out.vibe = "";
-
-  return out;
-}
-
-function loadOrder(): OrderData {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return sanitize(JSON.parse(raw) as OrderData);
-  } catch {
-    return {};
-  }
-}
-
-function saveOrder(next: OrderData) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // ignore
-  }
-}
+import CustomSongsShell from "@/components/CustomSongsShell";
+import { loadOrder, saveOrder, OrderData, PackageChoice } from "@/lib/customSongsStore";
 
 export default function GenrePage() {
   const [form, setForm] = useState<OrderData>({});
@@ -63,147 +20,154 @@ export default function GenrePage() {
     saveOrder(form);
   }, [form, mounted]);
 
-  function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
+  const packageChoice = useMemo<PackageChoice>(() => form.packageChoice ?? "song_video", [form.packageChoice]);
 
-  const bgStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    backgroundImage: "url('/backgrounds/custom-songs-bg.png')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    padding: "40px 16px",
+  const set = (patch: Partial<OrderData>) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const chip: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "10px 14px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.14)",
+    background: "rgba(255,255,255,0.90)",
+    fontWeight: 900,
+    textDecoration: "none",
+    color: "#111",
+    cursor: "pointer",
   };
 
-  const cardStyle: React.CSSProperties = {
-    maxWidth: 980,
-    margin: "0 auto",
-    background: "rgba(255,255,255,0.92)",
-    border: "1px solid rgba(0,0,0,0.08)",
+  const grid: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(12, 1fr)",
+    gap: 14,
+  };
+
+  const tile: React.CSSProperties = {
+    gridColumn: "span 12",
     borderRadius: 16,
-    padding: 28,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-    fontFamily: '"Georgia","Times New Roman",serif',
-    color: "#111",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontWeight: 800,
-    marginBottom: 6,
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.15)",
-    outline: "none",
-    fontFamily: "inherit",
-    background: "#fff",
-  };
-
-  const textareaStyle: React.CSSProperties = {
-    ...inputStyle,
-    minHeight: 160,
-    resize: "vertical",
-  };
-
-  const btnPrimary: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "10px 16px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.1)",
-    background: "#b57b17",
-    color: "#fff",
-    fontWeight: 900,
-    textDecoration: "none",
-    cursor: "pointer",
-  };
-
-  const btnSecondary: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "10px 16px",
-    borderRadius: 12,
     border: "1px solid rgba(0,0,0,0.12)",
-    background: "#fff",
-    color: "#111",
-    fontWeight: 900,
-    textDecoration: "none",
-    cursor: "pointer",
+    background: "rgba(255,255,255,0.88)",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.12)",
+    padding: 16,
   };
+
+  const bigBtn = (active: boolean): React.CSSProperties => ({
+    ...chip,
+    background: active ? "#111" : "rgba(255,255,255,0.92)",
+    color: active ? "#fff" : "#111",
+    borderColor: active ? "rgba(0,0,0,0.40)" : "rgba(0,0,0,0.14)",
+  });
+
+  const genres = ["Country", "Acoustic", "Pop", "Worship / Faith", "Rock", "Classic / Oldies", "Other"];
+
+  const nextHref = packageChoice === "song_video" ? "/custom-songs/photos" : "/custom-songs/order";
 
   return (
-    <main style={bgStyle}>
-      <section style={cardStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <Link href="/custom-songs" style={btnSecondary} onClick={() => track("CustomSongsBack", { step: 2 })}>
-            ← Back to Options
-          </Link>
+    <CustomSongsShell
+      badge="CUSTOM SONGS • OPTIONS"
+      title="Choose Your Style"
+      subtitle="Pick your package and a general vibe. If you’re not sure, choose ‘Other’ and we’ll dial it in together."
+      backHref="/custom-songs"
+      backLabel="← Back to Custom Songs"
+    >
+      <div style={grid}>
+        <div style={tile}>
+          <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 10 }}>Package</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              style={bigBtn(packageChoice === "song_only")}
+              onClick={() => {
+                set({ packageChoice: "song_only" });
+                track("CustomSongsPackageChoice", { packageChoice: "song_only" });
+              }}
+            >
+              Custom Song
+            </button>
 
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontWeight: 900 }}>Home</div>
-            <div style={{ fontSize: 13, opacity: 0.8 }}>40% Complete</div>
+            <button
+              type="button"
+              style={bigBtn(packageChoice === "song_video")}
+              onClick={() => {
+                set({ packageChoice: "song_video" });
+                track("CustomSongsPackageChoice", { packageChoice: "song_video" });
+              }}
+            >
+              Song + Photo Music Video
+            </button>
           </div>
         </div>
 
-        <div style={{ marginTop: 14, display: "inline-block", padding: "4px 10px", borderRadius: 999, border: "1px solid rgba(0,0,0,0.12)", fontSize: 12, fontWeight: 900 }}>
-          Step 2 of 5
+        <div style={tile}>
+          <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 10 }}>Genre</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {genres.map((g) => {
+              const active = (form.genre ?? "").toLowerCase() === g.toLowerCase();
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  style={bigBtn(active)}
+                  onClick={() => {
+                    set({ genre: g });
+                    track("CustomSongsGenrePick", { genre: g });
+                  }}
+                >
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: 12, fontWeight: 800, opacity: 0.85 }}>
+            Current: <span style={{ fontWeight: 900 }}>{packageChoice}</span> •{" "}
+            <span style={{ fontWeight: 900 }}>{form.genre || "—"}</span>
+          </div>
         </div>
 
-        <h1 style={{ fontSize: 44, margin: "14px 0 10px" }}>Let’s shape the song</h1>
+        <div style={tile}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link
+              href={nextHref}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: "1px solid rgba(0,0,0,0.10)",
+                background: "#b57b17",
+                color: "#fff",
+                fontWeight: 900,
+                textDecoration: "none",
+                boxShadow: "0 10px 22px rgba(0,0,0,0.12)",
+              }}
+              onClick={() => track("CustomSongsContinueFromGenre", { packageChoice })}
+            >
+              Continue →
+            </Link>
 
-        <div style={{ marginTop: 12 }}>
-          <label style={labelStyle}>Occasion *</label>
-          <input
-            style={inputStyle}
-            value={form.occasion ?? ""}
-            onChange={(e) => update("occasion", e.target.value)}
-            placeholder="Birthday, anniversary, memorial, graduation…"
-            autoComplete="off"
-          />
+            <Link
+              href="/custom-songs/samples"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: "1px solid rgba(0,0,0,0.14)",
+                background: "rgba(255,255,255,0.90)",
+                color: "#111",
+                fontWeight: 900,
+                textDecoration: "none",
+              }}
+            >
+              View Samples
+            </Link>
+          </div>
         </div>
-
-        <div style={{ marginTop: 14 }}>
-          <label style={labelStyle}>Mood / vibe *</label>
-          <input
-            style={inputStyle}
-            value={form.vibe ?? ""}
-            onChange={(e) => update("vibe", e.target.value)}
-            placeholder="Warm & hopeful, funny, tearjerker, worshipful…"
-            autoComplete="off"
-          />
-        </div>
-
-        <div style={{ marginTop: 14 }}>
-          <label style={labelStyle}>Your story (the more detail, the better) *</label>
-          <textarea
-            style={textareaStyle}
-            value={form.notes ?? ""}
-            onChange={(e) => update("notes", e.target.value)}
-            placeholder="Names, relationship, key memories, phrases you want included, what you want them to feel when they hear it..."
-          />
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
-          <Link href="/custom-songs" style={btnSecondary}>
-            ← Back
-          </Link>
-
-          <Link
-            href="/custom-songs/photos"
-            style={btnPrimary}
-            onClick={() => track("CustomSongsNext", { step: 2 })}
-          >
-            Next →
-          </Link>
-        </div>
-      </section>
-    </main>
+      </div>
+    </CustomSongsShell>
   );
 }

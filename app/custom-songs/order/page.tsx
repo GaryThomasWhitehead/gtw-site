@@ -2,216 +2,141 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { track } from "@vercel/analytics";
+import CustomSongsShell from "@/components/CustomSongsShell";
+import { loadOrder, saveOrder, OrderData } from "@/lib/customSongsStore";
 
-type PackageChoice = "song_only" | "song_video";
-
-type OrderData = {
-  packageChoice?: PackageChoice;
-  occasion?: string;
-  vibe?: string;
-  story?: string;
-};
-
-const STORAGE_KEY = "gtw_custom_song_order_v1";
-
-function safeReadOrder(): OrderData {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as OrderData;
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveOrder(next: OrderData) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+function line(label: string, value?: string) {
+  if (!value) return "";
+  return `${label}: ${value}\n`;
 }
 
 export default function OrderPage() {
-  const router = useRouter();
-
-  // ✅ NO defaults (removes Birthday / Warm & Hopeful autofill)
-  const [form, setForm] = useState<OrderData>({
-    occasion: "",
-    vibe: "",
-    story: "",
-  });
+  const [form, setForm] = useState<OrderData>({});
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = safeReadOrder();
-    setForm((prev) => ({
-      ...prev,
-      ...saved,
-      // keep whatever packageChoice was set earlier (song_only or song_video)
-      packageChoice: saved.packageChoice,
-    }));
+    setForm(loadOrder());
+    setMounted(true);
   }, []);
 
   useEffect(() => {
-    saveOrder({ ...safeReadOrder(), ...form });
+    if (!mounted) return;
+    saveOrder(form);
+  }, [form, mounted]);
+
+  const update = (k: keyof OrderData, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  const mailto = useMemo(() => {
+    const subject = "Custom Song Request";
+    const body =
+      "CUSTOM SONG REQUEST\n\n" +
+      line("Package", form.packageChoice) +
+      "\nCONTACT\n" +
+      line("Name", form.name) +
+      line("Email", form.email) +
+      line("Phone", form.phone) +
+      "\nSONG DETAILS\n" +
+      line("Occasion", form.occasion) +
+      line("Recipient", form.recipientName) +
+      line("Relationship", form.relationship) +
+      line("Vibe / Mood", form.vibe) +
+      line("Genre", form.genre) +
+      line("Tempo", form.tempo) +
+      line("Must-Include", form.mustInclude) +
+      "\nSTORY / NOTES\n" +
+      (form.notes || "") +
+      "\n\nPHOTO VIDEO\n" +
+      line("Photo Count", form.photoCount) +
+      line("Photo Notes", form.photoNotes);
+
+    return `mailto:garys_new_music@yahoo.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }, [form]);
 
-  const bgStyle = useMemo(
-    () => ({
-      minHeight: "100vh",
-      padding: "28px 18px",
-      backgroundImage: "url('/backgrounds/custom-songs-bg.png')",
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-      display: "flex",
-      alignItems: "flex-start",
-      justifyContent: "center",
-    }),
-    []
-  );
-
-  const card: React.CSSProperties = {
-    width: "min(980px, 100%)",
-    background: "rgba(255,255,255,0.92)",
-    border: "1px solid rgba(0,0,0,0.08)",
-    borderRadius: 16,
-    boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
-    padding: 24,
-  };
-
-  const pill: React.CSSProperties = {
-    display: "inline-block",
-    fontSize: 12,
-    fontWeight: 800,
-    borderRadius: 999,
-    padding: "6px 10px",
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "rgba(255,255,255,0.85)",
-  };
-
+  const label: React.CSSProperties = { display: "block", fontWeight: 900, marginBottom: 6 };
   const input: React.CSSProperties = {
     width: "100%",
+    padding: "12px 12px",
     borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.18)",
-    padding: "12px 14px",
-    fontSize: 16,
-    background: "rgba(255,255,255,0.95)",
-    outline: "none",
+    border: "1px solid rgba(0,0,0,0.16)",
+    background: "#fff",
+    fontWeight: 800,
+    fontFamily: "inherit",
+  };
+  const textarea: React.CSSProperties = { ...input, minHeight: 130, resize: "vertical" };
+
+  const panel: React.CSSProperties = {
+    borderRadius: 18,
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "rgba(255,255,255,0.88)",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.12)",
+    padding: 18,
   };
 
-  const textarea: React.CSSProperties = {
-    ...input,
-    minHeight: 170,
-    resize: "vertical",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    fontSize: 14,
-  };
-
-  const btn: React.CSSProperties = {
-    borderRadius: 14,
-    padding: "12px 18px",
-    fontWeight: 900,
-    cursor: "pointer",
-    border: "none",
-    background: "#b07a12",
-    color: "#fff",
-  };
-
-  const btnGhost: React.CSSProperties = {
-    borderRadius: 14,
-    padding: "12px 18px",
-    fontWeight: 900,
-    cursor: "pointer",
-    border: "1px solid rgba(0,0,0,0.18)",
-    background: "rgba(255,255,255,0.75)",
-    color: "#111",
-    textDecoration: "none",
+  const btnPrimary: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "center",
+    padding: "12px 16px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.10)",
+    background: "#b57b17",
+    color: "#fff",
+    fontWeight: 900,
+    textDecoration: "none",
+    boxShadow: "0 10px 22px rgba(0,0,0,0.12)",
   };
 
-  function nextStep(e: React.FormEvent) {
-    e.preventDefault();
-
-    saveOrder({ ...safeReadOrder(), ...form });
-    track("CustomSongsOrderSubmit", { step: 2 });
-
-    router.push("/custom-songs/genre");
-  }
+  const btnSecondary: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "12px 16px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.14)",
+    background: "rgba(255,255,255,0.90)",
+    color: "#111",
+    fontWeight: 900,
+    textDecoration: "none",
+  };
 
   return (
-    <main style={bgStyle}>
-      <section style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+    <CustomSongsShell
+      badge="CUSTOM SONGS • ORDER"
+      title="Song Request Form"
+      subtitle="Fill out what you can. If anything is missing, that’s okay — I’ll confirm details with you."
+      backHref="/custom-songs"
+      backLabel="← Back to Custom Songs"
+    >
+      <div style={panel}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div>
-            <Link href="/custom-songs" style={btnGhost}>
-              ← Back to Options
-            </Link>
-            <div style={{ marginTop: 8 }}>
-              <span style={pill}>Step 2 of 5</span>
-            </div>
+            <label style={label}>Your Name</label>
+            <input style={input} value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} autoComplete="off" />
           </div>
-
-          <div style={{ textAlign: "right" }}>
-            <Link href="/" style={{ fontWeight: 900, textDecoration: "none", color: "#111" }}>
-              Home
-            </Link>
-            <div style={{ marginTop: 6, fontWeight: 800, color: "rgba(0,0,0,0.65)" }}>40% Complete</div>
+          <div>
+            <label style={label}>Email</label>
+            <input style={input} value={form.email ?? ""} onChange={(e) => update("email", e.target.value)} autoComplete="off" />
           </div>
         </div>
 
-        <h1 style={{ fontSize: 46, margin: "18px 0 12px", fontFamily: '"Georgia","Times New Roman",serif' }}>
-          Let&apos;s shape the song
-        </h1>
+        <div style={{ marginTop: 12 }}>
+          <label style={label}>Story / notes</label>
+          <textarea style={textarea} value={form.notes ?? ""} onChange={(e) => update("notes", e.target.value)} />
+        </div>
 
-        <form onSubmit={nextStep}>
-          <label style={{ display: "block", fontWeight: 900, marginBottom: 8 }}>Occasion *</label>
-          <input
-            style={input}
-            value={form.occasion || ""}
-            onChange={(e) => setForm((p) => ({ ...p, occasion: e.target.value }))}
-            placeholder="Birthday, anniversary, memorial…"
-            required
-          />
-
-          <div style={{ height: 14 }} />
-
-          <label style={{ display: "block", fontWeight: 900, marginBottom: 8 }}>Mood / vibe *</label>
-          <input
-            style={input}
-            value={form.vibe || ""}
-            onChange={(e) => setForm((p) => ({ ...p, vibe: e.target.value }))}
-            placeholder="Warm, hopeful, funny, emotional…"
-            required
-          />
-
-          <div style={{ height: 14 }} />
-
-          <label style={{ display: "block", fontWeight: 900, marginBottom: 8 }}>
-            Your story (the more detail, the better) *
-          </label>
-          <textarea
-            style={textarea}
-            value={form.story || ""}
-            onChange={(e) => setForm((p) => ({ ...p, story: e.target.value }))}
-            placeholder="Names, relationship, key memories, phrases you want included, what you want them to feel when they hear it..."
-            required
-          />
-
-          <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <Link href="/custom-songs" style={btnGhost}>
-              ← Back
-            </Link>
-
-            <button type="submit" style={btn}>
-              Next →
-            </button>
-          </div>
-        </form>
-      </section>
-    </main>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+          <a href={mailto} style={btnPrimary} onClick={() => track("CustomSongsSubmitMailtoFromOrder")}>
+            Submit Request →
+          </a>
+          <Link href="/custom-songs/review" style={btnSecondary}>
+            Review Page
+          </Link>
+          <Link href="/custom-songs/thank-you" style={btnSecondary}>
+            After Submit →
+          </Link>
+        </div>
+      </div>
+    </CustomSongsShell>
   );
 }

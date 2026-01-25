@@ -1,109 +1,58 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
+import CustomSongsShell from "@/components/CustomSongsShell";
 
 export default function ThankYouPage() {
+  const box: React.CSSProperties = {
+    borderRadius: 18,
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "rgba(255,255,255,0.88)",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.12)",
+    padding: 18,
+    fontWeight: 800,
+    lineHeight: 1.85,
+    fontSize: 17,
+  };
+
+  const btn: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "12px 16px",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.14)",
+    background: "rgba(255,255,255,0.90)",
+    color: "#111",
+    fontWeight: 900,
+    textDecoration: "none",
+  };
+
   return (
-    <main style={pageStyle}>
-      <section style={cardStyle}>
-        <h1 style={titleStyle}>✅ Thank you!</h1>
+    <CustomSongsShell
+      badge="CUSTOM SONGS"
+      title="You’re all set"
+      subtitle="Thank you. If you already submitted the request email, I’ll respond and confirm details so the lyrics fit your story perfectly."
+      backHref="/custom-songs"
+      backLabel="← Back to Custom Songs"
+    >
+      <div style={box}>
+        <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 8 }}>Next steps</div>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <li>I’ll confirm key details with you (names, timeline, vibe, any must-include lines).</li>
+          <li>Then I’ll write and record your song.</li>
+          <li>If you chose the Photo Music Video, I’ll guide you on the best photo count + pacing.</li>
+        </ul>
 
-        <div style={box}>
-          <div style={boxTitle}>Your request is ready.</div>
-          <div style={boxText}>
-            I’ll follow up by email about next steps and any details.
-            <br />
-            If you selected the <b>Photo Music Video</b>, we’ll make sure your photos and story
-            come together in a cinematic keepsake.
-          </div>
-        </div>
-
-        <div style={actions}>
-          <Link href="/" style={btnSecondary}>
-            Back to Home
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+          <Link href="/custom-songs/samples" style={btn}>
+            Watch Samples
           </Link>
-          <a href="mailto:gary@example.com" style={btnPrimary}>
-            Email Gary
-          </a>
+          <Link href="/custom-songs" style={btn}>
+            Back to Options
+          </Link>
         </div>
-
-        <footer style={footer}>
-          <div>© {new Date().getFullYear()} Gary Thomas Whitehead</div>
-        </footer>
-      </section>
-    </main>
+      </div>
+    </CustomSongsShell>
   );
 }
-
-const pageStyle: React.CSSProperties = {
-  minHeight: "100vh",
-  background: "transparent",
-  padding: "30px",
-  fontFamily: "Georgia, serif",
-};
-
-const cardStyle: React.CSSProperties = {
-  maxWidth: 860,
-  margin: "0 auto",
-  background: "rgba(255,255,255,0.92)",
-  borderRadius: 18,
-  padding: 24,
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 14px 34px rgba(0,0,0,.10)",
-  backdropFilter: "blur(2px)",
-  textAlign: "center",
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: 38,
-  margin: "10px 0 12px",
-};
-
-const box: React.CSSProperties = {
-  background: "#fff6ea",
-  border: "1px solid #f1d7b0",
-  borderRadius: 12,
-  padding: 14,
-  marginTop: 12,
-};
-
-const boxTitle: React.CSSProperties = { fontWeight: 900, marginBottom: 6 };
-const boxText: React.CSSProperties = { fontSize: 16, lineHeight: 1.45 };
-
-const actions: React.CSSProperties = {
-  marginTop: 16,
-  display: "flex",
-  justifyContent: "center",
-  gap: 12,
-  flexWrap: "wrap",
-};
-
-const btnPrimary: React.CSSProperties = {
-  background: "#b57b17",
-  color: "#fff",
-  padding: "12px 18px",
-  borderRadius: 12,
-  textDecoration: "none",
-  fontWeight: 900,
-  display: "inline-block",
-  boxShadow: "0 8px 18px rgba(181,123,23,.25)",
-};
-
-const btnSecondary: React.CSSProperties = {
-  background: "rgba(0,0,0,0.08)",
-  color: "#111",
-  padding: "12px 18px",
-  borderRadius: 12,
-  textDecoration: "none",
-  fontWeight: 900,
-  display: "inline-block",
-};
-
-const footer: React.CSSProperties = {
-  marginTop: 22,
-  borderTop: "1px solid rgba(0,0,0,0.08)",
-  paddingTop: 14,
-  fontWeight: 900,
-  color: "#333",
-};
