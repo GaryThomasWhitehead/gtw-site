@@ -41,6 +41,20 @@ export default function ReviewsPage() {
     >
       <div style={grid}>
         <div style={card}>
+          <div style={quote}>
+            “Still holding my hand. Wow! Thank you Gary for writing a personal song for my mom and me.”
+          </div>
+          <p style={body}>
+            You completely captured the relationship my mom and I share. The song <em>Still Holding My Hand</em> will be
+            cherished forever. I believe I am not the only one who this song will touch. Thank you Gary for such a
+            priceless treasure.
+            <br />
+            <br />
+            — Brenda W.
+          </p>
+        </div>
+
+        <div style={card}>
           <div style={quote}>“It felt like you wrote our story.”</div>
           <p style={body}>
             The lyrics were spot on and the emotion came through. It wasn’t generic — it was us.
