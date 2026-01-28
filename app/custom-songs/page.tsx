@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
@@ -78,7 +77,7 @@ export default function CustomSongsHome() {
             the music.
           </p>
 
-          {/* ✅ go to packages/pricing first + preselect video */}
+          {/* ✅ IMPORTANT FIX: go to package/pricing first */}
           <Link href="/custom-songs/order?pkg=video" style={btn}>
             Start My Photo Music Video →
           </Link>

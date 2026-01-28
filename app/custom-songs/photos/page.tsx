@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
@@ -71,6 +70,14 @@ export default function PhotosPage() {
     );
   }, [form.packageChoice]);
 
+  const softCard: React.CSSProperties = {
+    borderRadius: 16,
+    border: "1px solid rgba(0,0,0,0.10)",
+    background: "rgba(255,255,255,0.82)",
+    padding: 16,
+    boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
+  };
+
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontWeight: 900,
@@ -122,18 +129,6 @@ export default function PhotosPage() {
     cursor: "pointer",
   };
 
-  const noteBox: React.CSSProperties = {
-    marginTop: 14,
-    borderRadius: 14,
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "rgba(255,255,255,0.82)",
-    padding: 14,
-    fontSize: 13,
-    fontWeight: 800,
-    color: "rgba(0,0,0,0.72)",
-    lineHeight: 1.55,
-  };
-
   return (
     <CustomSongsShell
       title="Photo Music Video Details"
@@ -143,15 +138,15 @@ export default function PhotosPage() {
       badge="PHOTO VIDEO"
     >
       {!selectedIsVideo ? (
-        <div style={noteBox}>
+        <div style={{ ...softCard, marginBottom: 14 }}>
           <div style={{ fontWeight: 950, marginBottom: 6 }}>
             Heads up: your current package is not a video package.
           </div>
-          <div>
-            Photo Music Video details are only needed if you selected a package
-            that includes the video.
+          <div style={{ fontWeight: 800, color: "rgba(0,0,0,0.70)", lineHeight: 1.6 }}>
+            Photo Music Video details are only needed if you selected a package that includes the video.
           </div>
-          <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>
             <Link href="/custom-songs/order?pkg=video" style={btnPrimary}>
               Choose a Video Package →
             </Link>
@@ -162,33 +157,21 @@ export default function PhotosPage() {
         </div>
       ) : null}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div>
           <label style={labelStyle}>Your Name *</label>
-          <input
-            style={inputStyle}
-            value={form.name ?? ""}
-            onChange={(e) => update("name", e.target.value)}
-          />
+          <input style={inputStyle} value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} />
         </div>
 
         <div>
           <label style={labelStyle}>Email *</label>
-          <input
-            style={inputStyle}
-            value={form.email ?? ""}
-            onChange={(e) => update("email", e.target.value)}
-          />
+          <input style={inputStyle} value={form.email ?? ""} onChange={(e) => update("email", e.target.value)} />
         </div>
       </div>
 
       <div style={{ marginTop: 12 }}>
         <label style={labelStyle}>Phone (optional)</label>
-        <input
-          style={inputStyle}
-          value={form.phone ?? ""}
-          onChange={(e) => update("phone", e.target.value)}
-        />
+        <input style={inputStyle} value={form.phone ?? ""} onChange={(e) => update("phone", e.target.value)} />
       </div>
 
       <h3 style={{ marginTop: 18, marginBottom: 10, fontWeight: 900, fontSize: 20 }}>

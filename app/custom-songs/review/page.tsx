@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
@@ -45,39 +44,24 @@ function loadOrder(): OrderData {
   }
 }
 
-function money(n: number) {
-  return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-}
-
-const PACKAGE_INFO: Record<PackageChoice, { title: string; price: number }> = {
-  song_audio: { title: "Custom Song (Audio)", price: 249 },
-  song_audio_lyrics: { title: "Custom Song + Printable Lyrics Sheet", price: 279 },
-  video: { title: "Custom Song + Photo Music Video", price: 499 },
-  video_lyrics: { title: "Photo Music Video + Printable Lyrics Sheet", price: 529 },
-  everything_bundle: { title: "Everything Bundle", price: 599 },
+const PACKAGE_LABELS: Record<PackageChoice, string> = {
+  song_audio: "Custom Song (Audio)",
+  song_audio_lyrics: "Custom Song + Printable Lyrics Sheet",
+  video: "Custom Song + Photo Music Video",
+  video_lyrics: "Photo Music Video + Printable Lyrics Sheet",
+  everything_bundle: "Everything Bundle",
 };
-
-function isVideoPackage(choice?: PackageChoice) {
-  return choice === "video" || choice === "video_lyrics" || choice === "everything_bundle";
-}
 
 export default function ReviewPage() {
   const [data, setData] = useState<OrderData>({});
 
   useEffect(() => setData(loadOrder()), []);
 
-  const pkgLine = useMemo(() => {
-    const c = data.packageChoice;
-    if (!c) return "Package: —";
-    const info = PACKAGE_INFO[c];
-    return info ? `Package: ${info.title} (${money(info.price)})` : `Package: ${c}`;
-  }, [data.packageChoice]);
-
   const lines = useMemo(() => {
     const d = data;
+    const pkg = d.packageChoice ? PACKAGE_LABELS[d.packageChoice] : "";
     const parts: string[] = [];
-
-    parts.push(pkgLine);
+    parts.push(`Package: ${pkg}`);
     parts.push(`Name: ${d.name ?? ""}`);
     parts.push(`Email: ${d.email ?? ""}`);
     parts.push(`Phone: ${d.phone ?? ""}`);
@@ -89,17 +73,10 @@ export default function ReviewPage() {
     parts.push(`Tempo: ${d.tempo ?? ""}`);
     parts.push(`Must include: ${d.mustInclude ?? ""}`);
     parts.push(`Story/Notes: ${d.notes ?? ""}`);
-
-    if (isVideoPackage(d.packageChoice)) {
-      parts.push(`Photo count: ${d.photoCount ?? ""}`);
-      parts.push(`Photo notes: ${d.photoNotes ?? ""}`);
-    } else {
-      parts.push(`Photo count:`);
-      parts.push(`Photo notes:`);
-    }
-
+    parts.push(`Photo count: ${d.photoCount ?? ""}`);
+    parts.push(`Photo notes: ${d.photoNotes ?? ""}`);
     return parts;
-  }, [data, pkgLine]);
+  }, [data]);
 
   const box: React.CSSProperties = {
     borderRadius: 16,
@@ -146,15 +123,7 @@ export default function ReviewPage() {
       badge="REVIEW"
     >
       <div style={box}>
-        <pre
-          style={{
-            margin: 0,
-            whiteSpace: "pre-wrap",
-            fontSize: 14,
-            lineHeight: 1.7,
-            fontWeight: 700,
-          }}
-        >
+        <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7, fontWeight: 700 }}>
           {lines.join("\n")}
         </pre>
       </div>

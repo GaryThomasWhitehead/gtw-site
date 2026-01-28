@@ -1,8 +1,7 @@
 "use client";
 
-import React, { Suspense } from "react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
@@ -27,9 +26,9 @@ type OrderData = {
   notes?: string;
 
   // direction (optional)
-  genre?: string; // free text
-  vibe?: string; // free text
-  tempo?: string; // free text
+  genre?: string;
+  vibe?: string;
+  tempo?: string;
 
   // photo video (optional)
   photoCount?: string;
@@ -76,7 +75,7 @@ const PACKAGES: Array<{
     price: 249,
     subtitle: "Radio-clean song delivered as a high-quality file.",
     bullets: [
-      "Personally written lyrics by a seasoned, published songwriter",
+      "Personally written lyrics by a published songwriter",
       "AI-assisted music + vocals, produced to match your story",
       "Delivered as MP3/WAV-style file",
     ],
@@ -135,15 +134,6 @@ const PACKAGES: Array<{
   },
 ];
 
-export default function OrderPage() {
-  // ✅ Next.js requires Suspense when using useSearchParams on an App Router page.
-  return (
-    <Suspense fallback={null}>
-      <OrderPageInner />
-    </Suspense>
-  );
-}
-
 function OrderPageInner() {
   const searchParams = useSearchParams();
 
@@ -153,26 +143,33 @@ function OrderPageInner() {
   useEffect(() => setForm(loadOrder()), []);
   useEffect(() => saveOrder(form), [form]);
 
-  // ✅ If you arrive at /order?pkg=video, preselect a package (only if none chosen yet).
+  // ✅ Preselect package via query param
   useEffect(() => {
     const pkg = (searchParams.get("pkg") || "").toLowerCase();
+
     if (!pkg) return;
-    if (form.packageChoice) return;
 
-    const map: Record<string, PackageChoice> = {
-      audio: "song_audio",
-      lyrics: "song_audio_lyrics",
-      video: "video",
-      video_lyrics: "video_lyrics",
-      bundle: "everything_bundle",
-    };
+    const pick: PackageChoice | null =
+      pkg === "video"
+        ? "video"
+        : pkg === "everything"
+        ? "everything_bundle"
+        : pkg === "lyrics"
+        ? "song_audio_lyrics"
+        : pkg === "audio"
+        ? "song_audio"
+        : null;
 
-    const choice = map[pkg];
-    if (!choice) return;
+    if (!pick) return;
 
-    setForm((prev) => ({ ...prev, packageChoice: choice }));
+    setForm((prev) => {
+      // don't overwrite if user already chose something
+      if (prev.packageChoice) return prev;
+      return { ...prev, packageChoice: pick };
+    });
+
+    // keep them on package step (shows pricing)
     setStep(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const selectedPkg = useMemo(
@@ -181,7 +178,6 @@ function OrderPageInner() {
   );
 
   const progressPct = useMemo(() => {
-    // 5-step flow like your screenshots
     const map: Record<number, number> = { 1: 20, 2: 40, 3: 60, 4: 80, 5: 100 };
     return map[step] ?? 20;
   }, [step]);
@@ -264,13 +260,7 @@ function OrderPageInner() {
     setStep(1);
   }
 
-  const StepHeader = ({
-    title,
-    subtitle,
-  }: {
-    title: string;
-    subtitle: string;
-  }) => (
+  const StepHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
     <div
       style={{
         ...softCard,
@@ -285,13 +275,7 @@ function OrderPageInner() {
         <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>
           {title}
         </div>
-        <div
-          style={{
-            fontWeight: 850,
-            color: "rgba(0,0,0,0.60)",
-            fontSize: 13,
-          }}
-        >
+        <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.60)", fontSize: 13 }}>
           {subtitle}
         </div>
       </div>
@@ -380,13 +364,7 @@ function OrderPageInner() {
             <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>
               {p.title}
             </div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 850,
-                color: "rgba(0,0,0,0.62)",
-              }}
-            >
+            <div style={{ fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
               {p.subtitle}
             </div>
           </div>
@@ -409,9 +387,7 @@ function OrderPageInner() {
                 {p.badge}
               </div>
             ) : null}
-            <div style={{ fontSize: 20, fontWeight: 950 }}>
-              {money(p.price)}
-            </div>
+            <div style={{ fontSize: 20, fontWeight: 950 }}>{money(p.price)}</div>
           </div>
         </div>
 
@@ -490,10 +466,7 @@ function OrderPageInner() {
       {/* STEP 1 */}
       {step === 1 ? (
         <>
-          <StepHeader
-            title="Choose package"
-            subtitle="Pick what you want delivered."
-          />
+          <StepHeader title="Choose package" subtitle="Pick what you want delivered." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>
@@ -510,38 +483,18 @@ function OrderPageInner() {
               Choose your package now — you can adjust details later.
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 14,
-              }}
-            >
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
               {PACKAGES.map((p) => (
-                <PackageCard
-                  key={p.id}
-                  p={p}
-                  selected={form.packageChoice === p.id}
-                />
+                <PackageCard key={p.id} p={p} selected={form.packageChoice === p.id} />
               ))}
             </div>
 
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: 13,
-                fontWeight: 850,
-                color: "rgba(0,0,0,0.65)",
-              }}
-            >
+            <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.65)" }}>
               <b>Audio:</b> delivered as a high-quality file.{" "}
-              <b>Photo Video:</b> your photos timed to the music for a polished
-              keepsake.
+              <b>Photo Video:</b> your photos timed to the music for a polished keepsake.
             </div>
 
-            <div
-              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
-            >
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
               <button type="button" style={btnBase} onClick={resetForm}>
                 Reset form
               </button>
@@ -561,10 +514,7 @@ function OrderPageInner() {
       {/* STEP 2 */}
       {step === 2 ? (
         <>
-          <StepHeader
-            title="Your basics"
-            subtitle="So I can deliver and confirm details."
-          />
+          <StepHeader title="Your basics" subtitle="So I can deliver and confirm details." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={row2}>
@@ -573,9 +523,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.name ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, name: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                 />
               </div>
 
@@ -584,9 +532,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.email ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, email: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                 />
               </div>
             </div>
@@ -596,27 +542,15 @@ function OrderPageInner() {
               <input
                 style={input}
                 value={form.phone ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
               />
             </div>
 
-            <div
-              style={{
-                marginTop: 12,
-                fontSize: 13,
-                fontWeight: 850,
-                color: "rgba(0,0,0,0.62)",
-              }}
-            >
-              If you’re unsure about anything, leave it blank — I’ll confirm
-              details so it fits your story perfectly.
+            <div style={{ marginTop: 12, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
+              If you’re unsure about anything, leave it blank — I’ll confirm details so it fits your story perfectly.
             </div>
 
-            <div
-              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
-            >
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
               <button type="button" style={btnBase} onClick={() => setStep(1)}>
                 ← Back
               </button>
@@ -639,23 +573,11 @@ function OrderPageInner() {
       {/* STEP 3 */}
       {step === 3 ? (
         <>
-          <StepHeader
-            title="Song direction"
-            subtitle="Genre, vibe, tempo (optional)."
-          />
+          <StepHeader title="Song direction" subtitle="Genre, vibe, tempo (optional)." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ fontWeight: 950, marginBottom: 8 }}>
-              Song direction (optional)
-            </div>
-            <div
-              style={{
-                fontWeight: 850,
-                color: "rgba(0,0,0,0.62)",
-                fontSize: 13,
-                marginBottom: 12,
-              }}
-            >
+            <div style={{ fontWeight: 950, marginBottom: 8 }}>Song direction (optional)</div>
+            <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.62)", fontSize: 13, marginBottom: 12 }}>
               Pick a starting point — I’ll shape it into something polished.
             </div>
 
@@ -665,9 +587,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.genre ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, genre: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, genre: e.target.value }))}
                   placeholder="Country, Pop, Worship, Rock, etc."
                 />
               </div>
@@ -676,9 +596,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.vibe ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, vibe: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, vibe: e.target.value }))}
                   placeholder="Warm & hopeful, emotional, uplifting..."
                 />
               </div>
@@ -689,16 +607,12 @@ function OrderPageInner() {
               <input
                 style={input}
                 value={form.tempo ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, tempo: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, tempo: e.target.value }))}
                 placeholder="Slow, mid, upbeat"
               />
             </div>
 
-            <div
-              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
-            >
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
               <button type="button" style={btnBase} onClick={() => setStep(2)}>
                 ← Back
               </button>
@@ -719,21 +633,13 @@ function OrderPageInner() {
           <StepHeader title="Your story" subtitle="The heart of the song." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 14,
-              }}
-            >
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
               <div>
                 <label style={label}>Occasion</label>
                 <input
                   style={input}
                   value={form.occasion ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, occasion: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, occasion: e.target.value }))}
                 />
               </div>
               <div>
@@ -741,9 +647,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.recipientName ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, recipientName: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, recipientName: e.target.value }))}
                 />
               </div>
               <div>
@@ -751,9 +655,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.relationship ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, relationship: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, relationship: e.target.value }))}
                 />
               </div>
               <div>
@@ -761,9 +663,7 @@ function OrderPageInner() {
                 <input
                   style={input}
                   value={form.mustInclude ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, mustInclude: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, mustInclude: e.target.value }))}
                   placeholder="Names, phrases, inside jokes (optional)"
                 />
               </div>
@@ -774,27 +674,15 @@ function OrderPageInner() {
               <textarea
                 style={textarea}
                 value={form.notes ?? ""}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, notes: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
                 placeholder="Tell me what happened, what you want it to say, and what emotion you want it to carry."
               />
-              <div
-                style={{
-                  marginTop: 8,
-                  fontSize: 12,
-                  fontWeight: 850,
-                  color: "rgba(0,0,0,0.60)",
-                }}
-              >
-                Best results: key moments + what you want the song to “speak
-                over” the person.
+              <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "rgba(0,0,0,0.60)" }}>
+                Best results: key moments + what you want the song to “speak over” the person.
               </div>
             </div>
 
-            <div
-              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
-            >
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
               <button type="button" style={btnBase} onClick={() => setStep(3)}>
                 ← Back
               </button>
@@ -812,10 +700,7 @@ function OrderPageInner() {
       {/* STEP 5 */}
       {step === 5 ? (
         <>
-          <StepHeader
-            title="Review & continue"
-            subtitle="Quick check before the review page."
-          />
+          <StepHeader title="Review & continue" subtitle="Quick check before the review page." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={{ fontWeight: 950, marginBottom: 10 }}>Quick review</div>
@@ -834,13 +719,10 @@ function OrderPageInner() {
             >
               <div>
                 <b>Package:</b>{" "}
-                {selectedPkg
-                  ? `${selectedPkg.title} (${money(selectedPkg.price)})`
-                  : "—"}
+                {selectedPkg ? `${selectedPkg.title} (${money(selectedPkg.price)})` : "—"}
               </div>
               <div>
-                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b>{" "}
-                {form.email || "—"}
+                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b> {form.email || "—"}
               </div>
               <div>
                 <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp;{" "}
@@ -848,29 +730,23 @@ function OrderPageInner() {
               </div>
               <div>
                 <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b>{" "}
-                {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b>{" "}
-                {form.tempo || "—"}
+                {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b> {form.tempo || "—"}
               </div>
               <div>
                 <b>Must-include:</b> {form.mustInclude || "—"}
               </div>
             </div>
 
-            {/* photo section only if they chose a video package */}
             {selectedIsVideo ? (
               <>
-                <div style={{ marginTop: 14, fontWeight: 950 }}>
-                  Photo Music Video (optional)
-                </div>
+                <div style={{ marginTop: 14, fontWeight: 950 }}>Photo Music Video (optional)</div>
                 <div style={{ ...row2, marginTop: 10 }}>
                   <div>
                     <label style={label}>Approx photo count</label>
                     <input
                       style={input}
                       value={form.photoCount ?? ""}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, photoCount: e.target.value }))
-                      }
+                      onChange={(e) => setForm((p) => ({ ...p, photoCount: e.target.value }))}
                       placeholder="e.g., 15"
                     />
                   </div>
@@ -879,41 +755,22 @@ function OrderPageInner() {
                     <input
                       style={input}
                       value={form.photoNotes ?? ""}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, photoNotes: e.target.value }))
-                      }
+                      onChange={(e) => setForm((p) => ({ ...p, photoNotes: e.target.value }))}
                       placeholder="Any timing or sequence notes (optional)"
                     />
                   </div>
                 </div>
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    fontWeight: 850,
-                    color: "rgba(0,0,0,0.60)",
-                  }}
-                >
-                  You can change this later. I’ll guide you on the best photo
-                  count for pacing.
+                <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "rgba(0,0,0,0.60)" }}>
+                  You can change this later. I’ll guide you on the best photo count for pacing.
                 </div>
               </>
             ) : null}
 
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: 13,
-                fontWeight: 850,
-                color: "rgba(0,0,0,0.62)",
-              }}
-            >
+            <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
               Next you’ll go to the Review page to confirm everything and submit.
             </div>
 
-            <div
-              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
-            >
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
               <button type="button" style={btnBase} onClick={() => setStep(4)}>
                 ← Back
               </button>
@@ -935,5 +792,14 @@ function OrderPageInner() {
         </>
       ) : null}
     </CustomSongsShell>
+  );
+}
+
+export default function OrderPage() {
+  // ✅ This fixes the Vercel build error for useSearchParams on a page.
+  return (
+    <Suspense fallback={null}>
+      <OrderPageInner />
+    </Suspense>
   );
 }
