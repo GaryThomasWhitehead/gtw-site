@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
+import TrackedLink from "@/components/TrackedLink";
 
 type PackageChoice =
   | "song_audio"
@@ -13,176 +14,127 @@ type PackageChoice =
 
 type OrderData = {
   packageChoice?: PackageChoice;
-
   name?: string;
   email?: string;
   phone?: string;
-
   occasion?: string;
   recipientName?: string;
   relationship?: string;
+  vibe?: string;
+  genre?: string;
+  tempo?: string;
   mustInclude?: string;
   notes?: string;
-
-  genre?: string;
-  vibe?: string;
-  tempo?: string;
-
   photoCount?: string;
   photoNotes?: string;
 };
 
 const STORAGE_KEY = "customSongsOrder_v4";
 
+const PKG_LABEL: Record<PackageChoice, string> = {
+  song_audio: "Custom Song (Audio)",
+  song_audio_lyrics: "Custom Song + Printable Lyrics Sheet",
+  video: "Custom Song + Photo Music Video",
+  video_lyrics: "Photo Music Video + Printable Lyrics Sheet",
+  everything_bundle: "Everything Bundle",
+};
+
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as OrderData;
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   } catch {
     return {};
   }
 }
 
-function saveOrder(next: OrderData) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // ignore
-  }
-}
+export default function ReviewPage() {
+  const [data, setData] = useState<OrderData>({});
 
-export default function PhotosPage() {
-  const [form, setForm] = useState<OrderData>({});
+  useEffect(() => setData(loadOrder()), []);
 
-  useEffect(() => setForm(loadOrder()), []);
-  useEffect(() => saveOrder(form), [form]);
+  const lines = useMemo(() => {
+    const d = data;
+    const parts: string[] = [];
+    const pkg = d.packageChoice ? PKG_LABEL[d.packageChoice] : "—";
+    parts.push(`Package: ${pkg}`);
+    parts.push(`Name: ${d.name ?? ""}`);
+    parts.push(`Email: ${d.email ?? ""}`);
+    parts.push(`Phone: ${d.phone ?? ""}`);
+    parts.push(`Occasion: ${d.occasion ?? ""}`);
+    parts.push(`Recipient: ${d.recipientName ?? ""}`);
+    parts.push(`Relationship: ${d.relationship ?? ""}`);
+    parts.push(`Genre: ${d.genre ?? ""}`);
+    parts.push(`Vibe: ${d.vibe ?? ""}`);
+    parts.push(`Tempo: ${d.tempo ?? ""}`);
+    parts.push(`Must include: ${d.mustInclude ?? ""}`);
+    parts.push(`Story/Notes: ${d.notes ?? ""}`);
+    parts.push(`Photo count: ${d.photoCount ?? ""}`);
+    parts.push(`Photo notes: ${d.photoNotes ?? ""}`);
+    return parts;
+  }, [data]);
 
-  // If they came here directly, ensure a video-capable package is selected
-  useEffect(() => {
-    const isVideo =
-      form.packageChoice === "video" ||
-      form.packageChoice === "video_lyrics" ||
-      form.packageChoice === "everything_bundle";
-
-    if (!isVideo) {
-      setForm((prev) => ({ ...prev, packageChoice: prev.packageChoice ?? "video" }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const packageChoice = useMemo<PackageChoice>(() => form.packageChoice ?? "video", [form.packageChoice]);
-
-  function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  const labelStyle: React.CSSProperties = { display: "block", fontWeight: 900, marginBottom: 6 };
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.15)",
-    outline: "none",
-    fontFamily: "inherit",
-    background: "#fff",
-  };
-  const textareaStyle: React.CSSProperties = { ...inputStyle, minHeight: 120, resize: "vertical" };
-
-  const btnPrimary: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "10px 16px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.1)",
-    background: "#b57b17",
-    color: "#fff",
-    fontWeight: 900,
-    textDecoration: "none",
-    cursor: "pointer",
-    boxShadow: "0 10px 22px rgba(0,0,0,0.14)",
+  const box: React.CSSProperties = {
+    borderRadius: 16,
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "rgba(255,255,255,0.78)",
+    padding: 18,
+    boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
   };
 
-  const btnSecondary: React.CSSProperties = {
+  const row: React.CSSProperties = { display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 };
+
+  const btn: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "10px 16px",
     borderRadius: 12,
     border: "1px solid rgba(0,0,0,0.12)",
-    background: "#fff",
-    color: "#111",
+    background: "#111",
+    color: "#fff",
     fontWeight: 900,
     textDecoration: "none",
-    cursor: "pointer",
   };
+
+  const btnAlt: React.CSSProperties = { ...btn, background: "#b57b17" };
+
+  const mailto = useMemo(() => {
+    const subject = encodeURIComponent("Custom Song Request");
+    const body = encodeURIComponent(lines.join("\n"));
+    return `mailto:garys_new_music@yahoo.com?subject=${subject}&body=${body}`;
+  }, [lines]);
 
   return (
     <CustomSongsShell
-      title="Photo Music Video Details"
-      subtitle="This option includes a custom song plus a video where your photos play beautifully as the music plays."
+      title="Review Your Request"
+      subtitle="Check everything looks right. Then send it to me — I’ll confirm details and next steps."
       backHref="/custom-songs/order"
       backLabel="← Back to Order"
-      badge="PHOTO VIDEO"
+      badge="REVIEW"
     >
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div>
-          <label style={labelStyle}>Your Name *</label>
-          <input style={inputStyle} value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Email *</label>
-          <input style={inputStyle} value={form.email ?? ""} onChange={(e) => update("email", e.target.value)} />
-        </div>
+      <div style={box}>
+        <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7, fontWeight: 700 }}>
+          {lines.join("\n")}
+        </pre>
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        <label style={labelStyle}>Phone (optional)</label>
-        <input style={inputStyle} value={form.phone ?? ""} onChange={(e) => update("phone", e.target.value)} />
-      </div>
+      <div style={row}>
+        <TrackedLink href={mailto} style={btnAlt} eventName="CustomSongsSendEmail">
+          Send Request by Email →
+        </TrackedLink>
 
-      <h3 style={{ marginTop: 18, marginBottom: 10, fontWeight: 900, fontSize: 20 }}>
-        Photos for the video
-      </h3>
-
-      <div style={{ marginTop: 10 }}>
-        <label style={labelStyle}>Approx. number of photos</label>
-        <input
-          style={inputStyle}
-          value={form.photoCount ?? ""}
-          onChange={(e) => update("photoCount", e.target.value)}
-          placeholder="Example: 25"
-          inputMode="numeric"
-        />
-        <div style={{ fontSize: 14, fontWeight: 800, opacity: 0.85, marginTop: 6 }}>
-          You can change this later. I’ll guide you on the best photo count for pacing.
-        </div>
-      </div>
-
-      <div style={{ marginTop: 12 }}>
-        <label style={labelStyle}>Photo notes (optional)</label>
-        <textarea
-          style={textareaStyle}
-          value={form.photoNotes ?? ""}
-          onChange={(e) => update("photoNotes", e.target.value)}
-          placeholder="Any photo order preferences, captions, or moments you want highlighted?"
-        />
-      </div>
-
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18, alignItems: "center" }}>
-        <Link href="/custom-songs/review" style={btnPrimary}>
-          Continue to Review →
+        <Link href="/custom-songs/order" style={btn}>
+          Edit Order
         </Link>
 
-        <Link href="/custom-songs/order" style={btnSecondary}>
-          Back to Order
+        <Link href="/custom-songs/photos" style={btn}>
+          Edit Photos
         </Link>
 
-        <div style={{ fontSize: 12, opacity: 0.7 }}>
-          Saved packageChoice: <code>{packageChoice}</code>
-        </div>
+        <Link href="/custom-songs/thank-you" style={btn}>
+          Continue →
+        </Link>
       </div>
     </CustomSongsShell>
   );
