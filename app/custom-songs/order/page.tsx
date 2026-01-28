@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
 type PackageChoice =
@@ -26,9 +25,9 @@ type OrderData = {
   notes?: string;
 
   // direction (optional)
-  genre?: string;
-  vibe?: string;
-  tempo?: string;
+  genre?: string; // free text
+  vibe?: string; // free text
+  tempo?: string; // free text
 
   // photo video (optional)
   photoCount?: string;
@@ -134,43 +133,12 @@ const PACKAGES: Array<{
   },
 ];
 
-function OrderPageInner() {
-  const searchParams = useSearchParams();
-
+export default function OrderPage() {
   const [form, setForm] = useState<OrderData>({});
   const [step, setStep] = useState<number>(1);
 
   useEffect(() => setForm(loadOrder()), []);
   useEffect(() => saveOrder(form), [form]);
-
-  // ✅ Preselect package via query param
-  useEffect(() => {
-    const pkg = (searchParams.get("pkg") || "").toLowerCase();
-
-    if (!pkg) return;
-
-    const pick: PackageChoice | null =
-      pkg === "video"
-        ? "video"
-        : pkg === "everything"
-        ? "everything_bundle"
-        : pkg === "lyrics"
-        ? "song_audio_lyrics"
-        : pkg === "audio"
-        ? "song_audio"
-        : null;
-
-    if (!pick) return;
-
-    setForm((prev) => {
-      // don't overwrite if user already chose something
-      if (prev.packageChoice) return prev;
-      return { ...prev, packageChoice: pick };
-    });
-
-    // keep them on package step (shows pricing)
-    setStep(1);
-  }, [searchParams]);
 
   const selectedPkg = useMemo(
     () => PACKAGES.find((p) => p.id === form.packageChoice),
@@ -178,14 +146,16 @@ function OrderPageInner() {
   );
 
   const progressPct = useMemo(() => {
+    // 5-step flow like your screenshots
     const map: Record<number, number> = { 1: 20, 2: 40, 3: 60, 4: 80, 5: 100 };
     return map[step] ?? 20;
   }, [step]);
 
+  // ✅ UPDATED shell subtitle (Option B)
   const shellSubtitle =
-    "Your lyrics are personally crafted by a seasoned, published songwriter — then I produce a radio-clean track with AI-assisted music & vocals to match your story.";
+    "Lyrics are personally written by Gary Thomas Whitehead — then music & vocals are artist-directed using advanced AI tools to deliver a polished, emotionally powerful, radio-ready track.";
 
-  const softCard: React.CSSProperties = {
+  const softCard: CSSProperties = {
     borderRadius: 18,
     border: "1px solid rgba(0,0,0,0.10)",
     background: "rgba(255,255,255,0.82)",
@@ -193,20 +163,20 @@ function OrderPageInner() {
     padding: 18,
   };
 
-  const row2: React.CSSProperties = {
+  const row2: CSSProperties = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 14,
   };
 
-  const label: React.CSSProperties = {
+  const label: CSSProperties = {
     display: "block",
     fontWeight: 900,
     marginBottom: 6,
     color: "rgba(0,0,0,0.78)",
   };
 
-  const input: React.CSSProperties = {
+  const input: CSSProperties = {
     width: "100%",
     padding: "10px 12px",
     borderRadius: 12,
@@ -216,13 +186,13 @@ function OrderPageInner() {
     outline: "none",
   };
 
-  const textarea: React.CSSProperties = {
+  const textarea: CSSProperties = {
     ...input,
     minHeight: 140,
     resize: "vertical",
   };
 
-  const btnBase: React.CSSProperties = {
+  const btnBase: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -237,7 +207,7 @@ function OrderPageInner() {
     cursor: "pointer",
   };
 
-  const btnNext: React.CSSProperties = {
+  const btnNext: CSSProperties = {
     ...btnBase,
     background: "#111",
     color: "#fff",
@@ -245,7 +215,7 @@ function OrderPageInner() {
     boxShadow: "0 12px 26px rgba(0,0,0,0.18)",
   };
 
-  const btnGold: React.CSSProperties = {
+  const btnGold: CSSProperties = {
     ...btnBase,
     background: "#b57b17",
     color: "#fff",
@@ -272,9 +242,7 @@ function OrderPageInner() {
       }}
     >
       <div>
-        <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>
-          {title}
-        </div>
+        <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>{title}</div>
         <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.60)", fontSize: 13 }}>
           {subtitle}
         </div>
@@ -299,6 +267,7 @@ function OrderPageInner() {
             }}
           />
         </div>
+
         <div
           style={{
             marginTop: 6,
@@ -361,9 +330,7 @@ function OrderPageInner() {
           }}
         >
           <div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>
-              {p.title}
-            </div>
+            <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>{p.title}</div>
             <div style={{ fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
               {p.subtitle}
             </div>
@@ -443,7 +410,6 @@ function OrderPageInner() {
       title="Start My Custom Song"
       subtitle={shellSubtitle}
       backHref="/custom-songs"
-      backLabel="← Back to Custom Songs"
       badge="ORDER"
       rightSlot={
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -463,15 +429,64 @@ function OrderPageInner() {
         </div>
       }
     >
+      {/* ✅ BRAND POSITIONING */}
+      <div
+        style={{
+          borderRadius: 18,
+          border: "1px solid rgba(0,0,0,0.10)",
+          background: "rgba(255,255,255,0.78)",
+          boxShadow: "0 12px 30px rgba(0,0,0,0.10)",
+          padding: 16,
+          marginBottom: 14,
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 950,
+            letterSpacing: ".06em",
+            fontSize: 12,
+            color: "rgba(0,0,0,0.65)",
+          }}
+        >
+          🎼 BRAND POSITIONING
+        </div>
+
+        <div
+          style={{
+            marginTop: 8,
+            fontWeight: 900,
+            color: "rgba(0,0,0,0.80)",
+            lineHeight: 1.65,
+            fontSize: 14,
+          }}
+        >
+          Every song begins with lyrics personally written by <b>Gary Thomas Whitehead</b> — a
+          published songwriter and storyteller. Music and vocals are then <b>artist-directed</b>{" "}
+          using advanced AI production tools to deliver polished, emotionally powerful recordings.
+        </div>
+
+        <div
+          style={{
+            marginTop: 8,
+            fontSize: 13,
+            fontWeight: 850,
+            color: "rgba(0,0,0,0.62)",
+            lineHeight: 1.6,
+          }}
+        >
+          Lyrics are personally written by a seasoned, published songwriter. Music and vocals are
+          produced using advanced AI tools — artist-directed, edited, and quality-controlled to
+          achieve radio-ready results.
+        </div>
+      </div>
+
       {/* STEP 1 */}
       {step === 1 ? (
         <>
           <StepHeader title="Choose package" subtitle="Pick what you want delivered." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>
-              What do you want?
-            </div>
+            <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>What do you want?</div>
             <div
               style={{
                 fontWeight: 850,
@@ -483,15 +498,21 @@ function OrderPageInner() {
               Choose your package now — you can adjust details later.
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+              }}
+            >
               {PACKAGES.map((p) => (
                 <PackageCard key={p.id} p={p} selected={form.packageChoice === p.id} />
               ))}
             </div>
 
             <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.65)" }}>
-              <b>Audio:</b> delivered as a high-quality file.{" "}
-              <b>Photo Video:</b> your photos timed to the music for a polished keepsake.
+              <b>Audio:</b> delivered as a high-quality file. <b>Photo Video:</b> your photos timed
+              to the music for a polished keepsake.
             </div>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
@@ -547,7 +568,8 @@ function OrderPageInner() {
             </div>
 
             <div style={{ marginTop: 12, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
-              If you’re unsure about anything, leave it blank — I’ll confirm details so it fits your story perfectly.
+              If you’re unsure about anything, leave it blank — I’ll confirm details so it fits your
+              story perfectly.
             </div>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
@@ -725,12 +747,12 @@ function OrderPageInner() {
                 <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b> {form.email || "—"}
               </div>
               <div>
-                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp;{" "}
-                <b>Recipient:</b> {form.recipientName || "—"}
+                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp; <b>Recipient:</b>{" "}
+                {form.recipientName || "—"}
               </div>
               <div>
-                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b>{" "}
-                {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b> {form.tempo || "—"}
+                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b> {form.vibe || "—"}{" "}
+                &nbsp; • &nbsp; <b>Tempo:</b> {form.tempo || "—"}
               </div>
               <div>
                 <b>Must-include:</b> {form.mustInclude || "—"}
@@ -792,14 +814,5 @@ function OrderPageInner() {
         </>
       ) : null}
     </CustomSongsShell>
-  );
-}
-
-export default function OrderPage() {
-  // ✅ This fixes the Vercel build error for useSearchParams on a page.
-  return (
-    <Suspense fallback={null}>
-      <OrderPageInner />
-    </Suspense>
   );
 }
