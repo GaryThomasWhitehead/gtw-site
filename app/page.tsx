@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
 import MoreMenu from "@/components/MoreMenu";
@@ -91,7 +92,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (RESTORED) ====== */}
+      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (SIMPLIFIED CTA) ====== */}
       <section
         aria-labelledby="custom-songs"
         style={{
@@ -144,8 +145,9 @@ export default function Home() {
           </li>
         </ul>
 
+        {/* ✅ ONE CTA ONLY */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <a
+          <Link
             className="btn"
             href="/custom-songs/order"
             style={{
@@ -161,28 +163,10 @@ export default function Home() {
             onClick={() => track("CustomSongsOrderClick")}
           >
             Start My Song Request
-          </a>
+          </Link>
 
-          {/* More dropdown button */}
+          {/* Keep your dropdown if you want it */}
           <MoreMenu />
-
-          <a
-            className="btn"
-            href="/custom-songs/photos"
-            style={{
-              display: "inline-block",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              fontWeight: 800,
-              textDecoration: "none",
-              background: "#111",
-              color: "#fff",
-              boxShadow: "0 1px 0 rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06)",
-            }}
-            onClick={() => track("CustomSongsPhotoVideoClick")}
-          >
-            Start My Photo Music Video
-          </a>
         </div>
       </section>
 
@@ -289,7 +273,6 @@ export default function Home() {
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
-            {/* ✅ file is: public/videos/not-for-sale.mp4 */}
             <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>

@@ -53,7 +53,7 @@ export default function CustomSongsHome() {
   return (
     <CustomSongsShell
       title="Custom Songs & Photo Music Videos"
-      subtitle="Order a personalized song for any occasion — and add a Photo Music Video where your pictures play beautifully as the music plays."
+      subtitle="Order a personalized song for any occasion — and (optionally) add a Photo Music Video where your pictures play beautifully as the music plays."
       backHref="/"
       backLabel="← Back to Home"
       badge="CUSTOM SONGS"
@@ -62,24 +62,11 @@ export default function CustomSongsHome() {
         <div style={card}>
           <h3 style={h}>Start a Custom Song</h3>
           <p style={p}>
-            Tell me the occasion and the story. We’ll shape the lyrics and vibe
-            together.
+            Tell me the occasion and the story. We’ll shape the lyrics and vibe together — then you can choose audio-only
+            or a Photo Music Video package on the next page.
           </p>
           <Link href="/custom-songs/order" style={btnGold}>
             Start My Song Request →
-          </Link>
-        </div>
-
-        <div style={card}>
-          <h3 style={h}>Start a Photo Music Video</h3>
-          <p style={p}>
-            Includes a custom song + a polished video with your photos timed to
-            the music.
-          </p>
-
-          {/* ✅ IMPORTANT FIX: go to package/pricing first */}
-          <Link href="/custom-songs/order?pkg=video" style={btn}>
-            Start My Photo Music Video →
           </Link>
         </div>
 
@@ -104,8 +91,7 @@ export default function CustomSongsHome() {
         <div style={card}>
           <h3 style={h}>FAQ</h3>
           <p style={p}>
-            Quick answers on turnaround time, revisions, and what you’ll
-            receive.
+            Quick answers on turnaround time, revisions, and what you’ll receive.
           </p>
           <Link href="/custom-songs/faq" style={btn}>
             Read FAQ →
