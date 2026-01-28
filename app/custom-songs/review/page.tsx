@@ -14,6 +14,7 @@ type PackageChoice =
 
 type OrderData = {
   packageChoice?: PackageChoice;
+
   name?: string;
   email?: string;
   phone?: string;
@@ -21,13 +22,12 @@ type OrderData = {
   occasion?: string;
   recipientName?: string;
   relationship?: string;
+  mustInclude?: string;
+  notes?: string;
 
   genre?: string;
   vibe?: string;
   tempo?: string;
-
-  mustInclude?: string;
-  notes?: string;
 
   photoCount?: string;
   photoNotes?: string;
@@ -38,38 +38,36 @@ const STORAGE_KEY = "customSongsOrder_v4";
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as OrderData;
   } catch {
     return {};
   }
 }
 
-function packageLabel(p?: PackageChoice) {
-  switch (p) {
-    case "song_audio":
-      return "Custom Song (Audio)";
-    case "song_audio_lyrics":
-      return "Custom Song + Printable Lyrics Sheet";
-    case "video":
-      return "Custom Song + Photo Music Video";
-    case "video_lyrics":
-      return "Photo Music Video + Printable Lyrics Sheet";
-    case "everything_bundle":
-      return "Everything Bundle";
-    default:
-      return "—";
-  }
+function money(n: number) {
+  return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
+
+const PACKAGE_META: Record<PackageChoice, { title: string; price: number; isVideo: boolean }> = {
+  song_audio: { title: "Custom Song (Audio)", price: 249, isVideo: false },
+  song_audio_lyrics: { title: "Custom Song + Printable Lyrics Sheet", price: 279, isVideo: false },
+  video: { title: "Custom Song + Photo Music Video", price: 499, isVideo: true },
+  video_lyrics: { title: "Photo Music Video + Printable Lyrics Sheet", price: 529, isVideo: true },
+  everything_bundle: { title: "Everything Bundle", price: 599, isVideo: true },
+};
 
 export default function ReviewPage() {
   const [data, setData] = useState<OrderData>({});
 
   useEffect(() => setData(loadOrder()), []);
 
+  const pkg = data.packageChoice ? PACKAGE_META[data.packageChoice] : null;
+  const selectedIsVideo = Boolean(pkg?.isVideo);
+
   const lines = useMemo(() => {
     const d = data;
     const parts: string[] = [];
-    parts.push(`Package: ${packageLabel(d.packageChoice)}`);
+    parts.push(`Package: ${pkg ? `${pkg.title} (${money(pkg.price)})` : ""}`);
     parts.push(`Name: ${d.name ?? ""}`);
     parts.push(`Email: ${d.email ?? ""}`);
     parts.push(`Phone: ${d.phone ?? ""}`);
@@ -84,7 +82,7 @@ export default function ReviewPage() {
     parts.push(`Photo count: ${d.photoCount ?? ""}`);
     parts.push(`Photo notes: ${d.photoNotes ?? ""}`);
     return parts;
-  }, [data]);
+  }, [data, pkg]);
 
   const box: React.CSSProperties = {
     borderRadius: 16,
@@ -140,9 +138,11 @@ export default function ReviewPage() {
           Edit Order
         </Link>
 
-        <Link href="/custom-songs/photos" style={btn}>
-          Edit Photos
-        </Link>
+        {selectedIsVideo ? (
+          <Link href="/custom-songs/photos" style={btn}>
+            Edit Photos
+          </Link>
+        ) : null}
 
         <Link href="/custom-songs/thank-you" style={btn}>
           Continue →
