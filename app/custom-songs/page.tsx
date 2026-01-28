@@ -1,6 +1,6 @@
-// app/custom-songs/page.tsx
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
@@ -63,7 +63,8 @@ export default function CustomSongsHome() {
         <div style={card}>
           <h3 style={h}>Start a Custom Song</h3>
           <p style={p}>
-            Tell me the occasion and the story. We’ll shape the lyrics and vibe together.
+            Tell me the occasion and the story. We’ll shape the lyrics and vibe
+            together.
           </p>
           <Link href="/custom-songs/order" style={btnGold}>
             Start My Song Request →
@@ -73,9 +74,11 @@ export default function CustomSongsHome() {
         <div style={card}>
           <h3 style={h}>Start a Photo Music Video</h3>
           <p style={p}>
-            Includes a custom song + a polished video with your photos timed to the music.
+            Includes a custom song + a polished video with your photos timed to
+            the music.
           </p>
-          {/* ✅ FIX: go to package/pricing FIRST and preselect video */}
+
+          {/* ✅ go to packages/pricing first + preselect video */}
           <Link href="/custom-songs/order?pkg=video" style={btn}>
             Start My Photo Music Video →
           </Link>
@@ -91,7 +94,9 @@ export default function CustomSongsHome() {
 
         <div style={card}>
           <h3 style={h}>Reviews</h3>
-          <p style={p}>See what listeners say about the songs and video keepsakes.</p>
+          <p style={p}>
+            See what listeners say about the songs and video keepsakes.
+          </p>
           <Link href="/custom-songs/reviews" style={btn}>
             Read Reviews →
           </Link>
@@ -99,7 +104,10 @@ export default function CustomSongsHome() {
 
         <div style={card}>
           <h3 style={h}>FAQ</h3>
-          <p style={p}>Quick answers on turnaround time, revisions, and what you’ll receive.</p>
+          <p style={p}>
+            Quick answers on turnaround time, revisions, and what you’ll
+            receive.
+          </p>
           <Link href="/custom-songs/faq" style={btn}>
             Read FAQ →
           </Link>

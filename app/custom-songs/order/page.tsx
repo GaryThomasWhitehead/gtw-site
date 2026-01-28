@@ -1,7 +1,9 @@
 "use client";
 
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
 type PackageChoice =
@@ -74,7 +76,7 @@ const PACKAGES: Array<{
     price: 249,
     subtitle: "Radio-clean song delivered as a high-quality file.",
     bullets: [
-      "Personally written lyrics by a published songwriter",
+      "Personally written lyrics by a seasoned, published songwriter",
       "AI-assisted music + vocals, produced to match your story",
       "Delivered as MP3/WAV-style file",
     ],
@@ -133,40 +135,45 @@ const PACKAGES: Array<{
   },
 ];
 
-function pkgParamToChoice(v: string | null): PackageChoice | null {
-  if (!v) return null;
-  const s = v.trim().toLowerCase();
-  // allow a few friendly aliases
-  if (s === "video" || s === "song_video" || s === "photo" || s === "photos") return "video";
-  if (s === "audio" || s === "song" || s === "song_audio") return "song_audio";
-  if (s === "bundle" || s === "everything") return "everything_bundle";
-  return null;
+export default function OrderPage() {
+  // ✅ Next.js requires Suspense when using useSearchParams on an App Router page.
+  return (
+    <Suspense fallback={null}>
+      <OrderPageInner />
+    </Suspense>
+  );
 }
 
-export default function OrderPage() {
+function OrderPageInner() {
+  const searchParams = useSearchParams();
+
   const [form, setForm] = useState<OrderData>({});
   const [step, setStep] = useState<number>(1);
 
-  // Load from localStorage
-  useEffect(() => {
-    const loaded = loadOrder();
-    setForm(loaded);
-
-    // If nothing selected yet, allow /custom-songs/order?pkg=video to preselect
-    // (No useSearchParams here — avoids Next build/prerender issues)
-    if (!loaded.packageChoice && typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      const pref = pkgParamToChoice(url.searchParams.get("pkg"));
-      if (pref) {
-        const next = { ...loaded, packageChoice: pref };
-        setForm(next);
-        saveOrder(next);
-      }
-    }
-  }, []);
-
-  // Save on changes
+  useEffect(() => setForm(loadOrder()), []);
   useEffect(() => saveOrder(form), [form]);
+
+  // ✅ If you arrive at /order?pkg=video, preselect a package (only if none chosen yet).
+  useEffect(() => {
+    const pkg = (searchParams.get("pkg") || "").toLowerCase();
+    if (!pkg) return;
+    if (form.packageChoice) return;
+
+    const map: Record<string, PackageChoice> = {
+      audio: "song_audio",
+      lyrics: "song_audio_lyrics",
+      video: "video",
+      video_lyrics: "video_lyrics",
+      bundle: "everything_bundle",
+    };
+
+    const choice = map[pkg];
+    if (!choice) return;
+
+    setForm((prev) => ({ ...prev, packageChoice: choice }));
+    setStep(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const selectedPkg = useMemo(
     () => PACKAGES.find((p) => p.id === form.packageChoice),
@@ -174,6 +181,7 @@ export default function OrderPage() {
   );
 
   const progressPct = useMemo(() => {
+    // 5-step flow like your screenshots
     const map: Record<number, number> = { 1: 20, 2: 40, 3: 60, 4: 80, 5: 100 };
     return map[step] ?? 20;
   }, [step]);
@@ -256,7 +264,13 @@ export default function OrderPage() {
     setStep(1);
   }
 
-  const StepHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
+  const StepHeader = ({
+    title,
+    subtitle,
+  }: {
+    title: string;
+    subtitle: string;
+  }) => (
     <div
       style={{
         ...softCard,
@@ -268,8 +282,16 @@ export default function OrderPage() {
       }}
     >
       <div>
-        <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>{title}</div>
-        <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.60)", fontSize: 13 }}>
+        <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>
+          {title}
+        </div>
+        <div
+          style={{
+            fontWeight: 850,
+            color: "rgba(0,0,0,0.60)",
+            fontSize: 13,
+          }}
+        >
           {subtitle}
         </div>
       </div>
@@ -317,9 +339,11 @@ export default function OrderPage() {
     const accent =
       p.accent === "gold"
         ? {
+            ring: "0 0 0 3px rgba(181,123,23,0.25)",
             border: "1px solid rgba(181,123,23,0.45)",
           }
         : {
+            ring: "0 0 0 3px rgba(0,0,0,0.08)",
             border: "1px solid rgba(0,0,0,0.14)",
           };
 
@@ -335,17 +359,34 @@ export default function OrderPage() {
             ? "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78))"
             : "rgba(255,255,255,0.86)",
           padding: 16,
-          boxShadow: selected ? "0 26px 62px rgba(0,0,0,0.18)" : "0 16px 44px rgba(0,0,0,0.12)",
+          boxShadow: selected
+            ? "0 26px 62px rgba(0,0,0,0.18)"
+            : "0 16px 44px rgba(0,0,0,0.12)",
           cursor: "pointer",
           transition: "transform 160ms ease, box-shadow 160ms ease",
           outline: "none",
           transform: selected ? "translateY(-2px)" : "translateY(0px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
           <div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>{p.title}</div>
-            <div style={{ fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
+            <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>
+              {p.title}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+              }}
+            >
               {p.subtitle}
             </div>
           </div>
@@ -368,11 +409,20 @@ export default function OrderPage() {
                 {p.badge}
               </div>
             ) : null}
-            <div style={{ fontSize: 20, fontWeight: 950 }}>{money(p.price)}</div>
+            <div style={{ fontSize: 20, fontWeight: 950 }}>
+              {money(p.price)}
+            </div>
           </div>
         </div>
 
-        <ul style={{ margin: "12px 0 0", paddingLeft: 18, color: "rgba(0,0,0,0.78)", fontWeight: 850 }}>
+        <ul
+          style={{
+            margin: "12px 0 0",
+            paddingLeft: 18,
+            color: "rgba(0,0,0,0.78)",
+            fontWeight: 850,
+          }}
+        >
           {p.bullets.map((b) => (
             <li key={b} style={{ margin: "6px 0", lineHeight: 1.35 }}>
               {b}
@@ -417,6 +467,7 @@ export default function OrderPage() {
       title="Start My Custom Song"
       subtitle={shellSubtitle}
       backHref="/custom-songs"
+      backLabel="← Back to Custom Songs"
       badge="ORDER"
       rightSlot={
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -439,26 +490,58 @@ export default function OrderPage() {
       {/* STEP 1 */}
       {step === 1 ? (
         <>
-          <StepHeader title="Choose package" subtitle="Pick what you want delivered." />
+          <StepHeader
+            title="Choose package"
+            subtitle="Pick what you want delivered."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>What do you want?</div>
-            <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.62)", fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>
+              What do you want?
+            </div>
+            <div
+              style={{
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+                fontSize: 13,
+                marginBottom: 12,
+              }}
+            >
               Choose your package now — you can adjust details later.
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+              }}
+            >
               {PACKAGES.map((p) => (
-                <PackageCard key={p.id} p={p} selected={form.packageChoice === p.id} />
+                <PackageCard
+                  key={p.id}
+                  p={p}
+                  selected={form.packageChoice === p.id}
+                />
               ))}
             </div>
 
-            <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.65)" }}>
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.65)",
+              }}
+            >
               <b>Audio:</b> delivered as a high-quality file.{" "}
-              <b>Photo Video:</b> your photos timed to the music for a polished keepsake.
+              <b>Photo Video:</b> your photos timed to the music for a polished
+              keepsake.
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={resetForm}>
                 Reset form
               </button>
@@ -478,7 +561,10 @@ export default function OrderPage() {
       {/* STEP 2 */}
       {step === 2 ? (
         <>
-          <StepHeader title="Your basics" subtitle="So I can deliver and confirm details." />
+          <StepHeader
+            title="Your basics"
+            subtitle="So I can deliver and confirm details."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={row2}>
@@ -487,7 +573,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.name ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, name: e.target.value }))
+                  }
                 />
               </div>
 
@@ -496,7 +584,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.email ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, email: e.target.value }))
+                  }
                 />
               </div>
             </div>
@@ -506,15 +596,27 @@ export default function OrderPage() {
               <input
                 style={input}
                 value={form.phone ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, phone: e.target.value }))
+                }
               />
             </div>
 
-            <div style={{ marginTop: 12, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
-              If you’re unsure about anything, leave it blank — I’ll confirm details so it fits your story perfectly.
+            <div
+              style={{
+                marginTop: 12,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+              }}
+            >
+              If you’re unsure about anything, leave it blank — I’ll confirm
+              details so it fits your story perfectly.
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(1)}>
                 ← Back
               </button>
@@ -537,11 +639,23 @@ export default function OrderPage() {
       {/* STEP 3 */}
       {step === 3 ? (
         <>
-          <StepHeader title="Song direction" subtitle="Genre, vibe, tempo (optional)." />
+          <StepHeader
+            title="Song direction"
+            subtitle="Genre, vibe, tempo (optional)."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ fontWeight: 950, marginBottom: 8 }}>Song direction (optional)</div>
-            <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.62)", fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 950, marginBottom: 8 }}>
+              Song direction (optional)
+            </div>
+            <div
+              style={{
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+                fontSize: 13,
+                marginBottom: 12,
+              }}
+            >
               Pick a starting point — I’ll shape it into something polished.
             </div>
 
@@ -551,7 +665,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.genre ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, genre: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, genre: e.target.value }))
+                  }
                   placeholder="Country, Pop, Worship, Rock, etc."
                 />
               </div>
@@ -560,7 +676,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.vibe ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, vibe: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, vibe: e.target.value }))
+                  }
                   placeholder="Warm & hopeful, emotional, uplifting..."
                 />
               </div>
@@ -571,12 +689,16 @@ export default function OrderPage() {
               <input
                 style={input}
                 value={form.tempo ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, tempo: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, tempo: e.target.value }))
+                }
                 placeholder="Slow, mid, upbeat"
               />
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(2)}>
                 ← Back
               </button>
@@ -597,13 +719,21 @@ export default function OrderPage() {
           <StepHeader title="Your story" subtitle="The heart of the song." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+              }}
+            >
               <div>
                 <label style={label}>Occasion</label>
                 <input
                   style={input}
                   value={form.occasion ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, occasion: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, occasion: e.target.value }))
+                  }
                 />
               </div>
               <div>
@@ -611,7 +741,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.recipientName ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, recipientName: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, recipientName: e.target.value }))
+                  }
                 />
               </div>
               <div>
@@ -619,7 +751,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.relationship ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, relationship: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, relationship: e.target.value }))
+                  }
                 />
               </div>
               <div>
@@ -627,7 +761,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.mustInclude ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, mustInclude: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, mustInclude: e.target.value }))
+                  }
                   placeholder="Names, phrases, inside jokes (optional)"
                 />
               </div>
@@ -638,15 +774,27 @@ export default function OrderPage() {
               <textarea
                 style={textarea}
                 value={form.notes ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, notes: e.target.value }))
+                }
                 placeholder="Tell me what happened, what you want it to say, and what emotion you want it to carry."
               />
-              <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "rgba(0,0,0,0.60)" }}>
-                Best results: key moments + what you want the song to “speak over” the person.
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  fontWeight: 850,
+                  color: "rgba(0,0,0,0.60)",
+                }}
+              >
+                Best results: key moments + what you want the song to “speak
+                over” the person.
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(3)}>
                 ← Back
               </button>
@@ -664,7 +812,10 @@ export default function OrderPage() {
       {/* STEP 5 */}
       {step === 5 ? (
         <>
-          <StepHeader title="Review & continue" subtitle="Quick check before the review page." />
+          <StepHeader
+            title="Review & continue"
+            subtitle="Quick check before the review page."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={{ fontWeight: 950, marginBottom: 10 }}>Quick review</div>
@@ -683,34 +834,43 @@ export default function OrderPage() {
             >
               <div>
                 <b>Package:</b>{" "}
-                {selectedPkg ? `${selectedPkg.title} (${money(selectedPkg.price)})` : "—"}
+                {selectedPkg
+                  ? `${selectedPkg.title} (${money(selectedPkg.price)})`
+                  : "—"}
               </div>
               <div>
-                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b> {form.email || "—"}
+                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b>{" "}
+                {form.email || "—"}
               </div>
               <div>
-                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp; <b>Recipient:</b>{" "}
-                {form.recipientName || "—"}
+                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp;{" "}
+                <b>Recipient:</b> {form.recipientName || "—"}
               </div>
               <div>
-                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b> {form.vibe || "—"} &nbsp; • &nbsp;{" "}
-                <b>Tempo:</b> {form.tempo || "—"}
+                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b>{" "}
+                {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b>{" "}
+                {form.tempo || "—"}
               </div>
               <div>
                 <b>Must-include:</b> {form.mustInclude || "—"}
               </div>
             </div>
 
+            {/* photo section only if they chose a video package */}
             {selectedIsVideo ? (
               <>
-                <div style={{ marginTop: 14, fontWeight: 950 }}>Photo Music Video (optional)</div>
+                <div style={{ marginTop: 14, fontWeight: 950 }}>
+                  Photo Music Video (optional)
+                </div>
                 <div style={{ ...row2, marginTop: 10 }}>
                   <div>
                     <label style={label}>Approx photo count</label>
                     <input
                       style={input}
                       value={form.photoCount ?? ""}
-                      onChange={(e) => setForm((p) => ({ ...p, photoCount: e.target.value }))}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, photoCount: e.target.value }))
+                      }
                       placeholder="e.g., 15"
                     />
                   </div>
@@ -719,22 +879,41 @@ export default function OrderPage() {
                     <input
                       style={input}
                       value={form.photoNotes ?? ""}
-                      onChange={(e) => setForm((p) => ({ ...p, photoNotes: e.target.value }))}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, photoNotes: e.target.value }))
+                      }
                       placeholder="Any timing or sequence notes (optional)"
                     />
                   </div>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "rgba(0,0,0,0.60)" }}>
-                  You can change this later. I’ll guide you on the best photo count for pacing.
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(0,0,0,0.60)",
+                  }}
+                >
+                  You can change this later. I’ll guide you on the best photo
+                  count for pacing.
                 </div>
               </>
             ) : null}
 
-            <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+              }}
+            >
               Next you’ll go to the Review page to confirm everything and submit.
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(4)}>
                 ← Back
               </button>

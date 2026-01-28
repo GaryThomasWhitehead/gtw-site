@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
@@ -55,28 +56,27 @@ function saveOrder(next: OrderData) {
 export default function PhotosPage() {
   const [form, setForm] = useState<OrderData>({});
 
-  useEffect(() => {
-    const loaded = loadOrder();
-    // If they somehow land here first, default to a video package
-    const next: OrderData = loaded.packageChoice
-      ? loaded
-      : { ...loaded, packageChoice: "video" };
-    setForm(next);
-    saveOrder(next);
-  }, []);
-
+  useEffect(() => setForm(loadOrder()), []);
   useEffect(() => saveOrder(form), [form]);
-
-  const packageChoice = useMemo<PackageChoice>(
-    () => form.packageChoice ?? "video",
-    [form.packageChoice]
-  );
 
   function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  const labelStyle: React.CSSProperties = { display: "block", fontWeight: 900, marginBottom: 6 };
+  const selectedIsVideo = useMemo(() => {
+    return (
+      form.packageChoice === "video" ||
+      form.packageChoice === "video_lyrics" ||
+      form.packageChoice === "everything_bundle"
+    );
+  }, [form.packageChoice]);
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontWeight: 900,
+    marginBottom: 6,
+  };
+
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "10px 12px",
@@ -86,7 +86,12 @@ export default function PhotosPage() {
     fontFamily: "inherit",
     background: "#fff",
   };
-  const textareaStyle: React.CSSProperties = { ...inputStyle, minHeight: 120, resize: "vertical" };
+
+  const textareaStyle: React.CSSProperties = {
+    ...inputStyle,
+    minHeight: 120,
+    resize: "vertical",
+  };
 
   const btnPrimary: React.CSSProperties = {
     display: "inline-flex",
@@ -117,6 +122,18 @@ export default function PhotosPage() {
     cursor: "pointer",
   };
 
+  const noteBox: React.CSSProperties = {
+    marginTop: 14,
+    borderRadius: 14,
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "rgba(255,255,255,0.82)",
+    padding: 14,
+    fontSize: 13,
+    fontWeight: 800,
+    color: "rgba(0,0,0,0.72)",
+    lineHeight: 1.55,
+  };
+
   return (
     <CustomSongsShell
       title="Photo Music Video Details"
@@ -125,24 +142,58 @@ export default function PhotosPage() {
       backLabel="← Back to Order"
       badge="PHOTO VIDEO"
     >
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      {!selectedIsVideo ? (
+        <div style={noteBox}>
+          <div style={{ fontWeight: 950, marginBottom: 6 }}>
+            Heads up: your current package is not a video package.
+          </div>
+          <div>
+            Photo Music Video details are only needed if you selected a package
+            that includes the video.
+          </div>
+          <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link href="/custom-songs/order?pkg=video" style={btnPrimary}>
+              Choose a Video Package →
+            </Link>
+            <Link href="/custom-songs/order" style={btnSecondary}>
+              Back to Order
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
         <div>
           <label style={labelStyle}>Your Name *</label>
-          <input style={inputStyle} value={form.name ?? ""} onChange={(e) => update("name", e.target.value)} />
+          <input
+            style={inputStyle}
+            value={form.name ?? ""}
+            onChange={(e) => update("name", e.target.value)}
+          />
         </div>
 
         <div>
           <label style={labelStyle}>Email *</label>
-          <input style={inputStyle} value={form.email ?? ""} onChange={(e) => update("email", e.target.value)} />
+          <input
+            style={inputStyle}
+            value={form.email ?? ""}
+            onChange={(e) => update("email", e.target.value)}
+          />
         </div>
       </div>
 
       <div style={{ marginTop: 12 }}>
         <label style={labelStyle}>Phone (optional)</label>
-        <input style={inputStyle} value={form.phone ?? ""} onChange={(e) => update("phone", e.target.value)} />
+        <input
+          style={inputStyle}
+          value={form.phone ?? ""}
+          onChange={(e) => update("phone", e.target.value)}
+        />
       </div>
 
-      <h3 style={{ marginTop: 18, marginBottom: 10, fontWeight: 900, fontSize: 20 }}>Photos for the video</h3>
+      <h3 style={{ marginTop: 18, marginBottom: 10, fontWeight: 900, fontSize: 20 }}>
+        Photos for the video
+      </h3>
 
       <div style={{ marginTop: 10 }}>
         <label style={labelStyle}>Approx. number of photos</label>
@@ -178,7 +229,7 @@ export default function PhotosPage() {
         </Link>
 
         <div style={{ marginTop: 10, fontSize: 12, opacity: 0.7 }}>
-          Saved packageChoice: <code>{packageChoice}</code>
+          Saved packageChoice: <code>{form.packageChoice ?? "—"}</code>
         </div>
       </div>
     </CustomSongsShell>
