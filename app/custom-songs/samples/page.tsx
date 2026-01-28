@@ -137,6 +137,111 @@ function Ratio16x9({ children }: { children: React.ReactNode }) {
   );
 }
 
+function FeaturedCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        borderRadius: 24,
+        border: "1px solid rgba(0,0,0,0.14)",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.74))",
+        boxShadow: "0 34px 90px rgba(0,0,0,0.20)",
+        overflow: "hidden",
+        position: "relative",
+        transform: "translateZ(0)",
+      }}
+    >
+      {/* gold cinematic accent */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(900px 420px at 15% 0%, rgba(181,123,23,0.30), rgba(0,0,0,0) 55%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          padding: "14px 16px",
+          borderBottom: "1px solid rgba(0,0,0,0.10)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.70))",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 950,
+              letterSpacing: 0.2,
+              color: "#111",
+              marginBottom: 2,
+            }}
+          >
+            {title}
+          </div>
+          {subtitle ? (
+            <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(0,0,0,0.65)" }}>
+              {subtitle}
+            </div>
+          ) : null}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 950,
+              padding: "6px 10px",
+              borderRadius: 999,
+              border: "1px solid rgba(0,0,0,0.18)",
+              background: "rgba(255,255,255,0.86)",
+              color: "#222",
+              letterSpacing: 0.4,
+            }}
+          >
+            FEATURED
+          </div>
+
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 950,
+              padding: "6px 10px",
+              borderRadius: 999,
+              border: "1px solid rgba(181,123,23,0.40)",
+              background: "rgba(181,123,23,0.14)",
+              color: "#6c4608",
+              letterSpacing: 0.4,
+            }}
+          >
+            SPECIAL
+          </div>
+        </div>
+      </div>
+
+      <div style={{ position: "relative" }}>{children}</div>
+    </div>
+  );
+}
+
 export default function SamplesPage() {
   const grid: React.CSSProperties = {
     display: "grid",
@@ -195,6 +300,19 @@ export default function SamplesPage() {
         Want something like this for your story? I can deliver <b>audio-only</b> or a full{" "}
         <b>Photo Music Video</b> (your pictures timed to the song).
       </div>
+
+      {/* FEATURED / SPECIAL */}
+      <SectionTitle title="Featured" subtitle="Special highlight" />
+      <FeaturedCard
+        title="Through the Years"
+        subtitle="A special Photo Music Video sample"
+      >
+        <Ratio16x9>
+          <video style={videoStyle} controls preload="metadata" playsInline>
+            <source src="/videos/through_the_years.mp4" type="video/mp4" />
+          </video>
+        </Ratio16x9>
+      </FeaturedCard>
 
       <SectionTitle title="Video Samples" subtitle="Full-length examples" />
 
