@@ -5,24 +5,35 @@ import { useEffect, useMemo, useState } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
 import TrackedLink from "@/components/TrackedLink";
 
+type PackageChoice =
+  | "song_audio"
+  | "song_audio_lyrics"
+  | "video"
+  | "video_lyrics"
+  | "everything_bundle";
+
 type OrderData = {
-  packageChoice?: "song_only" | "song_video";
+  packageChoice?: PackageChoice;
   name?: string;
   email?: string;
   phone?: string;
+
   occasion?: string;
   recipientName?: string;
   relationship?: string;
-  vibe?: string;
+
   genre?: string;
+  vibe?: string;
   tempo?: string;
+
   mustInclude?: string;
   notes?: string;
+
   photoCount?: string;
   photoNotes?: string;
 };
 
-const STORAGE_KEY = "customSongsOrder_v3";
+const STORAGE_KEY = "customSongsOrder_v4";
 
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
@@ -30,6 +41,23 @@ function loadOrder(): OrderData {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   } catch {
     return {};
+  }
+}
+
+function packageLabel(p?: PackageChoice) {
+  switch (p) {
+    case "song_audio":
+      return "Custom Song (Audio)";
+    case "song_audio_lyrics":
+      return "Custom Song + Printable Lyrics Sheet";
+    case "video":
+      return "Custom Song + Photo Music Video";
+    case "video_lyrics":
+      return "Photo Music Video + Printable Lyrics Sheet";
+    case "everything_bundle":
+      return "Everything Bundle";
+    default:
+      return "—";
   }
 }
 
@@ -41,7 +69,7 @@ export default function ReviewPage() {
   const lines = useMemo(() => {
     const d = data;
     const parts: string[] = [];
-    parts.push(`Package: ${d.packageChoice === "song_only" ? "Song Only" : "Song + Photo Music Video"}`);
+    parts.push(`Package: ${packageLabel(d.packageChoice)}`);
     parts.push(`Name: ${d.name ?? ""}`);
     parts.push(`Email: ${d.email ?? ""}`);
     parts.push(`Phone: ${d.phone ?? ""}`);
@@ -93,7 +121,8 @@ export default function ReviewPage() {
     <CustomSongsShell
       title="Review Your Request"
       subtitle="Check everything looks right. Then send it to me — I’ll confirm details and next steps."
-      backHref="/custom-songs"
+      backHref="/custom-songs/order"
+      backLabel="← Back to Order"
       badge="REVIEW"
     >
       <div style={box}>

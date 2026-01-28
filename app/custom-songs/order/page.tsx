@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
 type PackageChoice =
@@ -133,12 +134,49 @@ const PACKAGES: Array<{
   },
 ];
 
+function normalizePackageParam(p?: string | null): PackageChoice | undefined {
+  if (!p) return undefined;
+  const v = p.toLowerCase().trim();
+
+  // direct matches
+  if (v === "song_audio" || v === "song_audio_lyrics" || v === "video" || v === "video_lyrics" || v === "everything_bundle") {
+    return v as PackageChoice;
+  }
+
+  // a couple friendly aliases (optional)
+  if (v === "song" || v === "audio" || v === "song_only") return "song_audio";
+  if (v === "song_video" || v === "video_only") return "video";
+
+  return undefined;
+}
+
 export default function OrderPage() {
+  const searchParams = useSearchParams();
+
   const [form, setForm] = useState<OrderData>({});
   const [step, setStep] = useState<number>(1);
 
+  // Load saved order
   useEffect(() => setForm(loadOrder()), []);
+
+  // Persist on change
   useEffect(() => saveOrder(form), [form]);
+
+  // ✅ Apply ?package=... if present (and keep the user on the package step)
+  useEffect(() => {
+    const pkg = normalizePackageParam(searchParams?.get("package"));
+    if (!pkg) return;
+
+    setForm((prev) => {
+      if (prev.packageChoice === pkg) return prev;
+      const next = { ...prev, packageChoice: pkg };
+      saveOrder(next);
+      return next;
+    });
+
+    setStep(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const selectedPkg = useMemo(
     () => PACKAGES.find((p) => p.id === form.packageChoice),
@@ -664,23 +702,27 @@ export default function OrderPage() {
               }}
             >
               <div>
-                <b>Package:</b> {selectedPkg ? `${selectedPkg.title} (${money(selectedPkg.price)})` : "—"}
+                <b>Package:</b>{" "}
+                {selectedPkg ? `${selectedPkg.title} (${money(selectedPkg.price)})` : "—"}
               </div>
               <div>
-                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b> {form.email || "—"}
+                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b>{" "}
+                {form.email || "—"}
               </div>
               <div>
-                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp; <b>Recipient:</b> {form.recipientName || "—"}
+                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp;{" "}
+                <b>Recipient:</b> {form.recipientName || "—"}
               </div>
               <div>
-                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b> {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b> {form.tempo || "—"}
+                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b>{" "}
+                {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b>{" "}
+                {form.tempo || "—"}
               </div>
               <div>
                 <b>Must-include:</b> {form.mustInclude || "—"}
               </div>
             </div>
 
-            {/* photo section only if they chose a video package */}
             {selectedIsVideo ? (
               <>
                 <div style={{ marginTop: 14, fontWeight: 950 }}>Photo Music Video (optional)</div>

@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CustomSongsShell from "@/components/CustomSongsShell";
 
-type PackageChoice = "song_only" | "song_video";
+type PackageChoice =
+  | "song_audio"
+  | "song_audio_lyrics"
+  | "video"
+  | "video_lyrics"
+  | "everything_bundle";
 
 type OrderData = {
   packageChoice?: PackageChoice;
@@ -16,17 +21,18 @@ type OrderData = {
   occasion?: string;
   recipientName?: string;
   relationship?: string;
-  vibe?: string;
-  genre?: string;
-  tempo?: string;
   mustInclude?: string;
   notes?: string;
+
+  genre?: string;
+  vibe?: string;
+  tempo?: string;
 
   photoCount?: string;
   photoNotes?: string;
 };
 
-const STORAGE_KEY = "customSongsOrder_v3";
+const STORAGE_KEY = "customSongsOrder_v4";
 
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
@@ -39,7 +45,11 @@ function loadOrder(): OrderData {
 
 function saveOrder(next: OrderData) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
 }
 
 export default function PhotosPage() {
@@ -48,7 +58,20 @@ export default function PhotosPage() {
   useEffect(() => setForm(loadOrder()), []);
   useEffect(() => saveOrder(form), [form]);
 
-  const packageChoice = useMemo<PackageChoice>(() => form.packageChoice ?? "song_video", [form.packageChoice]);
+  // If they came here directly, ensure a video-capable package is selected
+  useEffect(() => {
+    const isVideo =
+      form.packageChoice === "video" ||
+      form.packageChoice === "video_lyrics" ||
+      form.packageChoice === "everything_bundle";
+
+    if (!isVideo) {
+      setForm((prev) => ({ ...prev, packageChoice: prev.packageChoice ?? "video" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const packageChoice = useMemo<PackageChoice>(() => form.packageChoice ?? "video", [form.packageChoice]);
 
   function update<K extends keyof OrderData>(key: K, value: OrderData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -99,7 +122,8 @@ export default function PhotosPage() {
     <CustomSongsShell
       title="Photo Music Video Details"
       subtitle="This option includes a custom song plus a video where your photos play beautifully as the music plays."
-      backHref="/custom-songs"
+      backHref="/custom-songs/order"
+      backLabel="← Back to Order"
       badge="PHOTO VIDEO"
     >
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -119,7 +143,9 @@ export default function PhotosPage() {
         <input style={inputStyle} value={form.phone ?? ""} onChange={(e) => update("phone", e.target.value)} />
       </div>
 
-      <h3 style={{ marginTop: 18, marginBottom: 10, fontWeight: 900, fontSize: 20 }}>Photos for the video</h3>
+      <h3 style={{ marginTop: 18, marginBottom: 10, fontWeight: 900, fontSize: 20 }}>
+        Photos for the video
+      </h3>
 
       <div style={{ marginTop: 10 }}>
         <label style={labelStyle}>Approx. number of photos</label>
@@ -145,7 +171,7 @@ export default function PhotosPage() {
         />
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18, alignItems: "center" }}>
         <Link href="/custom-songs/review" style={btnPrimary}>
           Continue to Review →
         </Link>
@@ -154,7 +180,7 @@ export default function PhotosPage() {
           Back to Order
         </Link>
 
-        <div style={{ marginTop: 10, fontSize: 12, opacity: 0.7 }}>
+        <div style={{ fontSize: 12, opacity: 0.7 }}>
           Saved packageChoice: <code>{packageChoice}</code>
         </div>
       </div>
