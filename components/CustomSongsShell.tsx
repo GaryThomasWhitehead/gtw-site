@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
+import MoreMenu from "@/components/MoreMenu";
 
 type Props = {
   badge?: string;
@@ -112,6 +113,10 @@ export default function CustomSongsShell({
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={pill}>{badge}</div>
+
+            {/* ✅ This is the dropdown */}
+            <MoreMenu />
+
             {rightSlot}
           </div>
         </div>
