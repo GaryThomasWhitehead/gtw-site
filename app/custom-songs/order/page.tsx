@@ -25,9 +25,9 @@ type OrderData = {
   notes?: string;
 
   // direction (optional)
-  genre?: string; // free text
-  vibe?: string; // free text
-  tempo?: string; // free text
+  genre?: string;
+  vibe?: string;
+  tempo?: string;
 
   // photo video (optional)
   photoCount?: string;
@@ -59,6 +59,7 @@ function money(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
+// ✅ Prices adjusted: base is now $119 (was $249), so all others reduced by $130 as well.
 const PACKAGES: Array<{
   id: PackageChoice;
   title: string;
@@ -71,7 +72,7 @@ const PACKAGES: Array<{
   {
     id: "song_audio",
     title: "Custom Song (Audio)",
-    price: 119, // ✅ UPDATED
+    price: 119,
     subtitle: "Radio-clean song delivered as a high-quality file.",
     bullets: [
       "Personally written lyrics by a published songwriter",
@@ -83,7 +84,7 @@ const PACKAGES: Array<{
   {
     id: "song_audio_lyrics",
     title: "Custom Song + Printable Lyrics Sheet",
-    price: 133, // ✅ UPDATED (scaled from 279)
+    price: 149,
     subtitle: "Audio song plus a beautiful PDF lyrics keepsake.",
     bullets: [
       "Everything in Custom Song (Audio)",
@@ -95,7 +96,7 @@ const PACKAGES: Array<{
   {
     id: "video",
     title: "Custom Song + Photo Music Video",
-    price: 239, // ✅ UPDATED (scaled from 499)
+    price: 369,
     subtitle: "Your photos timed to the music for a polished keepsake video.",
     bullets: [
       "Includes Custom Song (Audio)",
@@ -108,7 +109,7 @@ const PACKAGES: Array<{
   {
     id: "video_lyrics",
     title: "Photo Music Video + Printable Lyrics Sheet",
-    price: 253, // ✅ UPDATED (scaled from 529)
+    price: 399,
     subtitle: "The complete keepsake: video + audio + lyrics PDF.",
     bullets: [
       "Everything in Custom Song + Photo Music Video",
@@ -119,7 +120,7 @@ const PACKAGES: Array<{
   {
     id: "everything_bundle",
     title: "Everything Bundle",
-    price: 286, // ✅ UPDATED (scaled from 599)
+    price: 469,
     subtitle: "All deliverables plus a couple premium extras.",
     bullets: [
       "Custom Song (Audio)",
@@ -150,7 +151,7 @@ export default function OrderPage() {
     return map[step] ?? 20;
   }, [step]);
 
-  // ✅ UPDATED shell subtitle (Option B)
+  // ✅ Option B
   const shellSubtitle =
     "Lyrics are personally written by Gary Thomas Whitehead — then music & vocals are artist-directed using advanced AI tools to deliver a polished, emotionally powerful, radio-ready track.";
 
@@ -229,7 +230,13 @@ export default function OrderPage() {
     setStep(1);
   }
 
-  const StepHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
+  const StepHeader = ({
+    title,
+    subtitle,
+  }: {
+    title: string;
+    subtitle: string;
+  }) => (
     <div
       style={{
         ...softCard,
@@ -241,8 +248,16 @@ export default function OrderPage() {
       }}
     >
       <div>
-        <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>{title}</div>
-        <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.60)", fontSize: 13 }}>
+        <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 2 }}>
+          {title}
+        </div>
+        <div
+          style={{
+            fontWeight: 850,
+            color: "rgba(0,0,0,0.60)",
+            fontSize: 13,
+          }}
+        >
           {subtitle}
         </div>
       </div>
@@ -266,8 +281,14 @@ export default function OrderPage() {
             }}
           />
         </div>
-
-        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 900, color: "rgba(0,0,0,0.55)" }}>
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            fontWeight: 900,
+            color: "rgba(0,0,0,0.55)",
+          }}
+        >
           {progressPct}% complete
         </div>
       </div>
@@ -284,11 +305,9 @@ export default function OrderPage() {
     const accent =
       p.accent === "gold"
         ? {
-            ring: "0 0 0 3px rgba(181,123,23,0.25)",
             border: "1px solid rgba(181,123,23,0.45)",
           }
         : {
-            ring: "0 0 0 3px rgba(0,0,0,0.08)",
             border: "1px solid rgba(0,0,0,0.14)",
           };
 
@@ -313,10 +332,27 @@ export default function OrderPage() {
           transform: selected ? "translateY(-2px)" : "translateY(0px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
           <div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>{p.title}</div>
-            <div style={{ fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>{p.subtitle}</div>
+            <div style={{ fontSize: 18, fontWeight: 950, marginBottom: 4 }}>
+              {p.title}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+              }}
+            >
+              {p.subtitle}
+            </div>
           </div>
 
           <div style={{ textAlign: "right" }}>
@@ -337,11 +373,20 @@ export default function OrderPage() {
                 {p.badge}
               </div>
             ) : null}
-            <div style={{ fontSize: 20, fontWeight: 950 }}>{money(p.price)}</div>
+            <div style={{ fontSize: 20, fontWeight: 950 }}>
+              {money(p.price)}
+            </div>
           </div>
         </div>
 
-        <ul style={{ margin: "12px 0 0", paddingLeft: 18, color: "rgba(0,0,0,0.78)", fontWeight: 850 }}>
+        <ul
+          style={{
+            margin: "12px 0 0",
+            paddingLeft: 18,
+            color: "rgba(0,0,0,0.78)",
+            fontWeight: 850,
+          }}
+        >
           {p.bullets.map((b) => (
             <li key={b} style={{ margin: "6px 0", lineHeight: 1.35 }}>
               {b}
@@ -349,7 +394,17 @@ export default function OrderPage() {
           ))}
         </ul>
 
-        <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, color: "rgba(0,0,0,0.70)", fontWeight: 900, fontSize: 13 }}>
+        <div
+          style={{
+            marginTop: 12,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            color: "rgba(0,0,0,0.70)",
+            fontWeight: 900,
+            fontSize: 13,
+          }}
+        >
           <span
             aria-hidden
             style={{
@@ -406,17 +461,43 @@ export default function OrderPage() {
           marginBottom: 14,
         }}
       >
-        <div style={{ fontWeight: 950, letterSpacing: ".06em", fontSize: 12, color: "rgba(0,0,0,0.65)" }}>
+        <div
+          style={{
+            fontWeight: 950,
+            letterSpacing: ".06em",
+            fontSize: 12,
+            color: "rgba(0,0,0,0.65)",
+          }}
+        >
           🎼 BRAND POSITIONING
         </div>
 
-        <div style={{ marginTop: 8, fontWeight: 900, color: "rgba(0,0,0,0.80)", lineHeight: 1.65, fontSize: 14 }}>
-          Every song begins with lyrics personally written by <b>Gary Thomas Whitehead</b> — a published songwriter and storyteller.
-          Music and vocals are then <b>artist-directed</b> using advanced AI production tools to deliver polished, emotionally powerful recordings.
+        <div
+          style={{
+            marginTop: 8,
+            fontWeight: 900,
+            color: "rgba(0,0,0,0.80)",
+            lineHeight: 1.65,
+            fontSize: 14,
+          }}
+        >
+          Every song begins with lyrics personally written by{" "}
+          <b>Gary Thomas Whitehead</b> — a published songwriter and storyteller.
+          Music and vocals are then <b>artist-directed</b> using advanced AI
+          production tools to deliver polished, emotionally powerful recordings.
         </div>
 
-        <div style={{ marginTop: 8, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)", lineHeight: 1.6 }}>
-          Lyrics are personally written by a seasoned, published songwriter. Music and vocals are produced using advanced AI tools — artist-directed,
+        <div
+          style={{
+            marginTop: 8,
+            fontSize: 13,
+            fontWeight: 850,
+            color: "rgba(0,0,0,0.62)",
+            lineHeight: 1.6,
+          }}
+        >
+          Lyrics are personally written by a seasoned, published songwriter.
+          Music and vocals are produced using advanced AI tools — artist-directed,
           edited, and quality-controlled to achieve radio-ready results.
         </div>
       </div>
@@ -424,29 +505,66 @@ export default function OrderPage() {
       {/* STEP 1 */}
       {step === 1 ? (
         <>
-          <StepHeader title="Choose package" subtitle="Pick what you want delivered." />
+          <StepHeader
+            title="Choose package"
+            subtitle="Pick what you want delivered."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>What do you want?</div>
-            <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.62)", fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 6 }}>
+              What do you want?
+            </div>
+            <div
+              style={{
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+                fontSize: 13,
+                marginBottom: 12,
+              }}
+            >
               Choose your package now — you can adjust details later.
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+              }}
+            >
               {PACKAGES.map((p) => (
-                <PackageCard key={p.id} p={p} selected={form.packageChoice === p.id} />
+                <PackageCard
+                  key={p.id}
+                  p={p}
+                  selected={form.packageChoice === p.id}
+                />
               ))}
             </div>
 
-            <div style={{ marginTop: 14, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.65)" }}>
-              <b>Audio:</b> delivered as a high-quality file. <b>Photo Video:</b> your photos timed to the music for a polished keepsake.
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.65)",
+              }}
+            >
+              <b>Audio:</b> delivered as a high-quality file. <b>Photo Video:</b>{" "}
+              your photos timed to the music for a polished keepsake.
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={resetForm}>
                 Reset form
               </button>
-              <button type="button" style={btnNext} onClick={() => setStep(2)} disabled={!form.packageChoice}>
+              <button
+                type="button"
+                style={btnNext}
+                onClick={() => setStep(2)}
+                disabled={!form.packageChoice}
+              >
                 Next →
               </button>
             </div>
@@ -457,38 +575,74 @@ export default function OrderPage() {
       {/* STEP 2 */}
       {step === 2 ? (
         <>
-          <StepHeader title="Your basics" subtitle="So I can deliver and confirm details." />
+          <StepHeader
+            title="Your basics"
+            subtitle="So I can deliver and confirm details."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={row2}>
               <div>
                 <label style={label}>Your Name *</label>
-                <input style={input} value={form.name ?? ""} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+                <input
+                  style={input}
+                  value={form.name ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                />
               </div>
 
               <div>
                 <label style={label}>Email *</label>
-                <input style={input} value={form.email ?? ""} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+                <input
+                  style={input}
+                  value={form.email ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                />
               </div>
             </div>
 
             <div style={{ marginTop: 12 }}>
               <label style={label}>Phone (optional)</label>
-              <input style={input} value={form.phone ?? ""} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
+              <input
+                style={input}
+                value={form.phone ?? ""}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, phone: e.target.value }))
+                }
+              />
             </div>
 
-            <div style={{ marginTop: 12, fontSize: 13, fontWeight: 850, color: "rgba(0,0,0,0.62)" }}>
-              If you’re unsure about anything, leave it blank — I’ll confirm details so it fits your story perfectly.
+            <div
+              style={{
+                marginTop: 12,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+              }}
+            >
+              If you’re unsure about anything, leave it blank — I’ll confirm
+              details so it fits your story perfectly.
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(1)}>
                 ← Back
               </button>
               <button type="button" style={btnBase} onClick={resetForm}>
                 Reset form
               </button>
-              <button type="button" style={btnNext} onClick={() => setStep(3)} disabled={!form.name || !form.email}>
+              <button
+                type="button"
+                style={btnNext}
+                onClick={() => setStep(3)}
+                disabled={!form.name || !form.email}
+              >
                 Next →
               </button>
             </div>
@@ -499,11 +653,23 @@ export default function OrderPage() {
       {/* STEP 3 */}
       {step === 3 ? (
         <>
-          <StepHeader title="Song direction" subtitle="Genre, vibe, tempo (optional)." />
+          <StepHeader
+            title="Song direction"
+            subtitle="Genre, vibe, tempo (optional)."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ fontWeight: 950, marginBottom: 8 }}>Song direction (optional)</div>
-            <div style={{ fontWeight: 850, color: "rgba(0,0,0,0.62)", fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 950, marginBottom: 8 }}>
+              Song direction (optional)
+            </div>
+            <div
+              style={{
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+                fontSize: 13,
+                marginBottom: 12,
+              }}
+            >
               Pick a starting point — I’ll shape it into something polished.
             </div>
 
@@ -513,7 +679,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.genre ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, genre: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, genre: e.target.value }))
+                  }
                   placeholder="Country, Pop, Worship, Rock, etc."
                 />
               </div>
@@ -522,7 +690,9 @@ export default function OrderPage() {
                 <input
                   style={input}
                   value={form.vibe ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, vibe: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, vibe: e.target.value }))
+                  }
                   placeholder="Warm & hopeful, emotional, uplifting..."
                 />
               </div>
@@ -533,12 +703,16 @@ export default function OrderPage() {
               <input
                 style={input}
                 value={form.tempo ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, tempo: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, tempo: e.target.value }))
+                }
                 placeholder="Slow, mid, upbeat"
               />
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(2)}>
                 ← Back
               </button>
@@ -559,25 +733,51 @@ export default function OrderPage() {
           <StepHeader title="Your story" subtitle="The heart of the song." />
 
           <div style={{ ...softCard, marginTop: 14 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+              }}
+            >
               <div>
                 <label style={label}>Occasion</label>
-                <input style={input} value={form.occasion ?? ""} onChange={(e) => setForm((p) => ({ ...p, occasion: e.target.value }))} />
+                <input
+                  style={input}
+                  value={form.occasion ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, occasion: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <label style={label}>Recipient name</label>
-                <input style={input} value={form.recipientName ?? ""} onChange={(e) => setForm((p) => ({ ...p, recipientName: e.target.value }))} />
+                <input
+                  style={input}
+                  value={form.recipientName ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, recipientName: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <label style={label}>Your relationship</label>
-                <input style={input} value={form.relationship ?? ""} onChange={(e) => setForm((p) => ({ ...p, relationship: e.target.value }))} />
+                <input
+                  style={input}
+                  value={form.relationship ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, relationship: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <label style={label}>Must-include phrases</label>
                 <input
                   style={input}
                   value={form.mustInclude ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, mustInclude: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, mustInclude: e.target.value }))
+                  }
                   placeholder="Names, phrases, inside jokes (optional)"
                 />
               </div>
@@ -588,15 +788,27 @@ export default function OrderPage() {
               <textarea
                 style={textarea}
                 value={form.notes ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, notes: e.target.value }))
+                }
                 placeholder="Tell me what happened, what you want it to say, and what emotion you want it to carry."
               />
-              <div style={{ marginTop: 8, fontSize: 12, fontWeight: 850, color: "rgba(0,0,0,0.60)" }}>
-                Best results: key moments + what you want the song to “speak over” the person.
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  fontWeight: 850,
+                  color: "rgba(0,0,0,0.60)",
+                }}
+              >
+                Best results: key moments + what you want the song to “speak over”
+                the person.
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
               <button type="button" style={btnBase} onClick={() => setStep(3)}>
                 ← Back
               </button>
@@ -614,7 +826,10 @@ export default function OrderPage() {
       {/* STEP 5 */}
       {step === 5 ? (
         <>
-          <StepHeader title="Review & continue" subtitle="Quick check before the review page." />
+          <StepHeader
+            title="Review & continue"
+            subtitle="Quick check before the review page."
+          />
 
           <div style={{ ...softCard, marginTop: 14 }}>
             <div style={{ fontWeight: 950, marginBottom: 10 }}>Quick review</div>
@@ -622,4 +837,117 @@ export default function OrderPage() {
             <div
               style={{
                 borderRadius: 14,
-                border: "1px solid rgba(0,0,
+                border: "1px solid rgba(0,0,0,0.10)", // ✅ FIXED (complete string)
+                background: "rgba(255,255,255,0.80)",
+                padding: 14,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.78)",
+                lineHeight: 1.6,
+              }}
+            >
+              <div>
+                <b>Package:</b>{" "}
+                {selectedPkg
+                  ? `${selectedPkg.title} (${money(selectedPkg.price)})`
+                  : "—"}
+              </div>
+              <div>
+                <b>Name:</b> {form.name || "—"} &nbsp; • &nbsp; <b>Email:</b>{" "}
+                {form.email || "—"}
+              </div>
+              <div>
+                <b>Occasion:</b> {form.occasion || "—"} &nbsp; • &nbsp;{" "}
+                <b>Recipient:</b> {form.recipientName || "—"}
+              </div>
+              <div>
+                <b>Genre:</b> {form.genre || "—"} &nbsp; • &nbsp; <b>Vibe:</b>{" "}
+                {form.vibe || "—"} &nbsp; • &nbsp; <b>Tempo:</b>{" "}
+                {form.tempo || "—"}
+              </div>
+              <div>
+                <b>Must-include:</b> {form.mustInclude || "—"}
+              </div>
+            </div>
+
+            {/* photo section only if they chose a video package */}
+            {selectedIsVideo ? (
+              <>
+                <div style={{ marginTop: 14, fontWeight: 950 }}>
+                  Photo Music Video (optional)
+                </div>
+                <div style={{ ...row2, marginTop: 10 }}>
+                  <div>
+                    <label style={label}>Approx photo count</label>
+                    <input
+                      style={input}
+                      value={form.photoCount ?? ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, photoCount: e.target.value }))
+                      }
+                      placeholder="e.g., 15"
+                    />
+                  </div>
+                  <div>
+                    <label style={label}>Photo notes</label>
+                    <input
+                      style={input}
+                      value={form.photoNotes ?? ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, photoNotes: e.target.value }))
+                      }
+                      placeholder="Any timing or sequence notes (optional)"
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    fontWeight: 850,
+                    color: "rgba(0,0,0,0.60)",
+                  }}
+                >
+                  You can change this later. I’ll guide you on the best photo
+                  count for pacing.
+                </div>
+              </>
+            ) : null}
+
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 13,
+                fontWeight: 850,
+                color: "rgba(0,0,0,0.62)",
+              }}
+            >
+              Next you’ll go to the Review page to confirm everything and submit.
+            </div>
+
+            <div
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}
+            >
+              <button type="button" style={btnBase} onClick={() => setStep(4)}>
+                ← Back
+              </button>
+              <button type="button" style={btnBase} onClick={resetForm}>
+                Reset form
+              </button>
+
+              <Link href="/custom-songs/review" style={btnGold}>
+                Continue to Review →
+              </Link>
+
+              {selectedIsVideo ? (
+                <Link href="/custom-songs/photos" style={btnBase}>
+                  Add Photo Video Details
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </>
+      ) : null}
+    </CustomSongsShell>
+  );
+}

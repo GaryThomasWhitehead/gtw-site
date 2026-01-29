@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
-import MoreMenu from "@/components/MoreMenu";
 
 export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
@@ -92,7 +90,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (SIMPLIFIED CTA) ====== */}
+      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (RESTORED) ====== */}
       <section
         aria-labelledby="custom-songs"
         style={{
@@ -145,9 +143,39 @@ export default function Home() {
           </li>
         </ul>
 
-        {/* ✅ ONE CTA ONLY */}
+        {/* ✅ BRAND POSITIONING (Core Message) */}
+        <div
+          style={{
+            borderRadius: "12px",
+            border: "1px solid rgba(0,0,0,0.08)",
+            background: "rgba(245,242,236,0.75)",
+            padding: "14px 14px",
+            marginBottom: 14,
+            maxWidth: 980,
+          }}
+        >
+          <div style={{ fontWeight: 900, fontSize: 13, letterSpacing: ".08em", color: "rgba(0,0,0,0.65)" }}>
+            🎼 BRAND POSITIONING
+          </div>
+
+          <div style={{ marginTop: 8, fontWeight: 700, lineHeight: 1.7 }}>
+            Every song begins with lyrics personally written by{" "}
+            <strong>Gary Thomas Whitehead</strong> — a published songwriter and
+            storyteller. Music and vocals are then{" "}
+            <strong>artist-directed</strong> using advanced AI production tools
+            to deliver polished, emotionally powerful recordings.
+          </div>
+
+          <div style={{ marginTop: 8, fontSize: 14, fontWeight: 700, opacity: 0.85 }}>
+            Lyrics are personally written by a seasoned, published songwriter.
+            Music and vocals are produced using advanced AI tools — artist-directed,
+            edited, and quality-controlled to achieve radio-ready results.
+          </div>
+        </div>
+
+        {/* ✅ ONE BUTTON ONLY */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Link
+          <a
             className="btn"
             href="/custom-songs/order"
             style={{
@@ -163,10 +191,7 @@ export default function Home() {
             onClick={() => track("CustomSongsOrderClick")}
           >
             Start My Song Request
-          </Link>
-
-          {/* Keep your dropdown if you want it */}
-          <MoreMenu />
+          </a>
         </div>
       </section>
 
@@ -273,6 +298,7 @@ export default function Home() {
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
+            {/* ✅ file is: public/videos/not-for-sale.mp4 */}
             <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
