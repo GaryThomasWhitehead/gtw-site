@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
+import MoreMenu from "@/components/MoreMenu";
 
 export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
@@ -154,7 +155,14 @@ export default function Home() {
             maxWidth: 980,
           }}
         >
-          <div style={{ fontWeight: 900, fontSize: 13, letterSpacing: ".08em", color: "rgba(0,0,0,0.65)" }}>
+          <div
+            style={{
+              fontWeight: 900,
+              fontSize: 13,
+              letterSpacing: ".08em",
+              color: "rgba(0,0,0,0.65)",
+            }}
+          >
             🎼 BRAND POSITIONING
           </div>
 
@@ -166,14 +174,22 @@ export default function Home() {
             to deliver polished, emotionally powerful recordings.
           </div>
 
-          <div style={{ marginTop: 8, fontSize: 14, fontWeight: 700, opacity: 0.85 }}>
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              opacity: 0.85,
+            }}
+          >
             Lyrics are personally written by a seasoned, published songwriter.
-            Music and vocals are produced using advanced AI tools — artist-directed,
-            edited, and quality-controlled to achieve radio-ready results.
+            Music and vocals are produced using advanced AI tools —
+            artist-directed, edited, and quality-controlled to achieve
+            radio-ready results.
           </div>
         </div>
 
-        {/* ✅ ONE BUTTON ONLY */}
+        {/* ✅ ONE MAIN BUTTON + ✅ RESTORED DROPDOWN */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <a
             className="btn"
@@ -192,6 +208,8 @@ export default function Home() {
           >
             Start My Song Request
           </a>
+
+          <MoreMenu />
         </div>
       </section>
 
@@ -394,9 +412,7 @@ export default function Home() {
               }}
             >
               <li>Author: Gary Thomas Whitehead</li>
-              <li>
-                Genre: Christian theology / spiritual reflection / Bible Study
-              </li>
+              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
               <li>
                 An in-depth scriptural study on Jesus&apos; role as both
                 mediator and divine Son, written in a devotional, reflective
@@ -539,6 +555,7 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
+        {/* (rest of your music section unchanged) */}
         <h2
           id="music"
           style={{
@@ -589,6 +606,7 @@ export default function Home() {
                 gap: 12,
               }}
             >
+              {/* your buttons unchanged */}
               <a
                 className="btn"
                 href="https://soundcloud.com/user-747949669"
@@ -740,6 +758,7 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
+        {/* your art section unchanged */}
         <h2
           id="art"
           style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
