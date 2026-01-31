@@ -41,11 +41,36 @@ type OrderData = {
 };
 
 const STORAGE_KEY = "customSongsOrder_v5";
+const STORAGE_KEY_OLD = "customSongsOrder_v4";
+
+function safeParse(json: string | null): any {
+  if (!json) return null;
+  try {
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function migrateStorageIfNeeded() {
+  if (typeof window === "undefined") return;
+
+  const v5 = localStorage.getItem(STORAGE_KEY);
+  if (v5 && v5.trim().length > 0) return;
+
+  const v4 = localStorage.getItem(STORAGE_KEY_OLD);
+  if (!v4 || v4.trim().length === 0) return;
+
+  localStorage.setItem(STORAGE_KEY, v4);
+}
 
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as OrderData;
+    migrateStorageIfNeeded();
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = safeParse(raw);
+    return (parsed ?? {}) as OrderData;
   } catch {
     return {};
   }
@@ -91,8 +116,8 @@ function PayPalBlock({
       body: JSON.stringify({ packageChoice }),
     });
 
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || "Failed to create order");
+    const json = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(json?.error || `Failed to create order (${res.status})`);
     return json.id as string;
   };
 
@@ -105,8 +130,8 @@ function PayPalBlock({
       body: JSON.stringify({ orderId: details.orderID }),
     });
 
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || "Failed to capture order");
+    const json = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(json?.error || `Failed to capture order (${res.status})`);
 
     onPaid();
   };
@@ -118,7 +143,9 @@ function PayPalBlock({
         {isPending ? "loading…" : isRejected ? "failed" : isResolved ? "ready" : "unknown"}
       </div>
 
-      {isPending ? <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div> : null}
+      {isPending ? (
+        <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div>
+      ) : null}
 
       {isRejected ? (
         <div style={{ fontWeight: 900, color: "#b00020", lineHeight: 1.5 }}>
@@ -128,9 +155,12 @@ function PayPalBlock({
           <br />• ad blocker / privacy shield
           <br />• corporate firewall
           <br />• PayPal blocked in browser
+          <br />• invalid PayPal client-id (PayPal returns 400)
           <br />
           <br />
-          Check DevTools → Network and confirm the PayPal SDK request returns <b>200</b>.
+          Open DevTools → Network and click the <b>paypal.com/sdk/js</b> request.
+          <br />
+          If it’s <b>400</b>, the response usually says why (often “client-id not recognized”).
         </div>
       ) : null}
 
@@ -151,25 +181,62 @@ export default function ReviewPage() {
   const [paid, setPaid] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
-  useEffect(() => setData(loadOrder()), []);
+  // PayPal config loaded from your API route (NOT build-time env)
+  const [ppClientId, setPpClientId] = useState<string>("");
+  const [ppEnv, setPpEnv] = useState<"sandbox" | "live">("sandbox");
+  const [ppConfigError, setPpConfigError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setData(loadOrder());
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPayPalConfig() {
+      setPpConfigError(null);
+      try {
+        const res = await fetch("/api/paypal/client-id", { cache: "no-store" });
+        const json = await res.json().catch(() => ({} as any));
+        if (!res.ok) throw new Error(json?.error || `Failed to load PayPal config (${res.status})`);
+
+        const clientId = String(json?.clientId ?? "").trim();
+        const env = String(json?.env ?? "sandbox").toLowerCase() === "live" ? "live" : "sandbox";
+
+        if (!clientId) throw new Error("Missing clientId from /api/paypal/client-id");
+
+        if (!cancelled) {
+          setPpClientId(clientId);
+          setPpEnv(env);
+        }
+      } catch (e: any) {
+        if (!cancelled) setPpConfigError(String(e?.message || e));
+      }
+    }
+
+    loadPayPalConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pkgTitle = data.packageChoice ? PACKAGE_LABELS[data.packageChoice] : "";
   const price = data.packageChoice ? PACKAGE_PRICES[data.packageChoice] : 0;
 
-  // Read the PUBLIC client id (safe for browser)
-  const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
-  const clientLoaded = clientId.length > 0;
-
-  // ✅ IMPORTANT: this library version expects `clientId` (camelCase), not `"client-id"`.
   const paypalOptions = useMemo(() => {
-    if (!clientLoaded) return null;
+    if (!ppClientId) return null;
+
+    // "client-id" is the correct PayPal SDK option key.
+    // Casting keeps TS happy across versions.
     return {
-      clientId,
+      "client-id": ppClientId,
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    };
-  }, [clientId, clientLoaded]);
+      // Helps debugging in PayPal dashboards/logs
+      "data-sdk-integration-source": "gtw-custom-songs",
+    } as any;
+  }, [ppClientId]);
 
   const lines = useMemo(() => {
     const d = data;
@@ -258,22 +325,31 @@ export default function ReviewPage() {
       </div>
 
       <div style={{ ...box, marginTop: 14 }}>
-        <div style={{ fontWeight: 950, marginBottom: 10 }}>Pay securely with PayPal</div>
+        <div style={{ fontWeight: 950, marginBottom: 10 }}>
+          Pay securely with PayPal{" "}
+          <span style={{ fontSize: 12, opacity: 0.65, fontWeight: 900 }}>
+            (env: {ppEnv})
+          </span>
+        </div>
 
         {!data.packageChoice ? (
           <div style={{ fontWeight: 900, color: "#b00020" }}>
             Please go back and select a package first.
           </div>
-        ) : !clientLoaded ? (
-          <div style={{ fontWeight: 900, color: "#b00020" }}>
-            Client ID not available in the browser bundle.
+        ) : ppConfigError ? (
+          <div style={{ fontWeight: 900, color: "#b00020", lineHeight: 1.5 }}>
+            Could not load PayPal configuration.
+            <br />
+            {ppConfigError}
           </div>
+        ) : !paypalOptions ? (
+          <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal configuration…</div>
         ) : paid ? (
           <div style={{ fontWeight: 950, color: "#0b6b2d" }}>✅ Payment received! You can continue.</div>
         ) : (
           <PayPalScriptProvider
-            key={clientId} // force fresh script load if clientId changes
-            options={paypalOptions!}
+            key={`${ppClientId}:${ppEnv}`} // force reload when config changes
+            options={paypalOptions}
           >
             <PayPalBlock
               packageChoice={data.packageChoice}
