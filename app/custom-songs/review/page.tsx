@@ -119,9 +119,7 @@ function PayPalBlock({
       </div>
 
       {/* If the script is still loading, DO NOT render PayPalButtons yet */}
-      {isPending ? (
-        <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div>
-      ) : null}
+      {isPending ? <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div> : null}
 
       {isRejected ? (
         <div style={{ fontWeight: 900, color: "#b00020", lineHeight: 1.5 }}>
@@ -166,8 +164,10 @@ export default function ReviewPage() {
 
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
+
+    // ✅ IMPORTANT: @paypal/react-paypal-js expects camelCase clientId (NOT "client-id")
     return {
-      "client-id": clientId,
+      clientId,
       currency: "USD",
       intent: "capture",
       components: "buttons",
@@ -272,7 +272,9 @@ export default function ReviewPage() {
             Client ID not available in the browser bundle.
           </div>
         ) : paid ? (
-          <div style={{ fontWeight: 950, color: "#0b6b2d" }}>✅ Payment received! You can continue.</div>
+          <div style={{ fontWeight: 950, color: "#0b6b2d" }}>
+            ✅ Payment received! You can continue.
+          </div>
         ) : (
           <PayPalScriptProvider
             key={clientId} // forces fresh script load when client id changes
