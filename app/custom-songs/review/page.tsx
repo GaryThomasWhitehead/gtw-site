@@ -118,7 +118,6 @@ function PayPalBlock({
         {isPending ? "loading…" : isRejected ? "failed" : isResolved ? "ready" : "unknown"}
       </div>
 
-      {/* If the script is still loading, DO NOT render PayPalButtons yet */}
       {isPending ? <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div> : null}
 
       {isRejected ? (
@@ -135,7 +134,6 @@ function PayPalBlock({
         </div>
       ) : null}
 
-      {/* Only render buttons when the SDK is fully loaded */}
       {isResolved ? (
         <PayPalButtons
           style={{ layout: "vertical", shape: "pill", label: "pay" }}
@@ -162,16 +160,15 @@ export default function ReviewPage() {
   const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
   const clientLoaded = clientId.length > 0;
 
+  // ✅ IMPORTANT: this library version expects `clientId` (camelCase), not `"client-id"`.
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
-
-    // ✅ IMPORTANT: @paypal/react-paypal-js expects camelCase clientId (NOT "client-id")
     return {
       clientId,
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    } as const;
+    };
   }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
@@ -272,16 +269,11 @@ export default function ReviewPage() {
             Client ID not available in the browser bundle.
           </div>
         ) : paid ? (
-          <div style={{ fontWeight: 950, color: "#0b6b2d" }}>
-            ✅ Payment received! You can continue.
-          </div>
+          <div style={{ fontWeight: 950, color: "#0b6b2d" }}>✅ Payment received! You can continue.</div>
         ) : (
           <PayPalScriptProvider
-            key={clientId} // forces fresh script load when client id changes
+            key={clientId} // force fresh script load if clientId changes
             options={paypalOptions!}
-            onScriptLoadError={() =>
-              setPayError("PayPal SDK failed to load (often blocked by ad blocker/privacy shield).")
-            }
           >
             <PayPalBlock
               packageChoice={data.packageChoice}
