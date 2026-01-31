@@ -34,46 +34,13 @@ type OrderData = {
   photoNotes?: string;
 };
 
-/**
- * ✅ ONE SOURCE OF TRUTH
- * Order + Review MUST use the same key.
- */
+// ✅ MUST MATCH review/page.tsx STORAGE_KEY
 const STORAGE_KEY = "customSongsOrder_v5";
-const STORAGE_KEY_OLD = "customSongsOrder_v4";
-
-function safeParse(json: string | null): any {
-  if (!json) return null;
-  try {
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * ✅ Migration:
- * If v5 doesn't exist but v4 does, copy v4 -> v5.
- */
-function migrateStorageIfNeeded() {
-  if (typeof window === "undefined") return;
-
-  const v5 = localStorage.getItem(STORAGE_KEY);
-  if (v5 && v5.trim().length > 0) return;
-
-  const v4 = localStorage.getItem(STORAGE_KEY_OLD);
-  if (!v4 || v4.trim().length === 0) return;
-
-  // Copy old -> new
-  localStorage.setItem(STORAGE_KEY, v4);
-}
 
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
   try {
-    migrateStorageIfNeeded();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = safeParse(raw);
-    return (parsed ?? {}) as OrderData;
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as OrderData;
   } catch {
     return {};
   }

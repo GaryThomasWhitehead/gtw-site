@@ -41,36 +41,11 @@ type OrderData = {
 };
 
 const STORAGE_KEY = "customSongsOrder_v5";
-const STORAGE_KEY_OLD = "customSongsOrder_v4";
-
-function safeParse(json: string | null): any {
-  if (!json) return null;
-  try {
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-function migrateStorageIfNeeded() {
-  if (typeof window === "undefined") return;
-
-  const v5 = localStorage.getItem(STORAGE_KEY);
-  if (v5 && v5.trim().length > 0) return;
-
-  const v4 = localStorage.getItem(STORAGE_KEY_OLD);
-  if (!v4 || v4.trim().length === 0) return;
-
-  localStorage.setItem(STORAGE_KEY, v4);
-}
 
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
   try {
-    migrateStorageIfNeeded();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = safeParse(raw);
-    return (parsed ?? {}) as OrderData;
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as OrderData;
   } catch {
     return {};
   }
@@ -116,8 +91,8 @@ function PayPalBlock({
       body: JSON.stringify({ packageChoice }),
     });
 
-    const json = await res.json().catch(() => ({} as any));
-    if (!res.ok) throw new Error(json?.error || `Failed to create order (${res.status})`);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || "Failed to create order");
     return json.id as string;
   };
 
@@ -130,8 +105,8 @@ function PayPalBlock({
       body: JSON.stringify({ orderId: details.orderID }),
     });
 
-    const json = await res.json().catch(() => ({} as any));
-    if (!res.ok) throw new Error(json?.error || `Failed to capture order (${res.status})`);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || "Failed to capture order");
 
     onPaid();
   };
@@ -155,11 +130,10 @@ function PayPalBlock({
           <br />• ad blocker / privacy shield
           <br />• corporate firewall
           <br />• PayPal blocked in browser
-          <br />• invalid PayPal client-id (PayPal returns 400)
+          <br />• invalid PayPal client id (PayPal returns 400)
           <br />
           <br />
           Open DevTools → Network and click the <b>paypal.com/sdk/js</b> request.
-          <br />
           If it’s <b>400</b>, the response usually says why (often “client-id not recognized”).
         </div>
       ) : null}
@@ -181,62 +155,31 @@ export default function ReviewPage() {
   const [paid, setPaid] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
-  // PayPal config loaded from your API route (NOT build-time env)
-  const [ppClientId, setPpClientId] = useState<string>("");
-  const [ppEnv, setPpEnv] = useState<"sandbox" | "live">("sandbox");
-  const [ppConfigError, setPpConfigError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setData(loadOrder());
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPayPalConfig() {
-      setPpConfigError(null);
-      try {
-        const res = await fetch("/api/paypal/client-id", { cache: "no-store" });
-        const json = await res.json().catch(() => ({} as any));
-        if (!res.ok) throw new Error(json?.error || `Failed to load PayPal config (${res.status})`);
-
-        const clientId = String(json?.clientId ?? "").trim();
-        const env = String(json?.env ?? "sandbox").toLowerCase() === "live" ? "live" : "sandbox";
-
-        if (!clientId) throw new Error("Missing clientId from /api/paypal/client-id");
-
-        if (!cancelled) {
-          setPpClientId(clientId);
-          setPpEnv(env);
-        }
-      } catch (e: any) {
-        if (!cancelled) setPpConfigError(String(e?.message || e));
-      }
-    }
-
-    loadPayPalConfig();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  useEffect(() => setData(loadOrder()), []);
 
   const pkgTitle = data.packageChoice ? PACKAGE_LABELS[data.packageChoice] : "";
   const price = data.packageChoice ? PACKAGE_PRICES[data.packageChoice] : 0;
 
-  const paypalOptions = useMemo(() => {
-    if (!ppClientId) return null;
+  // Read the PUBLIC client id (safe for browser)
+  const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
+  const clientLoaded = clientId.length > 0;
 
-    // "client-id" is the correct PayPal SDK option key.
-    // Casting keeps TS happy across versions.
+  const envRaw = (process.env.NEXT_PUBLIC_PAYPAL_ENV ?? "sandbox").trim();
+  const env = envRaw.toLowerCase() === "live" ? "live" : "sandbox";
+
+  const paypalOptions = useMemo(() => {
+    if (!clientLoaded) return null;
+
+    // IMPORTANT:
+    // Your installed typings expect camelCase `clientId` (not "client-id").
+    // The library will still produce the correct `client-id=` query param.
     return {
-      "client-id": ppClientId,
+      clientId,
       currency: "USD",
       intent: "capture",
       components: "buttons",
-      // Helps debugging in PayPal dashboards/logs
-      "data-sdk-integration-source": "gtw-custom-songs",
     } as any;
-  }, [ppClientId]);
+  }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
     const d = data;
@@ -326,31 +269,21 @@ export default function ReviewPage() {
 
       <div style={{ ...box, marginTop: 14 }}>
         <div style={{ fontWeight: 950, marginBottom: 10 }}>
-          Pay securely with PayPal{" "}
-          <span style={{ fontSize: 12, opacity: 0.65, fontWeight: 900 }}>
-            (env: {ppEnv})
-          </span>
+          Pay securely with PayPal <span style={{ opacity: 0.6, fontWeight: 850 }}>(env: {env})</span>
         </div>
 
         {!data.packageChoice ? (
           <div style={{ fontWeight: 900, color: "#b00020" }}>
             Please go back and select a package first.
           </div>
-        ) : ppConfigError ? (
-          <div style={{ fontWeight: 900, color: "#b00020", lineHeight: 1.5 }}>
-            Could not load PayPal configuration.
-            <br />
-            {ppConfigError}
+        ) : !clientLoaded ? (
+          <div style={{ fontWeight: 900, color: "#b00020" }}>
+            Client ID not available in the browser bundle.
           </div>
-        ) : !paypalOptions ? (
-          <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal configuration…</div>
         ) : paid ? (
           <div style={{ fontWeight: 950, color: "#0b6b2d" }}>✅ Payment received! You can continue.</div>
         ) : (
-          <PayPalScriptProvider
-            key={`${ppClientId}:${ppEnv}`} // force reload when config changes
-            options={paypalOptions}
-          >
+          <PayPalScriptProvider key={clientId} options={paypalOptions!}>
             <PayPalBlock
               packageChoice={data.packageChoice}
               onPaid={() => setPaid(true)}
