@@ -34,13 +34,13 @@ type OrderData = {
   photoNotes?: string;
 };
 
-// bump the key so old saved values don’t interfere
-const STORAGE_KEY = "customSongsOrder_v5";
+// ✅ MUST MATCH review/page.tsx STORAGE_KEY
+const STORAGE_KEY = "customSongsOrder_v4";
 
 function loadOrder(): OrderData {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as OrderData;
   } catch {
     return {};
   }
@@ -60,9 +60,7 @@ function money(n: number) {
 }
 
 /**
- * ✅ Updated pricing (base $119 and adjusted others)
- * If you want a different ladder, tell me what you want the VIDEO and BUNDLE to be,
- * and I’ll set the rest around it.
+ * ✅ Pricing ladder (matches your screenshot)
  */
 const PACKAGES: Array<{
   id: PackageChoice;
@@ -142,8 +140,18 @@ export default function OrderPage() {
   const [form, setForm] = useState<OrderData>({});
   const [step, setStep] = useState<number>(1);
 
-  useEffect(() => setForm(loadOrder()), []);
-  useEffect(() => saveOrder(form), [form]);
+  // ✅ prevents first-render overwrite of localStorage with {}
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setForm(loadOrder());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveOrder(form);
+  }, [form, hydrated]);
 
   const selectedPkg = useMemo(
     () => PACKAGES.find((p) => p.id === form.packageChoice),
@@ -155,7 +163,6 @@ export default function OrderPage() {
     return map[step] ?? 20;
   }, [step]);
 
-  // ✅ Option B subtitle
   const shellSubtitle =
     "Lyrics are personally written by Gary Thomas Whitehead — then music & vocals are artist-directed using advanced AI tools to deliver a polished, emotionally powerful, radio-ready track.";
 
@@ -278,10 +285,19 @@ export default function OrderPage() {
     </div>
   );
 
-  const PackageCard = ({ p, selected }: { p: (typeof PACKAGES)[number]; selected: boolean }) => {
+  const PackageCard = ({
+    p,
+    selected,
+  }: {
+    p: (typeof PACKAGES)[number];
+    selected: boolean;
+  }) => {
     const accent =
       p.accent === "gold"
-        ? { ring: "0 0 0 3px rgba(181,123,23,0.25)", border: "1px solid rgba(181,123,23,0.45)" }
+        ? {
+            ring: "0 0 0 3px rgba(181,123,23,0.25)",
+            border: "1px solid rgba(181,123,23,0.45)",
+          }
         : { ring: "0 0 0 3px rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.14)" };
 
     return (
@@ -339,7 +355,17 @@ export default function OrderPage() {
           ))}
         </ul>
 
-        <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, color: "rgba(0,0,0,0.70)", fontWeight: 900, fontSize: 13 }}>
+        <div
+          style={{
+            marginTop: 12,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            color: "rgba(0,0,0,0.70)",
+            fontWeight: 900,
+            fontSize: 13,
+          }}
+        >
           <span
             aria-hidden
             style={{
