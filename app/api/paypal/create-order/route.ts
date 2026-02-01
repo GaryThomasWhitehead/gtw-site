@@ -15,13 +15,20 @@ const PACKAGE_PRICES: Record<PackageChoice, number> = {
   everything_bundle: 299,
 };
 
+function clean(v: unknown) {
+  return String(v ?? "")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "")
+    .trim();
+}
+
 async function getAccessToken() {
-  const clientId = (process.env.PAYPAL_CLIENT_ID || "").trim();
-  const secret = (process.env.PAYPAL_CLIENT_SECRET || "").trim();
-  const env = (process.env.PAYPAL_ENV || "live").toLowerCase().trim();
+  const clientId = clean(process.env.PAYPAL_CLIENT_ID);
+  const secret = clean(process.env.PAYPAL_CLIENT_SECRET);
+  const env = clean(process.env.PAYPAL_ENV || "live").toLowerCase();
 
   if (!clientId || !secret) {
-    throw new Error("Missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET");
+    throw new Error("Missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET (Vercel env vars)");
   }
 
   const base =
@@ -39,8 +46,8 @@ async function getAccessToken() {
   });
 
   const json = await res.json().catch(() => ({}));
-
   if (!res.ok) {
+    // bubble up PayPal response details (no secrets)
     throw new Error(`PayPal token error ${res.status}: ${JSON.stringify(json)}`);
   }
 
@@ -70,24 +77,19 @@ export async function POST(req: Request) {
         intent: "CAPTURE",
         purchase_units: [
           {
-            amount: { currency_code: "USD", value: amount },
+            amount: {
+              currency_code: "USD",
+              value: amount,
+            },
           },
         ],
       }),
     });
 
     const json = await res.json().catch(() => ({}));
-
     if (!res.ok) {
       return NextResponse.json(
         { error: `Create order failed (${res.status})`, details: json },
-        { status: 500 }
-      );
-    }
-
-    if (!json?.id) {
-      return NextResponse.json(
-        { error: "Create order succeeded but no id returned", details: json },
         { status: 500 }
       );
     }

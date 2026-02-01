@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 
+function clean(v: unknown) {
+  return String(v ?? "")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "")
+    .trim();
+}
+
 async function getAccessToken() {
-  const clientId = (process.env.PAYPAL_CLIENT_ID || "").trim();
-  const secret = (process.env.PAYPAL_CLIENT_SECRET || "").trim();
-  const env = (process.env.PAYPAL_ENV || "live").toLowerCase().trim();
+  const clientId = clean(process.env.PAYPAL_CLIENT_ID);
+  const secret = clean(process.env.PAYPAL_CLIENT_SECRET);
+  const env = clean(process.env.PAYPAL_ENV || "live").toLowerCase();
 
   if (!clientId || !secret) {
-    throw new Error("Missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET");
+    throw new Error("Missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET (Vercel env vars)");
   }
 
   const base =
@@ -24,7 +31,6 @@ async function getAccessToken() {
   });
 
   const json = await res.json().catch(() => ({}));
-
   if (!res.ok) {
     throw new Error(`PayPal token error ${res.status}: ${JSON.stringify(json)}`);
   }
@@ -35,7 +41,7 @@ async function getAccessToken() {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const orderId = (body?.orderId ?? "").toString().trim();
+    const orderId = clean(body?.orderId);
 
     if (!orderId) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
@@ -52,7 +58,6 @@ export async function POST(req: Request) {
     });
 
     const json = await res.json().catch(() => ({}));
-
     if (!res.ok) {
       return NextResponse.json(
         { error: `Capture failed (${res.status})`, details: json },

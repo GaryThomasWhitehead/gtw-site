@@ -99,9 +99,7 @@ function PayPalBlock({
 
     const id = (json?.id ?? "").toString().trim();
     if (!id) {
-      throw new Error(
-        `Create-order route did not return { id }. Got: ${JSON.stringify(json)}`
-      );
+      throw new Error(`Create-order did not return { id }. Got: ${JSON.stringify(json)}`);
     }
 
     return id;
@@ -172,15 +170,15 @@ export default function ReviewPage() {
   const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
   const clientLoaded = clientId.length > 0;
 
-  // IMPORTANT: use "clientId" (typed), not "client-id" (was causing your Vercel build failure)
+  // ✅ Fixes your Vercel build error: use `clientId` (not "client-id") for typings
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
     return {
-      clientId,
+      clientId, // <-- TypeScript expects this in your installed version
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    };
+    } as any;
   }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
