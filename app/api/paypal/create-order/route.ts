@@ -16,9 +16,9 @@ const PACKAGE_PRICES: Record<PackageChoice, number> = {
 };
 
 async function getAccessToken() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const secret = process.env.PAYPAL_CLIENT_SECRET;
-  const env = (process.env.PAYPAL_ENV || "live").toLowerCase();
+  const clientId = (process.env.PAYPAL_CLIENT_ID || "").trim();
+  const secret = (process.env.PAYPAL_CLIENT_SECRET || "").trim();
+  const env = (process.env.PAYPAL_ENV || "live").toLowerCase().trim();
 
   if (!clientId || !secret) {
     throw new Error("Missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET");
@@ -38,7 +38,8 @@ async function getAccessToken() {
     body: "grant_type=client_credentials",
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => ({}));
+
   if (!res.ok) {
     throw new Error(`PayPal token error ${res.status}: ${JSON.stringify(json)}`);
   }
@@ -69,16 +70,14 @@ export async function POST(req: Request) {
         intent: "CAPTURE",
         purchase_units: [
           {
-            amount: {
-              currency_code: "USD",
-              value: amount,
-            },
+            amount: { currency_code: "USD", value: amount },
           },
         ],
       }),
     });
 
-    const json = await res.json();
+    const json = await res.json().catch(() => ({}));
+
     if (!res.ok) {
       return NextResponse.json(
         { error: `Create order failed (${res.status})`, details: json },
@@ -86,7 +85,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ IMPORTANT: return { id }
+    if (!json?.id) {
+      return NextResponse.json(
+        { error: "Create order succeeded but no id returned", details: json },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ id: json.id });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });

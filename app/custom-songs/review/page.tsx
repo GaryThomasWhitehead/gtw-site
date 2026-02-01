@@ -71,10 +71,6 @@ const PACKAGE_PRICES: Record<PackageChoice, number> = {
   everything_bundle: 299,
 };
 
-/**
- * NOTE: PayPalBlock is a local component inside THIS file.
- * You do not put it anywhere else. Just keep it above ReviewPage.
- */
 function PayPalBlock({
   packageChoice,
   onPaid,
@@ -101,13 +97,13 @@ function PayPalBlock({
       throw new Error(json?.error || `Failed to create order (${res.status})`);
     }
 
-    // Must return order id string
     const id = (json?.id ?? "").toString().trim();
     if (!id) {
       throw new Error(
-        `Create-order did not return { id }. Got: ${JSON.stringify(json)}`
+        `Create-order route did not return { id }. Got: ${JSON.stringify(json)}`
       );
     }
+
     return id;
   };
 
@@ -176,9 +172,7 @@ export default function ReviewPage() {
   const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
   const clientLoaded = clientId.length > 0;
 
-  // ✅ IMPORTANT: Vercel/TS build wants clientId (camelCase)
-  // Some PayPal docs show "client-id", but typings may differ.
-  // We provide the camelCase form to satisfy build reliably.
+  // IMPORTANT: use "clientId" (typed), not "client-id" (was causing your Vercel build failure)
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
     return {
@@ -186,7 +180,7 @@ export default function ReviewPage() {
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    } as any;
+    };
   }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
