@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
-
 type PackageChoice =
   | "song_audio"
   | "song_audio_lyrics"
@@ -17,24 +15,18 @@ const PACKAGE_PRICES: Record<PackageChoice, number> = {
   everything_bundle: 299,
 };
 
-function getEnv() {
-  const envRaw = (process.env.PAYPAL_ENV ?? process.env.NEXT_PUBLIC_PAYPAL_ENV ?? "sandbox").trim();
-  const env = envRaw.toLowerCase() === "live" ? "live" : "sandbox";
+async function getAccessToken() {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const secret = process.env.PAYPAL_CLIENT_SECRET;
+  const env = (process.env.PAYPAL_ENV || "live").toLowerCase();
 
-  const clientId = (process.env.PAYPAL_CLIENT_ID ?? "").trim();
-  const secret = (process.env.PAYPAL_CLIENT_SECRET ?? "").trim();
-
-  if (!clientId) throw new Error("Missing PAYPAL_CLIENT_ID");
-  if (!secret) throw new Error("Missing PAYPAL_CLIENT_SECRET");
+  if (!clientId || !secret) {
+    throw new Error("Missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET");
+  }
 
   const base =
-    env === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+    env === "sandbox" ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
 
-  return { env, clientId, secret, base };
-}
-
-async function getAccessToken() {
-  const { clientId, secret, base } = getEnv();
   const auth = Buffer.from(`${clientId}:${secret}`).toString("base64");
 
   const res = await fetch(`${base}/v1/oauth2/token`, {
@@ -46,14 +38,12 @@ async function getAccessToken() {
     body: "grant_type=client_credentials",
   });
 
-  const json = await res.json().catch(() => ({}));
+  const json = await res.json();
   if (!res.ok) {
-    throw new Error(`PayPal token error: ${json?.error_description || JSON.stringify(json)}`);
+    throw new Error(`PayPal token error ${res.status}: ${JSON.stringify(json)}`);
   }
 
-  const token = (json?.access_token ?? "").toString().trim();
-  if (!token) throw new Error("PayPal token missing access_token");
-  return token;
+  return { accessToken: json.access_token as string, base };
 }
 
 export async function POST(req: Request) {
@@ -62,20 +52,17 @@ export async function POST(req: Request) {
     const packageChoice = body?.packageChoice as PackageChoice | undefined;
 
     if (!packageChoice || !(packageChoice in PACKAGE_PRICES)) {
-      return NextResponse.json(
-        { ok: false, error: "Invalid or missing packageChoice" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid packageChoice" }, { status: 400 });
     }
 
-    const amount = PACKAGE_PRICES[packageChoice];
-    const token = await getAccessToken();
-    const { base } = getEnv();
+    const amount = PACKAGE_PRICES[packageChoice].toFixed(2);
 
-    const createRes = await fetch(`${base}/v2/checkout/orders`, {
+    const { accessToken, base } = await getAccessToken();
+
+    const res = await fetch(`${base}/v2/checkout/orders`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -84,37 +71,24 @@ export async function POST(req: Request) {
           {
             amount: {
               currency_code: "USD",
-              value: amount.toFixed(2),
+              value: amount,
             },
-            description: `Custom Songs - ${packageChoice}`,
           },
         ],
       }),
     });
 
-    const createJson = await createRes.json().catch(() => ({}));
-
-    if (!createRes.ok) {
+    const json = await res.json();
+    if (!res.ok) {
       return NextResponse.json(
-        { ok: false, error: createJson?.message || JSON.stringify(createJson) },
-        { status: 500 }
-      );
-    }
-
-    const id = (createJson?.id ?? "").toString().trim();
-    if (!id) {
-      return NextResponse.json(
-        { ok: false, error: `PayPal did not return order id. Got: ${JSON.stringify(createJson)}` },
+        { error: `Create order failed (${res.status})`, details: json },
         { status: 500 }
       );
     }
 
     // ✅ IMPORTANT: return { id }
-    return NextResponse.json({ ok: true, id });
-  } catch (err: any) {
-    return NextResponse.json(
-      { ok: false, error: err?.message || String(err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ id: json.id });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
   }
 }

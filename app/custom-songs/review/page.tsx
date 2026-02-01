@@ -97,21 +97,21 @@ function PayPalBlock({
       throw new Error(json?.error || `Failed to create order (${res.status})`);
     }
 
-    // ✅ CRITICAL: must return a STRING order id
+    // Must return order id string
     const id = (json?.id ?? "").toString().trim();
     if (!id) {
       throw new Error(
-        `Create-order route did not return { id }. Got: ${JSON.stringify(json)}`
+        `Create-order did not return { id }. Got: ${JSON.stringify(json)}`
       );
     }
-
     return id;
   };
 
-  const onApprove: PayPalButtonsComponentProps["onApprove"] = async (details) => {
+  // IMPORTANT: onApprove receives (data, actions)
+  const onApprove: PayPalButtonsComponentProps["onApprove"] = async (data) => {
     setPayError(null);
 
-    const orderId = (details as any)?.orderID;
+    const orderId = (data as any)?.orderID;
     if (!orderId) throw new Error("Missing orderID from PayPal approval.");
 
     const res = await fetch("/api/paypal/capture-order", {
@@ -121,7 +121,9 @@ function PayPalBlock({
     });
 
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json?.error || `Failed to capture order (${res.status})`);
+    if (!res.ok) {
+      throw new Error(json?.error || `Failed to capture order (${res.status})`);
+    }
 
     onPaid();
   };
