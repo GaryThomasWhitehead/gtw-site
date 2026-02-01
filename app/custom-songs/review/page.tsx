@@ -71,6 +71,10 @@ const PACKAGE_PRICES: Record<PackageChoice, number> = {
   everything_bundle: 299,
 };
 
+/**
+ * NOTE: PayPalBlock is a local component inside THIS file.
+ * You do not put it anywhere else. Just keep it above ReviewPage.
+ */
 function PayPalBlock({
   packageChoice,
   onPaid,
@@ -172,7 +176,9 @@ export default function ReviewPage() {
   const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
   const clientLoaded = clientId.length > 0;
 
-  // IMPORTANT: your installed typings expect `clientId` (camelCase)
+  // ✅ IMPORTANT: Vercel/TS build wants clientId (camelCase)
+  // Some PayPal docs show "client-id", but typings may differ.
+  // We provide the camelCase form to satisfy build reliably.
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
     return {
@@ -180,7 +186,7 @@ export default function ReviewPage() {
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    } as const;
+    } as any;
   }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
