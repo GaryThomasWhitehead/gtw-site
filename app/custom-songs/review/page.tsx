@@ -91,22 +91,37 @@ function PayPalBlock({
       body: JSON.stringify({ packageChoice }),
     });
 
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || "Failed to create order");
-    return json.id as string;
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(json?.error || `Failed to create order (${res.status})`);
+    }
+
+    // ✅ CRITICAL: must return a STRING order id
+    const id = (json?.id ?? "").toString().trim();
+    if (!id) {
+      throw new Error(
+        `Create-order route did not return { id }. Got: ${JSON.stringify(json)}`
+      );
+    }
+
+    return id;
   };
 
   const onApprove: PayPalButtonsComponentProps["onApprove"] = async (details) => {
     setPayError(null);
 
+    const orderId = (details as any)?.orderID;
+    if (!orderId) throw new Error("Missing orderID from PayPal approval.");
+
     const res = await fetch("/api/paypal/capture-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId: details.orderID }),
+      body: JSON.stringify({ orderId }),
     });
 
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || "Failed to capture order");
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json?.error || `Failed to capture order (${res.status})`);
 
     onPaid();
   };
@@ -118,9 +133,7 @@ function PayPalBlock({
         {isPending ? "loading…" : isRejected ? "failed" : isResolved ? "ready" : "unknown"}
       </div>
 
-      {isPending ? (
-        <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div>
-      ) : null}
+      {isPending ? <div style={{ fontWeight: 900, opacity: 0.8 }}>Loading PayPal…</div> : null}
 
       {isRejected ? (
         <div style={{ fontWeight: 900, color: "#b00020", lineHeight: 1.5 }}>
@@ -130,11 +143,6 @@ function PayPalBlock({
           <br />• ad blocker / privacy shield
           <br />• corporate firewall
           <br />• PayPal blocked in browser
-          <br />• invalid PayPal client id (PayPal returns 400)
-          <br />
-          <br />
-          Open DevTools → Network and click the <b>paypal.com/sdk/js</b> request.
-          If it’s <b>400</b>, the response usually says why (often “client-id not recognized”).
         </div>
       ) : null}
 
@@ -160,25 +168,17 @@ export default function ReviewPage() {
   const pkgTitle = data.packageChoice ? PACKAGE_LABELS[data.packageChoice] : "";
   const price = data.packageChoice ? PACKAGE_PRICES[data.packageChoice] : 0;
 
-  // Read the PUBLIC client id (safe for browser)
   const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
   const clientLoaded = clientId.length > 0;
 
-  const envRaw = (process.env.NEXT_PUBLIC_PAYPAL_ENV ?? "sandbox").trim();
-  const env = envRaw.toLowerCase() === "live" ? "live" : "sandbox";
-
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
-
-    // IMPORTANT:
-    // Your installed typings expect camelCase `clientId` (not "client-id").
-    // The library will still produce the correct `client-id=` query param.
     return {
-      clientId,
+      "client-id": clientId,
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    } as any;
+    } as const;
   }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
@@ -268,9 +268,7 @@ export default function ReviewPage() {
       </div>
 
       <div style={{ ...box, marginTop: 14 }}>
-        <div style={{ fontWeight: 950, marginBottom: 10 }}>
-          Pay securely with PayPal <span style={{ opacity: 0.6, fontWeight: 850 }}>(env: {env})</span>
-        </div>
+        <div style={{ fontWeight: 950, marginBottom: 10 }}>Pay securely with PayPal</div>
 
         {!data.packageChoice ? (
           <div style={{ fontWeight: 900, color: "#b00020" }}>

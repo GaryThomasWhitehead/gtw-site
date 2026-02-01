@@ -24,17 +24,15 @@ type OrderData = {
   mustInclude?: string;
   notes?: string;
 
-  // direction (optional)
   genre?: string;
   vibe?: string;
   tempo?: string;
 
-  // photo video (optional)
   photoCount?: string;
   photoNotes?: string;
 };
 
-// ✅ MUST MATCH review/page.tsx STORAGE_KEY
+// ✅ MUST MATCH review/page.tsx
 const STORAGE_KEY = "customSongsOrder_v5";
 
 function loadOrder(): OrderData {
@@ -59,9 +57,6 @@ function money(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
-/**
- * ✅ Pricing ladder (matches your screenshot)
- */
 const PACKAGES: Array<{
   id: PackageChoice;
   title: string;
@@ -140,7 +135,6 @@ export default function OrderPage() {
   const [form, setForm] = useState<OrderData>({});
   const [step, setStep] = useState<number>(1);
 
-  // ✅ prevents first-render overwrite of localStorage with {}
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -278,7 +272,14 @@ export default function OrderPage() {
             }}
           />
         </div>
-        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 900, color: "rgba(0,0,0,0.55)" }}>
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            fontWeight: 900,
+            color: "rgba(0,0,0,0.55)",
+          }}
+        >
           {progressPct}% complete
         </div>
       </div>
@@ -411,7 +412,6 @@ export default function OrderPage() {
         </div>
       }
     >
-      {/* ✅ BRAND POSITIONING */}
       <div
         style={{
           borderRadius: 18,
@@ -437,7 +437,6 @@ export default function OrderPage() {
         </div>
       </div>
 
-      {/* STEP 1 */}
       {step === 1 ? (
         <>
           <StepHeader title="Choose package" subtitle="Pick what you want delivered." />
@@ -470,7 +469,6 @@ export default function OrderPage() {
         </>
       ) : null}
 
-      {/* STEP 2 */}
       {step === 2 ? (
         <>
           <StepHeader title="Your basics" subtitle="So I can deliver and confirm details." />
@@ -524,7 +522,6 @@ export default function OrderPage() {
         </>
       ) : null}
 
-      {/* STEP 3 */}
       {step === 3 ? (
         <>
           <StepHeader title="Song direction" subtitle="Genre, vibe, tempo (optional)." />
@@ -581,7 +578,6 @@ export default function OrderPage() {
         </>
       ) : null}
 
-      {/* STEP 4 */}
       {step === 4 ? (
         <>
           <StepHeader title="Your story" subtitle="The heart of the song." />
@@ -651,7 +647,6 @@ export default function OrderPage() {
         </>
       ) : null}
 
-      {/* STEP 5 */}
       {step === 5 ? (
         <>
           <StepHeader title="Review & continue" subtitle="Quick check before the review page." />
