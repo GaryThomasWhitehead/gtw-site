@@ -97,17 +97,14 @@ function PayPalBlock({
       throw new Error(json?.error || `Failed to create order (${res.status})`);
     }
 
-    // Must return order id string
     const id = (json?.id ?? "").toString().trim();
     if (!id) {
-      throw new Error(
-        `Create-order did not return { id }. Got: ${JSON.stringify(json)}`
-      );
+      throw new Error(`Create-order did not return { id }. Got: ${JSON.stringify(json)}`);
     }
+
     return id;
   };
 
-  // IMPORTANT: onApprove receives (data, actions)
   const onApprove: PayPalButtonsComponentProps["onApprove"] = async (data) => {
     setPayError(null);
 
@@ -121,9 +118,7 @@ function PayPalBlock({
     });
 
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(json?.error || `Failed to capture order (${res.status})`);
-    }
+    if (!res.ok) throw new Error(json?.error || `Failed to capture order (${res.status})`);
 
     onPaid();
   };
@@ -173,14 +168,15 @@ export default function ReviewPage() {
   const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "").trim();
   const clientLoaded = clientId.length > 0;
 
+  // ✅ IMPORTANT: PayPalScriptProvider expects clientId (camelCase), NOT "client-id"
   const paypalOptions = useMemo(() => {
     if (!clientLoaded) return null;
     return {
-      "client-id": clientId,
+      clientId,
       currency: "USD",
       intent: "capture",
       components: "buttons",
-    } as const;
+    };
   }, [clientId, clientLoaded]);
 
   const lines = useMemo(() => {
