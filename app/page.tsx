@@ -43,55 +43,107 @@ export default function Home() {
       <header
         className="hero"
         style={{
-          backgroundImage: "url('/new.jpg')",
+          // ✅ Your new PNG header image (put in /public as header.png)
+          backgroundImage: "url('/header.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          minHeight: "260px",
+          minHeight: "320px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: "24px",
           borderRadius: "12px",
           marginBottom: 40,
+          position: "relative",
+          overflow: "hidden",
         }}
       >
+        {/* subtle overlay so text stays readable */}
         <div
+          aria-hidden="true"
           style={{
-            display: "grid",
-            gridTemplateColumns: "72px auto",
-            gap: "16px",
-            alignItems: "center",
-            background: "rgba(0,0,0,.55)",
-            color: "#fff",
-            padding: "12px 16px",
-            borderRadius: "9999px",
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,.35))",
           }}
-        >
-          <img
-            src="/Gary.png"
-            alt="Gary Thomas Whitehead"
+        />
+
+        <div style={{ position: "relative", width: "100%" }}>
+          {/* Top pill (your existing name badge) */}
+          <div
             style={{
-              width: "72px",
-              height: "72px",
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "2px solid #fff",
+              display: "grid",
+              gridTemplateColumns: "72px auto",
+              gap: "16px",
+              alignItems: "center",
+              background: "rgba(0,0,0,.55)",
+              color: "#fff",
+              padding: "12px 16px",
+              borderRadius: "9999px",
+              width: "fit-content",
+              margin: "0 auto",
             }}
-            loading="lazy"
-          />
-          <div>
-            <div style={{ fontSize: "18px", opacity: 0.9 }}>
-              GARY THOMAS WHITEHEAD
+          >
+            <img
+              src="/Gary.png"
+              alt="Gary Thomas Whitehead"
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "2px solid #fff",
+              }}
+              loading="lazy"
+            />
+            <div>
+              <div style={{ fontSize: "18px", opacity: 0.9 }}>
+                GARY THOMAS WHITEHEAD
+              </div>
+              <div style={{ fontSize: "14px", opacity: 0.8 }}>
+                Author • Songwriter • Painter
+              </div>
             </div>
-            <div style={{ fontSize: "14px", opacity: 0.8 }}>
-              Author • Songwriter • Painter
+          </div>
+
+          {/* ✅ Big Sweetly Sentimental hero text (bigger + bolder) */}
+          <div
+            style={{
+              marginTop: 18,
+              textAlign: "center",
+              color: "#fff",
+              textShadow: "0 2px 18px rgba(0,0,0,.55)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 54,
+                fontWeight: 900,
+                letterSpacing: "0.02em",
+                lineHeight: 1.05,
+              }}
+            >
+              Sweetly Sentimental
+            </div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                opacity: 0.95,
+                marginTop: 6,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Custom Song Creation
             </div>
           </div>
         </div>
       </header>
 
-      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (RESTORED) ====== */}
+      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (UPDATED TITLE) ====== */}
       <section
         aria-labelledby="custom-songs"
         style={{
@@ -110,7 +162,7 @@ export default function Home() {
         </h2>
 
         <h3 style={{ fontSize: 34, margin: "8px 0 12px", lineHeight: 1.15 }}>
-          Personal songs for any occasion — and a{" "}
+          Sweetly Sentimental songs for any occasion — and a{" "}
           <span style={{ color: "#b57b17" }}>Photo Music Video</span> most
           services don’t offer
         </h3>
@@ -143,6 +195,28 @@ export default function Home() {
             lyrics fit your story
           </li>
         </ul>
+
+        {/* ✅ NEW: Sweetly Sentimental promo video on Home page */}
+        <div
+          style={{
+            borderRadius: "12px",
+            overflow: "hidden",
+            border: "1px solid #eee",
+            background: "#000",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            marginBottom: 16,
+          }}
+        >
+          <video
+            controls
+            preload="metadata"
+            style={{ width: "100%", height: "auto", display: "block" }}
+          >
+            {/* ✅ file is: public/videos/sweetly_sentimental.mp4 */}
+            <source src="/videos/sweetly_sentimental.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
 
         {/* ✅ BRAND POSITIONING (Core Message) */}
         <div
@@ -555,7 +629,6 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        {/* (rest of your music section unchanged) */}
         <h2
           id="music"
           style={{
@@ -606,7 +679,6 @@ export default function Home() {
                 gap: 12,
               }}
             >
-              {/* your buttons unchanged */}
               <a
                 className="btn"
                 href="https://soundcloud.com/user-747949669"
@@ -758,7 +830,6 @@ export default function Home() {
           border: "1px solid #eee",
         }}
       >
-        {/* your art section unchanged */}
         <h2
           id="art"
           style={{ fontSize: 14, color: "#7a7a7a", letterSpacing: ".08em" }}
