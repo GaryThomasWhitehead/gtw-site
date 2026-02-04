@@ -1,132 +1,123 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { type CSSProperties } from "react";
 import MoreMenu from "@/components/MoreMenu";
 
 type Props = {
-  badge?: string;
   title: string;
   subtitle?: string;
   backHref?: string;
-  backLabel?: string;
+  badge?: string;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
+
+  // ✅ NEW (optional): lets a page override the hero background image
+  heroImage?: string; // e.g. "/header.png"
 };
 
 export default function CustomSongsShell({
-  badge = "CUSTOM SONGS",
   title,
   subtitle,
-  backHref = "/custom-songs",
-  backLabel = "← Back to Custom Songs",
+  backHref = "/",
+  badge,
   rightSlot,
   children,
+  heroImage,
 }: Props) {
-  const bgStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    backgroundImage: "url('/backgrounds/custom-songs-bg.png')",
+  const pageBg = "url('/backgrounds/guitar-bokeh.jpg')"; // your existing page bg
+  const heroBg = `url('${heroImage || "/backgrounds/guitar-bokeh.jpg"}')`; // ✅ override if provided
+
+  const pageWrap: CSSProperties = {
+    maxWidth: "1360px",
+    margin: "0 auto",
+    padding: "24px 32px",
+    fontFamily: '"Georgia", "Times New Roman", serif',
+    color: "#111",
+    backgroundColor: "#faf9f6",
+    lineHeight: 1.6,
+  };
+
+  const hero: CSSProperties = {
+    backgroundImage: heroBg,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
-    padding: "44px 16px",
-  };
-
-  const cardStyle: React.CSSProperties = {
-    maxWidth: 1120,
-    margin: "0 auto",
-    background: "rgba(255,255,255,0.92)",
-    border: "1px solid rgba(0,0,0,0.10)",
     borderRadius: 18,
-    padding: 30,
-    boxShadow: "0 16px 52px rgba(0,0,0,0.20)",
-    fontFamily: '"Georgia","Times New Roman",serif',
-    color: "#111",
-    backdropFilter: "blur(3px)",
+    padding: 22,
+    boxShadow: "0 24px 80px rgba(0,0,0,0.18)",
+    border: "1px solid rgba(0,0,0,0.10)",
   };
 
-  const topRow: React.CSSProperties = {
+  const chromeBar: CSSProperties = {
     display: "flex",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
+    gap: 14,
     flexWrap: "wrap",
-    marginBottom: 10,
+    marginBottom: 14,
   };
 
-  const pill: React.CSSProperties = {
+  const backBtn: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     gap: 10,
-    padding: "6px 12px",
+    padding: "8px 12px",
     borderRadius: 999,
     border: "1px solid rgba(0,0,0,0.14)",
-    background: "rgba(255,255,255,0.70)",
-    fontSize: 12,
-    fontWeight: 900,
-    letterSpacing: ".12em",
-  };
-
-  const backLink: React.CSSProperties = {
+    background: "rgba(255,255,255,0.82)",
     fontWeight: 900,
     textDecoration: "none",
     color: "#111",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "rgba(255,255,255,0.85)",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
   };
 
-  const h1: React.CSSProperties = {
-    fontSize: 46,
-    margin: "10px 0 6px",
-    lineHeight: 1.08,
-    fontWeight: 900,
-    letterSpacing: "-0.02em",
+  const badgePill: CSSProperties = {
+    fontSize: 12,
+    fontWeight: 950,
+    letterSpacing: ".14em",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(0,0,0,0.14)",
+    background: "rgba(255,255,255,0.70)",
   };
 
-  const sub: React.CSSProperties = {
-    marginTop: 0,
-    marginBottom: 20,
-    fontSize: 18,
-    fontWeight: 800,
-    lineHeight: 1.65,
-    color: "#222",
-    maxWidth: 900,
-    textShadow: "0 1px 0 rgba(255,255,255,0.4)",
-  };
-
-  const divider: React.CSSProperties = {
-    height: 1,
-    background: "rgba(0,0,0,0.10)",
-    margin: "18px 0 22px",
+  const titleWrap: CSSProperties = {
+    marginTop: 10,
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.86)",
+    border: "1px solid rgba(0,0,0,0.10)",
+    padding: 18,
   };
 
   return (
-    <main style={bgStyle}>
-      <section style={cardStyle}>
-        <div style={topRow}>
-          <Link href={backHref} style={backLink}>
-            {backLabel}
+    <main style={pageWrap}>
+      <div style={hero}>
+        <div style={chromeBar}>
+          <Link href={backHref} style={backBtn}>
+            ← Back to Custom Songs
           </Link>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <div style={pill}>{badge}</div>
-
-            {/* ✅ This is the dropdown */}
+            {badge ? <div style={badgePill}>{badge}</div> : null}
             <MoreMenu />
-
             {rightSlot}
           </div>
         </div>
 
-        <h1 style={h1}>{title}</h1>
-        {subtitle ? <p style={sub}>{subtitle}</p> : null}
+        <div style={titleWrap}>
+          <h1 style={{ fontSize: 44, margin: "0 0 6px", lineHeight: 1.05 }}>
+            {title}
+          </h1>
 
-        <div style={divider} />
-        {children}
-      </section>
+          {subtitle ? (
+            <p style={{ margin: 0, fontWeight: 800, color: "rgba(0,0,0,0.72)" }}>
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+
+        <div style={{ marginTop: 14 }}>{children}</div>
+      </div>
     </main>
   );
 }

@@ -394,6 +394,7 @@ export default function OrderPage() {
       subtitle={shellSubtitle}
       backHref="/custom-songs"
       badge="ORDER"
+      heroImage="/header.png" // ✅ ORDER page uses Sweetly Sentimental banner
       rightSlot={
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div
@@ -412,6 +413,7 @@ export default function OrderPage() {
         </div>
       }
     >
+      {/* (rest of your file unchanged below this point) */}
       <div
         style={{
           borderRadius: 18,

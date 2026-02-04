@@ -39,111 +39,59 @@ export default function Home() {
         lineHeight: 1.6,
       }}
     >
-      {/* ====== HEADER ====== */}
+      {/* ====== HEADER (HOME HERO MUST STAY ORIGINAL) ====== */}
       <header
         className="hero"
         style={{
-          // ✅ Your new PNG header image (put in /public as header.png)
-          backgroundImage: "url('/header.png')",
+          backgroundImage: "url('/new.jpg')", // ✅ restore original home hero
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          minHeight: "320px",
+          minHeight: "260px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: "24px",
           borderRadius: "12px",
           marginBottom: 40,
-          position: "relative",
-          overflow: "hidden",
         }}
       >
-        {/* subtle overlay so text stays readable */}
         <div
-          aria-hidden="true"
           style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,.35))",
+            display: "grid",
+            gridTemplateColumns: "72px auto",
+            gap: "16px",
+            alignItems: "center",
+            background: "rgba(0,0,0,.55)",
+            color: "#fff",
+            padding: "12px 16px",
+            borderRadius: "9999px",
           }}
-        />
-
-        <div style={{ position: "relative", width: "100%" }}>
-          {/* Top pill (your existing name badge) */}
-          <div
+        >
+          <img
+            src="/Gary.png"
+            alt="Gary Thomas Whitehead"
             style={{
-              display: "grid",
-              gridTemplateColumns: "72px auto",
-              gap: "16px",
-              alignItems: "center",
-              background: "rgba(0,0,0,.55)",
-              color: "#fff",
-              padding: "12px 16px",
-              borderRadius: "9999px",
-              width: "fit-content",
-              margin: "0 auto",
+              width: "72px",
+              height: "72px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #fff",
             }}
-          >
-            <img
-              src="/Gary.png"
-              alt="Gary Thomas Whitehead"
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid #fff",
-              }}
-              loading="lazy"
-            />
-            <div>
-              <div style={{ fontSize: "18px", opacity: 0.9 }}>
-                GARY THOMAS WHITEHEAD
-              </div>
-              <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                Author • Songwriter • Painter
-              </div>
+            loading="lazy"
+          />
+          <div>
+            <div style={{ fontSize: "18px", opacity: 0.9 }}>
+              GARY THOMAS WHITEHEAD
             </div>
-          </div>
-
-          {/* ✅ Big Sweetly Sentimental hero text (bigger + bolder) */}
-          <div
-            style={{
-              marginTop: 18,
-              textAlign: "center",
-              color: "#fff",
-              textShadow: "0 2px 18px rgba(0,0,0,.55)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 54,
-                fontWeight: 900,
-                letterSpacing: "0.02em",
-                lineHeight: 1.05,
-              }}
-            >
-              Sweetly Sentimental
-            </div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                opacity: 0.95,
-                marginTop: 6,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              Custom Song Creation
+            <div style={{ fontSize: "14px", opacity: 0.8 }}>
+              Author • Songwriter • Painter
             </div>
           </div>
         </div>
       </header>
 
-      {/* ====== CUSTOM SONGS & MUSIC VIDEOS (UPDATED TITLE) ====== */}
+      {/* ====== CUSTOM SONGS & MUSIC VIDEOS ====== */}
       <section
         aria-labelledby="custom-songs"
         style={{
@@ -196,7 +144,7 @@ export default function Home() {
           </li>
         </ul>
 
-        {/* ✅ NEW: Sweetly Sentimental promo video on Home page */}
+        {/* ✅ SWEETLY SENTIMENTAL VIDEO (NEW) */}
         <div
           style={{
             borderRadius: "12px",
@@ -204,7 +152,8 @@ export default function Home() {
             border: "1px solid #eee",
             background: "#000",
             boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            marginBottom: 16,
+            marginBottom: 12,
+            maxWidth: 980,
           }}
         >
           <video
@@ -218,7 +167,7 @@ export default function Home() {
           </video>
         </div>
 
-        {/* ✅ BRAND POSITIONING (Core Message) */}
+        {/* ✅ BRAND POSITIONING */}
         <div
           style={{
             borderRadius: "12px",
@@ -257,13 +206,12 @@ export default function Home() {
             }}
           >
             Lyrics are personally written by a seasoned, published songwriter.
-            Music and vocals are produced using advanced AI tools —
-            artist-directed, edited, and quality-controlled to achieve
-            radio-ready results.
+            Music and vocals are produced using advanced AI tools — artist-
+            directed, edited, and quality-controlled to achieve radio-ready
+            results.
           </div>
         </div>
 
-        {/* ✅ ONE MAIN BUTTON + ✅ RESTORED DROPDOWN */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <a
             className="btn"
@@ -333,7 +281,7 @@ export default function Home() {
         </p>
       </section>
 
-      {/* ====== NOT FOR SALE (MOVE ABOVE BOOK) ====== */}
+      {/* ====== NOT FOR SALE ====== */}
       <section
         aria-labelledby="not-for-sale"
         style={{
@@ -390,7 +338,6 @@ export default function Home() {
             preload="metadata"
             style={{ width: "100%", height: "auto", display: "block" }}
           >
-            {/* ✅ file is: public/videos/not-for-sale.mp4 */}
             <source src="/videos/not-for-sale.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
@@ -427,7 +374,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== BOOK (NOW BELOW NOT FOR SALE) ====== */}
+      {/* ====== BOOK ====== */}
       <section
         aria-labelledby="book"
         style={{
@@ -486,7 +433,9 @@ export default function Home() {
               }}
             >
               <li>Author: Gary Thomas Whitehead</li>
-              <li>Genre: Christian theology / spiritual reflection / Bible Study</li>
+              <li>
+                Genre: Christian theology / spiritual reflection / Bible Study
+              </li>
               <li>
                 An in-depth scriptural study on Jesus&apos; role as both
                 mediator and divine Son, written in a devotional, reflective
@@ -819,7 +768,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== ART (THIRD) ====== */}
+      {/* ====== ART ====== */}
       <section
         aria-labelledby="art"
         style={{
