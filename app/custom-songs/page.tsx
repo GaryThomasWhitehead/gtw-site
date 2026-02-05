@@ -56,7 +56,6 @@ export default function CustomSongsHome() {
       title="Custom Songs & Photo Music Videos"
       subtitle="Order a personalized song for any occasion — and (optionally) add a Photo Music Video where your pictures play beautifully as the music plays."
       backHref="/"
-      backLabel="← Back to Home"
       badge="CUSTOM SONGS"
     >
       <div style={grid}>
