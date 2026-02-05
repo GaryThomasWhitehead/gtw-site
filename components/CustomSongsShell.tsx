@@ -41,7 +41,7 @@ export default function CustomSongsShell({
 
   const bannerStyle: CSSProperties = {
     width: "100vw",
-    height: "280px",                        // smaller banner height to fit better
+    height: "280px",                        // reduced banner height
     marginLeft: "calc(-50vw + 50%)",
     marginRight: "calc(-50vw + 50%)",
     backgroundImage: bannerImage ? `url('${bannerImage}')` : undefined,
@@ -52,13 +52,13 @@ export default function CustomSongsShell({
   };
 
   const hero: CSSProperties = {
-    backgroundImage: heroBg ? `url('${heroBg}')` : undefined,  // NO gradient → fully clear
+    backgroundImage: heroBg ? `url('${heroBg}')` : undefined,  // completely clear - no gradient/tint
     backgroundSize: "cover",
     backgroundPosition: "center",
-    minHeight: "400px",                        // enough space for text
+    minHeight: "380px",
     borderRadius: 18,
     padding: "40px 28px",
-    boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.12)",
     border: "1px solid rgba(0,0,0,0.08)",
     display: "flex",
     flexDirection: "column",
@@ -100,11 +100,11 @@ export default function CustomSongsShell({
   const titleWrap: CSSProperties = {
     marginTop: 12,
     borderRadius: 16,
-    background: "rgba(255,255,255, 0.25)",   // very transparent
-    border: "1px solid rgba(0,0,0,0.12)",
-    padding: "24px 32px",
-    backdropFilter: "blur(16px)",            // stronger blur for glass effect
-    boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+    background: "rgba(255,255,255, 0.18)",   // very low opacity - guitar clearly visible
+    border: "1px solid rgba(255,255,255,0.25)",
+    padding: "20px 32px",
+    backdropFilter: "blur(18px)",            // strong glass effect
+    boxShadow: "0 6px 24px rgba(0,0,0,0.08)",
   };
 
   return (
@@ -129,7 +129,7 @@ export default function CustomSongsShell({
         <div style={titleWrap}>
           <h1
             style={{
-              fontSize: 36,                    // smaller title font
+              fontSize: 36,                    // reduced title size
               margin: "0 0 8px",
               lineHeight: 1.1,
               color: "#111",
@@ -144,7 +144,7 @@ export default function CustomSongsShell({
               style={{
                 margin: 0,
                 fontWeight: 700,
-                fontSize: 16,                  // smaller subtitle
+                fontSize: 16,                  // reduced subtitle size
                 color: "rgba(0,0,0,0.95)",
                 textShadow: "0 1px 6px rgba(0,0,0,0.35)",
               }}
