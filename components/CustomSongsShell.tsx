@@ -8,12 +8,10 @@ type Props = {
   title: string;
   subtitle?: string;
   backHref?: string;
-  backLabel?: string;           // ← ADDED: now pages can pass custom back text
+  backLabel?: string;
   badge?: string;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
-
-  // ✅ NEW (optional): lets a page override the hero background image
   heroImage?: string; // e.g. "/header.png"
 };
 
@@ -21,14 +19,13 @@ export default function CustomSongsShell({
   title,
   subtitle,
   backHref = "/",
-  backLabel = "← Back to Custom Songs",  // ← default value (what you had hardcoded)
+  backLabel = "← Back to Custom Songs",
   badge,
   rightSlot,
   children,
   heroImage,
 }: Props) {
-  const pageBg = "url('/backgrounds/guitar-bokeh.jpg')"; // your existing page bg
-  const heroBg = `url('${heroImage || "/backgrounds/guitar-bokeh.jpg"}')`; // override if provided
+  const heroBg = `url('${heroImage || "/backgrounds/guitar-bokeh.jpg"}')`;
 
   const pageWrap: CSSProperties = {
     maxWidth: "1360px",
@@ -41,14 +38,18 @@ export default function CustomSongsShell({
   };
 
   const hero: CSSProperties = {
-    backgroundImage: heroBg,
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.40)), ${heroBg}`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
+    minHeight: "420px",                     // taller banner area
     borderRadius: 18,
-    padding: 22,
-    boxShadow: "0 24px 80px rgba(0,0,0,0.18)",
-    border: "1px solid rgba(0,0,0,0.10)",
+    padding: "40px 28px",
+    boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
+    border: "1px solid rgba(0,0,0,0.12)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-start",
   };
 
   const chromeBar: CSSProperties = {
@@ -57,17 +58,17 @@ export default function CustomSongsShell({
     justifyContent: "space-between",
     gap: 14,
     flexWrap: "wrap",
-    marginBottom: 14,
+    marginBottom: 24,
   };
 
   const backBtn: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     gap: 10,
-    padding: "8px 12px",
+    padding: "10px 16px",
     borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.14)",
-    background: "rgba(255,255,255,0.82)",
+    border: "1px solid rgba(0,0,0,0.18)",
+    background: "rgba(255,255,255,0.88)",
     fontWeight: 900,
     textDecoration: "none",
     color: "#111",
@@ -77,18 +78,20 @@ export default function CustomSongsShell({
     fontSize: 12,
     fontWeight: 950,
     letterSpacing: ".14em",
-    padding: "6px 10px",
+    padding: "6px 12px",
     borderRadius: 999,
-    border: "1px solid rgba(0,0,0,0.14)",
-    background: "rgba(255,255,255,0.70)",
+    border: "1px solid rgba(0,0,0,0.16)",
+    background: "rgba(255,255,255,0.80)",
   };
 
   const titleWrap: CSSProperties = {
-    marginTop: 10,
-    borderRadius: 18,
-    background: "rgba(255,255,255,0.86)",
-    border: "1px solid rgba(0,0,0,0.10)",
-    padding: 18,
+    marginTop: 8,
+    borderRadius: 16,
+    background: "rgba(255,255,255, 0.50)",   // transparent enough to see banner
+    border: "1px solid rgba(0,0,0,0.15)",
+    padding: "28px 36px",
+    backdropFilter: "blur(12px)",            // glass effect – banner shines through
+    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
   };
 
   return (
@@ -97,11 +100,11 @@ export default function CustomSongsShell({
         <div style={chromeBar}>
           {backHref && (
             <Link href={backHref} style={backBtn}>
-              {backLabel}           {/* ← now uses the prop (with fallback default) */}
+              {backLabel}
             </Link>
           )}
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             {badge ? <div style={badgePill}>{badge}</div> : null}
             <MoreMenu />
             {rightSlot}
@@ -109,18 +112,34 @@ export default function CustomSongsShell({
         </div>
 
         <div style={titleWrap}>
-          <h1 style={{ fontSize: 44, margin: "0 0 6px", lineHeight: 1.05 }}>
+          <h1
+            style={{
+              fontSize: 48,
+              margin: "0 0 10px",
+              lineHeight: 1.05,
+              color: "#111",
+              textShadow: "0 2px 12px rgba(0,0,0,0.55)",
+            }}
+          >
             {title}
           </h1>
 
-          {subtitle ? (
-            <p style={{ margin: 0, fontWeight: 800, color: "rgba(0,0,0,0.72)" }}>
+          {subtitle && (
+            <p
+              style={{
+                margin: 0,
+                fontWeight: 800,
+                fontSize: 18,
+                color: "rgba(0,0,0,0.95)",
+                textShadow: "0 1px 6px rgba(0,0,0,0.45)",
+              }}
+            >
               {subtitle}
             </p>
-          ) : null}
+          )}
         </div>
 
-        <div style={{ marginTop: 14 }}>{children}</div>
+        <div style={{ marginTop: 32 }}>{children}</div>
       </div>
     </main>
   );
