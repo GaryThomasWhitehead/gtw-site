@@ -26,7 +26,6 @@ export default function FAQPage() {
       title="FAQ"
       subtitle="Quick answers about custom songs and Photo Music Videos."
       backHref="/custom-songs"
-      backLabel="← Back to Custom Songs"
       badge="FAQ"
     >
       <div style={item}>
