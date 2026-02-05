@@ -394,7 +394,7 @@ export default function OrderPage() {
       subtitle={shellSubtitle}
       backHref="/custom-songs"
       badge="ORDER"
-      heroImage="/header.png" // ✅ ORDER page uses Sweetly Sentimental banner
+      bannerImage="/header.png"  // ← Full-width banner at the very top
       rightSlot={
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div
@@ -413,7 +413,7 @@ export default function OrderPage() {
         </div>
       }
     >
-      {/* (rest of your file unchanged below this point) */}
+      {/* Everything below this line stays exactly the same */}
       <div
         style={{
           borderRadius: 18,
