@@ -8,6 +8,7 @@ type Props = {
   title: string;
   subtitle?: string;
   backHref?: string;
+  backLabel?: string;           // ← ADDED: now pages can pass custom back text
   badge?: string;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
@@ -20,13 +21,14 @@ export default function CustomSongsShell({
   title,
   subtitle,
   backHref = "/",
+  backLabel = "← Back to Custom Songs",  // ← default value (what you had hardcoded)
   badge,
   rightSlot,
   children,
   heroImage,
 }: Props) {
   const pageBg = "url('/backgrounds/guitar-bokeh.jpg')"; // your existing page bg
-  const heroBg = `url('${heroImage || "/backgrounds/guitar-bokeh.jpg"}')`; // ✅ override if provided
+  const heroBg = `url('${heroImage || "/backgrounds/guitar-bokeh.jpg"}')`; // override if provided
 
   const pageWrap: CSSProperties = {
     maxWidth: "1360px",
@@ -93,9 +95,11 @@ export default function CustomSongsShell({
     <main style={pageWrap}>
       <div style={hero}>
         <div style={chromeBar}>
-          <Link href={backHref} style={backBtn}>
-            ← Back to Custom Songs
-          </Link>
+          {backHref && (
+            <Link href={backHref} style={backBtn}>
+              {backLabel}           {/* ← now uses the prop (with fallback default) */}
+            </Link>
+          )}
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             {badge ? <div style={badgePill}>{badge}</div> : null}
