@@ -12,7 +12,8 @@ type Props = {
   badge?: string;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
-  heroImage?: string; // e.g. "/header.png"
+  heroImage?: string;           // background for content area (optional now)
+  bannerImage?: string;         // ← NEW: full-width banner at the very top
 };
 
 export default function CustomSongsShell({
@@ -24,32 +25,41 @@ export default function CustomSongsShell({
   rightSlot,
   children,
   heroImage,
+  bannerImage,                  // ← new prop
 }: Props) {
-  const heroBg = `url('${heroImage || "/backgrounds/guitar-bokeh.jpg"}')`;
+  const heroBg = heroImage ? `url('${heroImage}')` : undefined;
 
   const pageWrap: CSSProperties = {
     maxWidth: "1360px",
     margin: "0 auto",
-    padding: "24px 32px",
+    padding: "0 32px 32px 32px",  // reduced top padding since banner takes space
     fontFamily: '"Georgia", "Times New Roman", serif',
     color: "#111",
     backgroundColor: "#faf9f6",
     lineHeight: 1.6,
   };
 
-  const hero: CSSProperties = {
-    backgroundImage: `linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.40)), ${heroBg}`,
+  const bannerStyle: CSSProperties = bannerImage ? {
+    width: "100vw",
+    height: "320px",                      // adjust this height to taste (280–400px)
+    marginLeft: "calc(-50vw + 50%)",      // centers full-width banner
+    marginRight: "calc(-50vw + 50%)",
+    backgroundImage: `url('${bannerImage}')`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
-    minHeight: "420px",                     // taller banner area
+    marginBottom: 32,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+  } : undefined;
+
+  const hero: CSSProperties = {
+    backgroundImage: heroBg ? `linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.30)), ${heroBg}` : undefined,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
     borderRadius: 18,
-    padding: "40px 28px",
-    boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
-    border: "1px solid rgba(0,0,0,0.12)",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-start",
+    padding: "32px 28px",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+    border: "1px solid rgba(0,0,0,0.10)",
   };
 
   const chromeBar: CSSProperties = {
@@ -58,7 +68,7 @@ export default function CustomSongsShell({
     justifyContent: "space-between",
     gap: 14,
     flexWrap: "wrap",
-    marginBottom: 24,
+    marginBottom: 20,
   };
 
   const backBtn: CSSProperties = {
@@ -68,7 +78,7 @@ export default function CustomSongsShell({
     padding: "10px 16px",
     borderRadius: 999,
     border: "1px solid rgba(0,0,0,0.18)",
-    background: "rgba(255,255,255,0.88)",
+    background: "rgba(255,255,255,0.90)",
     fontWeight: 900,
     textDecoration: "none",
     color: "#111",
@@ -81,21 +91,22 @@ export default function CustomSongsShell({
     padding: "6px 12px",
     borderRadius: 999,
     border: "1px solid rgba(0,0,0,0.16)",
-    background: "rgba(255,255,255,0.80)",
+    background: "rgba(255,255,255,0.85)",
   };
 
   const titleWrap: CSSProperties = {
     marginTop: 8,
     borderRadius: 16,
-    background: "rgba(255,255,255, 0.50)",   // transparent enough to see banner
-    border: "1px solid rgba(0,0,0,0.15)",
-    padding: "28px 36px",
-    backdropFilter: "blur(12px)",            // glass effect – banner shines through
-    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+    background: heroBg ? "rgba(255,255,255, 0.65)" : "rgba(255,255,255, 0.92)",
+    border: "1px solid rgba(0,0,0,0.12)",
+    padding: "24px 32px",
+    backdropFilter: heroBg ? "blur(8px)" : undefined,
   };
 
   return (
     <main style={pageWrap}>
+      {bannerImage && <div style={bannerStyle} />}
+
       <div style={hero}>
         <div style={chromeBar}>
           {backHref && (
@@ -118,7 +129,7 @@ export default function CustomSongsShell({
               margin: "0 0 10px",
               lineHeight: 1.05,
               color: "#111",
-              textShadow: "0 2px 12px rgba(0,0,0,0.55)",
+              textShadow: heroBg ? "0 2px 10px rgba(0,0,0,0.5)" : undefined,
             }}
           >
             {title}
@@ -130,8 +141,8 @@ export default function CustomSongsShell({
                 margin: 0,
                 fontWeight: 800,
                 fontSize: 18,
-                color: "rgba(0,0,0,0.95)",
-                textShadow: "0 1px 6px rgba(0,0,0,0.45)",
+                color: heroBg ? "rgba(0,0,0,0.95)" : "#222",
+                textShadow: heroBg ? "0 1px 6px rgba(0,0,0,0.4)" : undefined,
               }}
             >
               {subtitle}
@@ -139,7 +150,7 @@ export default function CustomSongsShell({
           )}
         </div>
 
-        <div style={{ marginTop: 32 }}>{children}</div>
+        <div style={{ marginTop: 28 }}>{children}</div>
       </div>
     </main>
   );
