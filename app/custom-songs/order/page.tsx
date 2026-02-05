@@ -394,7 +394,7 @@ export default function OrderPage() {
       subtitle={shellSubtitle}
       backHref="/custom-songs"
       badge="ORDER"
-      bannerImage="/header.png"  // ← Full-width banner at the very top
+      // No heroImage or bannerImage props needed anymore
       rightSlot={
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div
@@ -413,7 +413,7 @@ export default function OrderPage() {
         </div>
       }
     >
-      {/* Everything below this line stays exactly the same */}
+      {/* Everything below remains unchanged */}
       <div
         style={{
           borderRadius: 18,
