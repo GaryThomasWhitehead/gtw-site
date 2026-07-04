@@ -1,9 +1,14 @@
 ﻿import { NextRequest } from "next/server";
 
 const COOKIE_NAME = "fedex_tracker_access";
+const ACCESS_VALUE = "granted";
 
 export function fedExTrackerCookieName() {
   return COOKIE_NAME;
+}
+
+export function fedExTrackerCookieValue() {
+  return ACCESS_VALUE;
 }
 
 export function expectedFedExTrackerPassword() {
@@ -11,7 +16,6 @@ export function expectedFedExTrackerPassword() {
 }
 
 export function hasFedExTrackerAccess(request: NextRequest) {
-  const expected = expectedFedExTrackerPassword();
-  if (!expected) return false;
-  return request.cookies.get(COOKIE_NAME)?.value === expected;
+  if (!expectedFedExTrackerPassword()) return false;
+  return request.cookies.get(COOKIE_NAME)?.value === ACCESS_VALUE;
 }

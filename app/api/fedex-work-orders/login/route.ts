@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
-import { expectedFedExTrackerPassword, fedExTrackerCookieName } from "@/lib/fedexTrackerAuth";
+import { expectedFedExTrackerPassword, fedExTrackerCookieName, fedExTrackerCookieValue } from "@/lib/fedexTrackerAuth";
 
 export async function POST(request: NextRequest) {
   const expected = expectedFedExTrackerPassword();
@@ -14,19 +14,20 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.redirect(new URL("/fedex-tracker", request.url), { status: 303 });
-  response.cookies.set(fedExTrackerCookieName(), expected, {
+  const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
-    path: "/fedex-tracker",
     maxAge: 60 * 60 * 12
+  };
+
+  response.cookies.set(fedExTrackerCookieName(), fedExTrackerCookieValue(), {
+    ...cookieOptions,
+    path: "/fedex-tracker"
   });
-  response.cookies.set(fedExTrackerCookieName(), expected, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/api/fedex-work-orders",
-    maxAge: 60 * 60 * 12
+  response.cookies.set(fedExTrackerCookieName(), fedExTrackerCookieValue(), {
+    ...cookieOptions,
+    path: "/api/fedex-work-orders"
   });
   return response;
 }

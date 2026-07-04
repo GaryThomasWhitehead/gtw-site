@@ -36,10 +36,12 @@ function loginPage(message = "") {
 
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) {
-    return new NextResponse(loginPage(), { headers: { "content-type": "text/html; charset=utf-8" } });
+    const message = request.nextUrl.searchParams.get("error") ? "That password did not match. Please try again." : "";
+    return new NextResponse(loginPage(message), { headers: { "content-type": "text/html; charset=utf-8" } });
   }
 
   const filePath = path.join(process.cwd(), "app", "fedex-tracker", "fedex-work-orders.html");
   const html = await readFile(filePath, "utf8");
   return new NextResponse(html, { headers: { "content-type": "text/html; charset=utf-8" } });
 }
+
