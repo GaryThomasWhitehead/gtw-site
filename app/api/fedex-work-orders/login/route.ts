@@ -14,20 +14,12 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.redirect(new URL("/fedex-tracker", request.url), { status: 303 });
-  const cookieOptions = {
+  response.cookies.set(fedExTrackerCookieName(), fedExTrackerCookieValue(), {
     httpOnly: true,
-    sameSite: "lax" as const,
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
+    path: "/",
     maxAge: 60 * 60 * 12
-  };
-
-  response.cookies.set(fedExTrackerCookieName(), fedExTrackerCookieValue(), {
-    ...cookieOptions,
-    path: "/fedex-tracker"
-  });
-  response.cookies.set(fedExTrackerCookieName(), fedExTrackerCookieValue(), {
-    ...cookieOptions,
-    path: "/api/fedex-work-orders"
   });
   return response;
 }
