@@ -1,0 +1,1882 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FedEx Work Order Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172026;
+        --muted: #5c6b73;
+        --line: #d6dee3;
+        --panel: #ffffff;
+        --soft: #f4f7f8;
+        --brand: #4d148c;
+        --accent: #ff6600;
+        --good: #167a4b;
+        --warn: #a06100;
+        --bad: #aa2d2d;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #edf1f3;
+        color: var(--ink);
+      }
+
+      button, input, textarea, select { font: inherit; }
+
+      button {
+        border: 1px solid var(--brand);
+        border-radius: 6px;
+        background: var(--brand);
+        color: #fff;
+        min-height: 38px;
+        padding: 0 12px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button.secondary {
+        background: #fff;
+        color: var(--brand);
+      }
+
+      button.ghost {
+        border-color: transparent;
+        background: transparent;
+        color: var(--brand);
+      }
+
+      button.danger {
+        border-color: var(--bad);
+        background: var(--bad);
+      }
+
+      input, textarea, select {
+        width: 100%;
+        border: 1px solid #b9c5cc;
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        min-height: 38px;
+        padding: 8px 10px;
+      }
+
+      textarea { resize: vertical; }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: #33434c;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: #fff;
+        padding: 22px;
+        overflow: auto;
+      }
+
+      .main {
+        padding: 22px;
+        overflow: auto;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 25px;
+        line-height: 1.08;
+      }
+
+      .eyebrow {
+        margin: 0 0 5px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+
+      .fedex-mark {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        min-width: 92px;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -.5px;
+      }
+
+      .fed { color: var(--brand); }
+      .ex { color: var(--accent); }
+
+      .toolbar, .filters, .form-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar { margin-bottom: 14px; }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 150px;
+        margin-bottom: 14px;
+      }
+
+      .location-pages {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .location-page {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        min-height: 42px;
+        padding: 8px 10px;
+        text-align: left;
+      }
+
+      .location-page.active {
+        border-color: var(--brand);
+        background: #f5effb;
+      }
+
+      .location-page.billing {
+        border-color: #167a4b;
+        background: #f1fbf6;
+      }
+
+      .location-page strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .location-page span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 16px 0;
+      }
+
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--soft);
+        padding: 12px;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 25px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .work-card {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        padding: 12px;
+        text-align: left;
+      }
+
+      .work-card.active {
+        border-color: var(--brand);
+        box-shadow: inset 4px 0 0 var(--brand);
+      }
+
+      .work-card.old-job {
+        border-color: var(--bad);
+        background: #fff5f5;
+        box-shadow: inset 4px 0 0 var(--bad);
+      }
+
+      .work-card.old-job.active {
+        border-color: var(--bad);
+      }
+
+      .work-card h3 {
+        margin: 0 0 6px;
+        font-size: 15px;
+      }
+
+      .work-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: 800;
+        background: #e8edf0;
+        color: #34434b;
+        white-space: nowrap;
+      }
+
+      .pill.progress { background: #e7f0ff; color: #255da8; }
+      .pill.quote { background: #fff2dd; color: var(--warn); }
+      .pill.ready { background: #e8f6ef; color: var(--good); }
+      .pill.done { background: #e6f4ea; color: var(--good); }
+      .pill.blocked { background: #fae8e8; color: var(--bad); }
+      .pill.old { background: #fde2e2; color: var(--bad); }
+
+      .card-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 16px;
+        margin-bottom: 14px;
+      }
+
+      .panel h2 {
+        margin: 0 0 14px;
+        font-size: 18px;
+      }
+
+      .detail-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 12px;
+      }
+
+      .detail-head h2 {
+        margin: 0 0 5px;
+        font-size: 25px;
+      }
+
+      .detail-head p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .wide { grid-column: 1 / -1; }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(190px, 1fr));
+        gap: 12px;
+      }
+
+      .column {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        min-height: 180px;
+        padding: 12px;
+      }
+
+      .column h3 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 0 10px;
+        font-size: 14px;
+      }
+
+      .mini-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+        background: var(--soft);
+      }
+
+      .mini-card.old-job {
+        border-color: var(--bad);
+        background: #fff5f5;
+      }
+
+      .mini-card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .mini-card span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .summary {
+        border-left: 4px solid var(--accent);
+        background: #fff8f2;
+      }
+
+      .empty {
+        border: 1px dashed #b9c5cc;
+        border-radius: 8px;
+        padding: 18px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .hidden { display: none !important; }
+
+      @media (max-width: 980px) {
+        .app { grid-template-columns: 1fr; }
+        .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+        .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 640px) {
+        .sidebar, .main { padding: 16px; }
+        .filters, .field-grid, .board, .location-page { grid-template-columns: 1fr; }
+        .detail-head { display: grid; }
+      }
+
+      @media print {
+        .sidebar, .toolbar, .form-actions, .filters { display: none; }
+        .app { display: block; }
+        .main { padding: 0; }
+        body { background: #fff; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <header class="brand">
+          <div>
+            <p class="eyebrow">Operations Tracker</p>
+            <h1>Work Orders</h1>
+          </div>
+          <div class="fedex-mark" aria-label="FedEx"><span class="fed">Fed</span><span class="ex">Ex</span></div>
+        </header>
+
+        <div class="toolbar">
+          <button id="newButton" type="button">+ New</button>
+          <button id="exportButton" class="secondary" type="button">Export</button>
+          <button id="printButton" class="secondary" type="button">Print</button>
+          <label class="ghost-label">
+            <input id="importFile" class="hidden" type="file" accept=".json,.csv,.xlsx,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+            <button id="importButton" class="secondary" type="button">Import</button>
+          </label>
+        </div>
+
+        <div id="locationPages" class="location-pages" aria-label="Location pages"></div>
+
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Search tracking, location, work, notes" />
+          <select id="statusFilter" aria-label="Filter by status">
+            <option value="all">All status</option>
+          </select>
+        </div>
+
+        <section class="stats" aria-label="Work order summary">
+          <div class="stat"><strong id="totalCount">0</strong><span>Total</span></div>
+          <div class="stat"><strong id="openCount">0</strong><span>Open</span></div>
+          <div class="stat"><strong id="quoteCount">0</strong><span>Needs Quote</span></div>
+          <div class="stat"><strong id="doneCount">0</strong><span>Done</span></div>
+        </section>
+
+        <div id="workList" class="list" aria-label="Work order list"></div>
+      </aside>
+
+      <main class="main">
+        <section class="panel summary">
+          <div class="detail-head">
+            <div>
+              <p id="pageEyebrow" class="eyebrow">All Jobs</p>
+              <h2 id="selectedTitle">Choose a work order</h2>
+              <p id="selectedMeta">Add, update, and track field status from one screen.</p>
+            </div>
+            <span id="selectedStatus" class="pill">No selection</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Work Order Details</h2>
+          <form id="workForm">
+            <div class="field-grid">
+              <label>
+                Tracking number
+                <input id="trackingNumber" name="trackingNumber" required />
+              </label>
+              <label>
+                Location ID / name
+                <input id="location" name="location" required />
+              </label>
+              <label>
+                Class of work
+                <input id="classOfWork" name="classOfWork" />
+              </label>
+              <label>
+                Status
+                <select id="status" name="status"></select>
+              </label>
+              <label>
+                Cost / NTE
+                <input id="cost" name="cost" placeholder="NTE 2500" />
+              </label>
+              <label>
+                Priority
+                <select id="priority" name="priority">
+                  <option>Normal</option>
+                  <option>High</option>
+                  <option>Low</option>
+                </select>
+              </label>
+              <label>
+                Assigned to
+                <input id="assignedTo" name="assignedTo" placeholder="Technician or owner" />
+              </label>
+              <label>
+                Due date
+                <input id="dueDate" name="dueDate" type="date" />
+              </label>
+              <label>
+                Call date
+                <input id="callDate" name="callDate" type="date" />
+              </label>
+              <label class="wide">
+                Job description
+                <textarea id="jobDescription" name="jobDescription" rows="6"></textarea>
+              </label>
+              <label class="wide">
+                Additional notes
+                <textarea id="notes" name="notes" rows="5"></textarea>
+              </label>
+              <label class="wide">
+                Next step
+                <input id="nextStep" name="nextStep" placeholder="Example: Order switch, send quote, schedule lift" />
+              </label>
+            </div>
+            <div class="form-actions" style="margin-top: 14px;">
+              <button type="submit">Save Changes</button>
+              <button id="duplicateButton" class="secondary" type="button">Duplicate</button>
+              <button id="deleteButton" class="danger" type="button">Delete</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Status Board</h2>
+          <div id="board" class="board"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+      const storageKey = "fedex-work-orders-v1";
+      const statuses = [
+        "NTS",
+        "In progress",
+        "Need to quote",
+        "Waiting on parts",
+        "Scheduled",
+        "Completed",
+        "Canceled"
+      ];
+
+      const defaultOrders = [
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "340968129",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "Paint & Wallcovering",
+                "jobDescription": "OUTSIDE / Painting / Painting / Painting Request / Overhead Height Clearance Bar- (ramp to the roof). Needs to be repainted, Poles yellow and signage black. For further details please contact Antonio Omega or Anthony Harrison. Thank you.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-02-10",
+                "notes": "Call date: 2026-02-10 | Submitted by: Erendira Perez 413573 | Area: OUTSIDE | Equipment: Painting | Problem type: Painting | Problem code: Painting Request | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Feb 10, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Schedule with station by 2026-06-24."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "345858442",
+                "location": "MODA - MODESTO,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "OUTSIDE / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Yellow pole is bent on the east side front yard of the building (near where the stop sign is) Needs removal and dispose of.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-25",
+                "callDate": "2026-03-27",
+                "notes": "Call date: 2026-03-27 | Submitted by: Gwendolyn Smith | Area: OUTSIDE | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 28, 2026 Gwendolyn Smith, Office Admin, called to request a follow-up regarding the technician's schedule. She noted that there has been no update provided yet concerning the ETA for the service. (SC - Siegfred Jhon Michael Rebato) Apr 28, 2026 345858442. (SC - Siegfred Jhon Michael Rebato) Apr 21, 2026 Gwendolyn Smith/ Office Admin called in to follow up on this w/o as they need this to get fixed asap, So Please assist how to proceed with this w/o ? (SC - Steve Jha) Mar 27, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Gwendolyn Smith)",
+                "nextStep": "Schedule with station by 2026-06-25."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "346660796",
+                "location": "MODA - MODESTO,CA",
+                "classOfWork": "Signage",
+                "jobDescription": "OUTSIDE / Signage / Signage / Other - Click NEXT and describe what is broken in Problem Description / Our stop sign has faded out and need replacement. Stop sign is on the Eastside front side of the building ( by end of driveway). We need the stop sign replace with a new one. We have the replacement sign already.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-25",
+                "callDate": "2026-04-02",
+                "notes": "Call date: 2026-04-02 | Submitted by: Gwendolyn Smith | Area: OUTSIDE | Equipment: Signage | Problem type: Signage | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 28, 2026 Gwendolyn Smith, Office Admin, called to request a follow-up regarding the technician's schedule. She noted that there has been no update provided yet concerning the ETA for the service. (SC - Siegfred Jhon Michael Rebato) Apr 21, 2026 Gwendolyn Smith/ Office Admin called in to follow up on this w/o as they need this to get fixed asap, Please assist how to proceed with this w/o ? (SC - Steve Jha) Apr 20, 2026 We have the new stop sign. Just need to be installed. (Gwendolyn Smith) Apr 2, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Gwendolyn Smith)",
+                "nextStep": "Schedule with station by 2026-06-25."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "346851666",
+                "location": "LVKA - PLEASANTON,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Removal of all benches by the employee lockers. Will need to ensure all parts are removed including the components attached to the warehouse floor due to safety concerns.",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Brett Ladrech",
+                "dueDate": "2026-06-25",
+                "callDate": "2026-04-04",
+                "notes": "Call date: 2026-04-04 | Submitted by: John Wiens 428294 | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Attachment 'IMG_2208.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2209.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2205.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2207.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2206.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Work Summary: Removed damaged benches in warehouse (Brett Ladrech) Jun 25, 2026 Resolution Work Summary: Removed damaged benches in warehouse. (Brett Ladrech) Jun 25, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Brett Ladrech) Jun 25, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Brett Ladrech) Jun 24, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 24, 2026 Schedule Date changed from Jun 24 2026 14:21 PST to Jun 25, 2026 10:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 4, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (John Wiens 428294)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "347562817",
+                "location": "RHVA - SAN JOSE,CA",
+                "classOfWork": "Electrical",
+                "jobDescription": "OFFICE/SECURITY BLDG / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Repair/replace/install outlet(s) / we have multiple electrical outlets/faceplates that are cracked or push into the wall. We need to have all outlets inspected and repaired.",
+                "cost": "NTE 5000",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Brett Ladrech",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-04-13",
+                "notes": "Call date: 2026-04-13 | Submitted by: Amanda Corona-Bargas 5042870 | Area: OFFICE/SECURITY BLDG | Equipment: Outlets/ Switches/ Facility Circuit | Problem type: Electrical - Facility Related | Problem code: Repair/replace/install outlet(s) | Source status: IN PROGRESS | Status detail: DISPATCH CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Daniel Sullivan) Jun 25, 2026 Schedule Date changed from Jun 26 2026 13:10 PST to Jun 26, 2026 10:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Daniel Sullivan) Jun 24, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 13, 2026 Service Request has been copied to rhva-sm_corp.fedex.com@corp.ds.fedex.com. (Amanda Corona-Bargas 5042870) Apr 13, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Amanda Corona-Bargas 5042870)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "347636579",
+                "location": "0946 - San Leandro,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / remove drills from ground the create a tripping hazard",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Ricci Romano",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-04-14",
+                "notes": "Call date: 2026-04-14 | Submitted by: Ezequiel Lopez | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Jacob / Owner / pin is verified /tech having difficulties with IVR / check out request at 10AM / 1 tech / job is completed (SC - Noelyn Santos) Jun 23, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (SC - Noelyn Santos) Jun 23, 2026 Attachment '1000004847.jpg' has been added with the following description '1000004847.jpg'. (Ricci Romano) Jun 23, 2026 Attachment '1000004849.jpg' has been added with the following description '1000004849.jpg'. (Ricci Romano) Jun 23, 2026 Attachment '1000004845.jpg' has been added with the following description '1000004845.jpg'. (Ricci Romano) Jun 23, 2026 Attachment '1000004850.jpg' has been added with the following description '1000004850.jpg'. (Ricci Romano) Jun 23, 2026 Attachment '1000004846.jpg' has been added with the following description '1000004846.jpg'. (Ricci Romano) Jun 23, 2026 Attachment '1000004848.jpg' has been added with the following description '1000004848.jpg'. (Ricci Romano) Jun 23, 2026 Jacob /Frontline Pro Services /called to update the IVR times technician was facing an issues with the SC app while check in Date - 06/23/2026 Check in - 09.00AM # tech - 1 Status - On site PIN/SOW/ADD is verified (SC - Anna Das) Jun 23, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (SC - Anna Das) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 05:34 PST to Jun 23, 2026 08:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 14, 2026 Service Request has been copied to oakl-senior-manager-station@corp.ds.fedex.com. (Ezequiel Lopez) Apr 14, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Ezequiel Lopez)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "347938246",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / Ceiling/ Walls/ Floor / Floor / Floor Repair / Location: Back Flow pipes - by Gate1. Floor is sinking- safety issue, needs to be repair. Thx.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-04-16",
+                "notes": "Call date: 2026-04-16 | Submitted by: Erendira Perez 413573 | Area: Dock | Equipment: Floor | Problem type: Ceiling/ Walls/ Floor | Problem code: Floor Repair | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 16, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Erendira Perez 413573) Apr 16, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Schedule with station by 2026-06-24."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "348230920",
+                "location": "0880 - San Jose,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / Mount/install posters throughout warehouse and FedEx sign in front office (less than 5 lbs.)",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-04-20",
+                "notes": "Call date: 2026-04-20 | Submitted by: Claressa Mauricio | Area: Dock | Equipment: Pictures/Boards/Signs | Problem type: General Repairs | Problem code: Hang picture/dry erase board/bulletin board, signage, etc. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 5, 2026 Spoke with Claressa I'm waiting for her to generate more work before dispatching a vendor. (Kiliona Pesi) Apr 20, 2026 Service Request has been copied to ssjo-senior-manager-station@corp.ds.fedex.com. (Claressa Mauricio) Apr 20, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Claressa Mauricio)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "348318302",
+                "location": "0912 // South SF",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Need metal cabinet secured to wall for safety reasons. Contact info: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-04-21",
+                "notes": "Call date: 2026-04-21 | Submitted by: Tiffany Jones 427330 | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Work Summary: Mounted (2) cabinets to wall using toggle bolts. Took pictures of part number for push to start button that is broken. (Austin Goldie) Jun 24, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Austin Goldie) Jun 24, 2026 Resolution Work Summary: Mounted (2) cabinets to wall using toggle bolts. Took pictures of part number for push to start button that is broken. . (Austin Goldie) Jun 24, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Austin Goldie) Jun 24, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 24, 2026 Schedule Date changed from Jun 22 2026 15:18 PST to Jun 24, 2026 11:30 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 18, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 18, 2026 Management looking for updates on safety issue & security signage being completed. Thank you. (Tiffany Jones 427330) Apr 24, 2026 need to add two signs that need to be hung on the exterior of the building near security entrance. / Attachment(s) \"Apr 24, 2026, Apr 24, 2026\" uploaded by Tiffany Jones 427330 (Tiffany Jones 427330) Apr 24, 2026 Attachment 'security entrance signage.jpeg' has been added with the following description 'security entrance signage.jpeg'. (Tiffany Jones 427330) Apr 24, 2026 Attachment 'customer entrance signage.jpeg' has been added with the following description 'customer entrance signage.jpeg'. (Tiffany Jones 427330) Apr 21, 2026 Service Request has been copied to john.domingo@fedex.com;mark.avery@fedex.com;ssfngmgmt@corp.ds.fedex.com. (Tiffany Jones 427330) Apr 21, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Tiffany Jones 427330)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "348502000",
+                "location": "MODA - MODESTO,CA",
+                "classOfWork": "Signage",
+                "jobDescription": "OUTSIDE / Signage / Signage / Other - Click NEXT and describe what is broken in Problem Description / There are 5 signs that are faded and need to be replace. Signs on the east side of the building on the side lawn area. There is one pole that is broken, it needs to be replace as well.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-04-23",
+                "notes": "Call date: 2026-04-23 | Submitted by: Gwendolyn Smith | Area: OUTSIDE | Equipment: Signage | Problem type: Signage | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Apr 23, 2026 Service Request has been copied to moda-sm_corp.fedex.com@corp.ds.fedex.com. (Gwendolyn Smith) Apr 23, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Gwendolyn Smith)",
+                "nextStep": "Schedule with station by 2026-06-24."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "349853229",
+                "location": "0912 // South SF",
+                "classOfWork": "Health And Safety Systems",
+                "jobDescription": "DOCK / Carbon Monoxide Sensors / Sensor - Carbon Monoxide / Replace sensors / replace CO2 sensor, NTE $5,000.00",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-22",
+                "callDate": "2026-05-05",
+                "notes": "Call date: 2026-05-05 | Submitted by: Curtis Hoo 117636 | Area: Dock | Equipment: Sensor - Carbon Monoxide | Problem type: Carbon Monoxide Sensors | Problem code: Replace sensors | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 18, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) May 5, 2026 Service Request has been copied to john.domingo@fedex.com;mark.avery@fedex.com;ssfngmgmt@corp.ds.fedex.com. (Curtis Hoo 117636) May 5, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Curtis Hoo 117636)",
+                "nextStep": "Schedule with station by 2026-06-22."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "350187693",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "Electrical",
+                "jobDescription": "OUTSIDE / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Repair/replace/install outlet(s) / 5 damaged Metal Electrical boxes- Need to be replaced- For locations please contact M. Perez or Shannon. Thank you.",
+                "cost": "NTE 5000",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Brett Ladrech",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-05-08",
+                "notes": "Call date: 2026-05-08 | Submitted by: Erendira Perez 413573 | Area: OUTSIDE | Equipment: Outlets/ Switches/ Facility Circuit | Problem type: Electrical - Facility Related | Problem code: Repair/replace/install outlet(s) | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Attachment 'IMG_2146.jpg' has been added. (Brett Ladrech) Jun 24, 2026 Attachment 'IMG_2148.jpg' has been added. (Brett Ladrech) Jun 24, 2026 Attachment 'IMG_2143.jpg' has been added. (Brett Ladrech) Jun 24, 2026 Attachment 'IMG_2147.jpg' has been added. (Brett Ladrech) Jun 24, 2026 Attachment 'IMG_2145.jpg' has been added. (Brett Ladrech) Jun 23, 2026 Work Summary: Replace outlets in warehouse area do to the boxes being stepped on to get up ledge. Every box we replaced outlets we added two 20a receptacles. Totaling 10 receptacles we installed in existing locations. There was 5 total problem areas. We had to replace three double gang bell boxes and three single gang bell boxes because the brackets that hold the receptacle in place were broken off and would not be able to be used as is. Labeled each box we worked on with its correct panel and circuit number. (Austin Goldie) Jun 23, 2026 Status has been changed from IN PROGRESS/INCOMPLETE to COMPLETED/PENDING CONFIRMATION. (Austin Goldie) Jun 23, 2026 Resolution Work Summary: Replace outlets in warehouse area do to the boxes being stepped on to get up ledge. Every box we replaced outlets we added two 20a receptacles. Totaling 10 receptacles we installed in existing locations. There was 5 total problem areas. We had to replace three double gang bell boxes and three single gang bell boxes because the brackets that hold the receptacle in place were broken off and would not be able to be used as is. Labeled each box we worked on with its correct panel and circuit number. . (Austin Goldie) Jun 23, 2026 Work Summary: Replaced 6 boxes and added two outlets in each box with new covers. (Brett Ladrech) Jun 23, 2026 Resolution Work Summary: Replaced 6 boxes and added two outlets in each box with new covers. (Brett Ladrech) Jun 23, 2026 Status has been changed from IN PROGRESS/ON SITE to IN PROGRESS/INCOMPLETE. (Brett Ladrech) Jun 23, 2026 Unable to capture signature reason: Staff not present (Brett Ladrech) Jun 23, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Brett Ladrech) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 05:26 PST to Jun 23, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) May 8, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Erendira Perez 413573) May 8, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "350469095",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Installation for new equipment / Installation of 58\" TV screen- 2nd floor- Marlon's Office. Mounting bracket already purchased and available. For further details please contact Marlon at 628-255-5651 and / or Michelle Perez. Thank you",
+                "cost": "NTE 5000",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Brett Ladrech",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-05-12",
+                "notes": "Call date: 2026-05-12 | Submitted by: Erendira Perez 413573 | Area: CSA (CUSTOMER SERVICE AREA) | Equipment: Outlets/ Switches/ Facility Circuit | Problem type: Electrical - Facility Related | Problem code: Installation for new equipment | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Attachment '63272BDD-B14F-434D-8A31-A9FD2C3860E7-9532-00000627AA1724CB.jpg' has been added. (Austin Goldie) Jun 24, 2026 Attachment '06E678C3-931E-42B8-A2D3-430EE9A6F34D-9532-00000627AA1722D1.jpg' has been added. (Austin Goldie) Jun 24, 2026 Attachment '92B8F9F6-9E83-4F44-A2AF-87E9BF078AB3-9532-00000627AA172407.jpg' has been added. (Austin Goldie) Jun 23, 2026 Work Summary: Mounted tv on wall at customer desired height and location. (Austin Goldie) Jun 23, 2026 Status has been changed from IN PROGRESS/INCOMPLETE to COMPLETED/PENDING CONFIRMATION. (Austin Goldie) Jun 23, 2026 Resolution Work Summary: Mounted tv on wall at customer desired height and location. . (Austin Goldie) Jun 23, 2026 Unable to capture signature reason: Marlon was unreachable. Starting another work order at same location. (Austin Goldie) Jun 23, 2026 Work Summary: Mounted tv on wall (Brett Ladrech) Jun 23, 2026 Resolution Work Summary: Mounted tv on wall. (Brett Ladrech) Jun 23, 2026 Status has been changed from IN PROGRESS/ON SITE to IN PROGRESS/INCOMPLETE. (Brett Ladrech) Jun 23, 2026 Unable to capture signature reason: Staff not present (Brett Ladrech) Jun 23, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Brett Ladrech) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 05:26 PST to Jun 23, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 19, 2026 GL Code has been changed from 652061 to 652070. (Kiliona Pesi) Jun 19, 2026 Trade has been changed from ELECTRICAL to GENERAL REPAIRS. (Kiliona Pesi) May 12, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Erendira Perez 413573) May 12, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "350966612",
+                "location": "0939 - Watsonville,CA",
+                "classOfWork": "Lighting",
+                "jobDescription": "DOCK / Lighting / Interior Lights / Other - Click NEXT and describe what is broken in Problem Description / Door 4 both fan and light not working",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-05-18",
+                "notes": "Call date: 2026-05-18 | Submitted by: Kalee Kusaba-Kusumoto | Area: Dock | Equipment: Interior Lights | Problem type: Lighting | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) May 18, 2026 Service Request has been copied to slin-senior-manager-station@corp.ds.fedex.com. (Kalee Kusaba-Kusumoto) May 18, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Kalee Kusaba-Kusumoto)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "350966713",
+                "location": "0939 - Watsonville,CA",
+                "classOfWork": "Welding",
+                "jobDescription": "DOCK / Welding / Welding / Other - Click NEXT and describe what is broken in Problem Description / flat bed cart needing to be welded back together, all of them lined up in the back of the building",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-05-18",
+                "notes": "Call date: 2026-05-18 | Submitted by: Kalee Kusaba-Kusumoto | Area: Dock | Equipment: Welding | Problem type: Welding | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) May 18, 2026 Service Request has been copied to slin-senior-manager-station@corp.ds.fedex.com. (Kalee Kusaba-Kusumoto) May 18, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Kalee Kusaba-Kusumoto)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "350999780",
+                "location": "0931 - San Leandro,CA",
+                "classOfWork": "Paint & Wallcovering",
+                "jobDescription": "Paint a single exterior pedestrian door & frame as determined by the Senior Manager of this location. Completely paint the identified door & frame, interior and exterior. The designated door & frame painting specifications are as follows: â€¢ Color: Sherwin Williams equivalent to Pantone 021 (SW-6884 Obstinate Orange) â€¢ 1 primer coat of Sherwin Williams product SW Pro Industrial Pro-Cryl Primer â€¢ 2 finish coats of Sherwin Williams product SW Pro Industrial Waterbased Acrolon 100 Urethane Semi-Gloss Changing the specified paint color and noted paint specifications is strictly prohibited. Selecting a different brand of paint or color matching is unacceptable. Please contact the SRM directly for further instructions prior to coordinating service. Location contact information is contained within this Work Order. Work for the Vendor Control Door must be completed no later than August 31, 2026.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-05-18",
+                "notes": "Call date: 2026-05-18 | Submitted by: BulkPMDispatcher | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Provider reassigned from Sierra Group to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to Sierra Group. (Kiliona Pesi) May 21, 2026 Please see updated specification: â€¢ 1 Coat SW Pro Industrial Pro-Cryl Primer â€¢ 2 Coats SW Pro Industrial DTM Acrylic Semi-Gloss â€¢ 1 Coat SW Pro Industrial Acrolon 100 Clear Semi-Gloss Color is Pantone 021- Approved SW color SW6886 Invigorate Attached is the paint formula. (Rachael Scheib) May 21, 2026 Attachment 'FedEx Orange Color Formula.jpeg' has been added. (Rachael Scheib) May 19, 2026 Auto Dispatch summary sent to 'msollano@callsierra.com' on May 19, 2026 12:10 AM (PM Auto Dispatch)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "351851186",
+                "location": "0939 - Watsonville,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Tag lines above VL's need repairs/ new wires",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-05-26",
+                "notes": "Call date: 2026-05-26 | Submitted by: Kalee Kusaba-Kusumoto | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) May 26, 2026 Service Request has been copied to slin-senior-manager-station@corp.ds.fedex.com. (Kalee Kusaba-Kusumoto) May 26, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Kalee Kusaba-Kusumoto)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352120944",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / We need more Jam Pole holders installed on load side near door 35. There is one already there we need two more put in right along side the original one.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-05-28",
+                "notes": "Call date: 2026-05-28 | Submitted by: Carlos Pineda | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) May 28, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Carlos Pineda) May 28, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Carlos Pineda)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352675280",
+                "location": "LVKA - PLEASANTON,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "OFFICE/SECURITY BLDG / Ceiling/ Walls/ Floor / Walls / Hang picture/dry erase board/bulletin board, signage, etc. / Need to hang 2 boards in the conference room, 1 board in the warehouse, 1-2 boards in the courier checkout room, and 1-2 boards in the mgr. office area.",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Brett Ladrech",
+                "dueDate": "2026-06-25",
+                "callDate": "2026-06-01",
+                "notes": "Call date: 2026-06-01 | Submitted by: John Wiens 428294 | Area: OFFICE/SECURITY BLDG | Equipment: Walls | Problem type: Ceiling/ Walls/ Floor | Problem code: Hang picture/dry erase board/bulletin board, signage, etc. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Attachment 'IMG_2210.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2211.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2212.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2213.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Attachment 'IMG_2214.jpg' has been added. (Brett Ladrech) Jun 25, 2026 Work Summary: Installed 5 dry erase boards. (Brett Ladrech) Jun 25, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Brett Ladrech) Jun 25, 2026 Resolution Work Summary: Installed 5 dry erase boards. . (Brett Ladrech) Jun 25, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Brett Ladrech) Jun 24, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 24, 2026 Schedule Date changed from Jun 24 2026 14:16 PST to Jun 25, 2026 10:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 1, 2026 Service Request has been copied to lvka-sm_corp.fedex.com@corp.ds.fedex.com. (John Wiens 428294) Jun 1, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (John Wiens 428294)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352740882",
+                "location": "0939 - Watsonville,CA",
+                "classOfWork": "Lighting",
+                "jobDescription": "OUTSIDE / Lighting / Exterior Lights / Other - Click NEXT and describe what is broken in Problem Description / 10 exterior led fixtures above pedestrian doors out/inoperable (accessible by extension ladder). 1 exterior led fixture under eve and above trailer load/unload door out/inoperable (approx. 20-25 feet above ground level).",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-02",
+                "notes": "Call date: 2026-06-02 | Submitted by: Edward Castro | Area: OUTSIDE | Equipment: Exterior Lights | Problem type: Lighting | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 2, 2026 Service Request has been copied to slin-senior-manager-station@corp.ds.fedex.com. (Edward Castro) Jun 2, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Edward Castro)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352742113",
+                "location": "0939 - Watsonville,CA",
+                "classOfWork": "Lighting",
+                "jobDescription": "DOCK / Lighting / Interior Lights / Other - Click NEXT and describe what is broken in Problem Description / 1 damaged led light fixture in unload alley, 3 broken \"Exit\" signs need replaced (would like to raise/relocate to avoid damage), 1 uncovered/damaged electrical box, 2 damaged motion sensors (would like to relocate to avoid damage)",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-02",
+                "notes": "Call date: 2026-06-02 | Submitted by: Edward Castro | Area: Dock | Equipment: Interior Lights | Problem type: Lighting | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 2, 2026 Service Request has been copied to slin-senior-manager-station@corp.ds.fedex.com. (Edward Castro) Jun 2, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Edward Castro)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352749639",
+                "location": "0943 - Newark,CA",
+                "classOfWork": "Welding",
+                "jobDescription": "DOCK / Welding / Welding / Other - Click NEXT and describe what is broken in Problem Description / Welding on van line 3 - broken NC induct support leg.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-02",
+                "notes": "Call date: 2026-06-02 | Submitted by: Julianna Cecil | Area: Dock | Equipment: Welding | Problem type: Welding | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 2, 2026 Service Request has been copied to frmt-senior-manager-station@corp.ds.fedex.com. (Julianna Cecil) Jun 2, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Julianna Cecil)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352820893",
+                "location": "RHVA - SAN JOSE,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / REMOVE 3 OLD DOCK LIGHTS AND INSTALL 3 NEW DOCK LIGHTS WITH FANS THAT WE PURCHASED",
+                "cost": "NTE 2500",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-03",
+                "notes": "Call date: 2026-06-03 | Submitted by: Amanda Corona-Bargas 5042870 | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: IN PROGRESS | Status detail: DISPATCH CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Schedule Date changed from Jun 26 2026 13:08 PST to Jun 26, 2026 10:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Daniel Sullivan) Jun 25, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Daniel Sullivan) Jun 24, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 3, 2026 Service Request has been copied to rhva-sm_corp.fedex.com@corp.ds.fedex.com. (Amanda Corona-Bargas 5042870) Jun 3, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Amanda Corona-Bargas 5042870)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352845472",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / EV platforms on WA 247, WA 254, WA 334, and WA 335 are damaged and need repair. The EV platform on WA 334 has separated from the dock.",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Jeff Gelbmann; Ricci Romano",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-03",
+                "notes": "Call date: 2026-06-03 | Submitted by: Chase Humerickhouse | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Jacob / Frontline Pro Services called in to add the check-out time, as the tech forgot to do so, The Number of Techs: - 01, Verified Pin #, Company Name and Address, Status of Job: - Completed / Pending Confirmation. (SC - Dan Baddi) Jun 24, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (SC - Dan Baddi) Jun 24, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Ricci Romano) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 05:32 PST to Jun 24, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 3, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Chase Humerickhouse) Jun 3, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Chase Humerickhouse)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "352962903",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / Assemble furniture / Need rolling stairs assembled",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Ricci Romano",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-06-04",
+                "notes": "Call date: 2026-06-04 | Submitted by: Erika Nelson | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: Assemble furniture | Source status: COMPLETED | Status detail: CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Status has been changed from COMPLETED/PENDING CONFIRMATION to COMPLETED/CONFIRMED. (Sean Whipkey) Jun 24, 2026 Review Provided. (Sean Whipkey) Jun 23, 2026 Jacob/Frontline Pro Services Called to check out and the reason for not using IVR line and Sc provider app was he forgot to check out Date: 06/23/2026 Check out Time 01:03 pm Number of tech : 2 PIN/ADDRESS/SOW has been verified Status: completed (SC - Bella Chouhan) Jun 23, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (SC - Bella Chouhan) Jun 23, 2026 Attachment '1000004851.jpg' has been added with the following description '1000004851.jpg'. (Ricci Romano) Jun 23, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Ricci Romano) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 05:31 PST to Jun 23, 2026 11:30 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 4, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Erika Nelson) Jun 4, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erika Nelson)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "353113864",
+                "location": "0939 - Watsonville,CA",
+                "classOfWork": "Paint & Wallcovering",
+                "jobDescription": "DOCK / Painting / Painting / Other - Click NEXT and describe what is broken in Problem Description / Dividers in 2 warehouse men's restrooms need to be repainted with anti-graffiti coating. Current coating gums up so unable to remove current artwork.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-05",
+                "notes": "Call date: 2026-06-05 | Submitted by: Edward Castro | Area: Dock | Equipment: Painting | Problem type: Painting | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 5, 2026 Service Request has been copied to slin-senior-manager-station@corp.ds.fedex.com. (Edward Castro) Jun 5, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Edward Castro)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "353391269",
+                "location": "0880 - San Jose,CA",
+                "classOfWork": "Electrical",
+                "jobDescription": "DOCK / Electrical - Other / Other / Other - Click NEXT and describe what is broken in Problem Description / Install power to sign",
+                "cost": "NTE 5000",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-09",
+                "notes": "Call date: 2026-06-09 | Submitted by: Claressa Mauricio | Area: Dock | Equipment: Other | Problem type: Electrical - Other | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 9, 2026 Service Request has been copied to ssjo-senior-manager-station@corp.ds.fedex.com. (Claressa Mauricio) Jun 9, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Claressa Mauricio)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "353487275",
+                "location": "0946 - San Leandro,CA",
+                "classOfWork": "Material Handling",
+                "jobDescription": "DOCK / Material Handling / Conveyors / Roller Issue / REMOVE SECTIONAL ROLLER THRU WA 346 & 348 ALSO REMOVE THE WELLED HOLDERS SEE PICTURES",
+                "cost": "NTE 5000",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Jeff Gelbmann",
+                "dueDate": "2026-06-25",
+                "callDate": "2026-06-10",
+                "notes": "Call date: 2026-06-10 | Submitted by: Ezequiel Lopez | Area: Dock | Equipment: Conveyors | Problem type: Material Handling | Problem code: Roller Issue | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Work Summary: Removed roller conveyor in section 346-348 and placed inside cargo trailer customer chose. Mounted 3 name plates and moved a portrait from one wall to another in office. (Austin Goldie) Jun 25, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Austin Goldie) Jun 25, 2026 Resolution Work Summary: Removed roller conveyor in section 346-348 and placed inside cargo trailer customer chose. Mounted 3 name plates and moved a portrait from one wall to another in office. . (Austin Goldie) Jun 25, 2026 Status has been changed from COMPLETED/PENDING CONFIRMATION to IN PROGRESS/ON SITE. (Austin Goldie) Jun 25, 2026 Work Summary: Removed roller /conveyor assembly and loaded on to truck. Grinded off metal brackets. (Jeff Gelbmann) Jun 25, 2026 Status has been changed from IN PROGRESS/INCOMPLETE to COMPLETED/PENDING CONFIRMATION. (Jeff Gelbmann) Jun 25, 2026 Resolution Work Summary: Removed roller /conveyor assembly and loaded on to truck. Grinded off metal brackets. (Jeff Gelbmann) Jun 25, 2026 Work Summary: Removed roller conveyor in section 346-348. Placed it inside storage trailer customer chose. Hung 3 name plates in office and moved a portrait from one wall to another. (Austin Goldie) Jun 25, 2026 Resolution Work Summary: Removed roller conveyor in section 346-348. Placed it inside storage trailer customer chose. Hung 3 name plates in office and moved a portrait from one wall to another. . (Austin Goldie) Jun 25, 2026 Status has been changed from IN PROGRESS/ON SITE to IN PROGRESS/INCOMPLETE. (Austin Goldie) Jun 25, 2026 Attachment 'check-out_2026.06.25_19:27:48.jpg' has been added. (Jeff Gelbmann) Jun 25, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Austin Goldie) Jun 24, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 24, 2026 Schedule Date changed from Jun 24 2026 14:13 PST to Jun 25, 2026 10:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 10, 2026 Service Request has been copied to oakl-senior-manager-station@corp.ds.fedex.com. (Ezequiel Lopez) Jun 10, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Ezequiel Lopez)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "353621710",
+                "location": "0946 - San Leandro,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "OFFICE/SECURITY BLDG / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / Put up 4 name plates",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Jeff Gelbmann",
+                "dueDate": "2026-06-25",
+                "callDate": "2026-06-11",
+                "notes": "Call date: 2026-06-11 | Submitted by: Ezequiel Lopez | Area: OFFICE/SECURITY BLDG | Equipment: Pictures/Boards/Signs | Problem type: General Repairs | Problem code: Hang picture/dry erase board/bulletin board, signage, etc. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Work Summary: Installed 3 nameplate signs + moved a Kobe Bryant poster in office area. (Jeff Gelbmann) Jun 25, 2026 Resolution Work Summary: Installed 3 nameplate signs + moved a Kobe Bryant poster in office area. (Jeff Gelbmann) Jun 25, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Jeff Gelbmann) Jun 25, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Jeff Gelbmann) Jun 24, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 24, 2026 Schedule Date changed from Jun 24 2026 14:39 PST to Jun 25, 2026 10:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 11, 2026 Service Request has been copied to oakl-senior-manager-station@corp.ds.fedex.com. (Ezequiel Lopez) Jun 11, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Ezequiel Lopez)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "353956852",
+                "location": "RHVA - SAN JOSE,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / Shelving/Cages / Storage Cage / Other - Click NEXT and describe what is broken in Problem Description / We currently have an area of our cage that is split into two mini storage areas. We would like the split to be removed so the janitorial supply area can be expanded to one larger cage.",
+                "cost": "NTE 2500",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Brett Ladrech",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-15",
+                "notes": "Call date: 2026-06-15 | Submitted by: Amanda Corona-Bargas 5042870 | Area: Dock | Equipment: Storage Cage | Problem type: Shelving/Cages | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: IN PROGRESS | Status detail: DISPATCH CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Daniel Sullivan) Jun 25, 2026 Schedule Date changed from Jun 26 2026 06:27 PST to Jun 26, 2026 12:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Daniel Sullivan) Jun 24, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 15, 2026 Service Request has been copied to rhva-sm_corp.fedex.com@corp.ds.fedex.com. (Amanda Corona-Bargas 5042870) Jun 15, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Amanda Corona-Bargas 5042870)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354090313",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Tugger Cart trains in need of repair. Trains numbered 3 through 9.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-06-16",
+                "notes": "Call date: 2026-06-16 | Submitted by: MICHAEL ESCAMILLA | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 16, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (MICHAEL ESCAMILLA) Jun 16, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (MICHAEL ESCAMILLA)",
+                "nextStep": "Schedule with station by 2026-06-23."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354097926",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "CSA (CUSTOMER SERVICE AREA) / Plumbing / Other / Other - Click NEXT and describe what is broken in Problem Description / Replacement of ALL toilet seats (total of 10) in all bathrooms. Supplies -toilet seats- need to be included in vendor's proposal. For further details, please contact Shawnice 628-732-6521 or Curtis 408-931-3243. Thank you.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-06-16",
+                "notes": "Call date: 2026-06-16 | Submitted by: Erendira Perez 413573 | Area: CSA (CUSTOMER SERVICE AREA) | Equipment: Other | Problem type: Plumbing | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 19, 2026 GL Code has been changed from 652141 to 652070. (Kiliona Pesi) Jun 19, 2026 Trade has been changed from PLUMBING to GENERAL REPAIRS. (Kiliona Pesi) Jun 16, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Erendira Perez 413573) Jun 16, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Schedule with station by 2026-06-23."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354110908",
+                "location": "0945 - Fairfield,CA",
+                "classOfWork": "Gates & Grills",
+                "jobDescription": "OUTSIDE / Gate / Sliding/Swing Gate/Gate Arms / Other - Click NEXT and describe what is broken in Problem Description / the gate at Fulton lot needs some welding. it appears bars have been cut to break-in",
+                "cost": "NTE 5000",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-16",
+                "notes": "Call date: 2026-06-16 | Submitted by: Rene Allen | Area: OUTSIDE | Equipment: Sliding/Swing Gate/Gate Arms | Problem type: Gate | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 16, 2026 Service Request has been copied to fair-senior-manager-station@corp.ds.fedex.com. (Rene Allen) Jun 16, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Rene Allen)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354114950",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Get all grey push carts to be reinforced along the top. See attachment",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-23",
+                "callDate": "2026-06-16",
+                "notes": "Call date: 2026-06-16 | Submitted by: Carlos Pineda | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 16, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Carlos Pineda) Jun 16, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Carlos Pineda) Jun 16, 2026 Scheduled Date of the Work Order changed during Work Order creation by Carlos Pineda (Carlos Pineda)",
+                "nextStep": "Schedule with station by 2026-06-23."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354286019",
+                "location": "CCRA - PACHECO,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace 6 old/loose/ broken speed bumps...They are located inside the warehouse, at each bay door.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-18",
+                "notes": "Call date: 2026-06-18 | Submitted by: Teresa Bosque 104457 | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 18, 2026 Service Request has been copied to ccra-sm_corp.fedex.com@corp.ds.fedex.com. (Teresa Bosque 104457) Jun 18, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Teresa Bosque 104457)",
+                "nextStep": "Schedule with station by 2026-06-24."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354302101",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / The platform on WA 150 is starting to separate from the dock",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Jeff Gelbmann; Ricci Romano",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-18",
+                "notes": "Call date: 2026-06-18 | Submitted by: Chase Humerickhouse | Area: Dock | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: COMPLETED | Status detail: CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Status has been changed from COMPLETED/PENDING CONFIRMATION to COMPLETED/CONFIRMED. (Sean Whipkey) Jun 24, 2026 Review Provided. (Sean Whipkey) Jun 24, 2026 Work Summary: Stands were fixed with 2x4 boards cut to length and screwed in. Some needed to be bolted in to the catwalk or tightened. (Jeff Gelbmann) Jun 24, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Jeff Gelbmann) Jun 24, 2026 Resolution Work Summary: Stands were fixed with 2x4 boards cut to length and screwed in. Some needed to be bolted in to the catwalk or tightened. (Jeff Gelbmann) Jun 24, 2026 Unable to capture signature reason: Staff member unavailable (Jeff Gelbmann) Jun 24, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Jeff Gelbmann) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 05:30 PST to Jun 24, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 18, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Chase Humerickhouse) Jun 18, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Chase Humerickhouse)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354319114",
+                "location": "0912 // South SF",
+                "classOfWork": "Material Handling",
+                "jobDescription": "DOCK / Material Handling / Conveyors / Belt issue / Motor on belt S06-01 is making a grinding noise. Senior manager has video w/sound if needed. Contact info: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com Alt contact: Curtis Hoo (650) 824-4370 choo2@fedex.com",
+                "cost": "NTE 0",
+                "status": "Canceled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-22",
+                "callDate": "2026-06-18",
+                "notes": "Call date: 2026-06-18 | Submitted by: Tiffany Jones 427330 | Area: Dock | Equipment: Conveyors | Problem type: Material Handling | Problem code: Belt issue | Source status: COMPLETED | Status detail: CANCELLED | Source priority: SCHEDULE WITH STATION | Jun 19, 2026 No longer needed. (Kiliona Pesi) Jun 19, 2026 NTE has been changed from USD 5000.00 to USD 0. (Kiliona Pesi) Jun 19, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to COMPLETED/CANCELLED. (Kiliona Pesi) Jun 18, 2026 Schedule Date changed from Jun 19 2026 09:00 PST to Jun 22, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 18, 2026 Schedule Date changed from Jun 22 2026 14:20 PST to Jun 19, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 18, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Daniel Sullivan) Jun 18, 2026 ACCEPT performed via e-mail (Daniel Sullivan) Jun 18, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 18, 2026 Service Request has been copied to john.domingo@fedex.com;mark.avery@fedex.com;ssfngmgmt@corp.ds.fedex.com. (Tiffany Jones 427330) Jun 18, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Tiffany Jones 427330)",
+                "nextStep": "Review cancellation details."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354405676",
+                "location": "0912 // South SF",
+                "classOfWork": "Lighting",
+                "jobDescription": "DOCK / Lighting / Interior Lights / Lights are out - various fixtures / Reopening Lighting Work order from #344345388 per FM. Total of 6 lights out. Listed below: 1 interior office light outside office E154, 1 light above the top of VL1(Belt S), 2 lights high in warehouse (scissor lift required), 2 exterior lights outside warehouse, 1 above emergency exit door on side of building & 1 between unload rollup doors in rear of building(scissor lift required).",
+                "cost": "NTE 2500",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Brett Ladrech",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-19",
+                "notes": "Call date: 2026-06-19 | Submitted by: Tiffany Jones 427330 | Area: Dock | Equipment: Interior Lights | Problem type: Lighting | Problem code: Lights are out - various fixtures | Source status: IN PROGRESS | Status detail: WAITING FOR QUOTE | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Status has been changed from IN PROGRESS/PARTS ON ORDER to IN PROGRESS/WAITING FOR QUOTE. (Jacob Gardiner) Jun 23, 2026 After troubleshooting the lights, Frontline found that the integrated lights will need to be fully replaced. Frontline will provide a proposal to replace all light fixtures. Frontline will provide follow ups once quotes are received. (Jacob Gardiner) Jun 23, 2026 Work Summary: Verified if the lights that are not working are integrated led fixtures or bulbs. They are integrated. Used boom lift to capture part numbers for 2x2 fixtures and outside wall packs. (Austin Goldie) Jun 23, 2026 Status has been changed from IN PROGRESS/ON SITE to IN PROGRESS/PARTS ON ORDER. (Austin Goldie) Jun 23, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Austin Goldie) Jun 22, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 22, 2026 Schedule Date changed from Jun 23 2026 14:44 PST to Jun 24, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 19, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 19, 2026 Service Request has been copied to john.domingo@fedex.com;mark.avery@fedex.com;ssfngmgmt@corp.ds.fedex.com. (Tiffany Jones 427330) Jun 19, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Tiffany Jones 427330)",
+                "nextStep": "Schedule with station by 2026-06-24."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354443580",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / On site contact Erika Nelson 510-806-5241. Trim org chart banner and swap with old one in the Kiosk. Swap monitors in spare office. New monitors are in the office.",
+                "cost": "NTE 2500",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Ricci Romano",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-19",
+                "notes": "Call date: 2026-06-19 | Submitted by: Erika Nelson | Area: OFFICE/SECURITY BLDG | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Jacob / Frontline Pro Services called in to add the check-in and out times, as the tech forgot to do so, The Number of Techs: - 01, Verified Pin #, Company Name and Address, Status of Job: - Completed / Pending Confirmation. (SC - Dan Baddi) Jun 24, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (SC - Dan Baddi) Jun 24, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Ricci Romano) Jun 24, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 24, 2026 Schedule Date changed from Jun 24 2026 08:00 PST to Jun 24, 2026 02:30 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 23, 2026 Need to add two items to this work order. 1 - Need to have the facing on the cubicle put back on. Facing piece is on the table under the California sign. See Erika Nelson. 2 - need to have this wooden crate broken down and put in the trash. Located next to the dumpsters outside door 47(?). (Erika Nelson) Jun 23, 2026 Attachment 'cate.jpg' has been added. (Erika Nelson) Jun 23, 2026 Attachment 'cubicle facing missing.jpg' has been added. (Erika Nelson) Jun 21, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 19, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Erika Nelson) Jun 19, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erika Nelson)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354604507",
+                "location": "0912 // South SF",
+                "classOfWork": "Material Handling",
+                "jobDescription": "DOCK / Material Handling / Conveyors / Other - Click NEXT and describe what is broken in Problem Description / FXG Unload Belt BT-02 is missing a button on its control panel. Middle one: Start/Run button Contact: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com",
+                "cost": "NTE 5000",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-22",
+                "notes": "Call date: 2026-06-22 | Submitted by: Tiffany Jones 427330 | Area: Dock | Equipment: Conveyors | Problem type: Material Handling | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 22, 2026 Service Request has been copied to john.domingo@fedex.com;mark.avery@fedex.com;ssfngmgmt@corp.ds.fedex.com. (Tiffany Jones 427330) Jun 22, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Tiffany Jones 427330)",
+                "nextStep": "Schedule with station by 2026-06-24."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354634138",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "Dock Doors & Equipment",
+                "jobDescription": "DOCK / Doors / Overhead Doors - Powered \"Equip:\" Door, Overhead, Powered, OHD1 \"Tag ID\"SFOA-EA1-BD001, \"Brand\" Unknown / Rollers/springs/chains/plates / Shannon Epps | Ops Supervisor | reported an issue with OHD 20 (roll-up mechanical door) at the entrance of the warehouse. The proximity system/sensor is malfunctioning, causing issues with garage/door operation. store hours 6:00am 12:00am Mon - Fri",
+                "cost": "NTE 5000",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Brett Ladrech",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-22",
+                "notes": "Call date: 2026-06-22 | Submitted by: Shannon Epps | Ops Supervisor | Area: Dock | Equipment: Overhead Doors - Powered | Problem type: Doors | Problem code: Rollers/springs/chains/plates | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: SCHEDULE WITH STATION | Jun 24, 2026 Repairs are complete. Bracket was bended creasing a misalignment on the sensors. Working properly now. Thank you. (Erendira Perez 413573) Jun 24, 2026 Resolution Work Summary: Re-secured garage door proximity sensors that were unaligned. Secured open splices feeding sensors in handy box mounted on wall. (Erendira Perez 413573) Jun 24, 2026 Attachment 'IMG_2173.jpg' has been added. (Brett Ladrech) Jun 24, 2026 Attachment 'IMG_2173.jpg' has been added. (Brett Ladrech) Jun 24, 2026 Work Summary: Re-secured garage door proximity sensors that were unaligned. Secured open splices feeding sensors in handy box mounted on wall. (Brett Ladrech) Jun 24, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (Brett Ladrech) Jun 24, 2026 Resolution Work Summary: Re-secured garage door proximity sensors that were unaligned. Secured open splices feeding sensors in handy box mounted on wall. . (Brett Ladrech) Jun 24, 2026 Unable to capture signature reason: Staff not present (Brett Ladrech) Jun 24, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Brett Ladrech) Jun 23, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 23, 2026 Schedule Date changed from Jun 24 2026 14:08 PST to Jun 24, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 22, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 22, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (SC - Johannah Advincula Blacer) Jun 22, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (SC - Johannah Advincula Blacer)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354645524",
+                "location": "AUNA - ROCKLIN,CA",
+                "classOfWork": "Appliances",
+                "jobDescription": "OFFICE/SECURITY BLDG / Appliances / Watercooler / Change Filter light is on. / WATERCOOLER IN OFFICE HALLWAY NEEDS FILTER REPLACED",
+                "cost": "NTE 2500",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Jeff Gelbmann",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-22",
+                "notes": "Call date: 2026-06-22 | Submitted by: Edana Duran-Lynch 5123427 | Area: OFFICE/SECURITY BLDG | Equipment: Watercooler | Problem type: Appliances | Problem code: Change Filter light is on. | Source status: IN PROGRESS | Status detail: DISPATCH CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Daniel Sullivan) Jun 25, 2026 Schedule Date changed from Jun 29 2026 07:57 PST to Jun 26, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Daniel Sullivan) Jun 25, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 22, 2026 Service Request has been copied to auna-sm_corp.fedex.com@corp.ds.fedex.com. (Edana Duran-Lynch 5123427) Jun 22, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Edana Duran-Lynch 5123427)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354711862",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "Welding",
+                "jobDescription": "CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Installation for new equipment / Weld 5 to 7 angle iron brackets to protect damaged receptacles located at the vanline areas. For further details please contact Building Mgr. Kilo or Michelle Perez. Thank you.",
+                "cost": "NTE 5000",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie",
+                "dueDate": "2026-06-26",
+                "callDate": "2026-06-23",
+                "notes": "Call date: 2026-06-23 | Submitted by: Erendira Perez 413573 | Area: CSA (CUSTOMER SERVICE AREA) | Equipment: Outlets/ Switches/ Facility Circuit | Problem type: Electrical - Facility Related | Problem code: Installation for new equipment | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 23, 2026 GL Code has been changed from 652061 to 652070. (Kiliona Pesi) Jun 23, 2026 Trade has been changed from ELECTRICAL to WELDING. (Kiliona Pesi) Jun 23, 2026 Description has been changed from CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Installation for new equipment / Installation of protective brackets around electrical outlets repaired on WO# 350187693- 5 to 7 brackets. For further details please contact Building Mgr. Kilo or Michelle Perez. Thank you. to CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Installation for new equipment / Weld 5 to 7 angle iron brackets to protect damaged receptacles located at the vanline areas. For further details please contact Building Mgr. Kilo or Michelle Perez. Thank you.. (Kiliona Pesi) Jun 23, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Erendira Perez 413573) Jun 23, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Schedule with station by 2026-06-26."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354728706",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "Gates & Grills",
+                "jobDescription": "OUTSIDE / Gate / Motorized Gate \"Equip:\" Gate, Sliding, Powered \"Tag ID\"SFOA-EA1-BF001, \"Brand\" Unknown / Other - Click NEXT and describe what is broken in Problem Description / Main Gate- #1- Not working properly- Stays open- Needs to be reset- works for a couple hours and then stays open again- Please contact Shannon for further details: 415-716-3589. Thank you.",
+                "cost": "NTE 5000",
+                "status": "Completed",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie",
+                "dueDate": "2026-06-24",
+                "callDate": "2026-06-23",
+                "notes": "Call date: 2026-06-23 | Submitted by: Erendira Perez 413573 | Area: OUTSIDE | Equipment: Motorized Gate | Problem type: Gate | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: COMPLETED | Status detail: PENDING CONFIRMATION | Source priority: WITHIN A 24 HR WINDOW | Jun 24, 2026 Repaired is completed. Thank you. (Erendira Perez 413573) Jun 24, 2026 Resolution Looked into why gate would occasionally stop halfway while closing. No immediate issues found. Gate was functioning properly the entire time we were on site. Voltage all checked out. Sensors all checked out. Limit switches all checked out. No visible code thrown on control display. Guide rail is straight and not warped. Cleaned out motor casing and greased chain for ease of operation. Guide wheel on left hand side if you're facing the street slightly skims one of the guide rail bolts but operation was still functional the entire time. (Erendira Perez 413573) Jun 24, 2026 Resolution Looked into why gate would occasionally stop halfway while closing. No immediate issues found. Gate was functioning properly the entire time we were on site. Voltage all checked out. Sensors all checked out. Limit switches all checked out. No visible code thrown on control display. Guide rail is straight and not warped. Cleaned out motor casing and greased chain for ease of operation. Guide wheel on left hand side if you're facing the street slightly skims one of the guide rail bolts but operation was still functional the entire time. . (Jacob Gardiner) Jun 24, 2026 Jacob/Frontline Pro Services called in to update the status to Completed/pending confirmation and to update the check out for 1-techs, Since he informed that he had technical difficulties to update it on the IVR, Scope of work, Company and pin verified (SC - Joe Panicker) Jun 24, 2026 Status has been changed from IN PROGRESS/ON SITE to COMPLETED/PENDING CONFIRMATION. (SC - Joe Panicker) Jun 24, 2026 Status has been changed from IN PROGRESS/DISPATCH CONFIRMED to IN PROGRESS/ON SITE. (Austin Goldie) Jun 23, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Jacob Gardiner) Jun 23, 2026 Schedule Date changed from Jun 24 2026 15:25 PST to Jun 24, 2026 09:00 PST. Reschedule Reason: UPDATING TO ORIGINAL SCHEDULED DATE. (Jacob Gardiner) Jun 23, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 23, 2026 Scheduled Date has been changed from Jun 25, 2026 2:28 PM PST to Jun 24, 2026 3:25 PM PST. (Kiliona Pesi) Jun 23, 2026 Priority has been changed from Schedule with Station to Within a 24 Hr Window. (Kiliona Pesi) Jun 23, 2026 Service Request has been copied to sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Erendira Perez 413573) Jun 23, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erendira Perez 413573)",
+                "nextStep": "Ready to bill."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354815554",
+                "location": "MHRA - RANCHO CORDOVA,CA",
+                "classOfWork": "General Repairs",
+                "jobDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Privacy separator in men's restroom that separates the urinals is falling off wall. Wall anchors compromised and will not hold the weight of the privacy separator.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-29",
+                "callDate": "2026-06-24",
+                "notes": "Call date: 2026-06-24 | Submitted by: Michael Quilalang 77478 | Area: OFFICE/SECURITY BLDG | Equipment: General Repairs | Problem type: General Repairs | Problem code: OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 24, 2026 Service Request has been copied to mhra-sm_corp.fedex.com@corp.ds.fedex.com. (Michael Quilalang 77478) Jun 24, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Michael Quilalang 77478)",
+                "nextStep": "Schedule with station by 2026-06-29."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354850412",
+                "location": "SMFA - SACRAMENTO,CA",
+                "classOfWork": "Electrical",
+                "jobDescription": "CSA (CUSTOMER SERVICE AREA) / Electrical - Other / Other / Other - Click NEXT and describe what is broken in Problem Description / THE FRONT DOOR BELL IS NOT WORKING. TO ALERT US WHEN CUSTOMERS IN LOBBY",
+                "cost": "NTE 5000",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Jeff Gelbmann",
+                "dueDate": "2026-06-29",
+                "callDate": "2026-06-24",
+                "notes": "Call date: 2026-06-24 | Submitted by: Kimberly Bonzell | Area: CSA (CUSTOMER SERVICE AREA) | Equipment: Other | Problem type: Electrical - Other | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: IN PROGRESS | Status detail: DISPATCH CONFIRMED | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Status has been changed from OPEN to IN PROGRESS/DISPATCH CONFIRMED. (Daniel Sullivan) Jun 25, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 24, 2026 Service Request has been copied to smfa-sm_corp.fedex.com@corp.ds.fedex.com. (Kimberly Bonzell) Jun 24, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Kimberly Bonzell)",
+                "nextStep": "Schedule with station by 2026-06-29."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354907140",
+                "location": "0945 - Fairfield,CA",
+                "classOfWork": "Equipment Lifting",
+                "jobDescription": "DOCK / Equipment Lifting / Tuggers / Won't Start / Needs new wiring and Charing cord is missing a piece which unit cannot charge properly",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-29",
+                "callDate": "2026-06-25",
+                "notes": "Call date: 2026-06-25 | Submitted by: Troy Sugick | Area: Dock | Equipment: Tuggers | Problem type: Equipment Lifting | Problem code: Won't Start | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 25, 2026 Scheduled Date has been changed from Jun 29, 2026 3:19 AM PST to Jun 29, 2026 4:04 AM PST. (Kiliona Pesi) Jun 25, 2026 Service Request has been copied to fair-senior-manager-station@corp.ds.fedex.com. (Troy Sugick) Jun 25, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Troy Sugick)",
+                "nextStep": "Schedule with station by 2026-06-29."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354908047",
+                "location": "0945 - Fairfield,CA",
+                "classOfWork": "Equipment Lifting",
+                "jobDescription": "DOCK / Equipment Lifting / Tuggers / Won't Move / Tugger 9 charging cord is damaged.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-30",
+                "callDate": "2026-06-25",
+                "notes": "Call date: 2026-06-25 | Submitted by: Troy Sugick | Area: Dock | Equipment: Tuggers | Problem type: Equipment Lifting | Problem code: Won't Move | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 26, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 26, 2026 Description has been changed from DOCK / Equipment Lifting / Tuggers / Won't Move / charging cord is damaged. to DOCK / Equipment Lifting / Tuggers / Won't Move / Tugger 9 charging cord is damaged.. (Kiliona Pesi) Jun 25, 2026 Service Request has been copied to fair-senior-manager-station@corp.ds.fedex.com. (Troy Sugick) Jun 25, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Troy Sugick)",
+                "nextStep": "Schedule with station by 2026-06-30."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354916130",
+                "location": "CCRA - PACHECO,CA",
+                "classOfWork": "Lighting",
+                "jobDescription": "OUTSIDE / Lighting / Exterior Lights / Lights Out in all areas / REPLACE BURNT LIGHTS IN SEVERAL AREAS- 7 PERIMETER LIGHTS OUT (SEE ATTACHED) 120 WAREHOUSE LIGHTS OUT- 4 VMX LIGHTS OUT 3 LIGHTS IN WOMENS RESTROOM LOCKER AREA 1 LIGHT OUT IN MENS RESTROOM... A LIFT WILL BE NEEDED...THANK YOU",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-29",
+                "callDate": "2026-06-25",
+                "notes": "Call date: 2026-06-25 | Submitted by: Teresa Bosque 104457 | Area: OUTSIDE | Equipment: Exterior Lights | Problem type: Lighting | Problem code: Lights Out in all areas | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 25, 2026 Service Request has been copied to ccra-sm_corp.fedex.com@corp.ds.fedex.com. (Teresa Bosque 104457) Jun 25, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Teresa Bosque 104457)",
+                "nextStep": "Schedule with station by 2026-06-29."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354977033",
+                "location": "SFOA - SAN FRANCISCO,CA",
+                "classOfWork": "Electrical",
+                "jobDescription": "Lighting Installation: Provision of services to replace existing failed light bulbs and tubes.",
+                "cost": "NTE 8480",
+                "status": "In progress",
+                "priority": "Normal",
+                "assignedTo": "Austin Goldie; Brett Ladrech",
+                "dueDate": "2026-06-30",
+                "callDate": "2026-06-25",
+                "notes": "Call date: 2026-06-25 | Submitted by: Antonio Omega 320481 | Problem code: Lighting Installation: Provision of services to replace existing failed light bulbs and tubes. | Source status: IN PROGRESS | Status detail: PROPOSAL APPROVED | Source priority: SCHEDULE WITH STATION | Jun 25, 2026 Service Request has been copied to kiliona.pesi@fedex.com;sfoa-sm_corp.fedex.com@corp.ds.fedex.com. (Antonio Omega 320481) Jun 25, 2026 Service Request has been dispatched to Frontline Pro Services via jacob@frontlineworldwide.com,daniel@frontlineworldwide.com,contact@frontlineworldwide.com,gary@frontlineworldwide.com. (Antonio Omega 320481) Jun 25, 2026 NTE changed from 8480.95 to 8480.95. (Antonio Omega 320481) Jun 25, 2026 Status has been changed from IN PROGRESS/WAITING FOR APPROVAL to IN PROGRESS/PROPOSAL APPROVED. (Antonio Omega 320481) Jun 25, 2026 Proposal # prp62526213755353 has been approved. (Antonio Omega 320481) Jun 25, 2026 Attachment '26062590 FedEx SFOA - Lighting Installation.pdf' has been added. (Antonio Omega 320481) Jun 25, 2026 Status has been changed from OPEN to IN PROGRESS/WAITING FOR APPROVAL. (Antonio Omega 320481)",
+                "nextStep": "Schedule with station by 2026-06-30."
+        },
+        {
+                "id": crypto.randomUUID(),
+                "trackingNumber": "354978813",
+                "location": "0948 - Richmond,CA",
+                "classOfWork": "Welding",
+                "jobDescription": "DOCK / Welding / Welding / Other - Click NEXT and describe what is broken in Problem Description / Need safety chains put on tugger carts that were sent to us from another station.",
+                "cost": "NTE 2500",
+                "status": "Scheduled",
+                "priority": "Normal",
+                "assignedTo": "",
+                "dueDate": "2026-06-30",
+                "callDate": "2026-06-25",
+                "notes": "Call date: 2026-06-25 | Submitted by: Erika Nelson | Area: Dock | Equipment: Welding | Problem type: Welding | Problem code: Other - Click NEXT and describe what is broken in Problem Description | Source status: OPEN | Source priority: SCHEDULE WITH STATION | Jun 26, 2026 Provider reassigned from FMC - Kilo Pesi to Frontline Pro Services. Reassign reason: Assigned to Vendor. Service has been dispatched to Frontline Pro Services and cancellation has been sent to FMC - Kilo Pesi. (Kiliona Pesi) Jun 25, 2026 Service Request has been copied to rchm-senior-manager-station@corp.ds.fedex.com. (Erika Nelson) Jun 25, 2026 Service Request has been dispatched to FMC - Kilo Pesi via kiliona.pesi@fedex.com. (Erika Nelson)",
+                "nextStep": "Schedule with station by 2026-06-30."
+        }
+];
+
+      let orders = loadOrders();
+      let selectedId = orders[0]?.id || null;
+      let activeLocation = "all";
+
+      const els = {
+        locationPages: document.querySelector("#locationPages"),
+        list: document.querySelector("#workList"),
+        board: document.querySelector("#board"),
+        form: document.querySelector("#workForm"),
+        search: document.querySelector("#searchInput"),
+        statusFilter: document.querySelector("#statusFilter"),
+        pageEyebrow: document.querySelector("#pageEyebrow"),
+        selectedTitle: document.querySelector("#selectedTitle"),
+        selectedMeta: document.querySelector("#selectedMeta"),
+        selectedStatus: document.querySelector("#selectedStatus"),
+        totalCount: document.querySelector("#totalCount"),
+        openCount: document.querySelector("#openCount"),
+        quoteCount: document.querySelector("#quoteCount"),
+        doneCount: document.querySelector("#doneCount"),
+        importFile: document.querySelector("#importFile")
+      };
+
+      const readyToBillPage = "__ready_to_bill";
+      const oldJobDays = 45;
+      const fields = ["trackingNumber", "location", "classOfWork", "status", "cost", "priority", "assignedTo", "dueDate", "callDate", "jobDescription", "notes", "nextStep"];
+
+      function loadOrders() {
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) {
+          localStorage.setItem(storageKey, JSON.stringify(defaultOrders));
+          return defaultOrders;
+        }
+        try {
+          const parsed = JSON.parse(saved);
+          if (!Array.isArray(parsed) || !parsed.length) return defaultOrders;
+          const merged = mergeDefaultOrders(parsed);
+          localStorage.setItem(storageKey, JSON.stringify(merged));
+          return merged;
+        } catch {
+          return defaultOrders;
+        }
+      }
+
+      function mergeDefaultOrders(savedOrders) {
+        const seenTracking = new Set(savedOrders.map(order => String(order.trackingNumber || "").trim()).filter(Boolean));
+        const missingDefaults = defaultOrders.filter(order => !seenTracking.has(String(order.trackingNumber || "").trim()));
+        return [...savedOrders, ...missingDefaults];
+      }
+
+            let remoteSyncEnabled = false;
+
+      async function loadRemoteOrders() {
+        try {
+          const response = await fetch("/api/fedex-work-orders", { credentials: "same-origin" });
+          if (!response.ok) throw new Error(`Server returned ${response.status}`);
+          const remoteOrders = await response.json();
+          if (Array.isArray(remoteOrders) && remoteOrders.length) {
+            orders = remoteOrders;
+            localStorage.setItem(storageKey, JSON.stringify(orders));
+            selectedId = orders[0]?.id || null;
+          }
+          remoteSyncEnabled = true;
+          saveOrders();
+          render();
+        } catch (error) {
+          console.warn("FedEx tracker is using local browser storage only:", error);
+        }
+      }
+
+      function saveOrders() {
+        localStorage.setItem(storageKey, JSON.stringify(orders));
+        if (!remoteSyncEnabled) return;
+        fetch("/api/fedex-work-orders", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ orders })
+        }).catch(error => console.warn("Unable to save work orders to shared storage:", error));
+      }
+
+      function statusClass(status) {
+        if (status === "In progress" || status === "Scheduled") return "progress";
+        if (status === "Need to quote" || status === "Waiting on parts") return "quote";
+        if (status === "NTS") return "ready";
+        if (status === "Completed") return "done";
+        if (status === "Canceled") return "blocked";
+        return "";
+      }
+
+      function selectedOrder() {
+        return orders.find(order => order.id === selectedId) || orders[0] || null;
+      }
+
+      function normalizeLocation(location) {
+        return (location || "Unassigned Location").trim() || "Unassigned Location";
+      }
+
+      function getOrderCallDate(order) {
+        if (order.callDate) return order.callDate;
+        const match = String(order.notes || "").match(/Call date:\s*(\d{4}-\d{2}-\d{2})/i);
+        return match ? match[1] : "";
+      }
+
+      function getOrderAgeDays(order) {
+        const callDate = getOrderCallDate(order);
+        if (!callDate) return 0;
+        const start = new Date(`${callDate}T00:00:00`);
+        if (Number.isNaN(start.getTime())) return 0;
+        const today = new Date();
+        const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        return Math.floor((localToday - start) / 86400000);
+      }
+
+      function isOldJob(order) {
+        return getOrderAgeDays(order) > oldJobDays;
+      }
+
+      function locations() {
+        return [...new Set(orders.map(order => normalizeLocation(order.location)))].sort((a, b) => a.localeCompare(b));
+      }
+
+      function pageOrders() {
+        if (activeLocation === "all") return orders;
+        if (activeLocation === readyToBillPage) return orders.filter(order => order.status === "Completed");
+        return orders.filter(order => normalizeLocation(order.location) === activeLocation);
+      }
+
+      function ensureActivePage() {
+        if (activeLocation === "all" || activeLocation === readyToBillPage) return;
+        if (!locations().includes(activeLocation)) activeLocation = "all";
+      }
+
+      function ensureSelectedVisible() {
+        const selected = selectedOrder();
+        const visibleOnPage = selected && pageOrders().some(order => order.id === selected.id);
+        if (visibleOnPage) return;
+        selectedId = pageOrders()[0]?.id || orders[0]?.id || null;
+      }
+
+      function filteredOrders() {
+        const term = els.search.value.trim().toLowerCase();
+        const status = els.statusFilter.value;
+        return pageOrders().filter(order => {
+          const haystack = [order.trackingNumber, order.location, order.classOfWork, order.jobDescription, order.notes, order.nextStep, order.assignedTo, order.callDate].join(" ").toLowerCase();
+          const matchesSearch = !term || haystack.includes(term);
+          const matchesStatus = status === "all" || order.status === status;
+          return matchesSearch && matchesStatus;
+        });
+      }
+
+      function fillOptions() {
+        const statusSelect = document.querySelector("#status");
+        statusSelect.innerHTML = statuses.map(status => `<option>${status}</option>`).join("");
+        els.statusFilter.insertAdjacentHTML("beforeend", statuses.map(status => `<option>${status}</option>`).join(""));
+      }
+
+      function renderLocationPages() {
+        const openJobs = items => items.filter(order => !["Completed", "Canceled"].includes(order.status)).length;
+        const readyToBill = orders.filter(order => order.status === "Completed");
+        const locationButtons = locations().map(location => {
+          const items = orders.filter(order => normalizeLocation(order.location) === location);
+          return `
+            <button class="location-page ${activeLocation === location ? "active" : ""}" type="button" data-location="${escapeHtml(location)}">
+              <strong>${escapeHtml(location)}</strong>
+              <span>${items.length} jobs</span>
+              <span>${openJobs(items)} open</span>
+            </button>
+          `;
+        }).join("");
+
+        els.locationPages.innerHTML = `
+          <button class="location-page ${activeLocation === "all" ? "active" : ""}" type="button" data-location="all">
+            <strong>All Jobs</strong>
+            <span>${orders.length} jobs</span>
+            <span>${openJobs(orders)} open</span>
+          </button>
+          <button class="location-page billing ${activeLocation === readyToBillPage ? "active" : ""}" type="button" data-location="${readyToBillPage}">
+            <strong>Ready to Bill</strong>
+            <span>${readyToBill.length} jobs</span>
+            <span>completed</span>
+          </button>
+          ${locationButtons}
+        `;
+      }
+
+      function renderStats() {
+        const items = pageOrders();
+        els.totalCount.textContent = items.length;
+        els.openCount.textContent = items.filter(order => !["Completed", "Canceled"].includes(order.status)).length;
+        els.quoteCount.textContent = items.filter(order => order.status === "Need to quote" || order.cost === "NTQ").length;
+        els.doneCount.textContent = items.filter(order => order.status === "Completed").length;
+      }
+
+      function renderList() {
+        const visible = filteredOrders();
+        if (!visible.length) {
+          els.list.innerHTML = `<div class="empty">No work orders match the current filters.</div>`;
+          return;
+        }
+        els.list.innerHTML = visible.map(order => `
+          <button class="work-card ${order.id === selectedId ? "active" : ""} ${isOldJob(order) ? "old-job" : ""}" type="button" data-id="${order.id}">
+            <div class="card-row">
+              <h3>${escapeHtml(order.trackingNumber)} Â· ${escapeHtml(order.classOfWork || "Unclassified")}</h3>
+              <span class="pill ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
+            </div>
+            <p>${escapeHtml(order.location)} Â· ${escapeHtml(order.cost || "No cost limit")}${order.callDate ? ` Â· Call ${escapeHtml(order.callDate)}` : ""}</p>
+            ${isOldJob(order) ? `<p><span class="pill old">${getOrderAgeDays(order)} days old</span></p>` : ""}
+            <p>${escapeHtml(order.nextStep || order.jobDescription).slice(0, 120)}${(order.nextStep || order.jobDescription).length > 120 ? "..." : ""}</p>
+          </button>
+        `).join("");
+      }
+
+      function renderBoard() {
+        const groups = activeLocation === readyToBillPage
+          ? ["Completed"]
+          : ["NTS", "Scheduled", "In progress", "Need to quote", "Waiting on parts", "Completed"];
+        els.board.innerHTML = groups.map(status => {
+          const items = pageOrders().filter(order => order.status === status);
+          const cards = items.length ? items.map(order => `
+            <div class="mini-card ${isOldJob(order) ? "old-job" : ""}">
+              <strong>${escapeHtml(order.trackingNumber)}</strong>
+              <span>${escapeHtml(order.classOfWork || "Work order")} Â· ${escapeHtml(order.cost || "No cost")}${order.callDate ? ` Â· ${escapeHtml(order.callDate)}` : ""}</span>
+              <span>${escapeHtml(order.nextStep || "No next step set")}</span>
+              ${isOldJob(order) ? `<span class="pill old">${getOrderAgeDays(order)} days old</span>` : ""}
+            </div>
+          `).join("") : `<div class="empty">Nothing here</div>`;
+          return `<section class="column"><h3>${status}<span>${items.length}</span></h3>${cards}</section>`;
+        }).join("");
+      }
+
+      function renderDetail() {
+        const order = selectedOrder();
+        const disable = !order;
+        els.pageEyebrow.textContent = activeLocation === readyToBillPage ? "Ready to Bill" : (activeLocation === "all" ? "All Jobs" : activeLocation);
+        fields.forEach(name => {
+          const field = document.querySelector(`#${name}`);
+          field.disabled = disable;
+          field.value = order ? order[name] || "" : "";
+        });
+        document.querySelector("#duplicateButton").disabled = disable;
+        document.querySelector("#deleteButton").disabled = disable;
+        if (!order) {
+          els.selectedTitle.textContent = "Choose a work order";
+          els.selectedMeta.textContent = "Add, update, and track field status from one screen.";
+          els.selectedStatus.textContent = "No selection";
+          els.selectedStatus.className = "pill";
+          return;
+        }
+        els.selectedTitle.textContent = `${order.trackingNumber} Â· ${order.classOfWork || "Work Order"}`;
+        const ageLabel = isOldJob(order) ? ` Â· ${getOrderAgeDays(order)} days old` : "";
+        els.selectedMeta.textContent = `${order.location} Â· ${order.cost || "No cost limit"} Â· Priority ${order.priority || "Normal"}${ageLabel}`;
+        els.selectedStatus.textContent = order.status;
+        els.selectedStatus.className = `pill ${statusClass(order.status)}`;
+      }
+
+      function render() {
+        ensureActivePage();
+        ensureSelectedVisible();
+        renderLocationPages();
+        renderStats();
+        renderList();
+        renderDetail();
+        renderBoard();
+      }
+
+      function upsertFromForm(event) {
+        event.preventDefault();
+        const order = selectedOrder();
+        const data = Object.fromEntries(fields.map(name => [name, document.querySelector(`#${name}`).value.trim()]));
+        if (order) {
+          Object.assign(order, data);
+        } else {
+          selectedId = crypto.randomUUID();
+          orders.unshift({ id: selectedId, ...data });
+        }
+        saveOrders();
+        render();
+      }
+
+      function createOrder() {
+        const newOrder = {
+          id: crypto.randomUUID(),
+          trackingNumber: "",
+          location: activeLocation === "all" ? "0912 // South SF" : activeLocation,
+          classOfWork: "",
+          jobDescription: "",
+          cost: "",
+          status: "NTS",
+          priority: "Normal",
+          assignedTo: "",
+          dueDate: "",
+          callDate: new Date().toISOString().slice(0, 10),
+          notes: "",
+          nextStep: ""
+        };
+        orders.unshift(newOrder);
+        selectedId = newOrder.id;
+        saveOrders();
+        render();
+        document.querySelector("#trackingNumber").focus();
+      }
+
+      function duplicateOrder() {
+        const order = selectedOrder();
+        if (!order) return;
+        const copy = { ...order, id: crypto.randomUUID(), trackingNumber: `${order.trackingNumber}-copy`, status: "NTS" };
+        orders.unshift(copy);
+        selectedId = copy.id;
+        saveOrders();
+        render();
+      }
+
+      function deleteOrder() {
+        const order = selectedOrder();
+        if (!order || !confirm(`Delete work order ${order.trackingNumber || "without tracking number"}?`)) return;
+        orders = orders.filter(item => item.id !== order.id);
+        selectedId = orders[0]?.id || null;
+        saveOrders();
+        render();
+      }
+
+      function exportOrders() {
+        const blob = new Blob([JSON.stringify(orders, null, 2)], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `fedex-work-orders-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+
+      function importOrders(file) {
+        const extension = file.name.split(".").pop().toLowerCase();
+        if (extension === "xlsx") {
+          importExcelReport(file);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            if (extension === "csv") {
+              const imported = parseCsv(reader.result).map(mapImportedRow).filter(Boolean);
+              const result = upsertImportedOrders(imported);
+              alert(`Imported ${result.created} new jobs and updated ${result.updated} existing jobs.`);
+            } else {
+              const imported = JSON.parse(reader.result);
+              if (!Array.isArray(imported)) throw new Error("Imported JSON must contain a work order array.");
+              orders = imported.map(order => ({ ...mapImportedRow(order), id: order.id || crypto.randomUUID() })).filter(Boolean);
+              selectedId = orders[0]?.id || null;
+              saveOrders();
+            }
+            render();
+          } catch (error) {
+            alert(`Import failed: ${error.message}`);
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function importExcelReport(file) {
+        if (!window.XLSX) {
+          alert("Excel import needs the XLSX parser library. If this computer is offline or blocks cdn.jsdelivr.net, save the FedEx report as CSV and import the CSV instead.");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const workbook = XLSX.read(reader.result, { type: "array", cellDates: true });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
+            const imported = rows.map(mapImportedRow).filter(Boolean);
+            const result = upsertImportedOrders(imported);
+            render();
+            alert(`Imported ${result.created} new jobs and updated ${result.updated} existing jobs.`);
+          } catch (error) {
+            alert(`Excel import failed: ${error.message}`);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let value = "";
+        let quoted = false;
+        for (let index = 0; index < text.length; index += 1) {
+          const char = text[index];
+          const next = text[index + 1];
+          if (char === '"' && quoted && next === '"') {
+            value += '"';
+            index += 1;
+          } else if (char === '"') {
+            quoted = !quoted;
+          } else if (char === "," && !quoted) {
+            row.push(value);
+            value = "";
+          } else if ((char === "\n" || char === "\r") && !quoted) {
+            if (char === "\r" && next === "\n") index += 1;
+            row.push(value);
+            if (row.some(cell => cell.trim())) rows.push(row);
+            row = [];
+            value = "";
+          } else {
+            value += char;
+          }
+        }
+        row.push(value);
+        if (row.some(cell => cell.trim())) rows.push(row);
+        const headers = rows.shift() || [];
+        return rows.map(cells => Object.fromEntries(headers.map((header, index) => [header.trim(), cells[index] || ""])));
+      }
+
+      function getImportValue(row, names) {
+        for (const name of names) {
+          if (row[name] !== undefined && row[name] !== null && String(row[name]).trim() !== "") return String(row[name]).trim();
+        }
+        return "";
+      }
+
+      function mapImportedRow(row) {
+        const trackingNumber = getImportValue(row, ["trackingNumber", "TrackingNumber", "Tracking #", "Tracking Number"]);
+        if (!trackingNumber) return null;
+        const rawStatus = getImportValue(row, ["status", "Status"]);
+        const rawStatusExt = getImportValue(row, ["statusExt", "StatusExt", "Status Ext."]);
+        const rawPriority = getImportValue(row, ["priority", "Priority"]);
+        const nte = getImportValue(row, ["cost", "CostNTE", "Cost", "NTE"]);
+        const callDate = normalizeImportDate(getImportValue(row, ["callDate", "CallDate", "Call Date"]));
+        const dueDate = normalizeImportDate(getImportValue(row, ["dueDate", "DueDate", "Sched. Date", "Scheduled Date"]));
+        const additionalNotes = getImportValue(row, ["notes", "AdditionalNotes", "Additional Notes", "Notes"]);
+        const sourceNotes = [
+          ["Call date", callDate],
+          ["Submitted by", getImportValue(row, ["Submitted by"])],
+          ["Area", getImportValue(row, ["Area"])],
+          ["Equipment", getImportValue(row, ["Equipment"])],
+          ["Source status", rawStatus],
+          ["Status detail", rawStatusExt],
+          ["Source priority", rawPriority]
+        ].filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`);
+
+        return {
+          id: row.id || crypto.randomUUID(),
+          trackingNumber,
+          location: normalizeImportedLocation(getImportValue(row, ["location", "Location", "Locations ID // Name", "Store"])),
+          classOfWork: toTitleCase(getImportValue(row, ["classOfWork", "ClassOfWork", "Class of Work", "Trade"])),
+          jobDescription: getImportValue(row, ["jobDescription", "JobDescription", "Job Description", "Problem Description"]),
+          cost: formatImportedCost(nte),
+          status: mapImportedStatus(rawStatus || getImportValue(row, ["Status"]), rawStatusExt),
+          priority: mapImportedPriority(rawPriority),
+          assignedTo: getImportValue(row, ["assignedTo", "AssignedTo", "Assigned to Technician(s)", "Assignee"]),
+          dueDate,
+          callDate,
+          notes: additionalNotes || sourceNotes.join("\n"),
+          nextStep: getImportValue(row, ["nextStep", "NextStep", "Next Step"]) || (dueDate ? `Schedule with station by ${dueDate}.` : "Schedule with station.")
+        };
+      }
+
+      function upsertImportedOrders(importedOrders) {
+        let created = 0;
+        let updated = 0;
+        importedOrders.forEach(imported => {
+          const index = orders.findIndex(order => String(order.trackingNumber || "").trim() === imported.trackingNumber);
+          if (index === -1) {
+            orders.push(imported);
+            created += 1;
+            return;
+          }
+          orders[index] = {
+            ...orders[index],
+            location: imported.location || orders[index].location,
+            classOfWork: imported.classOfWork || orders[index].classOfWork,
+            jobDescription: imported.jobDescription || orders[index].jobDescription,
+            cost: imported.cost || orders[index].cost,
+            status: imported.status || orders[index].status,
+            dueDate: imported.dueDate || orders[index].dueDate,
+            callDate: imported.callDate || orders[index].callDate,
+            assignedTo: orders[index].assignedTo || imported.assignedTo,
+            notes: orders[index].notes || imported.notes,
+            nextStep: orders[index].nextStep || imported.nextStep
+          };
+          updated += 1;
+        });
+        selectedId = orders[0]?.id || null;
+        saveOrders();
+        return { created, updated };
+      }
+
+      function formatImportedCost(value) {
+        if (!value) return "";
+        if (/^ntq$/i.test(value) || /^nte/i.test(value)) return value.toUpperCase().replace("NTE ", "NTE ");
+        const number = Number(String(value).replace(/[^0-9.]/g, ""));
+        return Number.isFinite(number) && number > 0 ? `NTE ${number.toFixed(0)}` : value;
+      }
+
+      function mapImportedStatus(value, detail = "") {
+        if (/cancel/i.test(detail)) return "Canceled";
+        if (statuses.includes(value)) return value;
+        if (/cancel/i.test(value)) return "Canceled";
+        if (/complete|closed|done/i.test(value)) return "Completed";
+        if (/quote/i.test(value) || /quote/i.test(detail)) return "Need to quote";
+        if (/progress/i.test(value)) return "In progress";
+        if (/open|schedule/i.test(value)) return "Scheduled";
+        return "NTS";
+      }
+
+      function mapImportedPriority(value) {
+        if (/high|urgent/i.test(value)) return "High";
+        if (/low/i.test(value)) return "Low";
+        return "Normal";
+      }
+
+      function normalizeImportDate(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toISOString().slice(0, 10);
+      }
+
+      function normalizeImportedLocation(value) {
+        const location = String(value || "").trim();
+        if (!location) return "Unassigned Location";
+        if (/^0912\s*-\s*South San Francisco/i.test(location)) return "0912 // South SF";
+        return location;
+      }
+
+      function toTitleCase(value) {
+        return String(value || "").toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase());
+      }
+
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[char]));
+      }
+
+      fillOptions();
+      render();
+      loadRemoteOrders();
+
+      els.form.addEventListener("submit", upsertFromForm);
+      els.search.addEventListener("input", renderList);
+      els.statusFilter.addEventListener("change", renderList);
+      els.locationPages.addEventListener("click", event => {
+        const button = event.target.closest("[data-location]");
+        if (!button) return;
+        activeLocation = button.dataset.location;
+        render();
+      });
+      els.list.addEventListener("click", event => {
+        const card = event.target.closest("[data-id]");
+        if (!card) return;
+        selectedId = card.dataset.id;
+        render();
+      });
+      document.querySelector("#newButton").addEventListener("click", createOrder);
+      document.querySelector("#duplicateButton").addEventListener("click", duplicateOrder);
+      document.querySelector("#deleteButton").addEventListener("click", deleteOrder);
+      document.querySelector("#exportButton").addEventListener("click", exportOrders);
+      document.querySelector("#printButton").addEventListener("click", () => window.print());
+      document.querySelector("#importButton").addEventListener("click", () => els.importFile.click());
+      els.importFile.addEventListener("change", event => {
+        const [file] = event.target.files;
+        if (file) importOrders(file);
+        event.target.value = "";
+      });
+    </script>
+  </body>
+</html>
+
