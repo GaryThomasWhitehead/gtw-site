@@ -1510,10 +1510,10 @@
         els.list.innerHTML = visible.map(order => `
           <button class="work-card ${order.id === selectedId ? "active" : ""} ${isOldJob(order) ? "old-job" : ""}" type="button" data-id="${order.id}">
             <div class="card-row">
-              <h3>${escapeHtml(order.trackingNumber)} Â· ${escapeHtml(order.classOfWork || "Unclassified")}</h3>
+              <h3>${escapeHtml(order.trackingNumber)} - ${escapeHtml(order.classOfWork || "Unclassified")}</h3>
               <span class="pill ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
             </div>
-            <p>${escapeHtml(order.location)} Â· ${escapeHtml(order.cost || "No cost limit")}${order.callDate ? ` Â· Call ${escapeHtml(order.callDate)}` : ""}</p>
+            <p>${escapeHtml(order.location)} - ${escapeHtml(order.cost || "No cost limit")}${order.callDate ? ` - Call ${escapeHtml(order.callDate)}` : ""}</p>
             ${isOldJob(order) ? `<p><span class="pill old">${getOrderAgeDays(order)} days old</span></p>` : ""}
             <p>${escapeHtml(order.nextStep || order.jobDescription).slice(0, 120)}${(order.nextStep || order.jobDescription).length > 120 ? "..." : ""}</p>
           </button>
@@ -1529,7 +1529,7 @@
           const cards = items.length ? items.map(order => `
             <div class="mini-card ${isOldJob(order) ? "old-job" : ""}">
               <strong>${escapeHtml(order.trackingNumber)}</strong>
-              <span>${escapeHtml(order.classOfWork || "Work order")} Â· ${escapeHtml(order.cost || "No cost")}${order.callDate ? ` Â· ${escapeHtml(order.callDate)}` : ""}</span>
+              <span>${escapeHtml(order.classOfWork || "Work order")} - ${escapeHtml(order.cost || "No cost")}${order.callDate ? ` - ${escapeHtml(order.callDate)}` : ""}</span>
               <span>${escapeHtml(order.nextStep || "No next step set")}</span>
               ${isOldJob(order) ? `<span class="pill old">${getOrderAgeDays(order)} days old</span>` : ""}
             </div>
@@ -1556,9 +1556,9 @@
           els.selectedStatus.className = "pill";
           return;
         }
-        els.selectedTitle.textContent = `${order.trackingNumber} Â· ${order.classOfWork || "Work Order"}`;
-        const ageLabel = isOldJob(order) ? ` Â· ${getOrderAgeDays(order)} days old` : "";
-        els.selectedMeta.textContent = `${order.location} Â· ${order.cost || "No cost limit"} Â· Priority ${order.priority || "Normal"}${ageLabel}`;
+        els.selectedTitle.textContent = `${order.trackingNumber} - ${order.classOfWork || "Work Order"}`;
+        const ageLabel = isOldJob(order) ? ` - ${getOrderAgeDays(order)} days old` : "";
+        els.selectedMeta.textContent = `${order.location} - ${order.cost || "No cost limit"} - Priority ${order.priority || "Normal"}${ageLabel}`;
         els.selectedStatus.textContent = order.status;
         els.selectedStatus.className = `pill ${statusClass(order.status)}`;
       }
@@ -1879,4 +1879,5 @@
     </script>
   </body>
 </html>
+
 
