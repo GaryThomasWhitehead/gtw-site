@@ -1,0 +1,3331 @@
+{
+  "generatedAt": "2026-08-13T14:04:41.566Z",
+  "jobs": [
+    {
+      "trackingNumber": "345858442",
+      "store": "MODA - MODESTO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4827"
+      ],
+      "housecallJobs": [
+        "4827"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "482701",
+      "invoiceDate": "Jul 9, 2026",
+      "invoiceAmount": 1863.94,
+      "problemDescription": "OUTSIDE / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Yellow pole is bent on the east side front yard of the building (near  where the stop sign is)  Needs removal and dispose of.",
+      "resolution": "Work Summary: Removed old post in ground that was damaged due to being hit. Filled hole back in with rock and grass we dug up per managers instruction.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4827",
+          "date": "2026-06-29 09:00",
+          "endTime": "2026-06-29 15:30",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "345858442\nTracking\n\nOUTSIDE / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Yellow pole is bent on the east side front yard of the building (near where the stop sign is) Needs removal and dispose of.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "346660796",
+      "store": "MODA - MODESTO,CA",
+      "trade": "SIGNAGE",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4826"
+      ],
+      "housecallJobs": [
+        "4826"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "482601",
+      "invoiceDate": "Jul 9, 2026",
+      "invoiceAmount": 230.82,
+      "problemDescription": "OUTSIDE / Signage / Signage / Other - Click NEXT and describe what is broken in Problem Description / Our stop sign has faded out and need replacement. Stop sign is on the Eastside front side of the building ( by end of driveway). We need the stop sign replace with a new one. We have the replacement sign already.",
+      "resolution": "Work Summary: Replaced faded stop sign",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4826",
+          "date": "2026-06-29 09:00",
+          "endTime": "2026-06-29 15:30",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "346660796\nTracking\n\nOUTSIDE / Signage / Signage / Other - Click NEXT and describe what is broken in Problem Description / Our stop sign has faded out and need replacement. Stop sign is on the Eastside front side of the building ( by end of driveway). We need the stop sign replace with a new one. We have the replacement sign already.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "347562817",
+      "store": "RHVA - SAN JOSE,CA",
+      "trade": "ELECTRICAL",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4841"
+      ],
+      "housecallJobs": [
+        "4841"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "480202",
+      "invoiceDate": "Jul 10, 2026",
+      "invoiceAmount": 1986.64,
+      "problemDescription": "OFFICE/SECURITY BLDG / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Repair/replace/install outlet(s) / we have multiple electrical outlets/faceplates that  are cracked or push into the wall.  We need to have all outlets inspected and repaired.",
+      "resolution": "Work Summary: Repaired/replaced 35 outlets in office.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4841",
+          "date": "2026-07-02 10:00",
+          "endTime": "2026-07-02 15:00",
+          "customer": "FedEx RHVA",
+          "address": "710 Dado St, San Jose, CA 95131",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "347562817\nTracking\n\nOFFICE/SECURITY BLDG / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Repair/replace/install outlet(s) / we have multiple electrical outlets/faceplates that are cracked or push into the wall. We need to have all outlets inspected and repaired.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "347938246",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CANCELLED",
+      "parentJobs": [
+        "4825"
+      ],
+      "housecallJobs": [
+        "4825"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 0,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Ceiling/ Walls/ Floor / Floor / Floor Repair / Location:  Back Flow pipes - by Gate1. Floor is sinking- safety issue, needs to be repair.  Thx.",
+      "resolution": "",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "4825",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "347938246\nTracking\n\nDescription DOCK / Ceiling/ Walls/ Floor / Floor / Floor Repair / Location: Back Flow pipes - by Gate1. Floor is sinking- safety issue, needs to be repair.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "348230920",
+      "store": "0880 - San Jose,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4824"
+      ],
+      "housecallJobs": [
+        "4824"
+      ],
+      "employees": [
+        "Ricci Romano",
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "482401",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 561,
+      "problemDescription": "DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / Mount/install posters throughout warehouse and FedEx sign in front office (less than 5 lbs.)",
+      "resolution": "Work Summary: Installed customer provided sign behind front desk",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4824",
+          "date": "2026-07-01 09:00",
+          "endTime": "2026-07-01 14:45",
+          "customer": "FedEx 0880",
+          "address": "1605 Industrial Ave, San Jose, CA 95112",
+          "employee": "Ricci Romano, Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "348230920\nTracking\n\nDescription DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / Mount/install posters throughout warehouse and FedEx sign in front office (less than 5 lbs.)",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "348502000",
+      "store": "MODA - MODESTO,CA",
+      "trade": "SIGNAGE",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4823"
+      ],
+      "housecallJobs": [
+        "4823"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "482301",
+      "invoiceDate": "Jul 9, 2026",
+      "invoiceAmount": 1230.9,
+      "problemDescription": "OUTSIDE / Signage / Signage / Other - Click NEXT and describe what is broken in Problem Description / There are 5 signs that are faded and need to be replace. Signs on the east side of the building on the side lawn area. There is one pole that is broken, it needs to be replace as well.",
+      "resolution": "Work Summary: Dug a hole and put new post with cement to mount a sign right outside of the yard. Old sign got ripped out somehow.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4823",
+          "date": "2026-06-29 09:00",
+          "endTime": "2026-06-29 15:30",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "348502000\nTracking\n\nDescription OUTSIDE / Signage / Signage / Other - Click NEXT and describe what is broken in Problem Description / There are 5 signs that are faded and need to be replace. Signs on the east side of the building on the side lawn area. There is one pole that is broken, it needs to be replace as well.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "350966612",
+      "store": "0939 - Watsonville,CA",
+      "trade": "LIGHTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4820"
+      ],
+      "housecallJobs": [
+        "4820"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "482001",
+      "invoiceDate": "Jul 13, 2026",
+      "invoiceAmount": 1027.26,
+      "problemDescription": "DOCK / Lighting / Interior Lights / Other - Click NEXT and describe what is broken in Problem Description / Door 4 both fan and light not working",
+      "resolution": "Work Summary: S.O cord rubbing between metal pivot point. Direct short to ground. Wire was torn up. S.O cord was long enough to cut bad spot and rewire into fan motor. Fan and light worked properly afterward",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4820",
+          "date": "2026-06-30 09:00",
+          "endTime": "2026-06-30 15:30",
+          "customer": "FedEx 0939",
+          "address": "300 Manabe Ow Rd, Watsonville, CA 95076",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "350966612\nTracking\n\nDescription DOCK / Lighting / Interior Lights / Other - Click NEXT and describe what is broken in Problem Description / Door 4 both fan and light not working.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "350999351",
+      "store": "0948 - Richmond,CA",
+      "trade": "PAINT & WALLCOVERING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5359",
+        "5363"
+      ],
+      "housecallJobs": [
+        "5359",
+        "5363"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "535901",
+      "invoiceDate": "Jul 22, 2026",
+      "invoiceAmount": 1284.18,
+      "problemDescription": "Paint a single exterior pedestrian door & frame as determined by the Senior Manager of this location.  Completely paint the identified door & frame, interior and exterior.  The designated door & frame painting specifications are as follows: • Color: Sherwin Williams equivalent to Pantone 021 (SW-6884 Obstinate Orange) • 1 primer coat of Sherwin Williams product SW Pro Industrial Pro-Cryl Primer • 2 finish coats of Sherwin Williams product SW Pro Industrial Waterbased Acrolon 100 Urethane Semi-Gloss  Changing the specified paint color and noted paint specifications is strictly prohibited. Selecting a different brand of paint or color matching is unacceptable.    Please contact the SRM directly for further instructions prior to coordinating service. Location contact information is contained within this Work Order. Work for the Vendor Control Door must be completed no later than August 31, 2026.",
+      "resolution": "Frame and door was painted.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5359",
+          "date": "2026-07-17 09:30",
+          "endTime": "2026-07-17 16:30",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "350999351\nTracking\n\nPaint a single exterior pedestrian door & frame as determined by the Senior Manager of this location. Completely paint the identified door & frame, interior and exterior. The designated door & frame painting specifications are as follows: • Color: Sherwin Williams equivalent to Pantone 021 (SW-6884 Obstinate Orange) • 1 primer coat of Sherwin Williams product SW Pro Industrial Pro-Cryl Primer • 2 finish coats of Sherwin Williams product SW Pro Industrial Waterbased Acrolon 100 Urethane Semi-Gloss Changing the specified paint color and noted paint specifications is strictly prohibited. Selecting a different brand of paint or color matching is unacceptable. Please contact the SRM directly for further instructions prior to coordinating service. Location contact information is contained within this Work Order. Work for the Vendor Control Door must be completed no later than August 31, 2026.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5363",
+          "date": "2026-07-15 12:00",
+          "endTime": "2026-07-15 16:30",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "350999351\nTracking\n\nPaint a single exterior pedestrian door & frame as determined by the Senior Manager of this location. Completely paint the identified door & frame, interior and exterior. The designated door & frame painting specifications are as follows: • Color: Sherwin Williams equivalent to Pantone 021 (SW-6884 Obstinate Orange) • 1 primer coat of Sherwin Williams product SW Pro Industrial Pro-Cryl Primer • 2 finish coats of Sherwin Williams product SW Pro Industrial Waterbased Acrolon 100 Urethane Semi-Gloss Changing the specified paint color and noted paint specifications is strictly prohibited. Selecting a different brand of paint or color matching is unacceptable. Please contact the SRM directly for further instructions prior to coordinating service. Location contact information is contained within this Work Order. Work for the Vendor Control Door must be completed no later than August 31, 2026., SENIOR MANAGER KINDLY STATED HE ONLY WANTS THE FRAME OF THE DOOR PAINTED.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "351210578",
+      "store": "0951 - San Jose,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4852"
+      ],
+      "housecallJobs": [
+        "4852"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "485201",
+      "invoiceDate": "Jul 13, 2026",
+      "invoiceAmount": 1210,
+      "problemDescription": "DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / safety banner signs between vanlines 1 & 2, and 3 & 4 need to be re-installed",
+      "resolution": "Work Summary: Re-secured and rehung safety sign between van lines 3/4",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4852",
+          "date": "2026-07-07 13:30",
+          "endTime": "2026-07-07 16:00",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "Austin Goldie, Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "351210578\nTracking\n\nDescription DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / safety banner signs between vanlines 1 & 2, and 3 & 4 need to be re-installed.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "351851186",
+      "store": "0939 - Watsonville,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4818"
+      ],
+      "housecallJobs": [
+        "4818"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "481801",
+      "invoiceDate": "Jul 13, 2026",
+      "invoiceAmount": 1649.69,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Tag lines above VL's need repairs/ new wires",
+      "resolution": "Work Summary: Replaced cable and clamps above conveyor in middle of warehouse for hanging numbers with bar codes. (4) total locations that needed to be replaced.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4818",
+          "date": "2026-06-30 09:00",
+          "endTime": "2026-06-30 15:30",
+          "customer": "FedEx 0939",
+          "address": "300 Manabe Ow Rd, Watsonville, CA 95076",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "351851186\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Tag lines above VL's need repairs/ new wires.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "352120944",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5344",
+        "5362"
+      ],
+      "housecallJobs": [
+        "5344",
+        "5362"
+      ],
+      "employees": [
+        "Austin Goldie"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "094801",
+      "invoiceDate": "Jul 27, 2026",
+      "invoiceAmount": 1326.6,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / We need more Jam Pole holders installed on load side near door 35. There is one already there we need two more put in right along side the original one.",
+      "resolution": "Work Summary: Fabricated (2) jam pole holder in shop. Installed both next to existing jam pole holder in bay 35.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5344",
+          "date": "2026-07-13 08:00",
+          "endTime": "2026-07-13 15:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Austin Goldie",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "Working at the shop to fabricate jam poles for FedEx Richmond. Holders will need to be welded and painted. \n\n352120944\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / We need more Jam Pole holders installed on load side near door 35. There is one already there we need two more put in right along side the original one.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5362",
+          "date": "2026-07-15 14:00",
+          "endTime": "2026-07-15 15:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Austin Goldie",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "352120944\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / We need more Jam Pole holders installed on load side near door 35. There is one already there we need two more put in right along side the original one.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "352749639",
+      "store": "0943 - Newark,CA",
+      "trade": "WELDING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4815"
+      ],
+      "housecallJobs": [
+        "4815"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 0,
+      "travelHours": 5.79,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Welding / Welding / Other - Click NEXT and describe what is broken in Problem Description / Welding on van line 3 -  broken NC induct support leg.",
+      "resolution": "Work Summary: the bracket on the foot of the welder was broken off because the weld had broken. and the side guard will broken also of the conveyor. rewelded everything that was broken",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "4815",
+          "date": "2026-08-05 09:00",
+          "endTime": "2026-08-05 11:30",
+          "customer": "FedEx 0943",
+          "address": "8333 Central Ave, Newark, CA 94560",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 5.79,
+          "status": "DONE",
+          "notes": "352749639\nTracking\n\nDescription DOCK / Welding / Welding / Other - Click NEXT and describe what is broken in Problem Description / Welding on van line 3 - broken NC induct support leg.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354090313",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "PENDING CONFIRMATION",
+      "parentJobs": [
+        "5368"
+      ],
+      "housecallJobs": [
+        "5368"
+      ],
+      "employees": [
+        "Dennis White"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Tugger Cart trains in need of repair.  Trains numbered 3 through 9.",
+      "resolution": "",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5368",
+          "date": "2026-07-16 12:00",
+          "endTime": "2026-07-16 16:30",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Dennis White",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "354090313\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Tugger Cart trains in need of repair. Trains numbered 3 through 9.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354114950",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4810"
+      ],
+      "housecallJobs": [
+        "4810"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "480101",
+      "invoiceDate": "Jul 9, 2026",
+      "invoiceAmount": 1385.82,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Get all grey push carts to be reinforced along the top. See attachment",
+      "resolution": "Work Summary: Reinforced damaged push cart with steel brackets to secure cart cage.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4810",
+          "date": "2026-06-29 09:00",
+          "endTime": "2026-06-29 15:30",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "354114950\nTracking\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Get all grey push carts to be reinforced along the top.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354286019",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4843"
+      ],
+      "housecallJobs": [
+        "4843"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2663,
+      "invoiceNumber": "484301",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 1098.38,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace 6 old/loose/ broken speed bumps...They are located inside the warehouse, at each bay door.",
+      "resolution": "Work Summary: Replaced 5 warehouse speed bumps that were worn and damaged with new.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4843",
+          "date": "2026-07-08 10:00",
+          "endTime": "2026-07-08 15:30",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "354286019\nTracking\n\nDOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace 6 old/loose/ broken speed bumps...They are located inside the warehouse, at each bay door.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354645524",
+      "store": "AUNA - ROCKLIN,CA",
+      "trade": "APPLIANCES",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4799"
+      ],
+      "housecallJobs": [
+        "4799"
+      ],
+      "employees": [
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "479901",
+      "invoiceDate": "Jul 10, 2026",
+      "invoiceAmount": 892.35,
+      "problemDescription": "OFFICE/SECURITY BLDG / Appliances / Watercooler / Change Filter light is on. / WATERCOOLER IN OFFICE HALLWAY NEEDS FILTER REPLACED",
+      "resolution": "Work Summary: Replaced water filter for water fountain in office hallway.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4799",
+          "date": "2026-06-26 08:00",
+          "endTime": "2026-06-26 10:00",
+          "customer": "FedEx AUNA",
+          "address": "1500 Nichols Dr, Rocklin, CA 95765",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "OFFICE/SECURITY BLDG / Appliances / Watercooler / Change Filter light is on. / WATERCOOLER IN OFFICE HALLWAY NEEDS FILTER REPLACED\n\n354645524\nTracking\n\nTasks\n1.Show up to facility and verify filter type and part number\n2.Find and purchase replacement filter\n3.Install new filter and reset filter count \n\nFollow these instructions\nhttps://youtu.be/PvyTjJeq3dI?si=8N6ZY04TcktrESsp",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354815554",
+      "store": "MHRA - RANCHO CORDOVA,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4804"
+      ],
+      "housecallJobs": [
+        "4804"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Privacy separator in men's restroom that separates the urinals is falling off wall. Wall anchors compromised and will not hold the weight of the privacy separator.",
+      "resolution": "Work Summary: Re-secured urinal separator in men’s bathroom.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "4804",
+          "date": "2026-07-06 09:30",
+          "endTime": "2026-07-06 12:30",
+          "customer": "FedEx MHRA",
+          "address": "11140 Sun Center Dr, Rancho Cordova, CA 95670",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "354815554\nTracking\nDescription OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Privacy separator in men's restroom that separates the urinals is falling off wall. Wall anchors compromised and will not hold the weight of the privacy separator.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354850412",
+      "store": "SMFA - SACRAMENTO,CA",
+      "trade": "ELECTRICAL",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4842"
+      ],
+      "housecallJobs": [
+        "4842"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "490501",
+      "invoiceDate": "Jul 30, 2026",
+      "invoiceAmount": 3610.5,
+      "problemDescription": "CSA (CUSTOMER SERVICE AREA) / Electrical - Other / Other / Other - Click NEXT and describe what is broken in Problem Description / THE FRONT DOOR BELL IS NOT WORKING.  TO ALERT US WHEN CUSTOMERS IN LOBBY",
+      "resolution": "Work Summary: Repaired doorbells connected to front door. Transformer leads on the unit itself were miswired.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4842",
+          "date": "2026-07-06 12:45",
+          "endTime": "2026-07-06 13:45",
+          "customer": "FedEx SMFA",
+          "address": "3950 Development Dr, Sacramento, CA 95838",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "354850412\nTracking\n\nDoorbell was fixed through Saturday. Door bell is no longer working. Need to go back to diagnose problem.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "354916130",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "LIGHTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4802"
+      ],
+      "housecallJobs": [
+        "4802"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 9.2,
+      "travelHours": 0,
+      "nte": 8059.17,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "OUTSIDE / Lighting / Exterior Lights / Lights Out in all areas / REPLACE BURNT LIGHTS IN SEVERAL AREAS- 7 PERIMETER LIGHTS OUT (SEE ATTACHED)  120 WAREHOUSE LIGHTS OUT- 4 VMX LIGHTS OUT 3 LIGHTS IN WOMENS RESTROOM LOCKER AREA 1 LIGHT OUT IN MENS RESTROOM... A LIFT WILL BE NEEDED...THANK YOU",
+      "resolution": "Work Summary: Verified all perimeter lights are functional by manually turning all timer units on. All lights were operable excluding light #3, which had the bulb changed but had already had the ballast bypassed. To resolve this an LED 120v 400w bulb was installed. All perimeter lights can now be operated.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "4802",
+          "date": "2026-07-22 10:00",
+          "endTime": "2026-07-22 15:30",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 9.2,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "354916130\nTracking\n\nOUTSIDE / Lighting / Exterior Lights / Lights Out in all areas / REPLACE BURNT LIGHTS IN SEVERAL AREAS- 7 PERIMETER LIGHTS OUT (SEE ATTACHED) 120 WAREHOUSE LIGHTS OUT- 4 VMX LIGHTS OUT 3 LIGHTS IN WOMENS RESTROOM LOCKER AREA 1 LIGHT OUT IN MENS RESTROOM... A LIFT WILL BE NEEDED...THANK YOU, Per FMC, please make sure to check in with Teresa once on site.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355305614",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5372"
+      ],
+      "housecallJobs": [
+        "5372"
+      ],
+      "employees": [
+        "Ricci Romano",
+        "Jacob Gardiner"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "537201",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 951.56,
+      "problemDescription": "DOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The Store called to report that their Topside belt chain is exposed due to which its quite dangerous and is causing a safety issue so they want this problem fixed before someone gets hurt. They need emergency services. Store hours- 8 to 6. Alt # 925-674-4050.",
+      "resolution": "Mounted a temp shield plate to eliminate safety risk",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5372",
+          "date": "2026-06-29 15:00",
+          "endTime": "2026-06-29 16:00",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "Ricci Romano, Jacob Gardiner",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355305614\nTracking\n\nDOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The Store called to report that their Topside belt chain is exposed due to which its quite dangerous and is causing a safety issue so they want this problem fixed before someone gets hurt. They need emergency services. Store hours- 8 to 6. Alt # 925-674-4050.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355322577",
+      "store": "0912 - South San Francisco,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5373"
+      ],
+      "housecallJobs": [
+        "5373"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "537301",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 961.41,
+      "problemDescription": "DOCK / Equipment Lifting / Equipment Lifting / Other - Click NEXT and describe what is broken in Problem Description / Topside WASP #1 is broken. Part fell off & is missing the spring and bolt/nut to reattach. Equipment is unusable in current condition. See attached photos of part & example of working part. Contact info: Tiffany Jones (650) 754-2697 tiffany.jones@fedex. Alt contact: Bryan Martinez Ops Sup (650) 754-2682",
+      "resolution": "Work Summary: Repaired damaged handle for loader. Replaced bolt and nut that were broken.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5373",
+          "date": "2026-06-30 15:15",
+          "endTime": "2026-06-30 16:15",
+          "customer": "FedEx South San Francisco",
+          "address": "405 Victory Ave, South San Francisco, CA 94080",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355322577\nTracking\n\nDOCK / Equipment Lifting / Equipment Lifting / Other - Click NEXT and describe what is broken in Problem Description / Topside WASP #1 is broken. Part fell off & is missing the spring and bolt/nut to reattach. Equipment is unusable in current condition. See attached photos of part & example of working part. Contact info: Tiffany Jones (650) 754-2697 tiffany.jones@fedex. Alt contact: Bryan Martinez Ops Sup (650) 754-2682",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355429092",
+      "store": "0912 - South San Francisco,CA",
+      "trade": "ELECTRICAL",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5322"
+      ],
+      "housecallJobs": [
+        "5322"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 8537.23,
+      "invoiceNumber": "532601",
+      "invoiceDate": "Jul 30, 2026",
+      "invoiceAmount": 8537.23,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Conduit under belt needs to be reattached/rehung. It has been knocked down by over height tugger loads and now they are no longer able to fit under it. Am Contact: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com PM Contact: Area Manager Mark Avery (650) 351-8116",
+      "resolution": "Work Summary: Pulled back wire in 3/4 rigid conduit and replace messed up and bent pipe with new rigid. Pulled wire back through and terminated at each end. Re bent existing rigid to match our new rigid conduit.  The 3rd 3/4 rigid conduit was repaired on 7/10/2026.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5322",
+          "date": "2026-07-22 10:00",
+          "endTime": "2026-07-22 15:30",
+          "customer": "FedEx South San Francisco",
+          "address": "405 Victory Ave, South San Francisco, CA 94080",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "Install brace to protect conduits Tracking #355429092",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355696686",
+      "store": "0948 - Richmond,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5360",
+        "4834"
+      ],
+      "housecallJobs": [
+        "4834",
+        "5360"
+      ],
+      "employees": [
+        "Dennis White",
+        "Jose Perez Fonseca"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 930,
+      "invoiceNumber": "536001",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 930,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service all 6 tuggers, Check batteries cables for cracks, frayed, clean batteries and check batteries water level and fill them with distill water if it is necessary.",
+      "resolution": "Work Summary: Tugger Preventive Maintenance (PM) Checklist Summary  Date: July 15, 2026 Facility: Richmond FedEx Technician: Dennis Bell-White  Performed scheduled Preventive Maintenance (PM) inspections on Pack Mules #1 through #5 and Cushman Tugger #7. Each unit received a complete battery maintenance service and operational safety inspection.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5360",
+          "date": "2026-07-15 09:00",
+          "endTime": "2026-07-15 13:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Dennis White",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355696686\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service all 6 tuggers, Check batteries cables for cracks, frayed, clean batteries and check batteries water level and fill them with distill water if it is necessary.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "4834",
+          "date": "2026-08-12 10:00",
+          "endTime": "2026-08-12 14:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Jose Perez Fonseca",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355696686\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service all 6 tuggers.  Drove 81 miles",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355698586",
+      "store": "0951 - San Jose,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4836"
+      ],
+      "housecallJobs": [
+        "4836"
+      ],
+      "employees": [
+        "Dennis White"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 420,
+      "invoiceNumber": "483701",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 420,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Inspect 28 tugger carts.",
+      "resolution": "Work Summary: Tugger Cart PM Inspection Summary Date: July 21–23, 2026 Location: FedEx – 696 E. Trimble Rd., San Jose, CA Technician: Dennis Bell-White  Over the course of three days, preventive maintenance inspections were completed on the FedEx tugger cart. Each cart received a thorough visual inspection of the frame, cargo deck, tow tongue, wheel assemblies, maneuver handle, cargo restraint system, and towing components.  Overall, the fleet was found to be in good structural condition. No cracked welds or major frame failures were identified. Most maintenance items were routine in nature and centered on normal wear from daily service.  The most common deficiencies identified included:  * Torn, damaged, or missing cargo restraint webbing/netting requiring replacement. * Missing safety chains, chain hooks, or both on front tow hitches. * Missing rear D-rings requiring welding to restore safe towing capability. * Worn or damaged front wheels requiring replacement. * Bent or damaged upper corner uprights requiring straightening or replacement. * Routine lubrication recommended for all wheel bearings, pivot points, and tow hitch assemblies.  Overall, the tugger cart remains serviceable. The recommended repairs are primarily preventative and intended to improve operator safety, ensure proper cargo restraint, and maintain safe towing operations. Completing these repairs will return the carts to optimal operating condition and extend their service life.  Submitted by: Dennis Bell-White Field Service Technician",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4836",
+          "date": "2026-07-22 10:00",
+          "endTime": "2026-07-22 15:30",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "Dennis White",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355698586\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Inspect 28 tugger carts.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355698682",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5327",
+        "5328",
+        "5329"
+      ],
+      "housecallJobs": [
+        "5327",
+        "5328",
+        "5329",
+        "5329"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann",
+        "Brett Ladrech"
+      ],
+      "onJobHours": 51.48,
+      "travelHours": 3.11,
+      "nte": 2500,
+      "invoiceNumber": "484502",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 706.88,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace two mounted fans out in the warehouse. one located at the end of the concord belt and one is located on the doc area railing... We have the two new replacement fans on site...Thank you (ref old wo 344921193)",
+      "resolution": "Resolution Codes  Add New Resolution Code - Replaced fan that was not working  Root Cause  Add New Root Cause Code - Chain for motor was pulled out. Replaced with new fan/motor.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5327",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "355698682\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace two mounted fans out in the warehouse. one located at the end of the concord belt and one is located on the doc area railing... We have the two new replacement fans on site...Thank you (ref old wo 344921193)",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5328",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "355698682\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace two mounted fans out in the warehouse. one located at the end of the concord belt and one is located on the doc area railing... We have the two new replacement fans on site...Thank you (ref old wo 344921193)",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5329",
+          "date": "2026-08-04 09:00",
+          "endTime": "2026-08-04 14:00",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 7.32,
+          "travelHours": 1.65,
+          "status": "DONE",
+          "notes": "355698682\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Replace two mounted fans out in the warehouse. one located at the end of the concord belt and one is located on the doc area railing... We have the two new replacement fans on site...Thank you (ref old wo 344921193)",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5329",
+          "date": "2026-07-28 10:00",
+          "endTime": "2026-07-28 14:00",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Austin Goldie, Brett Ladrech",
+          "onJobHours": 44.17,
+          "travelHours": 1.47,
+          "status": "DONE",
+          "notes": "install bulbs in outside wall packs",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355698696",
+      "store": "0951 - San Jose,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4838"
+      ],
+      "housecallJobs": [
+        "4838"
+      ],
+      "employees": [
+        "Dennis White"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 1140,
+      "invoiceNumber": "083801",
+      "invoiceDate": "Jul 27, 2026",
+      "invoiceAmount": 1138.5,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service 12 tuggers.",
+      "resolution": "Work Summary: Pack Mule / Cushman Tugger Fleet Inspection Summary Date: July 17, 2026 Location: FedEx – 696 E. Trimble Rd., San Jose, CA Technician: Dennis Bell-White  Completed inspections of Pack Mule and Cushman Tugger units #1 through #13. Individual inspection reports have been completed and submitted separately.  Summary of Findings:  * Inspected 11 of 13 tugger units. * Units #10 and #11 could not be located and were not available for inspection. * The majority of battery systems tested at approximately 38 volts per pack, with 6 volts per individual battery, and electrolyte levels were found to be at the proper level. * Several units require front steering bearings replacement due to wear. * One unit requires a complete rear brake repair, including replacement of both rear wheel cylinders and brake shoes. * One unit has a completely discharged battery pack and will require battery recovery or replacement before further diagnostics can be performed. * Minor fluid seepage and drivetrain noise were noted on select units and should be addressed during scheduled maintenance. * Overall, the remaining inspected units were found to be in serviceable condition with routine preventive maintenance and identified repairs",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4838",
+          "date": "2026-07-17 09:30",
+          "endTime": "2026-07-17 16:00",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "Dennis White",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355698696\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service 12 tuggers.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355699531",
+      "store": "0948 - Richmond,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4839"
+      ],
+      "housecallJobs": [
+        "4839"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 555,
+      "invoiceNumber": "485002",
+      "invoiceDate": "Jul 16, 2026",
+      "invoiceAmount": 554.99,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Inspect 37 tugger carts.",
+      "resolution": "Work Summary: inspect tugger carts for damages  **Repairs needed.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4839",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355699531\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Inspect 37 tugger carts.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355701398",
+      "store": "0946 - San Leandro,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5404"
+      ],
+      "housecallJobs": [
+        "5404"
+      ],
+      "employees": [
+        "Dennis White"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 165,
+      "invoiceNumber": "540401",
+      "invoiceDate": "Jul 27, 2026",
+      "invoiceAmount": 165,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Inspect 11 tugger carts.",
+      "resolution": "A visual inspection was completed on Tugger Carts #1 through #7 and #9 through #11 located at FedEx Ground, 1400 Business Center Dr., San Leandro, CA 94577. All inspected carts were found to be structurally sound and operational. No cracked welds, structural failures, or conditions requiring immediate removal from service were observed. All undercarriages, wheel assemblies, hitch assemblies, and safety chains were inspected and found to be in good operating condition.  The primary maintenance items identified throughout the fleet consist of cosmetic deterioration, including chipped paint and varying degrees of surface rust, along with several missing or damaged pull handles. To improve fleet appearance, corrosion resistance, and long-term service life, it is recommended that all carts exhibiting moderate to heavy surface rust be properly cleaned, prepared, and repainted Safety Yellow.  It is further recommended that all carts missing pull (pole) handles have new handles installed and that the bent handle identified during this inspection be replaced. These repairs will improve safe manual maneuverability whenever carts are disconnected from a tugger.  Two carts were observed without side cargo webbing/rail assemblies. Based on their current use as flat trailers, no recommendation is made to install side webbing or railing unless their intended application changes.  As part of the next scheduled preventive maintenance service, all lubrication points should be greased, surface corrosion should be treated as necessary, and routine inspections should continue. Based on this inspection, all inspected tugger carts are suitable for continued service.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5404",
+          "date": "2026-07-08 11:30",
+          "endTime": "2026-07-08 12:30",
+          "customer": "FedEx 0946",
+          "address": "1400 Business Center Dr, San Leandro, CA 94577",
+          "employee": "Dennis White",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355701398\nTracking\t\n\nDOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Inspect 11 tugger carts.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355747327",
+      "store": "MODA - MODESTO,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5358"
+      ],
+      "housecallJobs": [
+        "5358"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "535801",
+      "invoiceDate": "Jul 13, 2026",
+      "invoiceAmount": 4998.68,
+      "problemDescription": "OUTSIDE / Gate / Sliding/Swing Gate/Gate Arms / Gate/arm is stuck in open/closed position - Security Concern / EAST SIDE GATE WILL NOT OPEN OR CLOSE.",
+      "resolution": "Troubleshooting gate, mechanical and control issues. Found that gate rollers and rolling housing was damaged and need to be replaced. Per night lead repairs needed to be repaired same day. Extensive modifications were needed and had to fully remove gate from track. New rollers and rolling housing was welded and unit is now fully functional.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5358",
+          "date": "2026-07-02 15:45",
+          "endTime": "2026-07-02 16:45",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355747327\nTracking\n\nDescription OUTSIDE / Gate / Sliding/Swing Gate/Gate Arms / Gate/arm is stuck in open/closed position - Security Concern / EAST SIDE GATE WILL NOT OPEN OR CLOSE.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "355911781",
+      "store": "0951 - San Jose,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4853"
+      ],
+      "housecallJobs": [
+        "4853"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "485202",
+      "invoiceDate": "Jul 13, 2026",
+      "invoiceAmount": 561,
+      "problemDescription": "DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Fan is not operational / Dial to turn on/ off broke off. Panel cover fell off.",
+      "resolution": "Work Summary: Replaced broken timer and cover plate for fan at dock.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4853",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "355911781\nTracking\n\nDescription DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Fan is not operational / Dial to turn on/ off broke off. Panel cover fell off.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356034934",
+      "store": "0880 - San Jose,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4851"
+      ],
+      "housecallJobs": [
+        "4851"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "485101",
+      "invoiceDate": "Jul 13, 2026",
+      "invoiceAmount": 913,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / WA 246 has a bolted down platform that is broken. Upon inspection the wheel either needs to be replaced, or another platform installed",
+      "resolution": "Work Summary: Replaced broken off wheel on platform. Customer had extra wheels so we removed the broken wheel and replaced with new.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4851",
+          "date": "2026-07-07 09:00",
+          "endTime": "2026-07-07 13:30",
+          "customer": "FedEx 0880",
+          "address": "1605 Industrial Ave, San Jose, CA 95112",
+          "employee": "Austin Goldie, Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356034934\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / WA 246 has a bolted down platform that is broken. Upon inspection the wheel either needs to be replaced, or another platform installed",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356246050",
+      "store": "NOTA - PETALUMA,CA",
+      "trade": "LIGHTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4854",
+        "4865",
+        "5336"
+      ],
+      "housecallJobs": [
+        "4854",
+        "4865",
+        "5336"
+      ],
+      "employees": [
+        "Gary Whitehead"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "486601",
+      "invoiceDate": "Jul 27, 2026",
+      "invoiceAmount": 2500,
+      "problemDescription": "OUTSIDE / Lighting / Exterior Lights / Other - Click NEXT and describe what is broken in Problem Description / PER PM MGR KIRBY DORSETT, A FEW EXTERIOR LIGHTS ARE OUT. PLEASE SEE ATTACHED PICTURES. ANY QUESTIONS, PLEASE REACH OUT TO KIRBY 707-787-0142.",
+      "resolution": "Work Summary: replace existing bulb with LED ballast bypass rewire",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4854",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx NOTA",
+          "address": "2275 S McDowell Blvd, Petaluma, CA 94954",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "356246050\nTracking\n\nDescription OUTSIDE / Lighting / Exterior Lights / Other - Click NEXT and describe what is broken in Problem Description / PER PM MGR KIRBY DORSETT, A FEW EXTERIOR LIGHTS ARE OUT. PLEASE SEE ATTACHED PICTURES. ANY QUESTIONS, PLEASE REACH OUT TO KIRBY 707-787-0142.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "4865",
+          "date": "2026-07-10 10:00",
+          "endTime": "2026-07-10 11:00",
+          "customer": "FedEx NOTA",
+          "address": "2275 S McDowell Blvd, Petaluma, CA 94954",
+          "employee": "Gary Whitehead",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "Job walk for lighting replacement @ FedEx Petaluma. \n\n356246050\nTracking\n\nDescription OUTSIDE / Lighting / Exterior Lights / Other - Click NEXT and describe what is broken in Problem Description / PER PM MGR KIRBY DORSETT, A FEW EXTERIOR LIGHTS ARE OUT. PLEASE SEE ATTACHED PICTURES. ANY QUESTIONS, PLEASE REACH OUT TO KIRBY 707-787-0142.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5336",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx NOTA",
+          "address": "2275 S McDowell Blvd, Petaluma, CA 94954",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "356246050\nTracking\n\nDescription OUTSIDE / Lighting / Exterior Lights / Other - Click NEXT and describe what is broken in Problem Description / PER PM MGR KIRBY DORSETT, A FEW EXTERIOR LIGHTS ARE OUT. PLEASE SEE ATTACHED PICTURES. ANY QUESTIONS, PLEASE REACH OUT TO KIRBY 707-787-0142.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356252499",
+      "store": "0931 - San Leandro,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "4856",
+        "5334",
+        "5345",
+        "5353"
+      ],
+      "housecallJobs": [
+        "4856",
+        "5334",
+        "5345",
+        "5353"
+      ],
+      "employees": [
+        "Ricci Romano",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "534501",
+      "invoiceDate": "Jul 22, 2026",
+      "invoiceAmount": 1816.3,
+      "problemDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / 1. One office chair needs to be assembled. 2. One tricycle and attached backet cart needs to be assembled. 3. The Orkin Fly Light in the brake room needs to be relocated to the wall between the fridge and window. The cable must be concealed by a cable cover.",
+      "resolution": "Work Summary: Fine-tuned bicycle, attached basket, moved big zapper.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "4856",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0931",
+          "address": "2451 Polvorosa Ave, San Leandro, CA 94577",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "356252499\nTracking\n\nDescription OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / 1. One office chair needs to be assembled. 2. One tricycle and attached backet cart needs to be assembled. 3. The Orkin Fly Light in the brake room needs to be relocated to the wall between the fridge and window. The cable must be concealed by a cable cover.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5334",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0931",
+          "address": "2451 Polvorosa Ave, San Leandro, CA 94577",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "356252499\nTracking\n\nDescription OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / 1. One office chair needs to be assembled. 2. One tricycle and attached backet cart needs to be assembled. 3. The Orkin Fly Light in the brake room needs to be relocated to the wall between the fridge and window. The cable must be concealed by a cable cover.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5345",
+          "date": "2026-07-13 09:00",
+          "endTime": "2026-07-13 16:00",
+          "customer": "FedEx 0931",
+          "address": "2451 Polvorosa Ave, San Leandro, CA 94577",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356252499\nTracking\n\nDescription OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / 1. One office chair needs to be assembled. 2. One tricycle and attached backet cart needs to be assembled. 3. The Orkin Fly Light in the brake room needs to be relocated to the wall between the fridge and window. The cable must be concealed by a cable cover.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5353",
+          "date": "2026-07-14 13:00",
+          "endTime": "2026-07-14 16:30",
+          "customer": "FedEx 0931",
+          "address": "2451 Polvorosa Ave, San Leandro, CA 94577",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356252499\nTracking\n\nDescription OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / 1. One office chair needs to be assembled. 2. One tricycle and attached backet cart needs to be assembled. 3. The Orkin Fly Light in the brake room needs to be relocated to the wall between the fridge and window. The cable must be concealed by a cable cover.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356324005",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5333"
+      ],
+      "housecallJobs": [
+        "5333"
+      ],
+      "employees": [
+        "Austin Goldie"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "533301",
+      "invoiceDate": "Jul 27, 2026",
+      "invoiceAmount": 950.47,
+      "problemDescription": "DOCK / Material Handling / Conveyors \"Equip:\" Conveyor, 48\" W Slider Bed \"Tag ID\"SFOA-PF4-8, \"Brand\" Unknown / Belt issue / SFOA Anthony Harrison / Sort manager called in to report that the belt needs to be adjusted as it is rubbing to the metal part and making it heated up and torn, it is for PF4-8, hours are 8am to 6pm, 4154812518 is the alt #, need regular services.",
+      "resolution": "Technician responded on site and inspected the conveyor for the reported belt tracking issue. The conveyor belt tension assembly was adjusted, and the conveyor belt was realigned to correct the tracking condition. Belt operation was tested after adjustments were made, and the belt was observed running properly without rubbing against the conveyor frame. The issue was resolved, and the conveyor was returned to normal operation.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5333",
+          "date": "2026-07-07 12:00",
+          "endTime": "2026-07-07 12:05",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Austin Goldie",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356324005\nTracking\n\nDescription DOCK / Material Handling / Conveyors \"Equip:\" Conveyor, 48\" W Slider Bed \"Tag ID\"SFOA-PF4-8, \"Brand\" Unknown / Belt issue / SFOA Anthony Harrison / Sort manager called in to report that the belt needs to be adjusted as it is rubbing to the metal part and making it heated up and torn, it is for PF4-8, hours are 8am to 6pm, 4154812518 is the alt #, need regular services.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356375279",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5338"
+      ],
+      "housecallJobs": [
+        "5338",
+        "5338"
+      ],
+      "employees": [
+        "Daniel Sullivan",
+        "Ricci Romano"
+      ],
+      "onJobHours": 10.94,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "533801",
+      "invoiceDate": "Jul 15, 2026",
+      "invoiceAmount": 1207.91,
+      "problemDescription": "OUTSIDE / Gate / Sliding/Swing Gate/Gate Arms \"Equip:\" Gate, Sliding, Powered \"Tag ID\"SFOA-EA1-BF001, \"Brand\" Unknown / Gate/arm is stuck in open/closed position - Security Concern / Shannon Epps / OPS supervisor / The store had called in to report that there is an issue with the gate #1, in the outside. they said that it is a gate that slides sideways and that is it stuck open. they are unable to close the gate and are not able to secure the store. Need a Technician on-site to fix this issue.   Store Hours: 4 AM - 12 AM  ALT # : JUST CALL THE STORE  415-716-3589/Shannon Epps / OPS supervisor  Priority   Emergency (2 Hours)",
+      "resolution": "Work Summary: A trash bag got caught in the left side (facing street) gears in motor housing. Once debris was removed, reprogrammed the limit for the left side gate. (Working properly now)",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5338",
+          "date": "2026-07-07 12:00",
+          "endTime": "2026-07-07 12:05",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356375279\nTracking\n\nOUTSIDE / Gate / Sliding/Swing Gate/Gate Arms \"Equip:\" Gate, Sliding, Powered \"Tag ID\"SFOA-EA1-BF001, \"Brand\" Unknown / Gate/arm is stuck in open/closed position - Security Concern / Shannon Epps / OPS supervisor / The store had called in to report that there is an issue with the gate #1, in the outside. they said that it is a gate that slides sideways and that is it stuck open. they are unable to close the gate and are not able to secure the store. Need a Technician on-site to fix this issue. Store Hours: 4 AM - 12 AM ALT # : JUST CALL THE STORE 415-716-3589/Shannon Epps / OPS supervisor Priority Emergency (2 Hours)",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5338",
+          "date": "2026-07-27 09:30",
+          "endTime": "2026-07-27 15:30",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Ricci Romano",
+          "onJobHours": 10.94,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356397589",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "DOCK DOORS & EQUIPMENT",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5339"
+      ],
+      "housecallJobs": [
+        "5339"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "533901",
+      "invoiceDate": "Jul 21, 2026",
+      "invoiceAmount": 749.51,
+      "problemDescription": "VEHICLE MX / Doors / Overhead Doors - Powered / Door won't lift - Limiting Operations/Reducing Sort Capabilities BUT work arounds available – within 24 hours / Shannon Epps/Operations Supervisor called in to report that their roll up door wont work, the exact issue when the hit the button wont work and sometime it work so need service tech to come and fix it, they can use it manually now so regular services, store hrs- 02.00 AM to 06.00 PM, store # is fine, alt #- 415-401-2847 (Michele Perez). This is for mechanic bay overhead powered door.",
+      "resolution": "Work Summary: instructed mechanics on operating the roll up door. stating that when opening the door there's a slight delay after pushing the button then you could let go of the button and it'll continue all the way up. when closing you have to press the close button. there's a slight delay but you have to keep your finger on the button the entire way down.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5339",
+          "date": "2026-07-08 12:00",
+          "endTime": "2026-07-08 12:05",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356397589\nTracking\n\nVEHICLE MX / Doors / Overhead Doors - Powered / Door won't lift - Limiting Operations/Reducing Sort Capabilities BUT work arounds available – within 24 hours / Shannon Epps/Operations Supervisor called in to report that their roll up door wont work, the exact issue when the hit the button wont work and sometime it work so need service tech to come and fix it, they can use it manually now so regular services, store hrs- 02.00 AM to 06.00 PM, store # is fine, alt #- 415-401-2847 (Michele Perez). This is for mechanic bay overhead powered door.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356455678",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "ELECTRICAL",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5379"
+      ],
+      "housecallJobs": [
+        "5379"
+      ],
+      "employees": [
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 26.73,
+      "travelHours": 1.21,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Installation for new equipment / Computer /printer cable management - Training rm, next to equipment rm, needs a cable management system to organize, hide cables along the wall or baseboard. Please contact Julio or Michelle for  more information. Thank you.",
+      "resolution": "Work Summary: Installed wire management system, including routing wires through wire molding and securing neatly and in place with zip ties in the computer training room. One wire that powers a monitor was not routed in the molding due to being short. I recommended to the manager to get a longer cable as the best solution to this issue",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5379",
+          "date": "2026-07-30 10:00",
+          "endTime": "2026-07-30 16:30",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 26.73,
+          "travelHours": 1.21,
+          "status": "DONE",
+          "notes": "356455678\nTracking\n\nDescription CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Installation for new equipment / Computer /printer cable management - Training rm, next to equipment rm, needs a cable management system to organize, hide cables along the wall or baseboard. Please contact Julio or Michelle for more information. Thank you., Total distance travelled in personal vehicle: 69mi",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356648222",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5364"
+      ],
+      "housecallJobs": [
+        "5364"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 4.14,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "536501",
+      "invoiceDate": "Aug 5, 2026",
+      "invoiceAmount": 4988.06,
+      "problemDescription": "OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / **************POSSIBLE RECALL****************** The store reported that the main metal building access gate (Gate #1) is stuck in the open position. The gate is automatic and normally opens and closes, but it is currently unable to close, creating a security issue for the store tonight. Store hours are 8:00 AM to 6:00 PM. Store # is fine. Emergency service has been requested. *********************************************** OUTSIDE / Gate / Motorized Gate \"Equip:\" Gate, Sliding, Powered \"Tag ID\"SFOA-EA1-BF001, \"Brand\" Unknown / Other - Click NEXT and describe what is broken in Problem Description / Main Gate- #1- Not working properly- Stays open- Needs to be reset- works for a couple hours and then stays open again- Please contact Shannon for further details: 415-716-3589. Thank you. / POSSIBLE RECALL FROM TN #354728706",
+      "resolution": "First emergency visit: found damage done to motor and gear caused by bag in the gears of the motor. See previous WO w/ attached photo. Gate was operating after visit. Second emergency visit: Found loose connections to the exit loop circuit. Wiring was reterminated, tightened, and tested. Gate was operating after visit. Third emergency visit: Gate was operating through ~20 cycles then failed. Found that the bearings to the motor were failing causing gate to fail. Found that limit switch settings were reset due to failed gate and needed to be reprogrammed. During final inspection of the gate, we found that the edge sensor was nonexistent. Edge sensor needs to be ordered in order for the gate to fully operate properly. Frontline recommends purchasing and installing a new edge sensor. We also recommend replacing the failing motor due to repetitive damage to gears.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5364",
+          "date": "2026-07-16 09:30",
+          "endTime": "2026-07-16 15:00",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Austin Goldie, Jeff Gelbmann",
+          "onJobHours": 4.14,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "Lighting Installation:  Provision of services to replace existing failed light bulbs and tubes.  356648222\nTracking",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356667291",
+      "store": "0943 - Newark,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5349",
+        "5352"
+      ],
+      "housecallJobs": [
+        "5349",
+        "5352"
+      ],
+      "employees": [
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "535201",
+      "invoiceDate": "Jul 27, 2026",
+      "invoiceAmount": 924.76,
+      "problemDescription": "DOCK / General Repairs / Pictures/Boards/Signs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Exit sign near p-70 needs repair.",
+      "resolution": "Root cause: Add New Root Cause Code - Emergency lights were torn off. Resolution code(s): Add New Resolution Code - Replace exit sign",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5349",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0943",
+          "address": "8333 Central Ave, Newark, CA 94560",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "356667291\nTracking\n\nDescription DOCK / General Repairs / Pictures/Boards/Signs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Exit sign near p-70 needs repair.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5352",
+          "date": "2026-07-14 09:30",
+          "endTime": "2026-07-14 12:30",
+          "customer": "FedEx 0943",
+          "address": "8333 Central Ave, Newark, CA 94560",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "Materials for exit sign replacement are at the shop. \n\n356667291\nTracking\n\nDescription DOCK / General Repairs / Pictures/Boards/Signs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Exit sign near p-70 needs repair.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356749177",
+      "store": "MODA - MODESTO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5348"
+      ],
+      "housecallJobs": [
+        "5348"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "534801",
+      "invoiceDate": "Jul 21, 2026",
+      "invoiceAmount": 2743.65,
+      "problemDescription": "DOCK / Dock Equipment / Roller Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / Dwayne Brown / Manager called in to report that the roller on the S Curve went out, and it stopped automatically, Its in the mobidock, Need emergency services, hours are 9:30 am to 3:30pm, Alt # is 5103903877. The tag # is P11P47.",
+      "resolution": "Visit 1:   Technician arrived onsite and performed troubleshooting on the motor assembly. Multiple loose connectors were identified. All affected terminals were re‑crimped and torqued to proper specifications. Recommendation:   Perform a full inspection of all electrical connections and torque values across the entire line to prevent future intermittent faults.  Visit 2:   Technician responded to a breaker‑trip issue. Troubleshooting determined the circuit breaker had been tripped due to tampering with internal speed potentiometers. Recommendation:   Install an external speed potentiometer to eliminate exposure to live components and prevent breaker trips caused by improper adjustments inside the panel.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5348",
+          "date": "2026-07-18 12:00",
+          "endTime": "2026-07-18 12:05",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356749177\nTracking\n\nDescription DOCK / Dock Equipment / Roller Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / Dwayne Brown / Manager called in to report that the roller on the S Curve went out, and it stopped automatically, Its in the mobidock, Need emergency services, hours are 9:30 am to 3:30pm, Alt # is 5103903877. The tag # is P11P47.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "356868659",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5351"
+      ],
+      "housecallJobs": [
+        "5351"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "535101",
+      "invoiceDate": "Jul 21, 2026",
+      "invoiceAmount": 1392,
+      "problemDescription": "OUTSIDE / Gate / Motorized Gate / Other - Click NEXT and describe what is broken in Problem Description / The motorized security gate POLE IS BENT and gate will not close properly.  THIS IS AN EMERGENCY WORK ORDER",
+      "resolution": "Pole was repaired and gate is now secured.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5351",
+          "date": "2026-07-13 12:00",
+          "endTime": "2026-07-13 12:05",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "356868659\nTracking\n\nDescription OUTSIDE / Gate / Motorized Gate / Other - Click NEXT and describe what is broken in Problem Description / The motorized security gate POLE IS BENT and gate will not close properly. THIS IS AN EMERGENCY WORK ORDER",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357103347",
+      "store": "0945 - Fairfield,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5369"
+      ],
+      "housecallJobs": [
+        "5369"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / per email to Kilo for broken or torn down privacy screen on fencing",
+      "resolution": "Work Summary: Removed damaged privacy screens on gate",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5369",
+          "date": "2026-07-22 12:00",
+          "endTime": "2026-07-22 16:00",
+          "customer": "FedEx 0945",
+          "address": "5191 Fermi Dr, Fairfield, CA 94534",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357103347\nTracking\n\n Problem Description\nOFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / per email to Kilo for broken or torn down privacy screen on fencing, Per FMC, please make sure to check in with Rene once on site.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357459932",
+      "store": "MODA - MODESTO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5377"
+      ],
+      "housecallJobs": [
+        "5377"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "533701",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 1393.6,
+      "problemDescription": "DOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The store called in stating that the conveyor belt near the door is not not operational the motor is not rotating they wont be able to use the belt they have tried resetting it store hours - 9.30am to 3.30pm store phone is fine they need this as an emergency service",
+      "resolution": "Work Summary: When I arrived on site, conveyor was running. Per my discussion with the manager, he simply went up to the control panel turned on the conveyor line and it started to work. Went through the wiring and controls of the panel and everything was functioning properly. I did found that the top and bottom half of the rollers were connected. If the top half is running and bottom half is turned off. I found that the motor is binding, making noise, and causing a higher load on the motor. This may be cause of the issue on this WO. Recommend modifications to the rollers to ensure there is no binding and slipping occurring.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5377",
+          "date": "2026-07-19 12:00",
+          "endTime": "2026-07-19 12:05",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357459932\nTracking\n\nDescription DOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The store called in stating that the conveyor belt near the door is not not operational the motor is not rotating they wont be able to use the belt they have tried resetting it store hours - 9.30am to 3.30pm store phone is fine they need this as an emergency",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357578363",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5395"
+      ],
+      "housecallJobs": [
+        "5395"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Other - Click NEXT and describe what is broken in Problem Description / THE MOUNTED FAN IN THE DOCK SORT AREA NEEDS TO BE REPLACED. IT IS BEING HELD TOGETHER WITH ZIP TIES AND NOT OSCILLATING. WE HAVE THE REPLACEMENT FAN ONSITE.",
+      "resolution": "Work Summary: Replaced existing fan with new fan in same location. The existing fan would not oscillate so they wanted to replace. Everything is working properly now.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5395",
+          "date": "2026-07-22 12:00",
+          "endTime": "2026-07-22 12:05",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357578363\nTracking\n\nDescription DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Other - Click NEXT and describe what is broken in Problem Description / THE MOUNTED FAN IN THE DOCK SORT AREA NEEDS TO BE REPLACED. IT IS BEING HELD TOGETHER WITH ZIP TIES AND NOT OSCILLATING. WE HAVE THE REPLACEMENT FAN ONSITE.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357584116",
+      "store": "0948 - Richmond,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "PENDING CONFIRMATION",
+      "parentJobs": [
+        "5380"
+      ],
+      "housecallJobs": [
+        "5380"
+      ],
+      "employees": [
+        "Jose Perez Fonseca"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Tugger 7 brakes stopped working",
+      "resolution": "",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5380",
+          "date": "2026-08-12 10:00",
+          "endTime": "2026-08-12 14:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Jose Perez Fonseca",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357584116\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Tugger 7 brakes stopped working",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357585319",
+      "store": "0946 - San Leandro,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5381"
+      ],
+      "housecallJobs": [
+        "5381"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Electrical - Other / Other / Other - Click NEXT and describe what is broken in Problem Description / FAN ON UNLOAD DOOR 6 WONT TURN OFF",
+      "resolution": "Work Summary: replaced with noose timer switch",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5381",
+          "date": "2026-08-05 11:30",
+          "endTime": "2026-08-05 14:30",
+          "customer": "FedEx 0946",
+          "address": "1400 Business Center Dr, San Leandro, CA 94577",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357585319\nTracking\n\nDescription DOCK / Electrical - Other / Other / Other - Click NEXT and describe what is broken in Problem Description / FAN ON UNLOAD DOOR 6 WONT TURN OFF",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357697617",
+      "store": "0948 - Richmond,CA",
+      "trade": "LIGHTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5385"
+      ],
+      "housecallJobs": [
+        "5385"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "5385",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 417.05,
+      "problemDescription": "DOCK / Lighting / Interior Lights / Other - Click NEXT and describe what is broken in Problem Description / Spot light on UL Door 11 does not stay in position",
+      "resolution": "Work Summary: Tightened loose bolts on spot light at UL door 11 which locks it in place.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5385",
+          "date": "2026-07-22 10:00",
+          "endTime": "2026-07-22 12:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357697617\nTracking\n\nDescription DOCK / Lighting / Interior Lights / Other - Click NEXT and describe what is broken in Problem Description / Spot light on UL Door 11 does not stay in position, Drove 67 miles in personal vehicle.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357728658",
+      "store": "MODA - MODESTO,CA",
+      "trade": "ELECTRICAL",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5384"
+      ],
+      "housecallJobs": [
+        "5384"
+      ],
+      "employees": [
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 23.02,
+      "travelHours": 1.21,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Electrical - Safety Issue / 2 outlets burnt/receptacle loose by door 1 & 2 & door 2 & 3 Also the 1 by the westside south wall in front of roller belt by door 1(in warehouse behind men's bathroom)",
+      "resolution": "Work Summary: Replaced 4 receptacles, 3 in warehouse, 1 in office and replaced one bulb in front of customer entrance door. The one receptacle in the office is an add-on to the work order",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5384",
+          "date": "2026-08-03 08:30",
+          "endTime": "2026-08-03 11:00",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 23.02,
+          "travelHours": 1.21,
+          "status": "DONE",
+          "notes": "357728658\nTracking\n\nDescription CSA (CUSTOMER SERVICE AREA) / Electrical - Facility Related / Outlets/ Switches/ Facility Circuit / Electrical - Safety Issue / 2 outlets burnt/receptacle loose by door 1 & 2 & door 2 & 3 Also the 1 by the westside south wall in front of roller belt by door 1(in warehouse behind men's bathroom), Total Distance travelled in personal vehicle: 162mi",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357730888",
+      "store": "MODA - MODESTO,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5387"
+      ],
+      "housecallJobs": [
+        "5387"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "5387",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 1210.69,
+      "problemDescription": "OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / Westside gate with keypad will not automatically open or close. Has to be forced to open or close Contact Brian Sims 209 663 1989",
+      "resolution": "Found exit loop amplifier was set to the incorrect settings. Adjustments were made to the settings. Gate was tested several times and is functioning properly.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5387",
+          "date": "2026-07-21 12:00",
+          "endTime": "2026-07-21 12:05",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357730888\nTracking\n\nDescription OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / Westside gate with keypad will not automatically open or close. Has to be forced to open or close Contact Brian Sims 209 663 1989",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357780101",
+      "store": "0945 - Fairfield,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5389"
+      ],
+      "housecallJobs": [
+        "5389"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 70.16,
+      "travelHours": 0.5,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Won't Move / Tugger 14 will not move forward or backward and is stuck.",
+      "resolution": "Work Summary: Tugger #14 battery was dead and stuck in the middle of the warehouse. The tugger was moved back to the charging area, charged and is now operational.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5389",
+          "date": "2026-07-31 10:00",
+          "endTime": "2026-07-31 12:00",
+          "customer": "FedEx 0945",
+          "address": "5191 Fermi Dr, Fairfield, CA 94534",
+          "employee": "Brett Ladrech",
+          "onJobHours": 70.16,
+          "travelHours": 0.5,
+          "status": "DONE",
+          "notes": "357780101\nTracking\n\n\nDescription DOCK / Equipment Lifting / Tuggers / Won't Move / Tugger 14 will not move forward or backward and is stuck.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357810552",
+      "store": "MODA - MODESTO,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CANCELLED",
+      "parentJobs": [
+        "5396"
+      ],
+      "housecallJobs": [
+        "5396"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 0,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / Westside gate with keypad will not automatically open or close. Has to be forced to open or close Contact Brian Sims 209 663 1989",
+      "resolution": "",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5396",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "357810552\nTracking\n\nDescription OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / Westside gate with keypad will not automatically open or close. Has to be forced to open or close Contact Brian Sims 209 663 1989",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357831271",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5397"
+      ],
+      "housecallJobs": [
+        "5397"
+      ],
+      "employees": [
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 68.87,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "5397",
+      "invoiceDate": "Aug 11, 2026",
+      "invoiceAmount": 713.38,
+      "problemDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Erika Nelson 510.806.5241 - cut/shorten the lower shelf in the office kitchen. remove unused bracket. Patch and repair wall. Change banner in warehouse kiosk.",
+      "resolution": "Work Summary: Cut shelf to match length of counter below, patched holes in drywall left by the screws for the bracket that supported the part of shelf that was removed. Hung new banner in warehouse area to replace old one",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5397",
+          "date": "2026-07-31 10:00",
+          "endTime": "2026-07-31 15:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 68.87,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357831271\nTracking\n\nDescription OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Erika Nelson 510.806.5241 - cut/shorten the lower shelf in the office kitchen. remove unused bracket. Patch and repair wall. Change banner in warehouse kiosk., Total Distance Travelled in personal vehicle: 46 miles",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357834784",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5407"
+      ],
+      "housecallJobs": [
+        "5407"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 2.33,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "5407",
+      "invoiceDate": "Aug 11, 2026",
+      "invoiceAmount": 1273.1,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Erika Nelson 510.806.5241 - EV chargers retracting mechanism for the plug. Express van line. From the outside door on the express belt side - #2 and #8 See Kev Pina or Jayson Baterina for more info on specific units if needed.",
+      "resolution": "Component Replacement.  Found broken EV plug recommend replacement.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5407",
+          "date": "2026-08-04 12:00",
+          "endTime": "2026-08-04 16:00",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Ricci Romano",
+          "onJobHours": 2.33,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357834784\nTracking\n\nDOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Erika Nelson 510.806.5241 - EV chargers retracting mechanism for the plug. Express van line. From the outside door on the express belt side - #2 and #8 See Kev Pina or Jayson Baterina for more info on specific units if needed.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "357916274",
+      "store": "0951 - San Jose,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5398",
+        "5438"
+      ],
+      "housecallJobs": [
+        "5398",
+        "5438"
+      ],
+      "employees": [
+        "Jacob Gardiner"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "5438",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 1732.5,
+      "problemDescription": "DOCK / Material Handling / Electrical/ Controls / Other - Click NEXT and describe what is broken in Problem Description / p25 trips. Motor was just replaced but seems to have an electrical problem causing it to trip often.",
+      "resolution": "Checked motor connections, wiring, and overload. All components and wiring were good. Verified and tested circuit breaker. Found circuit breaker to be weak and obsolete. Replaced circuit breaker with a new replacement. Tested and checked system multiple times. Breaker no longer tripped and system ran properly,",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5398",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357916274\nTracking\n\nDescription DOCK / Material Handling / Electrical/ Controls / Other - Click NEXT and describe what is broken in Problem Description / p25 trips. Motor was just replaced but seems to have an electrical problem causing it to trip often.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5438",
+          "date": "2026-07-23 07:00",
+          "endTime": "2026-07-23 15:00",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "Jacob Gardiner",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "357916274\nTracking\n\nDescription DOCK / Material Handling / Electrical/ Controls / Other - Click NEXT and describe what is broken in Problem Description / p25 trips. Motor was just replaced but seems to have an electrical problem causing it to trip often.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358057991",
+      "store": "0951 - San Jose,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5408"
+      ],
+      "housecallJobs": [
+        "5408"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Brett Ladrech"
+      ],
+      "onJobHours": 3.29,
+      "travelHours": 4.32,
+      "nte": 5000,
+      "invoiceNumber": "5408",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 1210,
+      "problemDescription": "DOCK / Dock Equipment / Extension Dock / Other - Click NEXT and describe what is broken in Problem Description / Need bulk truck steps installed on vanline 2, work area #254.",
+      "resolution": "Work Summary: Installed bulk truck steps on 254 on van line 2",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5408",
+          "date": "2026-07-30 08:00",
+          "endTime": "2026-07-30 11:00",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "Austin Goldie, Brett Ladrech",
+          "onJobHours": 3.29,
+          "travelHours": 4.32,
+          "status": "DONE",
+          "notes": "358057991\nTracking\n\nDescription DOCK / Dock Equipment / Extension Dock / Other - Click NEXT and describe what is broken in Problem Description / Need bulk truck steps installed on vanline 2, work area #254.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358059126",
+      "store": "SFOA - SAN FRANCISCO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5402",
+        "5406"
+      ],
+      "housecallJobs": [
+        "5402",
+        "5406"
+      ],
+      "employees": [
+        "Jacob Gardiner"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The store called in regarding an issue with one of the conveyor belts, PF-8, located by OHD 21. The conveyor belt is making unusual noises, and the motor appears to be having an issue. The store has already spoken with building maintenance and is requesting a technician on site tomorrow to inspect and resolve the issue. This is an emergency request. Store hours are 6:00 AM to 10:00 PM. Alternate callback number: 415-716-3589.",
+      "resolution": "Convery line was tested in forward and reverse. Found significant vibration and noise coming form motor. Recommended replacing motor/motor assembly.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5402",
+          "date": "2026-07-25 09:00",
+          "endTime": "2026-07-25 15:30",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "Jacob Gardiner",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358059126\nTracking\n\nDOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The store called in regarding an issue with one of the conveyor belts, PF-8, located by OHD 21. The conveyor belt is making unusual noises, and the motor appears to be having an issue. The store has already spoken with building maintenance and is requesting a technician on site tomorrow to inspect and resolve the issue. This is an emergency request. Store hours are 6:00 AM to 10:00 PM. Alternate callback number: 415-716-3589.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5406",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx SFOA",
+          "address": "1875 Marin St, San Francisco, CA 94124",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "358059126\nTracking\n\nDOCK / Material Handling / Conveyors / Belt Issue - Stopping Operations/Entire Sort Impacted – 2 hr emergency / The store called in regarding an issue with one of the conveyor belts, PF-8, located by OHD 21. The conveyor belt is making unusual noises, and the motor appears to be having an issue. The store has already spoken with building maintenance and is requesting a technician on site tomorrow to inspect and resolve the issue. This is an emergency request. Store hours are 6:00 AM to 10:00 PM. Alternate callback number: 415-716-3589.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358268475",
+      "store": "0951 - San Jose,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5419",
+        "5422"
+      ],
+      "housecallJobs": [
+        "5419",
+        "5422"
+      ],
+      "employees": [
+        "Austin Goldie",
+        "Brett Ladrech"
+      ],
+      "onJobHours": 6.53,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "541901",
+      "invoiceDate": "Aug 3, 2026",
+      "invoiceAmount": 1210,
+      "problemDescription": "OFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / A few things need to get done 1-hang sign on the out-security notice on the front door, 2- need to relocate the FedEx sign in the office and remove the old fountain also make sure that the water is connected so we could put the new water flavored machine in, will also need to touch up the wall when removing the ground word from the sign. Also check the electrical outlet to make sure there is enough power, 3- in the break room front office need to check the power outlet for coffee maker and the microwave oven.",
+      "resolution": "Work Summary: Fixed outlet in break room that was not reading correct voltage. Bad neutral. Traced wire out and found bad splice above office area. Re spliced and got voltage back to 120v. Installed 20a gfci in that location. Removed fountain in front office and removed ground portion of FedEx ground sign. Moved fed ex sign up above the height of the new water machine that is going to be installed. Mudded and painted wall to match existing paint. Installed security sign on main door to office. Job order complete.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5419",
+          "date": "2026-07-30 11:00",
+          "endTime": "2026-07-30 14:30",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "Austin Goldie, Brett Ladrech",
+          "onJobHours": 6.53,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358268475\nTracking\n\nOFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / A few things need to get done 1-hang sign on the out-security notice on the front door, 2- need to relocate the FedEx sign in the office and remove the old fountain also make sure that the water is connected so we could put the new water flavored machine in, will also need to touch up the wall when removing the ground word from the sign. Also check the electrical outlet to make sure there is enough power, 3- in the break room front office need to check the power outlet for coffee maker and the microwave oven.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5422",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0951",
+          "address": "696 E Trimble Rd, San Jose, CA 95131",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "358268475\nTracking\n\nOFFICE/SECURITY BLDG / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / A few things need to get done 1-hang sign on the out-security notice on the front door, 2- need to relocate the FedEx sign in the office and remove the old fountain also make sure that the water is connected so we could put the new water flavored machine in, will also need to touch up the wall when removing the ground word from the sign. Also check the electrical outlet to make sure there is enough power, 3- in the break room front office need to check the power outlet for coffee maker and the microwave oven.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358295074",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "LIGHTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5411"
+      ],
+      "housecallJobs": [
+        "5411"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Lighting / Interior Lights / Lights are out - various fixtures / There are 18 warehouse lights and 4 lights in the women bathroom that are out. Also troubleshoot the lighting timer.",
+      "resolution": "Work Summary: Ballast bypass 4 fixtures, 6 bulbs each. In total replaced 24 fluorescent 4’ bulbs with 4’ LED bulbs. Troubleshooting to discover issue with light above left garage door on front of building not turning on. Tested the time switches to verify the timed automatic function works. No issues found, all perimeter lights turn on and timer turns on when programmed to.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5411",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "358295074\nTracking\n\nDescription DOCK / Lighting / Interior Lights / Lights are out - various fixtures / There are 18 warehouse lights and 4 lights in the women bathroom that are out. Also troubleshoot the lighting timer.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358315170",
+      "store": "MODA - MODESTO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5421"
+      ],
+      "housecallJobs": [
+        "5421"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 7.67,
+      "travelHours": 1.55,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Other - Click NEXT and describe what is broken in Problem Description / We would like to uninstall a fan from Dock 10 and reinstall the same fan on Dock 2.",
+      "resolution": "Work Summary: remove the fan from Bay 10 and the timer switch and moved everything over to Bay too tied it into the existing jukebox tied it into the plug",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5421",
+          "date": "2026-08-03 08:30",
+          "endTime": "2026-08-03 11:00",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Ricci Romano",
+          "onJobHours": 7.67,
+          "travelHours": 1.55,
+          "status": "DONE",
+          "notes": "358315170\nTracking\n\nDescription DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Other - Click NEXT and describe what is broken in Problem Description / We would like to uninstall a fan from Dock 10 and reinstall the same fan on Dock 2.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358412809",
+      "store": "MODA - MODESTO,CA",
+      "trade": "DOCK DOORS & EQUIPMENT",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5418"
+      ],
+      "housecallJobs": [
+        "5418"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "ACCIDENT REPAIR / CSP / Overhead Doors - Powered / Door is broken - Cannot secure building / Enter ARC number: 07/28/2026 1430 / In moby dock north, slot route 136 . Roll up door cannot closed, parts are expanded. Contact Brian Sims @ 209-663-1989",
+      "resolution": "Unjammed and rolled back door to proper position. Gathered materials and replaced felt strip with foam strip. New strip is used to protect door from metal to metal contact with roller. Door operates properly now.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5418",
+          "date": "2026-07-28 12:00",
+          "endTime": "2026-07-28 12:05",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358412809\nTracking\n\nDescription ACCIDENT REPAIR / CSP / Overhead Doors - Powered / Door is broken - Cannot secure building / Enter ARC number: 07/28/2026 1430 / In moby dock north, slot route 136 . Roll up door cannot closed, parts are expanded. Contact Brian Sims @ 209-663-1989",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358496358",
+      "store": "LVKA - PLEASANTON,CA",
+      "trade": "DOCK DOORS & EQUIPMENT",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5423"
+      ],
+      "housecallJobs": [
+        "5423"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Dock Equipment / Dock Leveler / Not Working Properly / The lift at dock #2 is not working at all.  There was a power outage that caused the lift to malfunction. Needs urgent repair.",
+      "resolution": "Lift for dock #2 was troubleshot and tested. Lift gate is working properly now.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5423",
+          "date": "2026-07-29 12:00",
+          "endTime": "2026-07-29 12:05",
+          "customer": "FedEx LVKA",
+          "address": "7275 Johnson Dr, Pleasanton, CA 94588",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358496358\nTracking\n\nDescription DOCK / Dock Equipment / Dock Leveler / Not Working Properly / The lift at dock #2 is not working at all. There was a power outage that caused the lift to malfunction. Needs urgent repair.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358502918",
+      "store": "0912 - South San Francisco,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5424",
+        "5426"
+      ],
+      "housecallJobs": [
+        "5424",
+        "5426"
+      ],
+      "employees": [
+        "Ricci Romano"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Material Handling / Conveyors / Other - Click NEXT and describe what is broken in Problem Description / FXG unload UC-02 belt has lost its plastic plate at transition from rollers to conveyor belt. The screws are sticking out and ripping open the NC packages. Am contact: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com PM contact: Mark Avery Area Manager (650) 351-8116",
+      "resolution": "Work Summary: fabricated a piece plastic to mount on the conveyor keep the boxes from getting stuck",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5424",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx South San Francisco",
+          "address": "405 Victory Ave, South San Francisco, CA 94080",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "358502918\nTracking\n\nDescription DOCK / Material Handling / Conveyors / Other - Click NEXT and describe what is broken in Problem Description / FXG unload UC-02 belt has lost its plastic plate at transition from rollers to conveyor belt. The screws are sticking out and ripping open the NC packages. Am contact: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com PM contact: Mark Avery Area Manager (650) 351-8116",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5426",
+          "date": "2026-07-30 00:00",
+          "endTime": "2026-07-30 03:30",
+          "customer": "FedEx South San Francisco",
+          "address": "405 Victory Ave, South San Francisco, CA 94080",
+          "employee": "Ricci Romano",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358502918\nTracking\n\nDOCK / Material Handling / Conveyors / Other - Click NEXT and describe what is broken in Problem Description / FXG unload UC-02 belt has lost its plastic plate at transition from rollers to conveyor belt. The screws are sticking out and ripping open the NC packages. Am contact: Tiffany Jones (650) 754-2697 tiffany.jones@fedex.com PM contact: Mark Avery Area Manager (650) 351-8116",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358544789",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5440"
+      ],
+      "housecallJobs": [
+        "5440"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 5.72,
+      "travelHours": 0.92,
+      "nte": 2500,
+      "invoiceNumber": "5440",
+      "invoiceDate": "Aug 11, 2026",
+      "invoiceAmount": 1009.7,
+      "problemDescription": "DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / Install signage in three locations - Office door, Dockzilla, Express cage. See Sean Whipkey",
+      "resolution": "Work Summary: Installed a security sign on front office door, installed 3 courier signs on post in warehouse, installed cork board on fenced cage in back of warehouse & installed lift gate signs.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5440",
+          "date": "2026-08-05 09:00",
+          "endTime": "2026-08-05 11:30",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Brett Ladrech",
+          "onJobHours": 5.72,
+          "travelHours": 0.92,
+          "status": "DONE",
+          "notes": "358544789\nTracking\n\nDescription DOCK / General Repairs / Pictures/Boards/Signs / Hang picture/dry erase board/bulletin board, signage, etc. / Install signage in three locations - Office door, Dockzilla, Express cage. See Sean Whipkey, Drove 52 miles in personal vehicle.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358648317",
+      "store": "MODA - MODESTO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5429"
+      ],
+      "housecallJobs": [
+        "5429"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Dock Equipment / Roller Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / lift will not stay up(gears need replacing) It came down, almost hit an employee",
+      "resolution": "Emergency call - Main conveyor, Lift gate /bridge not latching in, safety concerns- investigated found both left and right latches, right lock plate gear and latch springs with stud mounting are worn out. Check for spare parts found left and right matches. R&R left and right latches and Testing, works good put guards back and cleaned up. Recommend replacing right plate lock gear and latch springs and stud mounts.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5429",
+          "date": "2026-07-30 12:00",
+          "endTime": "2026-07-30 12:05",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358648317\nTracking\n\nDOCK / Dock Equipment / Roller Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / lift will not stay up(gears need replacing) It came down, almost hit an employee",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358818562",
+      "store": "0948 - Richmond,CA",
+      "trade": "ELECTRICAL",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5442"
+      ],
+      "housecallJobs": [
+        "5442"
+      ],
+      "employees": [
+        "Daniel Sullivan"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "5442",
+      "invoiceDate": "Aug 11, 2026",
+      "invoiceAmount": 548.75,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / V2-1.SS2 Stop button is broken and needs to be replaced.",
+      "resolution": "button replaced",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5442",
+          "date": "2026-08-04 12:00",
+          "endTime": "2026-08-04 12:05",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "Daniel Sullivan",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358818562\nTracking\n\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / V2-1.SS2 Stop button is broken and needs to be replaced.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "358818587",
+      "store": "0948 - Richmond,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "PENDING CONFIRMATION",
+      "parentJobs": [
+        "5439"
+      ],
+      "housecallJobs": [
+        "5439"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Light on V4-1SS5 is not flashing and needs to be fixed",
+      "resolution": "",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5439",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0948",
+          "address": "177 Parr Blvd, Richmond, CA 94801",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "358818587\nTracking\n\nDescription DOCK / General Repairs / General Repairs / OTHER - This should only be used for general repairs (ie. Handyman) or maintenance work not included in another problem type. / Light on V4-1SS5 is not flashing and needs to be fixed",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "359289476",
+      "store": "MODA - MODESTO,CA",
+      "trade": "GENERAL REPAIRS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5441"
+      ],
+      "housecallJobs": [
+        "5441"
+      ],
+      "employees": [
+        "Jeff Gelbmann"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Other - Click NEXT and describe what is broken in Problem Description / Mobi-dock fans need to be cleaned.",
+      "resolution": "Work Summary: Opened fan to replace filters, could not find any filters to clean",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5441",
+          "date": "2026-08-03 12:00",
+          "endTime": "2026-08-03 12:05",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "Jeff Gelbmann",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "359289476\nTracking\n\nDOCK / Stationary Fan/Dock Fan / Stationary Fan/Dock Fan / Other - Click NEXT and describe what is broken in Problem Description / Mobi-dock fans need to be cleaned.",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "359324746",
+      "store": "NOTA - PETALUMA,CA",
+      "trade": "GATES & GRILLS",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5444"
+      ],
+      "housecallJobs": [
+        "5444"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / Kirby Dorsett / Ops Manager called in to report that the parking lot Motorized Gate is not working properly , its not opening or closing , its stuck in open position, they need a tech to come and look at it , they are able to secure the store for tonight , store hours 6 am to 9 pm , alt # 707-787-0142 , they need emeregency services by tomorrow morning by 6 am .",
+      "resolution": "Gate was in operation and working properly when arrived on site. Troubleshooting and verification of wiring, safety loop, exit loop, photo eye, and all programming operations. Tested gate multiple times and gate functioned properly.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5444",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx NOTA",
+          "address": "2275 S McDowell Blvd, Petaluma, CA 94954",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "359324746\nTracking\n\nDescription OUTSIDE / Gate / Motorized Gate / Will not open (if gate failure impedes operational demands) / Kirby Dorsett / Ops Manager called in to report that the parking lot Motorized Gate is not working properly , its not opening or closing , its stuck in open position, they need a tech to come and look at it , they are able to secure the store for tonight , store hours 6 am to 9 pm , alt # 707-787-0142 , they need emeregency services by tomorrow morning by 6 am .",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "359402850",
+      "store": "0881 - Modesto,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5452"
+      ],
+      "housecallJobs": [
+        "5452"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 2500,
+      "invoiceNumber": "538601",
+      "invoiceDate": "Aug 7, 2026",
+      "invoiceAmount": 511.71,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Clean batteries and check cables for cracks and frays. Fill battery water with distill water if necessary on tugger 2.",
+      "resolution": "Work Summary: Refilled battery fluid levels to optimal level.",
+      "billingStatus": "Ready for QBO review",
+      "visits": [
+        {
+          "jobNumber": "5452",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx 0881",
+          "address": "1215 E Whitmore Ave, Modesto, CA 95358",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "359402850\nTracking\n\nDOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Clean batteries and check cables for cracks and frays. Fill battery water with distill water if nece",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "359418427",
+      "store": "CCRA - PACHECO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "CONFIRMED",
+      "parentJobs": [
+        "5447",
+        "5453"
+      ],
+      "housecallJobs": [
+        "5447",
+        "5453"
+      ],
+      "employees": [
+        "Brett Ladrech"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0.24,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Material Handling / Lift Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / Patrick Dolan/Ops Manager - called in to report the issue the Scessor lift is not working, its stuck up side, it wont come down, its getting the the down power button is not working, need emergency service, there will be soneone in the store waiting for the tech.  Working Hours 8Am to 6PM Alt# 5104954493",
+      "resolution": "Work Summary: Handheld up/down remote was damaged internally. Internal plastic bracket was cracked, not allowing down button terminal connection to work properly. Made repairs to the remote which fixed the issue. Recommend a replacement of the remote.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5447",
+          "date": "2026-08-04 19:00",
+          "endTime": "2026-08-04 21:00",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "Brett Ladrech",
+          "onJobHours": 0,
+          "travelHours": 0.24,
+          "status": "IN PROGRESS",
+          "notes": "359418427\nTracking\n\nDescription DOCK / Material Handling / Lift Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / Patrick Dolan/Ops Manager - called in to report the issue the Scessor lift is not working, its stuck up side, it wont come down, its getting the the down power button is not working, need emergency service, there will be soneone in the store waiting for the tech. Working Hours 8Am to 6PM Alt# 5104954493",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        },
+        {
+          "jobNumber": "5453",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx CCRA",
+          "address": "115 Center Ave, Pacheco, CA 94553",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "359418427\nTracking\n\nDescription DOCK / Material Handling / Lift Deck / Missing/Broken/Won't Move - Impeding Operations/Entire Sort Impacted – 2 hr emergency / Patrick Dolan/Ops Manager - called in to report the issue the Scessor lift is not working, its stuck up side, it wont come down, its getting the the down power button is not working, need emergency service, there will be soneone in the store waiting for the tech. Working Hours 8Am to 6PM Alt# 5104954493",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "359529743",
+      "store": "MODA - MODESTO,CA",
+      "trade": "MATERIAL HANDLING",
+      "status": "COMPLETED",
+      "statusDetail": "PENDING CONFIRMATION",
+      "parentJobs": [
+        "5459"
+      ],
+      "housecallJobs": [
+        "5459"
+      ],
+      "employees": [],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 5000,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Dock Equipment / Roller Deck / Other - Click NEXT and describe what is broken in Problem Description / Motor is burnt out on S curve by Rt 132",
+      "resolution": "S curve conveyor - Bryan bypassed the motor at the beginning of the s-curve by taking out the orange rubber band and installed on the rollers. Found a motor fuse was loose, replaced holder. (Recommend replacing all cables for the s-curve with 2ea 5 motor connectors and 2ea 3 motor connectors). > Also, replaced all clear rubber bands at the end of the conveyor.  Door 10 Accordion conveyor - per Kilo to fix bad motor and make a note. - Found a bad motor (open coil), found a brand new spare. R&R DC motor and tested.",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5459",
+          "date": "",
+          "endTime": "",
+          "customer": "FedEx MODA",
+          "address": "1407 Carpenter Ln, Modesto, CA 95351",
+          "employee": "",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "UNSCHEDULED",
+          "notes": "359529743\nTracking\n\nDescription DOCK / Dock Equipment / Roller Deck / Other - Click NEXT and describe what is broken in Problem Description / Motor is burnt out on S curve by Rt 132",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    },
+    {
+      "trackingNumber": "359764734",
+      "store": "0912 - South San Francisco,CA",
+      "trade": "EQUIPMENT LIFTING",
+      "status": "COMPLETED",
+      "statusDetail": "PENDING CONFIRMATION",
+      "parentJobs": [
+        "5475"
+      ],
+      "housecallJobs": [
+        "5475"
+      ],
+      "employees": [
+        "Jose Perez Fonseca"
+      ],
+      "onJobHours": 0,
+      "travelHours": 0,
+      "nte": 195,
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "invoiceAmount": 0,
+      "problemDescription": "DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service batteries to all tuggers.",
+      "resolution": "",
+      "billingStatus": "Needs pricing",
+      "visits": [
+        {
+          "jobNumber": "5475",
+          "date": "2026-08-10 10:00",
+          "endTime": "2026-08-10 14:00",
+          "customer": "FedEx South San Francisco",
+          "address": "405 Victory Ave, South San Francisco, CA 94080",
+          "employee": "Jose Perez Fonseca",
+          "onJobHours": 0,
+          "travelHours": 0,
+          "status": "DONE",
+          "notes": "359764734\nTracking\n\nDescription DOCK / Equipment Lifting / Tuggers / Other - Click NEXT and describe what is broken in Problem Description / Service batteries to all tuggers.   Miles drove 143",
+          "miles": 0,
+          "receiptTotal": 0,
+          "receipts": []
+        }
+      ]
+    }
+  ]
+}
