@@ -8,7 +8,7 @@ type ImportRange = { from: string; to: string; importedAt: string };
 type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange };
 type CsvRow = Record<string, string>;
 type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
-type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; unmatched: number };
+type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; serviceNotComplete: number; trackingNotFound: number; applied: boolean };
 
 const statuses = ["Needs pricing", "Ready for QBO review", "Approved for export", "Exported", "Invoiced", "Paid", "Hold"];
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -128,14 +128,14 @@ export default function Home() {
   const [saveState, setSaveState] = useState("Loading shared data…");
   const [hcpImportRange, setHcpImportRange] = useState<ImportRange | null>(null);
   const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
-  const [completedServiceOrders, setCompletedServiceOrders] = useState<ServiceChannelOrder[]>([]);
+  const [serviceOrders, setServiceOrders] = useState<ServiceChannelOrder[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetch("/fedex-review-data.json").then((r) => r.json()),
       fetch("/api/fedex-invoice-review").then((r) => r.ok ? r.json() : []),
     ]).then(([payload, shared]) => {
-      const sharedPayload = Array.isArray(shared) ? { reviews: shared, completedOrders: [] } : shared;
+      const sharedPayload = Array.isArray(shared) ? { reviews: shared, serviceOrders: [] } : shared;
       const sharedMap = new Map(((sharedPayload.reviews || []) as { trackingNumber: string; review: Partial<Job> }[]).map((item) => [item.trackingNumber, item.review]));
       const base: Job[] = payload.jobs.map((item: Job) => {
         const stored = sharedMap.get(item.trackingNumber);
@@ -147,7 +147,7 @@ export default function Home() {
       setSelected(rangedBase[0]?.trackingNumber || "");
       setReceiptVisit(rangedBase[0]?.visits[0]?.jobNumber || "");
       setHcpImportRange(currentRange);
-      setCompletedServiceOrders((sharedPayload.completedOrders || []).length ? sharedPayload.completedOrders : rangedBase.map((item) => ({ trackingNumber: item.trackingNumber, location: item.store, classOfWork: item.trade, status: item.status, statusDetail: item.statusDetail, cost: String(item.nte), jobDescription: item.problemDescription })));
+      setServiceOrders((sharedPayload.serviceOrders || sharedPayload.completedOrders || []).length ? (sharedPayload.serviceOrders || sharedPayload.completedOrders) : rangedBase.map((item) => ({ trackingNumber: item.trackingNumber, location: item.store, classOfWork: item.trade, status: item.status, statusDetail: item.statusDetail, cost: String(item.nte), jobDescription: item.problemDescription })));
       setSaveState("Shared data loaded");
     }).catch(() => setSaveState("Could not load shared edits"));
   }, []);
@@ -163,7 +163,6 @@ export default function Home() {
     setSaveState("Merging Housecall Pro data...");
     try {
       const rows = parseCsv(await file.text());
-      const serviceOrders = completedServiceOrders;
       if (!serviceOrders.length) throw new Error("Completed ServiceChannel work orders have not finished loading. Reload the page and try again.");
       const importDates = rows.map((row) => parseHcpDate(csvValue(row, "Date", "Finished"))).filter((date): date is Date => Boolean(date)).sort((a, b) => a.getTime() - b.getTime());
       if (!importDates.length) throw new Error("No valid job dates were found in this Housecall Pro CSV");
@@ -177,11 +176,14 @@ export default function Home() {
         if (jobNumber && tracking) rootTracking.set(rootJobNumber(jobNumber), tracking);
       });
       const grouped = new Map<string, CsvRow[]>();
+      let serviceNotComplete = 0;
+      let trackingNotFound = 0;
       rows.forEach((row) => {
         const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
         const tracking = trackingFromNotes(csvValue(row, "Notes")) || rootTracking.get(rootJobNumber(jobNumber)) || "";
         const serviceOrder = serviceByTracking.get(tracking);
-        if (!tracking || !serviceOrder || !String(serviceOrder.status || "").toLowerCase().includes("complete")) return;
+        if (!tracking || !serviceOrder) { trackingNotFound += 1; return; }
+        if (!String(serviceOrder.status || "").toLowerCase().includes("complete")) { serviceNotComplete += 1; return; }
         grouped.set(tracking, [...(grouped.get(tracking) || []), row]);
       });
 
@@ -239,11 +241,13 @@ export default function Home() {
           byTracking.set(trackingNumber, updatedJob);
           if (prior) updated += 1; else added += 1;
       });
-      setJobs([...byTracking.values()].map((item) => ({ ...item, hcpImportRange: importRange })).sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
-      setHcpImportRange(importRange);
       const matched = [...grouped.values()].reduce((sum, group) => sum + group.length, 0);
-      setUpdateNotice({ from: importRange.from, to: importRange.to, rows: rows.length, matched, updated, added, unmatched: rows.length - matched });
-      setSaveState(`${updated} jobs updated, ${added} added — click Save Changes`);
+      if (matched > 0) {
+        setJobs([...byTracking.values()].map((item) => ({ ...item, hcpImportRange: importRange })).sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
+        setHcpImportRange(importRange);
+      }
+      setUpdateNotice({ from: importRange.from, to: importRange.to, rows: rows.length, matched, updated, added, serviceNotComplete, trackingNotFound, applied: matched > 0 });
+      setSaveState(matched > 0 ? `${updated} jobs updated, ${added} added — click Save Changes` : "No completed ServiceChannel matches — nothing changed");
     } catch (error) {
       setSaveState(error instanceof Error ? error.message : "Housecall Pro update failed");
     }
@@ -324,7 +328,7 @@ export default function Home() {
 
   return (
     <><link rel="stylesheet" href="/fedex-invoice-review.css" /><main className="shell">
-      {updateNotice && <div className="noticeBackdrop" role="presentation"><section className="updateNotice" role="dialog" aria-modal="true" aria-labelledby="updateNoticeTitle"><div className="noticeCheck">✓</div><p className="eyebrow">HOUSECALL PRO IMPORT</p><h2 id="updateNoticeTitle">Update complete</h2><div className="noticeRange"><span>New HCP date range</span><strong>{displayDay(updateNotice.from)} – {displayDay(updateNotice.to)}</strong><small>Next update should begin {followingDay(updateNotice.to)}</small></div><div className="noticeStats"><div><strong>{updateNotice.rows}</strong><span>CSV rows read</span></div><div><strong>{updateNotice.matched}</strong><span>Rows matched</span></div><div><strong>{updateNotice.updated}</strong><span>Jobs updated</span></div><div><strong>{updateNotice.added}</strong><span>Jobs added</span></div></div>{updateNotice.unmatched > 0 && <p className="noticeWarning">{updateNotice.unmatched} row{updateNotice.unmatched === 1 ? " was" : "s were"} not matched to a completed ServiceChannel work order. The matched jobs were still updated.</p>}<div className="noticeActions"><button className="ghost" onClick={() => setUpdateNotice(null)}>Close</button><button className="saveButton" onClick={() => { setUpdateNotice(null); saveShared(); }}>Save Changes</button></div></section></div>}
+      {updateNotice && <div className="noticeBackdrop" role="presentation"><section className={`updateNotice ${updateNotice.applied ? "" : "notApplied"}`} role="dialog" aria-modal="true" aria-labelledby="updateNoticeTitle"><div className="noticeCheck">{updateNotice.applied ? "✓" : "!"}</div><p className="eyebrow">HOUSECALL PRO IMPORT</p><h2 id="updateNoticeTitle">{updateNotice.applied ? "Update complete" : "Update not applied"}</h2><div className="noticeRange"><span>{updateNotice.applied ? "New HCP date range" : "HCP file dates"}</span><strong>{displayDay(updateNotice.from)} – {displayDay(updateNotice.to)}</strong><small>{updateNotice.applied ? `Next update should begin ${followingDay(updateNotice.to)}` : "The saved coverage date was not changed."}</small></div><div className="noticeStats"><div><strong>{updateNotice.rows}</strong><span>CSV rows read</span></div><div><strong>{updateNotice.matched}</strong><span>Rows matched</span></div><div><strong>{updateNotice.updated}</strong><span>Jobs updated</span></div><div><strong>{updateNotice.added}</strong><span>Jobs added</span></div><div><strong>{updateNotice.serviceNotComplete}</strong><span>SC not complete</span></div><div><strong>{updateNotice.trackingNotFound}</strong><span>Tracking not found</span></div></div>{(updateNotice.serviceNotComplete > 0 || updateNotice.trackingNotFound > 0) && <p className="noticeWarning">{updateNotice.serviceNotComplete > 0 && <span><strong>{updateNotice.serviceNotComplete}</strong> HCP row{updateNotice.serviceNotComplete === 1 ? " has" : "s have"} a ServiceChannel work order that is not marked complete. </span>}{updateNotice.trackingNotFound > 0 && <span><strong>{updateNotice.trackingNotFound}</strong> row{updateNotice.trackingNotFound === 1 ? " does" : "s do"} not contain a tracking number that can be connected to ServiceChannel.</span>}</p>}<div className="noticeActions"><button className="ghost" onClick={() => setUpdateNotice(null)}>Close</button>{updateNotice.applied && <button className="saveButton" onClick={() => { setUpdateNotice(null); saveShared(); }}>Save Changes</button>}</div></section></div>}
       <header className="topbar">
         <div className="brandmark">FP</div>
         <div><p className="eyebrow">FRONTLINE PRO SERVICES</p><h1>Completed Work Review</h1></div>

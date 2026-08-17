@@ -23,10 +23,9 @@ export async function GET(request: NextRequest) {
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
   const rows = await response.json() as StoredRow[];
   const reviews = rows.flatMap((row) => row.data?.invoiceReview ? [{ trackingNumber: row.tracking_number, review: row.data.invoiceReview }] : []);
-  const completedOrders = rows.flatMap((row) => {
+  const serviceOrders = rows.map((row) => {
     const data = row.data || {};
-    if (!String(data.status || "").toLowerCase().includes("complete")) return [];
-    return [{
+    return {
       trackingNumber: String(data.trackingNumber || row.tracking_number),
       location: String(data.location || ""),
       classOfWork: String(data.classOfWork || ""),
@@ -34,9 +33,9 @@ export async function GET(request: NextRequest) {
       statusDetail: String(data.statusDetail || ""),
       cost: String(data.cost || ""),
       jobDescription: String(data.jobDescription || ""),
-    }];
+    };
   });
-  return NextResponse.json({ reviews, completedOrders });
+  return NextResponse.json({ reviews, serviceOrders });
 }
 
 export async function PUT(request: NextRequest) {
