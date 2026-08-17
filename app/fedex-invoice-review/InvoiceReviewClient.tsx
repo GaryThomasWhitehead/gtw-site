@@ -128,13 +128,15 @@ export default function Home() {
   const [saveState, setSaveState] = useState("Loading shared data…");
   const [hcpImportRange, setHcpImportRange] = useState<ImportRange | null>(null);
   const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
+  const [completedServiceOrders, setCompletedServiceOrders] = useState<ServiceChannelOrder[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetch("/fedex-review-data.json").then((r) => r.json()),
       fetch("/api/fedex-invoice-review").then((r) => r.ok ? r.json() : []),
     ]).then(([payload, shared]) => {
-      const sharedMap = new Map((shared as { trackingNumber: string; review: Partial<Job> }[]).map((item) => [item.trackingNumber, item.review]));
+      const sharedPayload = Array.isArray(shared) ? { reviews: shared, completedOrders: [] } : shared;
+      const sharedMap = new Map(((sharedPayload.reviews || []) as { trackingNumber: string; review: Partial<Job> }[]).map((item) => [item.trackingNumber, item.review]));
       const base: Job[] = payload.jobs.map((item: Job) => {
         const stored = sharedMap.get(item.trackingNumber);
         return stored ? { ...item, ...stored } : item;
@@ -145,6 +147,7 @@ export default function Home() {
       setSelected(rangedBase[0]?.trackingNumber || "");
       setReceiptVisit(rangedBase[0]?.visits[0]?.jobNumber || "");
       setHcpImportRange(currentRange);
+      setCompletedServiceOrders((sharedPayload.completedOrders || []).length ? sharedPayload.completedOrders : rangedBase.map((item) => ({ trackingNumber: item.trackingNumber, location: item.store, classOfWork: item.trade, status: item.status, statusDetail: item.statusDetail, cost: String(item.nte), jobDescription: item.problemDescription })));
       setSaveState("Shared data loaded");
     }).catch(() => setSaveState("Could not load shared edits"));
   }, []);
@@ -159,12 +162,9 @@ export default function Home() {
     if (!file) return;
     setSaveState("Merging Housecall Pro data...");
     try {
-      const [rows, serviceResponse] = await Promise.all([
-        file.text().then(parseCsv),
-        fetch("/api/fedex-completed-work-orders"),
-      ]);
-      if (!serviceResponse.ok) throw new Error("Could not load ServiceChannel work orders");
-      const serviceOrders = await serviceResponse.json() as ServiceChannelOrder[];
+      const rows = parseCsv(await file.text());
+      const serviceOrders = completedServiceOrders;
+      if (!serviceOrders.length) throw new Error("Completed ServiceChannel work orders have not finished loading. Reload the page and try again.");
       const importDates = rows.map((row) => parseHcpDate(csvValue(row, "Date", "Finished"))).filter((date): date is Date => Boolean(date)).sort((a, b) => a.getTime() - b.getTime());
       if (!importDates.length) throw new Error("No valid job dates were found in this Housecall Pro CSV");
       const importRange: ImportRange = { from: isoDay(importDates[0]), to: isoDay(importDates[importDates.length - 1]), importedAt: new Date().toISOString() };

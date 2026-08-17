@@ -22,7 +22,21 @@ export async function GET(request: NextRequest) {
   const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&order=tracking_number.asc`, { headers: authHeaders(key), cache: "no-store" });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
   const rows = await response.json() as StoredRow[];
-  return NextResponse.json(rows.flatMap((row) => row.data?.invoiceReview ? [{ trackingNumber: row.tracking_number, review: row.data.invoiceReview }] : []));
+  const reviews = rows.flatMap((row) => row.data?.invoiceReview ? [{ trackingNumber: row.tracking_number, review: row.data.invoiceReview }] : []);
+  const completedOrders = rows.flatMap((row) => {
+    const data = row.data || {};
+    if (!String(data.status || "").toLowerCase().includes("complete")) return [];
+    return [{
+      trackingNumber: String(data.trackingNumber || row.tracking_number),
+      location: String(data.location || ""),
+      classOfWork: String(data.classOfWork || ""),
+      status: String(data.status || ""),
+      statusDetail: String(data.statusDetail || ""),
+      cost: String(data.cost || ""),
+      jobDescription: String(data.jobDescription || ""),
+    }];
+  });
+  return NextResponse.json({ reviews, completedOrders });
 }
 
 export async function PUT(request: NextRequest) {
