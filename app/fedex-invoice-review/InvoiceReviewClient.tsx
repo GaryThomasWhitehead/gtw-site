@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 
 type Receipt = { id: string; visitJob: string; name: string; category: string; amount: number; dataUrl: string };
 type Visit = { jobNumber: string; date: string; endTime: string; customer: string; address: string; employee: string; onJobHours: number; travelHours: number; status: string; notes: string; miles: number; receiptTotal: number; receipts: Receipt[]; manualOnJob?: boolean; manualTravel?: boolean };
-type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[] };
+type ImportRange = { from: string; to: string; importedAt: string };
+type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange };
 type CsvRow = Record<string, string>;
 type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
 
@@ -86,6 +87,32 @@ function trackingFromNotes(value: string) {
   return value.match(/\b\d{9}\b/)?.[0] || "";
 }
 
+function parseHcpDate(value: string) {
+  const match = value.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})|^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+  if (!match) return null;
+  const year = Number(match[1] || match[6]);
+  const month = Number(match[2] || match[4]);
+  const day = Number(match[3] || match[5]);
+  const date = new Date(year, month - 1, day);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isoDay(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function displayDay(value: string) {
+  const date = parseHcpDate(value);
+  return date ? `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}` : value;
+}
+
+function followingDay(value: string) {
+  const date = parseHcpDate(value);
+  if (!date) return "";
+  date.setDate(date.getDate() + 1);
+  return displayDay(isoDay(date));
+}
+
 export default function Home() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selected, setSelected] = useState("");
@@ -97,6 +124,7 @@ export default function Home() {
   const [receiptCategory, setReceiptCategory] = useState("Materials");
   const [receiptAmount, setReceiptAmount] = useState("");
   const [saveState, setSaveState] = useState("Loading shared data…");
+  const [hcpImportRange, setHcpImportRange] = useState<ImportRange | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -111,6 +139,7 @@ export default function Home() {
       setJobs(base);
       setSelected(base[0]?.trackingNumber || "");
       setReceiptVisit(base[0]?.visits[0]?.jobNumber || "");
+      setHcpImportRange(base.find((item) => item.hcpImportRange)?.hcpImportRange || null);
       setSaveState("Shared data loaded");
     }).catch(() => setSaveState("Could not load shared edits"));
   }, []);
@@ -131,6 +160,9 @@ export default function Home() {
       ]);
       if (!serviceResponse.ok) throw new Error("Could not load ServiceChannel work orders");
       const serviceOrders = await serviceResponse.json() as ServiceChannelOrder[];
+      const importDates = rows.map((row) => parseHcpDate(csvValue(row, "Date"))).filter((date): date is Date => Boolean(date)).sort((a, b) => a.getTime() - b.getTime());
+      if (!importDates.length) throw new Error("No valid job dates were found in this Housecall Pro CSV");
+      const importRange: ImportRange = { from: isoDay(importDates[0]), to: isoDay(importDates[importDates.length - 1]), importedAt: new Date().toISOString() };
       const serviceByTracking = new Map(serviceOrders.map((order) => [String(order.trackingNumber || "").trim(), order]));
       const rootTracking = new Map<string, string>();
       rows.forEach((row) => {
@@ -196,11 +228,13 @@ export default function Home() {
             resolution: latestResolution || prior?.resolution || "",
             billingStatus: prior?.billingStatus || "Needs pricing",
             visits,
+            hcpImportRange: importRange,
           };
           byTracking.set(trackingNumber, updatedJob);
           if (prior) updated += 1; else added += 1;
       });
-      setJobs([...byTracking.values()].sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
+      setJobs([...byTracking.values()].map((item) => ({ ...item, hcpImportRange: importRange })).sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
+      setHcpImportRange(importRange);
       setSaveState(`${updated} jobs updated, ${added} added — click Save Changes`);
     } catch (error) {
       setSaveState(error instanceof Error ? error.message : "Housecall Pro update failed");
@@ -292,7 +326,7 @@ export default function Home() {
       </header>
 
       <section className="hero">
-        <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p></div>
+        <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p>{hcpImportRange ? <div className="hcpRange"><span>HCP jobs uploaded</span><strong>{displayDay(hcpImportRange.from)} – {displayDay(hcpImportRange.to)}</strong><small>Next update should begin {followingDay(hcpImportRange.to)}</small></div> : <div className="hcpRange empty"><span>HCP jobs uploaded</span><strong>No date range recorded yet</strong><small>Import the next Housecall Pro jobs CSV to begin tracking coverage.</small></div>}</div>
         <div className="heroActions"><label className="mergeButton">Update from Housecall Pro<input type="file" accept=".csv,text/csv" onChange={(event) => { updateFromHousecall(event.target.files?.[0]); event.target.value = ""; }} /></label><button className="primary" onClick={exportQbo} disabled={!checked.length}>Export {checked.length || "selected"} to QBO CSV</button></div>
       </section>
 
