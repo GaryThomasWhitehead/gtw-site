@@ -9,8 +9,7 @@ export const metadata = {
 
 const requiredColumns = [
   "Job #",
-  "Date",
-  "End Time",
+  "Finished (or Date + End Time)",
   "Travel Duration",
   "On Job Duration",
   "Customer",
@@ -52,7 +51,7 @@ export default async function HcpInstructionsPage() {
       </article>
 
       <article className="stepsCard">
-        <div className="sectionTitle"><span>3</span><div><h3>Filter Job Status to Completed</h3><p>Find the <strong>Job Status</strong> column on the far right. Click its funnel/filter icon and select <strong>Completed</strong>.</p></div></div>
+        <div className="sectionTitle"><span>3</span><div><h3>Filter Job Status to Done</h3><p>Find the <strong>Job Status</strong> column on the far right. Click its funnel/filter icon, select only <strong>done</strong>, and click <strong>Filter</strong>. In Housecall Pro, done means completed.</p></div></div>
         <div className="tip warning"><strong>Do not export only the schedule view.</strong> The CSV must include the detailed Notes field containing the nine-digit ServiceChannel tracking number.</div>
       </article>
 

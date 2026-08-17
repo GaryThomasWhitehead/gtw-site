@@ -76,7 +76,8 @@ function durationHours(value: string) {
   const minutesPart = Number(text.match(/([\d.]+)\s*(?:m|min|mins|minute)/i)?.[1] || 0);
   if (hoursPart || minutesPart) return hoursPart + minutesPart / 60;
   const numeric = Number(text);
-  return Number.isFinite(numeric) ? numeric : 0;
+  if (!Number.isFinite(numeric)) return 0;
+  return numeric > 24 ? numeric / 3600 : numeric;
 }
 
 function currencyNumber(value?: string) {
@@ -162,11 +163,12 @@ export default function Home() {
       ]);
       if (!serviceResponse.ok) throw new Error("Could not load ServiceChannel work orders");
       const serviceOrders = await serviceResponse.json() as ServiceChannelOrder[];
-      const importDates = rows.map((row) => parseHcpDate(csvValue(row, "Date"))).filter((date): date is Date => Boolean(date)).sort((a, b) => a.getTime() - b.getTime());
+      const importDates = rows.map((row) => parseHcpDate(csvValue(row, "Date", "Finished"))).filter((date): date is Date => Boolean(date)).sort((a, b) => a.getTime() - b.getTime());
       if (!importDates.length) throw new Error("No valid job dates were found in this Housecall Pro CSV");
       const importRange: ImportRange = { from: isoDay(importDates[0]), to: isoDay(importDates[importDates.length - 1]), importedAt: new Date().toISOString() };
       const serviceByTracking = new Map(serviceOrders.map((order) => [String(order.trackingNumber || "").trim(), order]));
       const rootTracking = new Map<string, string>();
+      jobs.forEach((existingJob) => existingJob.housecallJobs.forEach((jobNumber) => rootTracking.set(rootJobNumber(jobNumber), existingJob.trackingNumber)));
       rows.forEach((row) => {
         const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
         const tracking = trackingFromNotes(csvValue(row, "Notes"));
@@ -193,8 +195,8 @@ export default function Home() {
             const saved = priorVisits.get(jobNumber);
             return {
               jobNumber,
-              date: csvValue(row, "Date"),
-              endTime: csvValue(row, "End Time"),
+              date: csvValue(row, "Date", "Finished"),
+              endTime: csvValue(row, "End Time", "Finished"),
               customer: csvValue(row, "Customer"),
               address: csvValue(row, "Address"),
               employee: csvValue(row, "Employee"),
