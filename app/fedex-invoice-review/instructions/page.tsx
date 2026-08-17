@@ -8,24 +8,24 @@ export const metadata = {
 };
 
 const requiredColumns = [
-  "Job #",
-  "Created at",
-  "Date",
-  "End time",
-  "Finished (or Date + End Time)",
-  "Travel Duration",
-  "On Job Duration",
-  "Total Duration",
-  "Customer",
-  "Address",
-  "Description",
-  "Job Tags",
-  "Notes",
-  "Employee",
-  "Job Status",
-  "Attachments",
-  "Segments",
-  "HCP Id (when available)",
+  "job #",
+  "created at",
+  "date",
+  "end time",
+  "travel duration",
+  "on job duration",
+  "total duration",
+  "customer",
+  "customer tags",
+  "address",
+  "description",
+  "amount",
+  "job tags",
+  "notes",
+  "employee",
+  "job status",
+  "attachments",
+  "segments",
 ];
 
 export default async function HcpInstructionsPage() {
@@ -66,7 +66,7 @@ export default async function HcpInstructionsPage() {
       <article className="stepsCard columnsCard">
         <div className="sectionTitle"><span>4</span><div><h3>Confirm the required columns</h3><p>Open <strong>Table columns</strong> and make sure these fields are checked:</p></div></div>
         <div className="columnList">{requiredColumns.map((column) => <span key={column}>✓ {column}</span>)}</div>
-        <p className="note">Other columns may remain selected. These required fields allow the tracker to match jobs and update technicians, dates, hours, travel, and resolutions.</p>
+        <p className="note">This list follows the Housecall Pro menu from top to bottom so you can check each box in order. Other columns may remain selected. HCP ID and Finished may be added automatically to the downloaded CSV even though they are not choices in this menu.</p>
       </article>
 
       <article className="stepsCard matchCard">
