@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 type Receipt = { id: string; visitJob: string; name: string; category: string; amount: number; dataUrl: string };
-type Visit = { jobNumber: string; date: string; endTime: string; customer: string; address: string; employee: string; onJobHours: number; travelHours: number; status: string; notes: string; miles: number; receiptTotal: number; receipts: Receipt[] };
+type Visit = { jobNumber: string; date: string; endTime: string; customer: string; address: string; employee: string; onJobHours: number; travelHours: number; status: string; notes: string; miles: number; receiptTotal: number; receipts: Receipt[]; manualOnJob?: boolean; manualTravel?: boolean };
 type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[] };
+type CsvRow = Record<string, string>;
+type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
 
 const statuses = ["Needs pricing", "Ready for QBO review", "Approved for export", "Exported", "Invoiced", "Paid", "Hold"];
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -28,6 +30,60 @@ async function compressReceipt(file: File): Promise<string> {
   } finally {
     URL.revokeObjectURL(source);
   }
+}
+
+function parseCsv(text: string): CsvRow[] {
+  const records: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (char === '"') {
+      if (quoted && text[index + 1] === '"') { field += '"'; index += 1; }
+      else quoted = !quoted;
+    } else if (char === "," && !quoted) { row.push(field); field = ""; }
+    else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && text[index + 1] === "\n") index += 1;
+      row.push(field); records.push(row); row = []; field = "";
+    } else field += char;
+  }
+  if (field || row.length) { row.push(field); records.push(row); }
+  const headers = (records.shift() || []).map((header) => header.trim().replace(/^\uFEFF/, ""));
+  return records.filter((record) => record.some(Boolean)).map((record) => Object.fromEntries(headers.map((header, index) => [header, (record[index] || "").trim()])));
+}
+
+function csvValue(row: CsvRow, ...names: string[]) {
+  const found = Object.keys(row).find((key) => names.some((name) => key.trim().toLowerCase() === name.toLowerCase()));
+  return found ? row[found] : "";
+}
+
+function cleanJobNumber(value: string) {
+  return value.replace(/^=/, "").replace(/^"|"$/g, "").trim();
+}
+
+function rootJobNumber(value: string) {
+  return cleanJobNumber(value).replace(/-\d+$/, "");
+}
+
+function durationHours(value: string) {
+  const text = String(value || "").trim();
+  if (!text) return 0;
+  const clock = text.match(/^(\d+):(\d{1,2})(?::\d{1,2})?$/);
+  if (clock) return Number(clock[1]) + Number(clock[2]) / 60;
+  const hoursPart = Number(text.match(/([\d.]+)\s*(?:h|hr|hrs|hour)/i)?.[1] || 0);
+  const minutesPart = Number(text.match(/([\d.]+)\s*(?:m|min|mins|minute)/i)?.[1] || 0);
+  if (hoursPart || minutesPart) return hoursPart + minutesPart / 60;
+  const numeric = Number(text);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function currencyNumber(value?: string) {
+  return Number(String(value || "").replace(/[^\d.-]/g, "")) || 0;
+}
+
+function trackingFromNotes(value: string) {
+  return value.match(/\b\d{9}\b/)?.[0] || "";
 }
 
 export default function Home() {
@@ -63,6 +119,92 @@ export default function Home() {
     setSaveState("Saving…");
     const response = await fetch("/api/fedex-invoice-review", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviews: jobs.map((item) => ({ trackingNumber: item.trackingNumber, review: item })) }) });
     setSaveState(response.ok ? "All changes saved" : "Save failed");
+  }
+
+  async function updateFromHousecall(file?: File) {
+    if (!file) return;
+    setSaveState("Merging Housecall Pro data...");
+    try {
+      const [rows, serviceResponse] = await Promise.all([
+        file.text().then(parseCsv),
+        fetch("/api/fedex-work-orders"),
+      ]);
+      if (!serviceResponse.ok) throw new Error("Could not load ServiceChannel work orders");
+      const serviceOrders = await serviceResponse.json() as ServiceChannelOrder[];
+      const serviceByTracking = new Map(serviceOrders.map((order) => [String(order.trackingNumber || "").trim(), order]));
+      const rootTracking = new Map<string, string>();
+      rows.forEach((row) => {
+        const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
+        const tracking = trackingFromNotes(csvValue(row, "Notes"));
+        if (jobNumber && tracking) rootTracking.set(rootJobNumber(jobNumber), tracking);
+      });
+      const grouped = new Map<string, CsvRow[]>();
+      rows.forEach((row) => {
+        const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
+        const tracking = trackingFromNotes(csvValue(row, "Notes")) || rootTracking.get(rootJobNumber(jobNumber)) || "";
+        const serviceOrder = serviceByTracking.get(tracking);
+        if (!tracking || !serviceOrder || !String(serviceOrder.status || "").toLowerCase().includes("complete")) return;
+        grouped.set(tracking, [...(grouped.get(tracking) || []), row]);
+      });
+
+      let added = 0;
+      let updated = 0;
+      const byTracking = new Map(jobs.map((item) => [item.trackingNumber, item]));
+      grouped.forEach((hcpRows, trackingNumber) => {
+          const prior = byTracking.get(trackingNumber);
+          const service = serviceByTracking.get(trackingNumber)!;
+          const priorVisits = new Map((prior?.visits || []).map((visit) => [visit.jobNumber, visit]));
+          const visits = hcpRows.map((row) => {
+            const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
+            const saved = priorVisits.get(jobNumber);
+            return {
+              jobNumber,
+              date: csvValue(row, "Date"),
+              endTime: csvValue(row, "End Time"),
+              customer: csvValue(row, "Customer"),
+              address: csvValue(row, "Address"),
+              employee: csvValue(row, "Employee"),
+              onJobHours: saved?.manualOnJob ? saved.onJobHours : durationHours(csvValue(row, "On Job Duration")),
+              travelHours: saved?.manualTravel ? saved.travelHours : durationHours(csvValue(row, "Travel Duration")),
+              status: csvValue(row, "Job Status"),
+              notes: csvValue(row, "Notes"),
+              miles: saved?.miles || 0,
+              receiptTotal: saved?.receiptTotal || 0,
+              receipts: saved?.receipts || [],
+              manualOnJob: saved?.manualOnJob || false,
+              manualTravel: saved?.manualTravel || false,
+            };
+          });
+          const employees = [...new Set(visits.map((visit) => visit.employee).filter(Boolean))];
+          const latestResolution = hcpRows.map((row) => csvValue(row, "Description")).filter(Boolean).at(-1) || "";
+          const updatedJob: Job = {
+            trackingNumber,
+            store: String(service.location || prior?.store || ""),
+            trade: String(service.classOfWork || prior?.trade || ""),
+            status: String(service.status || prior?.status || "Completed"),
+            statusDetail: String(service.statusDetail || prior?.statusDetail || ""),
+            parentJobs: prior?.parentJobs || [],
+            housecallJobs: visits.map((visit) => visit.jobNumber),
+            employees,
+            onJobHours: Number(visits.reduce((sum, visit) => sum + visit.onJobHours, 0).toFixed(2)),
+            travelHours: Number(visits.reduce((sum, visit) => sum + visit.travelHours, 0).toFixed(2)),
+            nte: currencyNumber(service.cost) || prior?.nte || 0,
+            invoiceNumber: prior?.invoiceNumber || "",
+            invoiceDate: prior?.invoiceDate || "",
+            invoiceAmount: prior?.invoiceAmount || 0,
+            problemDescription: String(service.jobDescription || prior?.problemDescription || ""),
+            resolution: latestResolution || prior?.resolution || "",
+            billingStatus: prior?.billingStatus || "Needs pricing",
+            visits,
+          };
+          byTracking.set(trackingNumber, updatedJob);
+          if (prior) updated += 1; else added += 1;
+      });
+      setJobs([...byTracking.values()].sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
+      setSaveState(`${updated} jobs updated, ${added} added — click Save Changes`);
+    } catch (error) {
+      setSaveState(error instanceof Error ? error.message : "Housecall Pro update failed");
+    }
   }
 
   const filtered = useMemo(() => jobs.filter((job) => {
@@ -151,7 +293,7 @@ export default function Home() {
 
       <section className="hero">
         <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p></div>
-        <button className="primary" onClick={exportQbo} disabled={!checked.length}>Export {checked.length || "selected"} to QBO CSV</button>
+        <div className="heroActions"><label className="mergeButton">Update from Housecall Pro<input type="file" accept=".csv,text/csv" onChange={(event) => { updateFromHousecall(event.target.files?.[0]); event.target.value = ""; }} /></label><button className="primary" onClick={exportQbo} disabled={!checked.length}>Export {checked.length || "selected"} to QBO CSV</button></div>
       </section>
 
       <section className="kpis">
@@ -207,7 +349,7 @@ export default function Home() {
             <div className="paneltitle"><div><h4>Visits, mileage & receipts</h4><p>{hours(job.onJobHours)} on job · {hours(job.travelHours)} travel · {jobMiles.toFixed(1)} miles</p></div><span>{job.visits.length} visit{job.visits.length === 1 ? "" : "s"}</span></div>
             <div className="visitscroll">{job.visits.map((visit, index) => <article className="visit" key={`${visit.jobNumber}-${index}`}>
               <div className="visitnum">{index + 1}</div><div className="visitwho"><strong>HCP {visit.jobNumber}</strong><span>{visit.employee || "Technician missing"}</span><small>{visit.date || "Date missing"}</small></div>
-              <label className="timeInput">On job hrs<input aria-label={`On job hours for HCP ${visit.jobNumber}`} type="number" min="0" step="0.25" value={visit.onJobHours || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { onJobHours: Number(e.target.value) })} /></label><label className="timeInput">Travel hrs<input aria-label={`Travel hours for HCP ${visit.jobNumber}`} type="number" min="0" step="0.25" value={visit.travelHours || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { travelHours: Number(e.target.value) })} /></label>
+              <label className="timeInput">On job hrs<input aria-label={`On job hours for HCP ${visit.jobNumber}`} type="number" min="0" step="0.25" value={visit.onJobHours || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { onJobHours: Number(e.target.value), manualOnJob: true })} /></label><label className="timeInput">Travel hrs<input aria-label={`Travel hours for HCP ${visit.jobNumber}`} type="number" min="0" step="0.25" value={visit.travelHours || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { travelHours: Number(e.target.value), manualTravel: true })} /></label>
               <label className="miles">Miles<input type="number" min="0" step="0.1" value={visit.miles || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { miles: Number(e.target.value) })} /></label>
               <div className="receiptcount"><span>Receipts</span><b>{visit.receipts?.length || 0} · {money.format((visit.receipts || []).reduce((sum, receipt) => sum + receipt.amount, 0))}</b></div>
               {(visit.receipts || []).length > 0 && <div className="receiptstrip">{visit.receipts.map((receipt) => <div className="receiptthumb" key={receipt.id}><a href={receipt.dataUrl} target="_blank"><img src={receipt.dataUrl} alt={receipt.name} /></a><span>{receipt.category}<b>{money.format(receipt.amount)}</b></span><button onClick={() => removeReceipt(visit.jobNumber, receipt.id)}>×</button></div>)}</div>}
