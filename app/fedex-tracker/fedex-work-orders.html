@@ -146,6 +146,16 @@
         margin-bottom: 14px;
       }
 
+      .filter-field {
+        display: grid;
+        gap: 5px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+
       .location-pages {
         display: grid;
         gap: 8px;
@@ -428,10 +438,14 @@
         <div id="locationPages" class="location-pages" aria-label="Location pages"></div>
 
         <div class="filters">
-          <input id="searchInput" type="search" placeholder="Search tracking, location, work, notes" />
-          <select id="statusFilter" aria-label="Filter by status">
-            <option value="all">All status</option>
-          </select>
+          <label class="filter-field">Search all open jobs
+            <input id="searchInput" type="search" placeholder="Example: general repairs" />
+          </label>
+          <label class="filter-field">Status
+            <select id="statusFilter" aria-label="Filter by status">
+              <option value="all">All open status</option>
+            </select>
+          </label>
         </div>
 
         <section class="stats" aria-label="Work order summary">
@@ -1451,8 +1465,9 @@
       function filteredOrders() {
         const term = els.search.value.trim().toLowerCase();
         const status = els.statusFilter.value;
-        return pageOrders().filter(order => {
-          const haystack = [order.trackingNumber, order.location, order.classOfWork, order.jobDescription, order.notes, order.nextStep, order.assignedTo, order.callDate].join(" ").toLowerCase();
+        const source = term ? orders.filter(order => !["Completed", "Canceled"].includes(order.status)) : pageOrders();
+        return source.filter(order => {
+          const haystack = [order.trackingNumber, order.location, order.classOfWork, order.status, order.cost, order.priority, order.jobDescription, order.notes, order.nextStep, order.assignedTo, order.callDate].join(" ").toLowerCase();
           const matchesSearch = !term || haystack.includes(term);
           const matchesStatus = status === "all" || order.status === status;
           return matchesSearch && matchesStatus;
