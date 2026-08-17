@@ -9,15 +9,23 @@ export const metadata = {
 
 const requiredColumns = [
   "Job #",
+  "Created at",
+  "Date",
+  "End time",
   "Finished (or Date + End Time)",
   "Travel Duration",
   "On Job Duration",
+  "Total Duration",
   "Customer",
   "Address",
   "Description",
+  "Job Tags",
   "Notes",
   "Employee",
   "Job Status",
+  "Attachments",
+  "Segments",
+  "HCP Id (when available)",
 ];
 
 export default async function HcpInstructionsPage() {
@@ -61,12 +69,19 @@ export default async function HcpInstructionsPage() {
         <p className="note">Other columns may remain selected. These required fields allow the tracker to match jobs and update technicians, dates, hours, travel, and resolutions.</p>
       </article>
 
+      <article className="stepsCard matchCard">
+        <div className="sectionTitle"><span>5</span><div><h3>Verify every job will match</h3><p>Before exporting, each job must contain the nine-digit ServiceChannel tracking number in <strong>Notes</strong>.</p></div></div>
+        <div className="matchingExample"><span>Example Notes</span><strong>358350082</strong><small>Tracking</small></div>
+        <ul><li>For follow-up jobs such as <strong>5214-1</strong> or <strong>5214-2</strong>, copy the same ServiceChannel tracking number from the original job into that follow-up job’s Notes.</li><li>Enter the completed work summary in <strong>Description</strong>.</li><li>Record mileage in Notes using a consistent phrase such as <strong>Drove 42 miles</strong>.</li></ul>
+        <div className="tip warning"><strong>Important:</strong> selecting the correct columns cannot replace a missing tracking number. Every exported row needs the number in Notes for guaranteed matching.</div>
+      </article>
+
       <article className="stepsCard">
-        <div className="sectionTitle"><span>5</span><div><h3>Download the CSV</h3><p>Click the spreadsheet/export icon in the blue report toolbar. Save the file as a <strong>CSV</strong>. A typical filename is <strong>jobs_report.csv</strong>.</p></div></div>
+        <div className="sectionTitle"><span>6</span><div><h3>Download the CSV</h3><p>Click the spreadsheet/export icon in the blue report toolbar. Save the file as a <strong>CSV</strong>. A typical filename is <strong>jobs_report.csv</strong>.</p></div></div>
       </article>
 
       <article className="stepsCard finishCard">
-        <div className="sectionTitle"><span>6</span><div><h3>Update Completed Work Review</h3><p>Return to Completed Work Review, click <strong>Update from Housecall Pro</strong>, and select the CSV. Confirm the displayed upload dates, review the results, and click <strong>Save Changes</strong>.</p></div></div>
+        <div className="sectionTitle"><span>7</span><div><h3>Update Completed Work Review</h3><p>Return to Completed Work Review, click <strong>Update from Housecall Pro</strong>, and select the CSV. Confirm the displayed upload dates, review the results, and click <strong>Save Changes</strong>.</p></div></div>
         <a href="/fedex-invoice-review">Go to Completed Work Review →</a>
       </article>
     </section>
