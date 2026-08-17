@@ -320,6 +320,7 @@ export default function Home() {
         <div className="brandmark">FP</div>
         <div><p className="eyebrow">FRONTLINE PRO SERVICES</p><h1>Completed Work Review</h1></div>
         <div className="testbadge"><span /> Live shared tracker</div>
+        <a className="helpButton" href="/fedex-invoice-review/instructions">HCP Export Instructions</a>
         <a className="backButton" href="/fedex-tracker">← Back to Work Orders</a>
         <button className="saveButton" onClick={saveShared}>Save Changes</button>
         <button className="ghost" onClick={resetLocal}>Reload Shared Data</button>
