@@ -8,7 +8,7 @@ type ImportRange = { from: string; to: string; importedAt: string };
 type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange };
 type CsvRow = Record<string, string>;
 type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
-type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; serviceNotComplete: number; trackingNotFound: number; applied: boolean };
+type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; serviceNotComplete: number; missingTrackingInHcp: number; notInServiceChannel: number; applied: boolean };
 
 const statuses = ["Needs pricing", "Ready for QBO review", "Approved for export", "Exported", "Invoiced", "Paid", "Hold"];
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -177,12 +177,14 @@ export default function Home() {
       });
       const grouped = new Map<string, CsvRow[]>();
       let serviceNotComplete = 0;
-      let trackingNotFound = 0;
+      let missingTrackingInHcp = 0;
+      let notInServiceChannel = 0;
       rows.forEach((row) => {
         const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
         const tracking = trackingFromNotes(csvValue(row, "Notes")) || rootTracking.get(rootJobNumber(jobNumber)) || "";
+        if (!tracking) { missingTrackingInHcp += 1; return; }
         const serviceOrder = serviceByTracking.get(tracking);
-        if (!tracking || !serviceOrder) { trackingNotFound += 1; return; }
+        if (!serviceOrder) { notInServiceChannel += 1; return; }
         if (!String(serviceOrder.status || "").toLowerCase().includes("complete")) { serviceNotComplete += 1; return; }
         grouped.set(tracking, [...(grouped.get(tracking) || []), row]);
       });
@@ -246,7 +248,7 @@ export default function Home() {
         setJobs([...byTracking.values()].map((item) => ({ ...item, hcpImportRange: importRange })).sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
         setHcpImportRange(importRange);
       }
-      setUpdateNotice({ from: importRange.from, to: importRange.to, rows: rows.length, matched, updated, added, serviceNotComplete, trackingNotFound, applied: matched > 0 });
+      setUpdateNotice({ from: importRange.from, to: importRange.to, rows: rows.length, matched, updated, added, serviceNotComplete, missingTrackingInHcp, notInServiceChannel, applied: matched > 0 });
       setSaveState(matched > 0 ? `${updated} jobs updated, ${added} added — click Save Changes` : "No completed ServiceChannel matches — nothing changed");
     } catch (error) {
       setSaveState(error instanceof Error ? error.message : "Housecall Pro update failed");
@@ -328,7 +330,7 @@ export default function Home() {
 
   return (
     <><link rel="stylesheet" href="/fedex-invoice-review.css" /><main className="shell">
-      {updateNotice && <div className="noticeBackdrop" role="presentation"><section className={`updateNotice ${updateNotice.applied ? "" : "notApplied"}`} role="dialog" aria-modal="true" aria-labelledby="updateNoticeTitle"><div className="noticeCheck">{updateNotice.applied ? "✓" : "!"}</div><p className="eyebrow">HOUSECALL PRO IMPORT</p><h2 id="updateNoticeTitle">{updateNotice.applied ? "Update complete" : "Update not applied"}</h2><div className="noticeRange"><span>{updateNotice.applied ? "New HCP date range" : "HCP file dates"}</span><strong>{displayDay(updateNotice.from)} – {displayDay(updateNotice.to)}</strong><small>{updateNotice.applied ? `Next update should begin ${followingDay(updateNotice.to)}` : "The saved coverage date was not changed."}</small></div><div className="noticeStats"><div><strong>{updateNotice.rows}</strong><span>CSV rows read</span></div><div><strong>{updateNotice.matched}</strong><span>Rows matched</span></div><div><strong>{updateNotice.updated}</strong><span>Jobs updated</span></div><div><strong>{updateNotice.added}</strong><span>Jobs added</span></div><div><strong>{updateNotice.serviceNotComplete}</strong><span>SC not complete</span></div><div><strong>{updateNotice.trackingNotFound}</strong><span>Tracking not found</span></div></div>{(updateNotice.serviceNotComplete > 0 || updateNotice.trackingNotFound > 0) && <p className="noticeWarning">{updateNotice.serviceNotComplete > 0 && <span><strong>{updateNotice.serviceNotComplete}</strong> HCP row{updateNotice.serviceNotComplete === 1 ? " has" : "s have"} a ServiceChannel work order that is not marked complete. </span>}{updateNotice.trackingNotFound > 0 && <span><strong>{updateNotice.trackingNotFound}</strong> row{updateNotice.trackingNotFound === 1 ? " does" : "s do"} not contain a tracking number that can be connected to ServiceChannel.</span>}</p>}<div className="noticeActions"><button className="ghost" onClick={() => setUpdateNotice(null)}>Close</button>{updateNotice.applied && <button className="saveButton" onClick={() => { setUpdateNotice(null); saveShared(); }}>Save Changes</button>}</div></section></div>}
+      {updateNotice && <div className="noticeBackdrop" role="presentation"><section className={`updateNotice ${updateNotice.applied ? "" : "notApplied"}`} role="dialog" aria-modal="true" aria-labelledby="updateNoticeTitle"><div className="noticeCheck">{updateNotice.applied ? "✓" : "!"}</div><p className="eyebrow">HOUSECALL PRO IMPORT</p><h2 id="updateNoticeTitle">{updateNotice.applied ? "Update complete" : "Update not applied"}</h2><div className="noticeRange"><span>{updateNotice.applied ? "New HCP date range" : "HCP file dates"}</span><strong>{displayDay(updateNotice.from)} – {displayDay(updateNotice.to)}</strong><small>{updateNotice.applied ? `Next update should begin ${followingDay(updateNotice.to)}` : "The saved coverage date was not changed."}</small></div><div className="noticeStats"><div><strong>{updateNotice.rows}</strong><span>CSV rows read</span></div><div><strong>{updateNotice.matched}</strong><span>Rows matched</span></div><div><strong>{updateNotice.updated}</strong><span>Jobs updated</span></div><div><strong>{updateNotice.added}</strong><span>Jobs added</span></div><div><strong>{updateNotice.serviceNotComplete}</strong><span>SC not complete</span></div><div><strong>{updateNotice.notInServiceChannel}</strong><span>Not in SC tracker</span></div>{updateNotice.missingTrackingInHcp > 0 && <div><strong>{updateNotice.missingTrackingInHcp}</strong><span>Missing in HCP notes</span></div>}</div>{(updateNotice.serviceNotComplete > 0 || updateNotice.notInServiceChannel > 0 || updateNotice.missingTrackingInHcp > 0) && <p className="noticeWarning">{updateNotice.serviceNotComplete > 0 && <span><strong>{updateNotice.serviceNotComplete}</strong> HCP row{updateNotice.serviceNotComplete === 1 ? " has" : "s have"} a ServiceChannel work order that is not marked complete. </span>}{updateNotice.notInServiceChannel > 0 && <span><strong>{updateNotice.notInServiceChannel}</strong> row{updateNotice.notInServiceChannel === 1 ? " has" : "s have"} a tracking number in HCP, but that number is not present in the imported ServiceChannel tracker. </span>}{updateNotice.missingTrackingInHcp > 0 && <span><strong>{updateNotice.missingTrackingInHcp}</strong> follow-up row{updateNotice.missingTrackingInHcp === 1 ? " is" : "s are"} missing the tracking number in HCP Notes.</span>}</p>}<div className="noticeActions"><button className="ghost" onClick={() => setUpdateNotice(null)}>Close</button>{updateNotice.applied && <button className="saveButton" onClick={() => { setUpdateNotice(null); saveShared(); }}>Save Changes</button>}</div></section></div>}
       <header className="topbar">
         <div className="brandmark">FP</div>
         <div><p className="eyebrow">FRONTLINE PRO SERVICES</p><h1>Completed Work Review</h1></div>
