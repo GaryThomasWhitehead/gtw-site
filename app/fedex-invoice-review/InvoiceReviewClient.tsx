@@ -8,6 +8,7 @@ type ImportRange = { from: string; to: string; importedAt: string };
 type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange };
 type CsvRow = Record<string, string>;
 type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
+type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; unmatched: number };
 
 const statuses = ["Needs pricing", "Ready for QBO review", "Approved for export", "Exported", "Invoiced", "Paid", "Hold"];
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -126,6 +127,7 @@ export default function Home() {
   const [receiptAmount, setReceiptAmount] = useState("");
   const [saveState, setSaveState] = useState("Loading shared data…");
   const [hcpImportRange, setHcpImportRange] = useState<ImportRange | null>(null);
+  const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -159,7 +161,7 @@ export default function Home() {
     try {
       const [rows, serviceResponse] = await Promise.all([
         file.text().then(parseCsv),
-        fetch("/api/fedex-work-orders"),
+        fetch("/api/fedex-completed-work-orders"),
       ]);
       if (!serviceResponse.ok) throw new Error("Could not load ServiceChannel work orders");
       const serviceOrders = await serviceResponse.json() as ServiceChannelOrder[];
@@ -239,6 +241,8 @@ export default function Home() {
       });
       setJobs([...byTracking.values()].map((item) => ({ ...item, hcpImportRange: importRange })).sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber)));
       setHcpImportRange(importRange);
+      const matched = [...grouped.values()].reduce((sum, group) => sum + group.length, 0);
+      setUpdateNotice({ from: importRange.from, to: importRange.to, rows: rows.length, matched, updated, added, unmatched: rows.length - matched });
       setSaveState(`${updated} jobs updated, ${added} added — click Save Changes`);
     } catch (error) {
       setSaveState(error instanceof Error ? error.message : "Housecall Pro update failed");
@@ -320,6 +324,7 @@ export default function Home() {
 
   return (
     <><link rel="stylesheet" href="/fedex-invoice-review.css" /><main className="shell">
+      {updateNotice && <div className="noticeBackdrop" role="presentation"><section className="updateNotice" role="dialog" aria-modal="true" aria-labelledby="updateNoticeTitle"><div className="noticeCheck">✓</div><p className="eyebrow">HOUSECALL PRO IMPORT</p><h2 id="updateNoticeTitle">Update complete</h2><div className="noticeRange"><span>New HCP date range</span><strong>{displayDay(updateNotice.from)} – {displayDay(updateNotice.to)}</strong><small>Next update should begin {followingDay(updateNotice.to)}</small></div><div className="noticeStats"><div><strong>{updateNotice.rows}</strong><span>CSV rows read</span></div><div><strong>{updateNotice.matched}</strong><span>Rows matched</span></div><div><strong>{updateNotice.updated}</strong><span>Jobs updated</span></div><div><strong>{updateNotice.added}</strong><span>Jobs added</span></div></div>{updateNotice.unmatched > 0 && <p className="noticeWarning">{updateNotice.unmatched} row{updateNotice.unmatched === 1 ? " was" : "s were"} not matched to a completed ServiceChannel work order. The matched jobs were still updated.</p>}<div className="noticeActions"><button className="ghost" onClick={() => setUpdateNotice(null)}>Close</button><button className="saveButton" onClick={() => { setUpdateNotice(null); saveShared(); }}>Save Changes</button></div></section></div>}
       <header className="topbar">
         <div className="brandmark">FP</div>
         <div><p className="eyebrow">FRONTLINE PRO SERVICES</p><h1>Completed Work Review</h1></div>
