@@ -136,10 +136,12 @@ export default function Home() {
         const stored = sharedMap.get(item.trackingNumber);
         return stored ? { ...item, ...stored } : item;
       });
-      setJobs(base);
-      setSelected(base[0]?.trackingNumber || "");
-      setReceiptVisit(base[0]?.visits[0]?.jobNumber || "");
-      setHcpImportRange(base.find((item) => item.hcpImportRange)?.hcpImportRange || null);
+      const currentRange: ImportRange | null = base.find((item) => item.hcpImportRange)?.hcpImportRange || payload.hcpImportRange || null;
+      const rangedBase = currentRange ? base.map((item) => ({ ...item, hcpImportRange: item.hcpImportRange || currentRange })) : base;
+      setJobs(rangedBase);
+      setSelected(rangedBase[0]?.trackingNumber || "");
+      setReceiptVisit(rangedBase[0]?.visits[0]?.jobNumber || "");
+      setHcpImportRange(currentRange);
       setSaveState("Shared data loaded");
     }).catch(() => setSaveState("Could not load shared edits"));
   }, []);

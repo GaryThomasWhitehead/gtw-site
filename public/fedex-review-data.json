@@ -1,5 +1,10 @@
 {
   "generatedAt": "2026-08-13T14:04:41.566Z",
+  "hcpImportRange": {
+    "from": "2026-06-13",
+    "to": "2026-08-13",
+    "importedAt": "2026-08-13T14:04:41.566Z"
+  },
   "jobs": [
     {
       "trackingNumber": "345858442",
