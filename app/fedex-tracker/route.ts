@@ -3,6 +3,16 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "content-type": "text/html; charset=utf-8",
+  "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
 function loginPage(message = "") {
   return `<!doctype html>
 <html lang="en">
@@ -37,11 +47,11 @@ function loginPage(message = "") {
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) {
     const message = request.nextUrl.searchParams.get("error") ? "That password did not match. Please try again." : "";
-    return new NextResponse(loginPage(message), { headers: { "content-type": "text/html; charset=utf-8" } });
+    return new NextResponse(loginPage(message), { headers: noCacheHeaders });
   }
 
   const filePath = path.join(process.cwd(), "app", "fedex-tracker", "fedex-work-orders.html");
   const html = await readFile(filePath, "utf8");
-  return new NextResponse(html, { headers: { "content-type": "text/html; charset=utf-8" } });
+  return new NextResponse(html, { headers: noCacheHeaders });
 }
 

@@ -1,6 +1,9 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type WorkOrder = Record<string, unknown> & { trackingNumber?: string; id?: string };
 
 function supabaseConfig() {
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
 
   const rows = await response.json();
-  return NextResponse.json(rows.map((row: { data: WorkOrder }) => row.data));
+  return NextResponse.json(rows.map((row: { data: WorkOrder }) => row.data), { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
 }
 
 export async function PUT(request: NextRequest) {
