@@ -187,6 +187,11 @@
         background: #f1fbf6;
       }
 
+      .location-page.canceled {
+        border-color: #b7791f;
+        background: #fff8e7;
+      }
+
       .location-page strong {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1346,6 +1351,7 @@
       };
 
       const readyToBillPage = "__ready_to_bill";
+      const canceledPage = "__canceled";
       const oldJobDays = 45;
       const fields = ["trackingNumber", "location", "classOfWork", "status", "cost", "priority", "assignedTo", "dueDate", "callDate", "jobDescription", "notes", "nextStep"];
 
@@ -1455,11 +1461,12 @@
       function pageOrders() {
         if (activeLocation === "all") return orders;
         if (activeLocation === readyToBillPage) return orders.filter(order => order.status === "Completed");
+        if (activeLocation === canceledPage) return orders.filter(order => order.status === "Canceled");
         return orders.filter(order => normalizeLocation(order.location) === activeLocation);
       }
 
       function ensureActivePage() {
-        if (activeLocation === "all" || activeLocation === readyToBillPage) return;
+        if (activeLocation === "all" || activeLocation === readyToBillPage || activeLocation === canceledPage) return;
         if (!locations().includes(activeLocation)) activeLocation = "all";
       }
 
@@ -1473,7 +1480,7 @@
       function filteredOrders() {
         const term = els.search.value.trim().toLowerCase();
         const status = els.statusFilter.value;
-        const source = term ? orders.filter(order => !["Completed", "Canceled"].includes(order.status)) : pageOrders();
+        const source = term && activeLocation === "all" ? orders.filter(order => !["Completed", "Canceled"].includes(order.status)) : pageOrders();
         return source.filter(order => {
           const haystack = [order.trackingNumber, order.location, order.classOfWork, order.status, order.cost, order.priority, order.jobDescription, order.notes, order.nextStep, order.assignedTo, order.callDate].join(" ").toLowerCase();
           const matchesSearch = !term || haystack.includes(term);
@@ -1491,6 +1498,7 @@
       function renderLocationPages() {
         const openJobs = items => items.filter(order => !["Completed", "Canceled"].includes(order.status)).length;
         const readyToBill = orders.filter(order => order.status === "Completed");
+        const canceled = orders.filter(order => order.status === "Canceled");
         const locationButtons = locations().map(location => {
           const items = orders.filter(order => normalizeLocation(order.location) === location);
           return `
@@ -1505,13 +1513,18 @@
         els.locationPages.innerHTML = `
           <button class="location-page ${activeLocation === "all" ? "active" : ""}" type="button" data-location="all">
             <strong>All Jobs</strong>
-            <span>${orders.length} jobs</span>
+            <span>${orders.length} total</span>
             <span>${openJobs(orders)} open</span>
           </button>
           <button class="location-page billing ${activeLocation === readyToBillPage ? "active" : ""}" type="button" data-location="${readyToBillPage}">
             <strong>Ready to Bill</strong>
             <span>${readyToBill.length} jobs</span>
             <span>completed</span>
+          </button>
+          <button class="location-page canceled ${activeLocation === canceledPage ? "active" : ""}" type="button" data-location="${canceledPage}">
+            <strong>Canceled</strong>
+            <span>${canceled.length} jobs</span>
+            <span>not billable</span>
           </button>
           ${locationButtons}
         `;
@@ -1547,6 +1560,8 @@
       function renderBoard() {
         const groups = activeLocation === readyToBillPage
           ? ["Completed"]
+          : activeLocation === canceledPage
+            ? ["Canceled"]
           : ["NTS", "Scheduled", "In progress", "Need to quote", "Waiting on parts", "Completed"];
         els.board.innerHTML = groups.map(status => {
           const items = pageOrders().filter(order => order.status === status);
@@ -1565,7 +1580,7 @@
       function renderDetail() {
         const order = selectedOrder();
         const disable = !order;
-        els.pageEyebrow.textContent = activeLocation === readyToBillPage ? "Ready to Bill" : (activeLocation === "all" ? "All Jobs" : activeLocation);
+        els.pageEyebrow.textContent = activeLocation === readyToBillPage ? "Ready to Bill" : (activeLocation === canceledPage ? "Canceled" : (activeLocation === "all" ? "All Jobs" : activeLocation));
         fields.forEach(name => {
           const field = document.querySelector(`#${name}`);
           field.disabled = disable;
@@ -1615,7 +1630,7 @@
         const newOrder = {
           id: crypto.randomUUID(),
           trackingNumber: "",
-          location: activeLocation === "all" ? "0912 // South SF" : activeLocation,
+          location: ["all", readyToBillPage, canceledPage].includes(activeLocation) ? "0912 // South SF" : activeLocation,
           classOfWork: "",
           jobDescription: "",
           cost: "",
