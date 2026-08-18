@@ -64,17 +64,19 @@ export async function PUT(request: NextRequest) {
     }))
     .filter((row: { tracking_number: string }) => row.tracking_number);
 
-  const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
-    method: "POST",
-    headers: {
-      ...headers(key),
-      Prefer: "resolution=merge-duplicates,return=minimal"
-    },
-    body: JSON.stringify(rows)
-  });
+  for (let index = 0; index < rows.length; index += 75) {
+    const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+      method: "POST",
+      headers: {
+        ...headers(key),
+        Prefer: "resolution=merge-duplicates,return=minimal"
+      },
+      body: JSON.stringify(rows.slice(index, index + 75))
+    });
 
-  if (!response.ok) {
-    return NextResponse.json({ error: await response.text() }, { status: response.status });
+    if (!response.ok) {
+      return NextResponse.json({ error: await response.text(), savedBeforeError: index }, { status: response.status });
+    }
   }
 
   return NextResponse.json({ ok: true, saved: rows.length });

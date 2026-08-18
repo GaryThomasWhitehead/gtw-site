@@ -1392,15 +1392,23 @@
         }
       }
 
-      function saveOrders() {
+      async function saveOrders() {
         localStorage.setItem(storageKey, JSON.stringify(orders));
-        if (!remoteSyncEnabled) return;
-        fetch("/api/fedex-work-orders", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ orders })
-        }).catch(error => console.warn("Unable to save work orders to shared storage:", error));
+        if (!remoteSyncEnabled) return { shared: false, error: "The shared tracker connection is not ready." };
+        try {
+          const response = await fetch("/api/fedex-work-orders", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ orders })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || `Server returned ${response.status}`);
+          return { shared: true, saved: result.saved || orders.length };
+        } catch (error) {
+          console.warn("Unable to save work orders to shared storage:", error);
+          return { shared: false, error: error.message || "Shared save failed." };
+        }
       }
 
       function statusClass(status) {
@@ -1661,18 +1669,21 @@
           return;
         }
         const reader = new FileReader();
-        reader.onload = () => {
+        reader.onload = async () => {
           try {
             if (extension === "csv") {
               const imported = parseCsv(reader.result).map(mapImportedRow).filter(Boolean);
               const result = upsertImportedOrders(imported);
-              alert(`Imported ${result.created} new jobs and updated ${result.updated} existing jobs.`);
+              const sync = await saveOrders();
+              if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
+              alert(`Import complete. ${result.created} new jobs and ${result.updated} existing jobs were saved to the shared tracker.`);
             } else {
               const imported = JSON.parse(reader.result);
               if (!Array.isArray(imported)) throw new Error("Imported JSON must contain a work order array.");
               orders = imported.map(order => ({ ...mapImportedRow(order), id: order.id || crypto.randomUUID() })).filter(Boolean);
               selectedId = orders[0]?.id || null;
-              saveOrders();
+              const sync = await saveOrders();
+              if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
             }
             render();
           } catch (error) {
@@ -1688,15 +1699,17 @@
           return;
         }
         const reader = new FileReader();
-        reader.onload = () => {
+        reader.onload = async () => {
           try {
             const workbook = XLSX.read(reader.result, { type: "array", cellDates: true });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
             const imported = rows.map(mapImportedRow).filter(Boolean);
             const result = upsertImportedOrders(imported);
+            const sync = await saveOrders();
+            if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
             render();
-            alert(`Imported ${result.created} new jobs and updated ${result.updated} existing jobs.`);
+            alert(`Import complete. ${result.created} new jobs and ${result.updated} existing jobs were saved to the shared tracker.`);
           } catch (error) {
             alert(`Excel import failed: ${error.message}`);
           }
@@ -1806,7 +1819,6 @@
           updated += 1;
         });
         selectedId = orders[0]?.id || null;
-        saveOrders();
         return { created, updated };
       }
 
