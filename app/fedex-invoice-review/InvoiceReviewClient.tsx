@@ -151,10 +151,11 @@ export default function Home() {
     Promise.all([
       fetch("/fedex-review-data.json").then((r) => r.json()),
       fetch("/api/fedex-invoice-review").then((r) => r.ok ? r.json() : []),
-    ]).then(([payload, shared]) => {
+      fetch("/api/fedex-work-orders").then((r) => r.ok ? r.json() : []),
+    ]).then(([payload, shared, liveServiceOrders]) => {
       const sharedPayload = Array.isArray(shared) ? { reviews: shared, serviceOrders: [] } : shared;
       const sharedMap = new Map(((sharedPayload.reviews || []) as { trackingNumber: string; review: Partial<Job> }[]).map((item) => [item.trackingNumber, item.review]));
-      const importedServiceOrders: ServiceChannelOrder[] = (sharedPayload.serviceOrders || sharedPayload.completedOrders || []);
+      const importedServiceOrders: ServiceChannelOrder[] = Array.isArray(liveServiceOrders) && liveServiceOrders.length ? liveServiceOrders : (sharedPayload.serviceOrders || sharedPayload.completedOrders || []);
       const completedTracking = new Set(importedServiceOrders.filter((order) => String(order.status || "").toLowerCase().includes("complete")).map((order) => String(order.trackingNumber || "").trim()));
       const base: Job[] = payload.jobs.filter((item: Job) => !importedServiceOrders.length || completedTracking.has(item.trackingNumber)).map((item: Job) => {
         const stored = sharedMap.get(item.trackingNumber);
@@ -177,7 +178,7 @@ export default function Home() {
       setReceiptVisit(rangedBase[0]?.visits[0]?.jobNumber || "");
       setHcpImportRange(currentRange);
       setServiceOrders(importedServiceOrders.length ? importedServiceOrders : rangedBase.map((item) => ({ trackingNumber: item.trackingNumber, location: item.store, classOfWork: item.trade, status: item.status, statusDetail: item.statusDetail, cost: String(item.nte), jobDescription: item.problemDescription })));
-      setSaveState("Shared data loaded");
+      setSaveState(`${completedTracking.size} completed ServiceChannel jobs loaded`);
     }).catch(() => setSaveState("Could not load shared edits"));
   }, []);
 
