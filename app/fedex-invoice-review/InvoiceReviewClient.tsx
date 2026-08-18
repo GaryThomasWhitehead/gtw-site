@@ -291,6 +291,8 @@ export default function Home() {
 
   const job = jobs.find((item) => item.trackingNumber === selected) || filtered[0];
   const totals = useMemo(() => ({
+    hcp: jobs.filter((item) => item.sourceType !== "contracted").length,
+    contracted: jobs.filter((item) => item.sourceType === "contracted").length,
     visits: jobs.reduce((sum, item) => sum + item.visits.length, 0),
     labor: jobs.reduce((sum, item) => sum + item.onJobHours, 0),
     miles: jobs.reduce((sum, item) => sum + item.visits.reduce((n, visit) => n + (visit.miles || 0), 0), 0),
@@ -378,7 +380,9 @@ export default function Home() {
       </section>
 
       <section className="kpis">
-        <Kpi label="Invoice jobs" value={String(jobs.length)} hint={`${jobs.filter((item) => item.sourceType === "contracted").length} contracted / no HCP`} />
+        <Kpi label="Total invoices" value={String(jobs.length)} hint="All completed ServiceChannel jobs" />
+        <Kpi label="HCP matched" value={String(totals.hcp)} hint="ServiceChannel + Housecall Pro" />
+        <Kpi label="Contracted / no HCP" value={String(totals.contracted)} hint="Manual invoice details" warning />
         <Kpi label="On-job time" value={hours(totals.labor)} hint="ServiceChannel-completed work" />
         <Kpi label="Mileage entered" value={`${totals.miles.toFixed(1)} mi`} hint="Editable by visit" />
         <Kpi label="Receipt expenses" value={money.format(totals.receipts)} hint="Saved with shared tracker" />
@@ -445,6 +449,6 @@ export default function Home() {
   );
 }
 
-function Kpi({ label, value, hint, accent = false }: { label: string; value: string; hint: string; accent?: boolean }) {
-  return <article className={`kpi ${accent ? "accent" : ""}`}><span>{label}</span><strong>{value}</strong><small>{hint}</small></article>;
+function Kpi({ label, value, hint, accent = false, warning = false }: { label: string; value: string; hint: string; accent?: boolean; warning?: boolean }) {
+  return <article className={`kpi ${accent ? "accent" : ""} ${warning ? "warning" : ""}`}><span>{label}</span><strong>{value}</strong><small>{hint}</small></article>;
 }

@@ -44,12 +44,14 @@ button { cursor:pointer; }
 .heroActions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
 .mergeButton { padding:12px 17px; border:1px solid #77b1df; border-radius:10px; background:#174f7c; color:#fff; font-weight:800; cursor:pointer; white-space:nowrap; }
 .mergeButton input { display:none; }
-.kpis { max-width:1540px; margin:-28px auto 0; padding:0 28px; display:grid; grid-template-columns:repeat(6,1fr); gap:12px; position:relative; }
+.kpis { max-width:1540px; margin:-28px auto 0; padding:0 28px; display:grid; grid-template-columns:repeat(8,1fr); gap:12px; position:relative; }
 .kpi { min-height:112px; padding:18px; display:flex; flex-direction:column; background:white; border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 30px #1c38550e; }
 .kpi span { font-size:12px; color:var(--muted); font-weight:700; }
 .kpi strong { margin:7px 0 6px; font-size:25px; letter-spacing:-.03em; }
 .kpi small { color:#7d8998; }
 .kpi.accent { background:#effaf6; border-color:#bfe7d8; }
+.kpi.warning { background:#fff9df; border-color:#ecd284; }
+.kpi.warning strong { color:#8a5a05; }
 .kpi.accent strong { color:var(--green); }
 .toolbar { max-width:1540px; margin:16px auto 12px; padding:0 28px; display:flex; align-items:center; gap:10px; }
 .search { flex:1; min-width:300px; height:42px; display:flex; align-items:center; gap:8px; padding:0 13px; background:white; border:1px solid var(--line); border-radius:10px; }
@@ -96,5 +98,6 @@ dl { margin:0; padding:13px 15px; display:grid; gap:10px; } dl div { display:gri
 .visitmetric,.receiptcount { display:flex; flex-direction:column; gap:4px; }.visitmetric span,.receiptcount span,.miles,.timeInput { font-size:9px; text-transform:uppercase; font-weight:800; color:#8190a0; }.visitmetric b,.receiptcount b { font-size:12px; color:#34465a; }.miles input,.timeInput input { width:78px; margin-top:4px; padding:7px; border:1px solid var(--line); border-radius:7px; color:#263c52; background:#fff; }.timeInput input:focus,.miles input:focus { outline:2px solid #9dc9ec; border-color:#4b94ce; }
 .receiptstrip { grid-column:2/-1; display:flex; gap:8px; flex-wrap:wrap; padding-top:5px; }.receiptthumb { width:170px; height:48px; padding:5px; display:flex; gap:7px; align-items:center; position:relative; border:1px solid var(--line); border-radius:8px; background:#fafcfe; }.receiptthumb img { width:38px; height:38px; object-fit:cover; border-radius:5px; }.receiptthumb span { display:flex; flex-direction:column; font-size:10px; color:#6b7888; }.receiptthumb b { color:#263c52; }.receiptthumb button { position:absolute; right:4px; top:2px; border:0; background:transparent; color:#8b98a6; }
 .uploader { padding:13px 15px; display:grid; grid-template-columns:1fr 140px 115px 100px auto; gap:8px; align-items:center; background:#f7fafc; }.uploader>div { display:flex; flex-direction:column; }.uploader strong { font-size:12px; }.uploader span { margin-top:3px; font-size:10px; color:#7d8996; }.uploader select,.uploader>input { min-width:0; padding:8px; border:1px solid var(--line); border-radius:8px; background:white; }.uploadButton { padding:9px 12px; border-radius:8px; background:#175f9d; color:white; font-size:11px; font-weight:800; text-align:center; }.uploadButton input { display:none; }
-@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.workspace{height:auto;grid-template-columns:1fr}.joblist{max-height:380px}.detail{max-height:none}.detailgrid{grid-template-columns:1fr}.hero{align-items:flex-start}.workspace{min-height:0}}
+@media(max-width:1250px){.kpis{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:1050px){.workspace{height:auto;grid-template-columns:1fr}.joblist{max-height:380px}.detail{max-height:none}.detailgrid{grid-template-columns:1fr}.hero{align-items:flex-start}.workspace{min-height:0}}
 @media(max-width:700px){.noticeStats{grid-template-columns:1fr 1fr}.topbar{padding:0 15px}.testbadge,.helpButton{display:none}.backButton{margin-left:auto}.hero{padding:25px 18px;display:block}.hero h2{font-size:27px}.heroActions{margin-top:18px;justify-content:flex-start}.primary{margin-top:0}.kpis{padding:0 15px;grid-template-columns:1fr 1fr}.toolbar{padding:0 15px;flex-wrap:wrap}.search{min-width:100%}.workspace{padding:0 15px}.visit{grid-template-columns:30px 1fr 1fr}.visitmetric,.timeInput,.miles,.receiptcount{grid-row:2}.visitwho{grid-column:2/4}.receiptstrip{grid-column:1/-1}.uploader{grid-template-columns:1fr 1fr}.uploader>div{grid-column:1/-1}.detailhead{align-items:flex-start;gap:10px;flex-direction:column}.statusSelect{width:100%}.topbar .ghost{display:none}}
