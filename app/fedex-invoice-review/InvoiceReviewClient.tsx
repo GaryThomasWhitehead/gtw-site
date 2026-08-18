@@ -166,7 +166,8 @@ export default function Home() {
         if (!tracking || jobMap.has(tracking)) return;
         const placeholder = contractedJob(order);
         const stored = sharedMap.get(tracking);
-        jobMap.set(tracking, stored ? { ...placeholder, ...stored } : placeholder);
+        const hasHcpRecord = Array.isArray(stored?.housecallJobs) && stored.housecallJobs.length > 0;
+        jobMap.set(tracking, stored ? { ...placeholder, ...stored, sourceType: hasHcpRecord ? "hcp" : "contracted" } : placeholder);
       });
       const completeBase = [...jobMap.values()].sort((a, b) => a.trackingNumber.localeCompare(b.trackingNumber));
       const currentRange: ImportRange | null = completeBase.find((item) => item.hcpImportRange)?.hcpImportRange || payload.hcpImportRange || null;
@@ -392,7 +393,7 @@ export default function Home() {
       <section className="kpis">
         <Kpi label="Total invoices" value={String(jobs.length)} hint="All completed ServiceChannel jobs" />
         <Kpi label="HCP matched" value={String(totals.hcp)} hint="ServiceChannel + Housecall Pro" />
-        <Kpi label="Contracted / no HCP" value={String(totals.contracted)} hint="Manual invoice details" warning />
+        <Kpi label="Contracted / no HCP" value={String(totals.contracted)} hint="Includes jobs before HCP" warning />
         <Kpi label="On-job time" value={hours(totals.labor)} hint="ServiceChannel-completed work" />
         <Kpi label="Mileage entered" value={`${totals.miles.toFixed(1)} mi`} hint="Editable by visit" />
         <Kpi label="Receipt expenses" value={money.format(totals.receipts)} hint="Saved with shared tracker" />
@@ -420,7 +421,7 @@ export default function Home() {
             const selectedRow = item.trackingNumber === job.trackingNumber;
             return <article key={item.trackingNumber} className={`jobrow ${selectedRow ? "selected" : ""} ${item.sourceType === "contracted" ? "contracted" : ""}`} onClick={() => { setSelected(item.trackingNumber); setReceiptVisit(item.visits[0]?.jobNumber || ""); }}>
               <input aria-label={`Select ${item.trackingNumber} for export`} type="checkbox" checked={checked.includes(item.trackingNumber)} onClick={(e) => e.stopPropagation()} onChange={(e) => setChecked((list) => e.target.checked ? [...list, item.trackingNumber] : list.filter((id) => id !== item.trackingNumber))} />
-              <div className="jobrowmain"><div><strong>{item.store}</strong><span className={`pill ${item.billingStatus === "Needs pricing" ? "warn" : "ok"}`}>{item.billingStatus}</span></div><p>{item.trackingNumber} · {item.trade}</p>{item.sourceType === "contracted" && <span className="contractBadge">Contracted · no HCP record</span>}<small>{item.visits.length} work entry · {hours(item.onJobHours)} · {miles.toFixed(1)} mi</small></div>
+              <div className="jobrowmain"><div><strong>{item.store}</strong><span className={`pill ${item.billingStatus === "Needs pricing" ? "warn" : "ok"}`}>{item.billingStatus}</span></div><p>{item.trackingNumber} · {item.trade}</p>{item.sourceType === "contracted" && <span className="contractBadge">Contracted / pre-HCP · no HCP record</span>}<small>{item.visits.length} work entry · {hours(item.onJobHours)} · {miles.toFixed(1)} mi</small></div>
               <b>{item.invoiceAmount ? money.format(item.invoiceAmount) : "—"}</b>
             </article>;
           })}
@@ -429,7 +430,7 @@ export default function Home() {
         <section className="detail">
           {!filtered.length && <div className="emptySection"><strong>{reviewSection === "sent" ? "No invoices are awaiting payment" : "No invoices need review"}</strong><span>Invoices will appear here when their billing stage changes.</span></div>}
           {!!filtered.length && <>
-          {job.sourceType === "contracted" && <div className="contractBanner"><strong>Contracted work — no Housecall Pro record</strong><span>Enter the outside provider, cost, charge, work details, and supporting receipts below.</span></div>}
+          {job.sourceType === "contracted" && <div className="contractBanner"><strong>Contracted or pre-HCP work — no Housecall Pro record</strong><span>Enter the outside provider, cost, charge, work details, and supporting receipts below.</span></div>}
           <div className="detailhead">
             <div><p className="eyebrow">SERVICECHANNEL {job.trackingNumber}</p><h3>{job.store}</h3><p>{job.trade} · {job.statusDetail}</p></div>
             <select className="statusSelect" value={job.billingStatus} onChange={(e) => updateJob(job.trackingNumber, { billingStatus: e.target.value })}>{statuses.map((status) => <option key={status}>{status}</option>)}</select>
