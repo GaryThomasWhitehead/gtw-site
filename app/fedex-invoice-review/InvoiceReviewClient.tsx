@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 type Receipt = { id: string; visitJob: string; name: string; category: string; amount: number; dataUrl: string };
 type Visit = { jobNumber: string; date: string; endTime: string; customer: string; address: string; employee: string; onJobHours: number; travelHours: number; status: string; notes: string; miles: number; receiptTotal: number; receipts: Receipt[]; manualOnJob?: boolean; manualTravel?: boolean };
 type ImportRange = { from: string; to: string; importedAt: string };
-type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange; sourceType?: "hcp" | "contracted"; contractorName?: string; contractorCost?: number };
+type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange; sourceType?: "hcp" | "contracted"; contractorName?: string; contractorCost?: number; invoiceSent?: boolean; invoiceSentDate?: string };
 type CsvRow = Record<string, string>;
 type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
 type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; serviceNotComplete: number; missingTrackingInHcp: number; notInServiceChannel: number; applied: boolean };
@@ -137,6 +137,7 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All billing statuses");
   const [onlyIssues, setOnlyIssues] = useState(false);
+  const [reviewSection, setReviewSection] = useState<"active" | "sent">("active");
   const [checked, setChecked] = useState<string[]>([]);
   const [receiptVisit, setReceiptVisit] = useState("");
   const [receiptCategory, setReceiptCategory] = useState("Materials");
@@ -154,7 +155,8 @@ export default function Home() {
       const sharedPayload = Array.isArray(shared) ? { reviews: shared, serviceOrders: [] } : shared;
       const sharedMap = new Map(((sharedPayload.reviews || []) as { trackingNumber: string; review: Partial<Job> }[]).map((item) => [item.trackingNumber, item.review]));
       const importedServiceOrders: ServiceChannelOrder[] = (sharedPayload.serviceOrders || sharedPayload.completedOrders || []);
-      const base: Job[] = payload.jobs.map((item: Job) => {
+      const completedTracking = new Set(importedServiceOrders.filter((order) => String(order.status || "").toLowerCase().includes("complete")).map((order) => String(order.trackingNumber || "").trim()));
+      const base: Job[] = payload.jobs.filter((item: Job) => !importedServiceOrders.length || completedTracking.has(item.trackingNumber)).map((item: Job) => {
         const stored = sharedMap.get(item.trackingNumber);
         return stored ? { ...item, sourceType: "hcp", ...stored } : { ...item, sourceType: item.sourceType || "hcp" };
       });
@@ -286,10 +288,11 @@ export default function Home() {
 
   const filtered = useMemo(() => jobs.filter((job) => {
     const text = `${job.trackingNumber} ${job.store} ${job.trade} ${job.housecallJobs.join(" ")} ${job.employees.join(" ")} ${job.contractorName || ""}`.toLowerCase();
-    return text.includes(query.toLowerCase()) && (statusFilter === "All billing statuses" || job.billingStatus === statusFilter) && (!onlyIssues || job.billingStatus === "Needs pricing" || job.visits.some((visit) => !visit.employee || !visit.onJobHours));
-  }), [jobs, query, statusFilter, onlyIssues]);
+    const inSection = reviewSection === "sent" ? Boolean(job.invoiceSent) : !job.invoiceSent;
+    return inSection && text.includes(query.toLowerCase()) && (statusFilter === "All billing statuses" || job.billingStatus === statusFilter) && (!onlyIssues || job.billingStatus === "Needs pricing" || job.visits.some((visit) => !visit.employee || !visit.onJobHours));
+  }), [jobs, query, statusFilter, onlyIssues, reviewSection]);
 
-  const job = jobs.find((item) => item.trackingNumber === selected) || filtered[0];
+  const job = filtered.find((item) => item.trackingNumber === selected) || filtered[0] || jobs[0];
   const totals = useMemo(() => ({
     hcp: jobs.filter((item) => item.sourceType !== "contracted").length,
     contracted: jobs.filter((item) => item.sourceType === "contracted").length,
@@ -299,11 +302,18 @@ export default function Home() {
     receipts: jobs.reduce((sum, item) => sum + item.visits.reduce((n, visit) => n + (visit.receipts || []).reduce((x, receipt) => x + receipt.amount, 0), 0), 0),
     receivables: jobs.reduce((sum, item) => sum + (Number(item.invoiceAmount) || 0), 0),
     ready: jobs.filter((item) => ["Ready for QBO review", "Approved for export"].includes(item.billingStatus)).length,
+    sent: jobs.filter((item) => item.invoiceSent).length,
   }), [jobs]);
 
   function updateJob(tracking: string, patch: Partial<Job>) {
     setSaveState("Unsaved changes");
     setJobs((items) => items.map((item) => item.trackingNumber === tracking ? { ...item, ...patch } : item));
+  }
+
+  function setInvoiceSent(tracking: string, sent: boolean) {
+    updateJob(tracking, { invoiceSent: sent, invoiceSentDate: sent ? isoDay(new Date()) : "", billingStatus: sent ? "Invoiced" : "Ready for QBO review" });
+    const next = jobs.find((item) => item.trackingNumber !== tracking && (reviewSection === "sent" ? Boolean(item.invoiceSent) : !item.invoiceSent));
+    setSelected(next?.trackingNumber || "");
   }
 
   function updateVisit(tracking: string, jobNumber: string, patch: Partial<Visit>) {
@@ -355,7 +365,7 @@ export default function Home() {
     location.reload();
   }
 
-  if (!job) return <main className="loading">Loading matched work orders…</main>;
+  if (!jobs.length) return <main className="loading">Loading matched work orders…</main>;
 
   const jobMiles = job.visits.reduce((sum, visit) => sum + (visit.miles || 0), 0);
   const receiptTotal = job.visits.reduce((sum, visit) => sum + (visit.receipts || []).reduce((n, receipt) => n + receipt.amount, 0), 0);
@@ -388,13 +398,19 @@ export default function Home() {
         <Kpi label="Receipt expenses" value={money.format(totals.receipts)} hint="Saved with shared tracker" />
         <Kpi label="Total receivables" value={money.format(totals.receivables)} hint="Combined invoice totals" />
         <Kpi label="Ready for review" value={String(totals.ready)} hint="Before QBO export" accent />
+        <Kpi label="Awaiting payment" value={String(totals.sent)} hint="Invoice sent" />
       </section>
+
+      <nav className="reviewTabs" aria-label="Invoice work sections">
+        <button className={reviewSection === "active" ? "active" : ""} onClick={() => { setReviewSection("active"); setSelected(""); }}>Review &amp; edit <strong>{jobs.length - totals.sent}</strong></button>
+        <button className={reviewSection === "sent" ? "active" : ""} onClick={() => { setReviewSection("sent"); setSelected(""); }}>Invoice sent — awaiting payment <strong>{totals.sent}</strong></button>
+      </nav>
 
       <section className="toolbar">
         <label className="search"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tracking, location, trade, tech…" /></label>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option>All billing statuses</option>{statuses.map((status) => <option key={status}>{status}</option>)}</select>
         <label className="toggle"><input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> Needs attention only</label>
-        <span className="resultcount">{filtered.length} jobs</span>
+        <span className="resultcount">{filtered.length} invoice{filtered.length === 1 ? "" : "s"}</span>
       </section>
 
       <section className="workspace">
@@ -411,6 +427,8 @@ export default function Home() {
         </aside>
 
         <section className="detail">
+          {!filtered.length && <div className="emptySection"><strong>{reviewSection === "sent" ? "No invoices are awaiting payment" : "No invoices need review"}</strong><span>Invoices will appear here when their billing stage changes.</span></div>}
+          {!!filtered.length && <>
           {job.sourceType === "contracted" && <div className="contractBanner"><strong>Contracted work — no Housecall Pro record</strong><span>Enter the outside provider, cost, charge, work details, and supporting receipts below.</span></div>}
           <div className="detailhead">
             <div><p className="eyebrow">SERVICECHANNEL {job.trackingNumber}</p><h3>{job.store}</h3><p>{job.trade} · {job.statusDetail}</p></div>
@@ -427,6 +445,7 @@ export default function Home() {
             <section className="panel financial">
               <div className="paneltitle"><h4>Billing review</h4><span>NTE {money.format(job.nte)}</span></div>
               <div className="formgrid">{job.sourceType === "contracted" && <><label>Outside provider<input value={job.contractorName || ""} placeholder="Company or person used" onChange={(e) => updateJob(job.trackingNumber, { contractorName: e.target.value })} /></label><label>Contractor cost<input type="number" value={job.contractorCost || ""} placeholder="Amount paid" onChange={(e) => updateJob(job.trackingNumber, { contractorCost: Number(e.target.value) })} /></label></>}<label>Invoice #<input value={job.invoiceNumber} onChange={(e) => updateJob(job.trackingNumber, { invoiceNumber: e.target.value })} /></label><label>Invoice date<input value={job.invoiceDate} onChange={(e) => updateJob(job.trackingNumber, { invoiceDate: e.target.value })} /></label><label>Amount to charge<input type="number" value={job.invoiceAmount || ""} onChange={(e) => updateJob(job.trackingNumber, { invoiceAmount: Number(e.target.value) })} /></label><label>Receipt expenses<input value={money.format(receiptTotal)} readOnly /></label></div>
+              <label className="invoiceSentCheck"><input type="checkbox" checked={Boolean(job.invoiceSent)} onChange={(e) => setInvoiceSent(job.trackingNumber, e.target.checked)} /><span><strong>Invoice sent</strong><small>Our work and billing are complete; move this invoice to awaiting payment.</small></span></label>
               <div className="financefoot"><span>Total field cost entered</span><strong>{money.format(fieldCost)}</strong></div>
             </section>
           </div>
@@ -443,6 +462,7 @@ export default function Home() {
 
             <div className="uploader"><div><strong>Add receipt image</strong><span>Saved with the shared tracker when you click Save Changes</span></div><select value={receiptVisit} onChange={(e) => setReceiptVisit(e.target.value)}>{job.visits.map((visit) => <option value={visit.jobNumber} key={visit.jobNumber}>HCP {visit.jobNumber}</option>)}</select><select value={receiptCategory} onChange={(e) => setReceiptCategory(e.target.value)}><option>Materials</option><option>Fuel</option><option>Parking</option><option>Toll</option><option>Other</option></select><input aria-label="Receipt amount" type="number" placeholder="Amount" value={receiptAmount} onChange={(e) => setReceiptAmount(e.target.value)} /><label className="uploadButton">Choose image<input type="file" accept="image/*" onChange={(e) => addReceipt(e.target.files?.[0])} /></label></div>
           </section>
+          </>}
         </section>
       </section>
     </main></>
