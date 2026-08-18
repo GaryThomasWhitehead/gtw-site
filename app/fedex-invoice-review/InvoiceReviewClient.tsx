@@ -155,7 +155,16 @@ export default function Home() {
     ]).then(([payload, shared, liveServiceOrders]) => {
       const sharedPayload = Array.isArray(shared) ? { reviews: shared, serviceOrders: [] } : shared;
       const sharedMap = new Map(((sharedPayload.reviews || []) as { trackingNumber: string; review: Partial<Job> }[]).map((item) => [item.trackingNumber, item.review]));
-      const importedServiceOrders: ServiceChannelOrder[] = Array.isArray(liveServiceOrders) && liveServiceOrders.length ? liveServiceOrders : (sharedPayload.serviceOrders || sharedPayload.completedOrders || []);
+      let browserServiceOrders: ServiceChannelOrder[] = [];
+      try {
+        const localOrders = JSON.parse(localStorage.getItem("fedex-work-orders-v1") || "[]");
+        if (Array.isArray(localOrders)) browserServiceOrders = localOrders;
+      } catch { /* Ignore an invalid browser cache and continue with shared data. */ }
+      const importedServiceOrders: ServiceChannelOrder[] = Array.isArray(liveServiceOrders) && liveServiceOrders.length
+        ? liveServiceOrders
+        : browserServiceOrders.length
+          ? browserServiceOrders
+          : (sharedPayload.serviceOrders || sharedPayload.completedOrders || []);
       const completedTracking = new Set(importedServiceOrders.filter((order) => String(order.status || "").toLowerCase().includes("complete")).map((order) => String(order.trackingNumber || "").trim()));
       const base: Job[] = payload.jobs.filter((item: Job) => !importedServiceOrders.length || completedTracking.has(item.trackingNumber)).map((item: Job) => {
         const stored = sharedMap.get(item.trackingNumber);

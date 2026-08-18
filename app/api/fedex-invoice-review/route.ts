@@ -50,10 +50,21 @@ export async function PUT(request: NextRequest) {
   if (!currentResponse.ok) return NextResponse.json({ error: await currentResponse.text() }, { status: currentResponse.status });
   const current = await currentResponse.json() as StoredRow[];
   const byTracking = new Map(current.map((row) => [row.tracking_number, row.data]));
-  const rows = reviews.flatMap((item: { trackingNumber?: string; review?: unknown }) => {
+  const rows = reviews.flatMap((item: { trackingNumber?: string; review?: Record<string, unknown> }) => {
     const tracking = String(item.trackingNumber || "").trim();
     const existing = byTracking.get(tracking);
-    return tracking && existing ? [{ tracking_number: tracking, data: { ...existing, invoiceReview: item.review }, updated_at: new Date().toISOString() }] : [];
+    if (!tracking) return [];
+    const review = item.review || {};
+    const base = existing || {
+      trackingNumber: tracking,
+      location: review.store || "",
+      classOfWork: review.trade || "",
+      status: review.status || "Completed",
+      statusDetail: review.statusDetail || "",
+      cost: review.nte || "",
+      jobDescription: review.problemDescription || "",
+    };
+    return [{ tracking_number: tracking, data: { ...base, invoiceReview: review }, updated_at: new Date().toISOString() }];
   });
   const saveResponse = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
     method: "POST",
