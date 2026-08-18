@@ -1400,7 +1400,6 @@
 
       async function saveOrders() {
         localStorage.setItem(storageKey, JSON.stringify(orders));
-        if (!remoteSyncEnabled) return { shared: false, error: "The shared tracker connection is not ready." };
         try {
           const response = await fetch("/api/fedex-work-orders", {
             method: "PUT",
@@ -1410,6 +1409,7 @@
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(result.error || `Server returned ${response.status}`);
+          remoteSyncEnabled = true;
           return { shared: true, saved: result.saved || orders.length };
         } catch (error) {
           console.warn("Unable to save work orders to shared storage:", error);
