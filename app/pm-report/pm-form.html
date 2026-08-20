@@ -644,6 +644,15 @@
         }
 
         // ===================== GENERATE PDF =====================
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+                reader.onerror = () => reject(new Error('Could not prepare the PDF for saving.'));
+                reader.readAsDataURL(blob);
+            });
+        }
+
         async function generatePDF(loadingToast, mode = 'download') {
             try {
                 const { jsPDF } = window.jspdf;
@@ -890,7 +899,7 @@
                 const safeDate = reportDateInput.value || 'undated';
                 const filename = 'Frontline_PM_' + safeFacId + '_' + safeDate + '.pdf';
                 if (mode === 'complete') {
-                    const pdfDataUrl = doc.output('datauristring');
+                    const pdfBase64 = await blobToBase64(doc.output('blob'));
                     const response = await fetch('/api/pm-reports', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -903,33 +912,23 @@
                             facilityId,
                             itemCount: totalItems,
                             filename,
-                            pdfBase64: pdfDataUrl.split(',')[1],
+                            pdfBase64,
                             completedAt: new Date().toISOString()
                         } })
                     });
-                    if (!response.ok) throw new Error(await response.text());
+                    if (!response.ok) {
+                        const details = await response.text();
+                        throw new Error('SAVE_FAILED:' + details);
+                    }
                     removeToast(loadingToast);
                     showToast('Completed report saved. It is now available under Completed Reports.', 'success');
                 } else if (mode === 'share') {
-                    const blob = doc.output('blob');
-                    const pdfFile = new File([blob], filename, { type: 'application/pdf' });
-                    const shareData = {
-                        title: 'Frontline PM Report - ' + facilityId,
-                        text: 'Send to: ' + EMAIL_RECIPIENTS.replaceAll(',', ', ') + '\n\nPreventative Maintenance report for ' + facilityId + ' - tracking ' + trackingNum,
-                        files: [pdfFile]
-                    };
-                    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [pdfFile] }))) {
-                        await navigator.share(shareData);
-                        removeToast(loadingToast);
-                        showToast('PDF ready to send from your selected email app.', 'success');
-                    } else {
-                        doc.save(filename);
-                        const subject = encodeURIComponent('Frontline PM Report - ' + facilityId + ' - ' + trackingNum);
-                        const body = encodeURIComponent('The PM report PDF has been downloaded. Please attach ' + filename + ' to this email.');
-                        window.location.href = 'mailto:' + EMAIL_RECIPIENTS + '?subject=' + subject + '&body=' + body;
-                        removeToast(loadingToast);
-                        showToast('PDF downloaded. Attach it to the prepared email.', 'info');
-                    }
+                    doc.save(filename);
+                    const subject = encodeURIComponent('Frontline PM Report - ' + facilityId + ' - ' + trackingNum);
+                    const body = encodeURIComponent('The completed PM report is ready. Please attach the downloaded file named ' + filename + '.');
+                    window.location.href = 'mailto:' + EMAIL_RECIPIENTS + '?subject=' + subject + '&body=' + body;
+                    removeToast(loadingToast);
+                    showToast('PDF downloaded and addressed email opened. Attach the downloaded PDF before sending.', 'info');
                 } else {
                     doc.save(filename);
                     removeToast(loadingToast);
@@ -944,7 +943,12 @@
                 }
                 console.error('PDF generation error:', err);
                 removeToast(loadingToast);
-                showToast('Error generating PDF. Please try again.', 'error');
+                if (mode === 'complete' || String(err && err.message || '').startsWith('SAVE_FAILED:')) {
+                    const detail = String(err && err.message || '').replace('SAVE_FAILED:', '');
+                    showToast('The PDF was created, but the completed report could not be saved.' + (detail ? ' ' + detail.slice(0, 180) : ''), 'error');
+                } else {
+                    showToast('Error generating PDF. Please try again.', 'error');
+                }
             }
         }
 
