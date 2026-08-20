@@ -72,3 +72,18 @@ export async function GET(request: NextRequest) {
     return { ...metadata, savedAt: row.updated_at };
   }), { headers: { "Cache-Control": "no-store" } });
 }
+
+export async function DELETE(request: NextRequest) {
+  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { url, key, table } = config();
+  if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
+  const id = String(request.nextUrl.searchParams.get("id") || "").trim();
+  if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
+  const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
+  const response = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
+    method: "DELETE",
+    headers: { ...apiHeaders(key), Prefer: "return=minimal" },
+  });
+  if (!response.ok) return NextResponse.json({ error: (await response.text()) || "Could not delete report" }, { status: response.status });
+  return NextResponse.json({ ok: true, id });
+}
