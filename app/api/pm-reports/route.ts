@@ -58,7 +58,9 @@ export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
   const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data,updated_at&tracking_number=like.PMREPORT%3A*&order=updated_at.desc`, { headers: apiHeaders(key), cache: "no-store" });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
-  const rows = (await response.json()).filter((row: { data?: { recordType?: string } }) => row.data?.recordType === "pm-report");
+  const rows = (await response.json()).filter((row: { data?: { recordType?: string; id?: string } }) =>
+    row.data?.recordType === "pm-report" && !String(row.data?.id || "").startsWith("connection-test-")
+  );
   if (id) {
     const row = rows.find((entry: { data: { id?: string } }) => entry.data.id === id);
     if (!row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
