@@ -130,6 +130,7 @@
                 <p data-id="10" class="text-navy-200 text-xs font-medium tracking-wide">Facility Services</p>
             </div>
             <div data-id="11" class="flex items-center gap-3">
+                <a href="/pm-reports" class="text-navy-100 hover:text-white text-xs font-semibold underline underline-offset-2 min-h-[44px] flex items-center">Completed Reports</a>
                 <span data-id="12" id="saved-badge-r2t5" class="hidden saved-indicator text-xs text-emerald-300 font-medium bg-navy-600 px-2 py-1 rounded-lg">
                     <i data-id="13" data-lucide="check" class="w-3 h-3 inline -mt-0.5"></i> Saved
                 </span>
@@ -234,6 +235,10 @@
                 <span data-id="73" id="logged-count-num-g3h4">0</span> items logged
             </span>
             <div data-id="74" class="flex gap-2">
+                <button id="complete-report-btn" class="h-11 px-4 bg-[#0f766e] hover:bg-[#115e59] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
+                    <span class="text-base leading-none">✓</span>
+                    <span class="hidden sm:inline">Complete &amp; Save</span>
+                </button>
                 <button data-id="75" id="print-btn-i5j6" class="h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border text-navy-500 font-medium rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
                     <i data-id="76" data-lucide="printer" class="w-4 h-4"></i>
                     <span data-id="77" class="hidden sm:inline">Print / PDF</span>
@@ -303,8 +308,10 @@
         // ===================== STATE =====================
         const MAX_ITEMS = 80;
         const STORAGE_KEY = 'frontline_pm_report';
+        const EMAIL_RECIPIENTS = 'jacob@frontlineworldwide.com,daniel@frontlineworldwide.com,gary@frontlineworldwide.com';
         let itemCounter = 0;
         let items = [];
+        let reportId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
 
         // Track photo filenames and data per item
         const photoFilenames = {};
@@ -328,6 +335,7 @@
         const printBtn = document.getElementById('print-btn-i5j6');
         const exportPdfBtn = document.getElementById('export-pdf-btn-p4q5');
         const emailPdfBtn = document.getElementById('email-pdf-btn');
+        const completeReportBtn = document.getElementById('complete-report-btn');
         const clearAllBtn = document.getElementById('clear-all-btn-k9p3');
         const savedBadge = document.getElementById('saved-badge-r2t5');
         const toastContainer = document.getElementById('toast-container-q8w3');
@@ -345,6 +353,7 @@
             printBtn.addEventListener('click', handlePrint);
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
             emailPdfBtn.addEventListener('click', () => handleExportPDF('share'));
+            completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
 
             const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput];
@@ -880,12 +889,33 @@
                 const safeFacId = facilityId.replace(/[^a-zA-Z0-9_-]/g, '_');
                 const safeDate = reportDateInput.value || 'undated';
                 const filename = 'Frontline_PM_' + safeFacId + '_' + safeDate + '.pdf';
-                if (mode === 'share') {
+                if (mode === 'complete') {
+                    const pdfDataUrl = doc.output('datauristring');
+                    const response = await fetch('/api/pm-reports', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ report: {
+                            id: reportId,
+                            technician: techName,
+                            reportDate: dateVal,
+                            facilityAddress: facilityAddr,
+                            trackingNumber: trackingNum,
+                            facilityId,
+                            itemCount: totalItems,
+                            filename,
+                            pdfBase64: pdfDataUrl.split(',')[1],
+                            completedAt: new Date().toISOString()
+                        } })
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    removeToast(loadingToast);
+                    showToast('Completed report saved. It is now available under Completed Reports.', 'success');
+                } else if (mode === 'share') {
                     const blob = doc.output('blob');
                     const pdfFile = new File([blob], filename, { type: 'application/pdf' });
                     const shareData = {
                         title: 'Frontline PM Report - ' + facilityId,
-                        text: 'Preventative Maintenance report for ' + facilityId + ' - tracking ' + trackingNum,
+                        text: 'Send to: ' + EMAIL_RECIPIENTS.replaceAll(',', ', ') + '\n\nPreventative Maintenance report for ' + facilityId + ' - tracking ' + trackingNum,
                         files: [pdfFile]
                     };
                     if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [pdfFile] }))) {
@@ -896,7 +926,7 @@
                         doc.save(filename);
                         const subject = encodeURIComponent('Frontline PM Report - ' + facilityId + ' - ' + trackingNum);
                         const body = encodeURIComponent('The PM report PDF has been downloaded. Please attach ' + filename + ' to this email.');
-                        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+                        window.location.href = 'mailto:' + EMAIL_RECIPIENTS + '?subject=' + subject + '&body=' + body;
                         removeToast(loadingToast);
                         showToast('PDF downloaded. Attach it to the prepared email.', 'info');
                     }
@@ -945,6 +975,7 @@
             emptyState.classList.remove('hidden');
             updateCounts();
             localStorage.removeItem(STORAGE_KEY);
+            reportId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -977,6 +1008,7 @@
                 facilityAddr: facilityAddrInput.value,
                 trackingNum: trackingNumInput.value,
                 facilityId: facilityIdInput.value,
+                reportId,
                 inspectionStarted: !inspectionSection.classList.contains('hidden'),
                 items: itemsData
             };
@@ -1002,6 +1034,7 @@
                 facilityAddrInput.value = state.facilityAddr || '';
                 trackingNumInput.value = state.trackingNum || '';
                 facilityIdInput.value = state.facilityId || '';
+                reportId = state.reportId || reportId;
 
                 if (state.inspectionStarted) {
                     inspectionSection.classList.remove('hidden');

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
-  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&order=tracking_number.asc`, { headers: authHeaders(key), cache: "no-store" });
+  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&tracking_number=not.like.PMREPORT%3A*&order=tracking_number.asc`, { headers: authHeaders(key), cache: "no-store" });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
   const rows = await response.json() as StoredRow[];
   const reviews = rows.flatMap((row) => row.data?.invoiceReview ? [{ trackingNumber: row.tracking_number, review: row.data.invoiceReview }] : []);
@@ -46,7 +46,7 @@ export async function PUT(request: NextRequest) {
   const reviews = Array.isArray(body?.reviews) ? body.reviews : [];
   if (!reviews.length) return NextResponse.json({ error: "No reviews supplied" }, { status: 400 });
 
-  const currentResponse = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data`, { headers: authHeaders(key), cache: "no-store" });
+  const currentResponse = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&tracking_number=not.like.PMREPORT%3A*`, { headers: authHeaders(key), cache: "no-store" });
   if (!currentResponse.ok) return NextResponse.json({ error: await currentResponse.text() }, { status: currentResponse.status });
   const current = await currentResponse.json() as StoredRow[];
   const byTracking = new Map(current.map((row) => [row.tracking_number, row.data]));

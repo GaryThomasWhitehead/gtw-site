@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   const table = process.env.FEDEX_TRACKER_TABLE || "fedex_work_orders";
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
-  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&order=tracking_number.asc`, {
+  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&tracking_number=not.like.PMREPORT%3A*&order=tracking_number.asc`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
     cache: "no-store",
   });

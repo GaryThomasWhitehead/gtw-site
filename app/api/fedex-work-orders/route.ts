@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const { url, key, table } = supabaseConfig();
   if (!url || !key) return missingConfig();
 
-  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&order=tracking_number.asc`, {
+  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&tracking_number=not.like.PMREPORT%3A*&order=tracking_number.asc`, {
     headers: headers(key),
     cache: "no-store"
   });
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
 
   const rows = await response.json();
-  return NextResponse.json(rows.map((row: { data: WorkOrder }) => row.data), { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
+  return NextResponse.json(rows.map((row: { data: WorkOrder }) => row.data).filter((data: WorkOrder) => data?.recordType !== "pm-report"), { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
 }
 
 export async function PUT(request: NextRequest) {
