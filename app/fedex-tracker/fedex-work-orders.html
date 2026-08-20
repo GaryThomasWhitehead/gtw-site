@@ -1481,13 +1481,26 @@
       function filteredOrders() {
         const term = els.search.value.trim().toLowerCase();
         const status = els.statusFilter.value;
-        const source = term && activeLocation === "all" ? orders.filter(order => !["Completed", "Canceled"].includes(order.status)) : pageOrders();
+        const source = term ? orders.filter(order => !["Completed", "Canceled"].includes(order.status)) : pageOrders();
         return source.filter(order => {
           const haystack = [order.trackingNumber, order.location, order.classOfWork, order.status, order.cost, order.priority, order.jobDescription, order.notes, order.nextStep, order.assignedTo, order.callDate].join(" ").toLowerCase();
           const matchesSearch = !term || haystack.includes(term);
           const matchesStatus = status === "all" || order.status === status;
           return matchesSearch && matchesStatus;
         });
+      }
+
+      function searchResultExcerpt(order) {
+        const term = els.search.value.trim().toLowerCase();
+        const defaultText = String(order.nextStep || order.jobDescription || order.notes || "");
+        if (!term) return defaultText;
+        const sources = [order.jobDescription, order.notes, order.nextStep].map(value => String(value || ""));
+        const matched = sources.find(value => value.toLowerCase().includes(term));
+        if (!matched) return defaultText;
+        const matchAt = matched.toLowerCase().indexOf(term);
+        const startAt = Math.max(0, matchAt - 45);
+        const endAt = Math.min(matched.length, matchAt + term.length + 85);
+        return `${startAt > 0 ? "…" : ""}${matched.slice(startAt, endAt)}${endAt < matched.length ? "…" : ""}`;
       }
 
       function fillOptions() {
@@ -1545,7 +1558,9 @@
           els.list.innerHTML = `<div class="empty">No work orders match the current filters.</div>`;
           return;
         }
-        els.list.innerHTML = visible.map(order => `
+        els.list.innerHTML = visible.map(order => {
+          const excerpt = searchResultExcerpt(order);
+          return `
           <button class="work-card ${order.id === selectedId ? "active" : ""} ${isOldJob(order) ? "old-job" : ""}" type="button" data-id="${order.id}">
             <div class="card-row">
               <h3>${escapeHtml(order.trackingNumber)} - ${escapeHtml(order.classOfWork || "Unclassified")}</h3>
@@ -1553,9 +1568,9 @@
             </div>
             <p>${escapeHtml(order.location)} - ${escapeHtml(order.cost || "No cost limit")}${order.callDate ? ` - Call ${escapeHtml(order.callDate)}` : ""}</p>
             ${isOldJob(order) ? `<p><span class="pill old">${getOrderAgeDays(order)} days old</span></p>` : ""}
-            <p>${escapeHtml(order.nextStep || order.jobDescription).slice(0, 120)}${(order.nextStep || order.jobDescription).length > 120 ? "..." : ""}</p>
+            <p>${escapeHtml(excerpt).slice(0, 150)}${excerpt.length > 150 ? "..." : ""}</p>
           </button>
-        `).join("");
+        `}).join("");
       }
 
       function renderBoard() {
