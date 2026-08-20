@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontline Facility PM Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f3f8',
+                            100: '#d9e0ed',
+                            200: '#b3c1db',
+                            300: '#8da2c9',
+                            400: '#4e6a9a',
+                            500: '#1B2A4A',
+                            600: '#172341',
+                            700: '#131d37',
+                            800: '#0f162b',
+                            900: '#0a0f1e',
+                        },
+                        field: {
+                            bg: '#F2F4F7',
+                            border: '#D0D5DD',
+                            focus: '#1B2A4A',
+                        },
+                        success: {
+                            50: '#ECFDF5',
+                            100: '#D1FAE5',
+                            200: '#A7F3D0',
+                            400: '#34D399',
+                            500: '#10B981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        danger: {
+                            50: '#FEF2F2',
+                            100: '#FEE2E2',
+                            400: '#F87171',
+                            500: '#EF4444',
+                            600: '#DC2626',
+                            700: '#B91C1C',
+                        },
+                        warn: {
+                            50: '#FFFBEB',
+                            400: '#FBBF24',
+                            600: '#D97706',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #ffffff; color: #1a1a1a; }
+        input, textarea, select, button { font-family: inherit; }
+        .item-card { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-16px); }
+        }
+        .toast-in { animation: toastIn 0.3s ease-out; }
+        .toast-out { animation: toastOut 0.3s ease-in forwards; }
+        .saved-indicator { animation: fadeIn 0.2s ease-out; }
+        .modal-overlay { animation: fadeIn 0.25s ease-out; }
+        .photo-thumb { max-height: 80px; border-radius: 8px; object-fit: cover; }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #1B2A4A;
+            box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.12);
+        }
+        .field-error { border-color: #EF4444 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important; }
+
+        /* Print Styles */
+        @media print {
+            @page { margin: 0.75in; size: letter; }
+            body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #header-card-c1a2 { box-shadow: none; border: 1px solid #D0D5DD; }
+            .item-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #D0D5DD !important; }
+            #sticky-header-b3x9 { position: static !important; }
+            #actions-bar-f7k2 { display: none !important; }
+            #app-header-m4n1 { position: static !important; }
+            .print-header-value { display: block !important; }
+            .print-hide-input { display: none !important; }
+            .photo-thumb { max-height: 120px; }
+            #toast-container-q8w3 { display: none !important; }
+        }
+    </style>
+</head>
+<body data-id="0" class="min-h-screen bg-white pb-24 md:pb-20">
+    <app-icon data-id="1" hidden data-icon="clipboard-list" data-palette="Blue"></app-icon>
+
+    <!-- Print Header (hidden on screen) -->
+    <div data-id="2" class="print-only hidden text-center border-b border-field-border pb-4 mb-6">
+        <h1 data-id="3" class="text-xl font-bold text-navy-500 tracking-wide">FRONTLINE</h1>
+        <p data-id="4" class="text-xs text-navy-400 font-medium">Facility Services</p>
+        <p data-id="5" class="text-sm font-semibold text-navy-500 mt-2">Preventative Maintenance Inspection Report</p>
+    </div>
+
+    <!-- App Header -->
+    <header data-id="6" id="app-header-m4n1" class="bg-navy-500 sticky top-0 z-50 no-print">
+        <div data-id="7" class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div data-id="8">
+                <h1 data-id="9" class="text-white font-extrabold text-xl tracking-widest leading-tight">FRONTLINE</h1>
+                <p data-id="10" class="text-navy-200 text-xs font-medium tracking-wide">Facility Services</p>
+            </div>
+            <div data-id="11" class="flex items-center gap-3">
+                <span data-id="12" id="saved-badge-r2t5" class="hidden saved-indicator text-xs text-emerald-300 font-medium bg-navy-600 px-2 py-1 rounded-lg">
+                    <i data-id="13" data-lucide="check" class="w-3 h-3 inline -mt-0.5"></i> Saved
+                </span>
+                <button data-id="14" id="clear-all-btn-k9p3" class="text-navy-200 hover:text-white text-xs underline underline-offset-2 min-h-[44px] min-w-[44px] flex items-center justify-center" title="Clear all and start new report">
+                    New Report
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Container -->
+    <div data-id="15" id="toast-container-q8w3" class="fixed top-16 left-1/2 -translate-x-1/2 z-[999] flex flex-col gap-2 w-[90%] max-w-sm no-print"></div>
+
+    <main data-id="16" class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- SECTION 1: Report Header -->
+        <section data-id="17" id="header-card-c1a2" class="bg-white rounded-2xl shadow-sm border border-field-border/40 p-5 md:p-7">
+            <div data-id="18" class="flex items-center gap-2 mb-5">
+                <i data-id="19" data-lucide="file-text" class="w-5 h-5 text-navy-500"></i>
+                <h2 data-id="20" class="text-lg font-semibold text-navy-500">Report Header</h2>
+            </div>
+            <div data-id="21" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Technician Name -->
+                <div data-id="22">
+                    <label data-id="23" for="tech-name-a1b2" class="block text-sm font-medium text-navy-700 mb-1.5">Technician Name <span data-id="24" class="text-danger-500">*</span></label>
+                    <input data-id="25" type="text" id="tech-name-a1b2" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="Enter full name" required />
+                    <span data-id="26" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p data-id="27" class="text-xs text-danger-500 mt-1 hidden" id="err-tech-name-z3x4"></p>
+                </div>
+                <!-- Date -->
+                <div data-id="28">
+                    <label data-id="29" for="report-date-c3d4" class="block text-sm font-medium text-navy-700 mb-1.5">Date <span data-id="30" class="text-danger-500">*</span></label>
+                    <input data-id="31" type="date" id="report-date-c3d4" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 print-hide-input" required />
+                    <span data-id="32" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p data-id="33" class="text-xs text-danger-500 mt-1 hidden" id="err-report-date-e5f6"></p>
+                </div>
+                <!-- Facility Address -->
+                <div data-id="34" class="md:col-span-2">
+                    <label data-id="35" for="facility-addr-g7h8" class="block text-sm font-medium text-navy-700 mb-1.5">Facility Address <span data-id="36" class="text-danger-500">*</span></label>
+                    <input data-id="37" type="text" id="facility-addr-g7h8" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="Full street address" required />
+                    <span data-id="38" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p data-id="39" class="text-xs text-danger-500 mt-1 hidden" id="err-facility-addr-i9j0"></p>
+                </div>
+                <!-- Tracking Number -->
+                <div data-id="40">
+                    <label data-id="41" for="tracking-num-k1l2" class="block text-sm font-medium text-navy-700 mb-1.5">Tracking Number <span data-id="42" class="text-danger-500">*</span></label>
+                    <input data-id="43" type="text" id="tracking-num-k1l2" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. PM-2026-0042" required />
+                    <span data-id="44" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p data-id="45" class="text-xs text-danger-500 mt-1 hidden" id="err-tracking-num-m3n4"></p>
+                </div>
+                <!-- Facility ID -->
+                <div data-id="46">
+                    <label data-id="47" for="facility-id-o5p6" class="block text-sm font-medium text-navy-700 mb-1.5">Facility ID <span data-id="48" class="text-danger-500">*</span></label>
+                    <input data-id="49" type="text" id="facility-id-o5p6" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. FAC-1001" required />
+                    <span data-id="50" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p data-id="51" class="text-xs text-danger-500 mt-1 hidden" id="err-facility-id-q7r8"></p>
+                </div>
+            </div>
+            <!-- Start Inspection Button -->
+            <button data-id="52" id="start-inspection-btn-s9t0" class="no-print w-full mt-6 h-12 bg-navy-500 hover:bg-navy-600 active:bg-navy-700 text-white font-semibold rounded-xl text-base transition-colors flex items-center justify-center gap-2">
+                <i data-id="53" data-lucide="clipboard-check" class="w-5 h-5"></i>
+                Start Inspection
+            </button>
+        </section>
+
+        <!-- SECTION 2: Inspection Items -->
+        <section data-id="54" id="inspection-section-u1v2" class="hidden">
+            <!-- Sticky Section Header -->
+            <div data-id="55" id="sticky-header-b3x9" class="sticky top-[60px] z-40 bg-white/95 backdrop-blur-sm border-b border-field-border/40 -mx-4 px-4 py-3 flex items-center justify-between no-print">
+                <div data-id="56" class="flex items-center gap-2">
+                    <i data-id="57" data-lucide="list-checks" class="w-5 h-5 text-navy-500"></i>
+                    <h2 data-id="58" class="text-lg font-semibold text-navy-500">Inspection Items</h2>
+                    <span data-id="59" id="item-count-badge-w3x4" class="bg-navy-100 text-navy-500 text-xs font-bold px-2.5 py-0.5 rounded-full tabular-nums">0 items</span>
+                </div>
+                <button data-id="60" id="add-item-btn-y5z6" class="h-11 px-4 bg-success-600 hover:bg-success-700 active:bg-success-500 text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
+                    <i data-id="61" data-lucide="plus" class="w-4 h-4"></i>
+                    Add Item
+                </button>
+            </div>
+            <!-- Print section header -->
+            <div data-id="62" class="print-only hidden mb-4 mt-2">
+                <h2 data-id="63" class="text-base font-semibold text-navy-500 border-b border-field-border pb-2">Inspection Items</h2>
+            </div>
+
+            <!-- Items Container -->
+            <div data-id="64" id="items-container-a7b8" class="space-y-4 mt-4"></div>
+
+            <!-- Empty State -->
+            <div data-id="65" id="empty-state-c9d0" class="text-center py-12 no-print">
+                <i data-id="66" data-lucide="clipboard" class="w-12 h-12 text-navy-200 mx-auto mb-3"></i>
+                <p data-id="67" class="text-navy-400 font-medium">No inspection items yet</p>
+                <p data-id="68" class="text-navy-300 text-sm mt-1">Tap "Add Item" to begin logging</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Actions Bar (sticky bottom) -->
+    <div data-id="69" id="actions-bar-f7k2" class="hidden fixed bottom-0 left-0 right-0 bg-white border-t border-field-border shadow-[0_-4px_16px_rgba(0,0,0,0.06)] z-50 no-print">
+        <div data-id="70" class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <span data-id="71" id="logged-count-e1f2" class="text-sm font-medium text-navy-400 tabular-nums whitespace-nowrap">
+                <i data-id="72" data-lucide="package" class="w-4 h-4 inline -mt-0.5"></i>
+                <span data-id="73" id="logged-count-num-g3h4">0</span> items logged
+            </span>
+            <div data-id="74" class="flex gap-2">
+                <button data-id="75" id="print-btn-i5j6" class="h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border text-navy-500 font-medium rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
+                    <i data-id="76" data-lucide="printer" class="w-4 h-4"></i>
+                    <span data-id="77" class="hidden sm:inline">Print / PDF</span>
+                </button>
+                <button data-id="78" id="export-pdf-btn-p4q5" class="h-11 px-4 bg-[#16a34a] hover:bg-[#15803d] active:bg-[#166534] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
+                    <span data-id="79" class="text-base leading-none">📄</span>
+                    <span data-id="80" class="hidden sm:inline">Export PDF</span>
+                </button>
+                <button id="email-pdf-btn" class="h-11 px-4 bg-[#2563eb] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
+                    <span class="text-base leading-none">✉</span>
+                    <span class="hidden sm:inline">Email PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer data-id="81" class="py-6 text-center no-print">
+        <p data-id="82" class="text-xs text-navy-300">Frontline Pro Services · Preventative Maintenance</p>
+    </footer>
+
+    <!-- Item Card Template -->
+    <template data-id="83" id="item-template-a3b4">
+        <div data-id="84" class="item-card bg-white rounded-2xl shadow-sm border border-field-border/40 p-4 md:p-5 relative" data-item-id="">
+            <div data-id="85" class="flex items-start justify-between gap-3 mb-3">
+                <div data-id="86" class="flex items-center gap-2.5">
+                    <span data-id="87" class="item-number w-8 h-8 bg-navy-500 text-white text-sm font-bold rounded-lg flex items-center justify-center tabular-nums shrink-0"></span>
+                    <div data-id="88" class="flex-1 min-w-0">
+                        <label data-id="89" class="block text-xs font-medium text-navy-400 mb-1">Unit ID</label>
+                        <input data-id="90" type="text" class="unit-id-input w-full h-10 px-3 bg-field-bg border border-field-border rounded-lg text-sm text-navy-800 placeholder:text-navy-300" placeholder="e.g. AHU-01" />
+                    </div>
+                </div>
+                <button data-id="91" class="remove-item-btn no-print text-danger-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0" title="Remove this item">
+                    <i data-id="92" data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span data-id="93" class="text-xs font-medium ml-1 hidden sm:inline">Remove</span>
+                </button>
+            </div>
+            <!-- Photo Upload -->
+            <div data-id="94" class="mb-3">
+                <label data-id="95" class="block text-xs font-medium text-navy-400 mb-1.5">Photo Evidence</label>
+                <div data-id="96" class="photo-area flex items-center gap-3 flex-wrap">
+                    <label data-id="97" class="photo-upload-label no-print cursor-pointer h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 transition-colors flex items-center gap-2 min-w-[44px]">
+                        <span data-id="98" class="text-base">📷</span> Upload Photo
+                        <input data-id="99" type="file" accept="image/*" capture="environment" class="photo-input hidden" />
+                    </label>
+                    <div data-id="100" class="photo-preview hidden flex items-center gap-2">
+                        <img data-id="101" class="photo-thumb border border-field-border" alt="Uploaded photo preview" />
+                        <button data-id="102" class="remove-photo-btn no-print text-xs text-danger-500 hover:text-danger-700 underline underline-offset-2 min-h-[44px] flex items-center">Remove</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Description -->
+            <div data-id="103">
+                <label data-id="104" class="block text-xs font-medium text-navy-400 mb-1.5">Description of Findings</label>
+                <textarea data-id="105" class="desc-textarea w-full px-3 py-2.5 bg-field-bg border border-field-border rounded-xl text-sm text-navy-800 placeholder:text-navy-300 resize-y" rows="3" placeholder="Describe condition, issues found, actions taken..."></textarea>
+            </div>
+            <!-- Alternating row indicator -->
+            <div data-id="106" class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-navy-500/0"></div>
+        </div>
+    </template>
+
+    <script>
+        // Guard Lucide
+        if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+            lucide.createIcons();
+        }
+
+        // ===================== STATE =====================
+        const MAX_ITEMS = 80;
+        const STORAGE_KEY = 'frontline_pm_report';
+        let itemCounter = 0;
+        let items = [];
+
+        // Track photo filenames and data per item
+        const photoFilenames = {};
+        const photoDataStore = {};
+        const photoTypeStore = {};
+
+        // ===================== DOM REFS =====================
+        const techNameInput = document.getElementById('tech-name-a1b2');
+        const reportDateInput = document.getElementById('report-date-c3d4');
+        const facilityAddrInput = document.getElementById('facility-addr-g7h8');
+        const trackingNumInput = document.getElementById('tracking-num-k1l2');
+        const facilityIdInput = document.getElementById('facility-id-o5p6');
+        const startBtn = document.getElementById('start-inspection-btn-s9t0');
+        const inspectionSection = document.getElementById('inspection-section-u1v2');
+        const addItemBtn = document.getElementById('add-item-btn-y5z6');
+        const itemsContainer = document.getElementById('items-container-a7b8');
+        const emptyState = document.getElementById('empty-state-c9d0');
+        const itemCountBadge = document.getElementById('item-count-badge-w3x4');
+        const actionsBar = document.getElementById('actions-bar-f7k2');
+        const loggedCountNum = document.getElementById('logged-count-num-g3h4');
+        const printBtn = document.getElementById('print-btn-i5j6');
+        const exportPdfBtn = document.getElementById('export-pdf-btn-p4q5');
+        const emailPdfBtn = document.getElementById('email-pdf-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn-k9p3');
+        const savedBadge = document.getElementById('saved-badge-r2t5');
+        const toastContainer = document.getElementById('toast-container-q8w3');
+        const itemTemplate = document.getElementById('item-template-a3b4');
+
+        // ===================== INIT =====================
+        function init() {
+            const now = new Date();
+            reportDateInput.value = now.toISOString().split('T')[0];
+
+            loadState();
+
+            startBtn.addEventListener('click', handleStartInspection);
+            addItemBtn.addEventListener('click', () => addItem());
+            printBtn.addEventListener('click', handlePrint);
+            exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
+            emailPdfBtn.addEventListener('click', () => handleExportPDF('share'));
+            clearAllBtn.addEventListener('click', handleClearAll);
+
+            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput];
+            headerFields.forEach(f => {
+                f.addEventListener('input', debounce(saveState, 500));
+                f.addEventListener('blur', () => {
+                    clearFieldError(f);
+                    if (f.hasAttribute('required') && !f.value.trim()) {
+                        showFieldError(f);
+                    }
+                });
+            });
+
+            updateCounts();
+        }
+
+        // ===================== TOAST =====================
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'error' ? 'bg-danger-50 border-danger-400 text-danger-700'
+                : type === 'success' ? 'bg-success-50 border-success-400 text-success-700'
+                : type === 'warning' ? 'bg-warn-50 border-warn-400 text-warn-600'
+                : 'bg-navy-50 border-navy-200 text-navy-600';
+            toast.className = `toast-in ${bgClass} border rounded-xl px-4 py-3 text-sm font-medium shadow-lg flex items-center gap-2`;
+            const iconName = type === 'error' ? 'alert-circle' : type === 'success' ? 'check-circle-2' : type === 'warning' ? 'alert-triangle' : 'info';
+            toast.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+            toastContainer.appendChild(toast);
+            if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+                lucide.createIcons();
+            }
+            setTimeout(() => {
+                toast.classList.remove('toast-in');
+                toast.classList.add('toast-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+            return toast;
+        }
+
+        function removeToast(toast) {
+            if (toast && toast.parentNode) {
+                toast.classList.remove('toast-in');
+                toast.classList.add('toast-out');
+                setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300);
+            }
+        }
+
+        // ===================== SAVED INDICATOR =====================
+        let savedTimeout;
+        function flashSaved() {
+            savedBadge.classList.remove('hidden');
+            clearTimeout(savedTimeout);
+            savedTimeout = setTimeout(() => savedBadge.classList.add('hidden'), 2000);
+        }
+
+        // ===================== VALIDATION =====================
+        function showFieldError(input) {
+            input.classList.add('field-error');
+            const errEl = input.parentElement.querySelector('p[id^="err-"]');
+            if (errEl) {
+                errEl.textContent = 'This field is required';
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function clearFieldError(input) {
+            input.classList.remove('field-error');
+            const errEl = input.parentElement.querySelector('p[id^="err-"]');
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.classList.add('hidden');
+            }
+        }
+
+        function validateHeaderFields() {
+            const fields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput];
+            let firstInvalid = null;
+            let valid = true;
+            fields.forEach(f => {
+                clearFieldError(f);
+                if (!f.value.trim()) {
+                    showFieldError(f);
+                    valid = false;
+                    if (!firstInvalid) firstInvalid = f;
+                }
+            });
+            if (!valid && firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+                showToast('Please fill in all required header fields.', 'error');
+            }
+            return valid;
+        }
+
+        // ===================== START INSPECTION =====================
+        function handleStartInspection() {
+            if (!validateHeaderFields()) return;
+            inspectionSection.classList.remove('hidden');
+            actionsBar.classList.remove('hidden');
+            if (items.length === 0) addItem();
+            inspectionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            saveState();
+        }
+
+        // ===================== ADD ITEM =====================
+        function addItem(data = null) {
+            if (items.length >= MAX_ITEMS) {
+                showToast(`Maximum of ${MAX_ITEMS} items reached.`, 'warning');
+                return;
+            }
+
+            itemCounter++;
+            const id = data?.id || ('item_' + Date.now() + '_' + itemCounter);
+            const clone = itemTemplate.content.cloneNode(true);
+            const card = clone.querySelector('.item-card');
+            card.dataset.itemId = id;
+
+            const idx = items.length;
+            if (idx % 2 === 1) {
+                card.style.backgroundColor = '#F2F4F7';
+            }
+
+            const numEl = card.querySelector('.item-number');
+            numEl.textContent = items.length + 1;
+
+            const unitInput = card.querySelector('.unit-id-input');
+            const descTextarea = card.querySelector('.desc-textarea');
+            const photoInput = card.querySelector('.photo-input');
+            const photoPreview = card.querySelector('.photo-preview');
+            const photoThumb = card.querySelector('.photo-thumb');
+            const removePhotoBtn = card.querySelector('.remove-photo-btn');
+            const removeItemBtn = card.querySelector('.remove-item-btn');
+
+            if (data) {
+                unitInput.value = data.unitId || '';
+                descTextarea.value = data.description || '';
+                if (data.photoData) {
+                    photoThumb.src = data.photoData;
+                    photoPreview.classList.remove('hidden');
+                    photoDataStore[id] = data.photoData;
+                    photoTypeStore[id] = data.photoType || 'image/jpeg';
+                }
+                if (data.photoFilename) {
+                    photoFilenames[id] = data.photoFilename;
+                }
+            }
+
+            // Photo upload handler
+            photoInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                photoFilenames[id] = file.name;
+                photoTypeStore[id] = file.type || 'image/jpeg';
+                const reader = new FileReader();
+                reader.addEventListener('load', function () {
+                    photoThumb.src = reader.result;
+                    photoPreview.classList.remove('hidden');
+                    photoDataStore[id] = reader.result;
+                    saveState();
+                });
+                reader.readAsDataURL(file);
+            });
+
+            // Remove photo
+            removePhotoBtn.addEventListener('click', function () {
+                photoThumb.src = '';
+                photoPreview.classList.add('hidden');
+                photoInput.value = '';
+                delete photoFilenames[id];
+                delete photoDataStore[id];
+                delete photoTypeStore[id];
+                saveState();
+            });
+
+            // Remove item
+            removeItemBtn.addEventListener('click', function () {
+                card.style.transition = 'opacity 0.2s, transform 0.2s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    card.remove();
+                    items = items.filter(i => i !== id);
+                    delete photoFilenames[id];
+                    delete photoDataStore[id];
+                    delete photoTypeStore[id];
+                    renumberItems();
+                    updateCounts();
+                    saveState();
+                }, 200);
+            });
+
+            unitInput.addEventListener('input', debounce(saveState, 500));
+            descTextarea.addEventListener('input', debounce(saveState, 500));
+
+            itemsContainer.appendChild(clone);
+            items.push(id);
+            updateCounts();
+            emptyState.classList.add('hidden');
+
+            if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+                lucide.createIcons();
+            }
+
+            if (!data) {
+                const lastCard = itemsContainer.lastElementChild;
+                if (lastCard) {
+                    setTimeout(() => lastCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+                }
+                saveState();
+            }
+        }
+
+        // ===================== RENUMBER =====================
+        function renumberItems() {
+            const cards = itemsContainer.querySelectorAll('.item-card');
+            items = [];
+            cards.forEach((card, i) => {
+                card.querySelector('.item-number').textContent = i + 1;
+                card.style.backgroundColor = i % 2 === 1 ? '#F2F4F7' : '#ffffff';
+                items.push(card.dataset.itemId);
+            });
+            if (items.length === 0) emptyState.classList.remove('hidden');
+        }
+
+        // ===================== COUNTS =====================
+        function updateCounts() {
+            const count = items.length;
+            itemCountBadge.textContent = count + (count === 1 ? ' item' : ' items');
+            loggedCountNum.textContent = count;
+        }
+
+        // ===================== PRINT =====================
+        function handlePrint() {
+            const headerFields = [
+                { input: techNameInput },
+                { input: reportDateInput },
+                { input: facilityAddrInput },
+                { input: trackingNumInput },
+                { input: facilityIdInput }
+            ];
+            headerFields.forEach(({ input }) => {
+                const printSpan = input.parentElement.querySelector('.print-header-value');
+                if (printSpan) {
+                    let val = input.value;
+                    if (input.type === 'date' && val) {
+                        const d = new Date(val + 'T12:00:00');
+                        val = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                    printSpan.textContent = val || '—';
+                }
+            });
+            window.print();
+        }
+
+        // ===================== EXPORT PDF =====================
+        function handleExportPDF(mode = 'download') {
+            const techName = techNameInput.value.trim();
+            const facilityId = facilityIdInput.value.trim();
+
+            if (!techName || !facilityId) {
+                showToast('Please fill in Technician Name and Facility ID before exporting.', 'error');
+                if (!techName) {
+                    techNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    techNameInput.focus();
+                } else {
+                    facilityIdInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    facilityIdInput.focus();
+                }
+                return;
+            }
+
+            const loadingToast = showToast('Generating PDF…', 'info');
+
+            // Load jsPDF dynamically if not present
+            if (typeof window.jspdf === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+                script.addEventListener('load', function () {
+                    generatePDF(loadingToast, mode);
+                });
+                script.addEventListener('error', function () {
+                    removeToast(loadingToast);
+                    showToast('Failed to load PDF library. Please try again.', 'error');
+                });
+                document.head.appendChild(script);
+            } else {
+                generatePDF(loadingToast, mode);
+            }
+        }
+
+        // ===================== GENERATE PDF =====================
+        async function generatePDF(loadingToast, mode = 'download') {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+
+                const pageW = doc.internal.pageSize.getWidth();   // 215.9
+                const pageH = doc.internal.pageSize.getHeight();  // 279.4
+                const marginL = 15;
+                const marginR = 15;
+                const marginTop = 15;
+                const marginBottom = 20;
+                const contentW = pageW - marginL - marginR;
+                const usableBottom = pageH - marginBottom;
+
+                const NAVY = [27, 42, 74];
+                const GRAY_LIGHT = [208, 213, 221];
+                const GRAY_TEXT = [120, 130, 145];
+                const WHITE = [255, 255, 255];
+                const BLACK = [26, 26, 26];
+
+                // Gather data
+                const techName = techNameInput.value.trim();
+                const facilityId = facilityIdInput.value.trim();
+                const facilityAddr = facilityAddrInput.value.trim() || 'Not specified';
+                const trackingNum = trackingNumInput.value.trim() || 'Not specified';
+                const dateVal = reportDateInput.value;
+                let formattedDate = dateVal || 'Not specified';
+                if (dateVal) {
+                    const d = new Date(dateVal + 'T12:00:00');
+                    formattedDate = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                }
+
+                const cards = itemsContainer.querySelectorAll('.item-card');
+                const totalItems = cards.length;
+
+                // Collect item data
+                const itemDataList = [];
+                cards.forEach((card, index) => {
+                    const unitId = card.querySelector('.unit-id-input').value.trim() || 'Not specified';
+                    const description = card.querySelector('.desc-textarea').value.trim() || 'No description provided';
+                    const cardId = card.dataset.itemId;
+                    const photoData = photoDataStore[cardId] || null;
+                    const photoType = photoTypeStore[cardId] || 'image/jpeg';
+                    itemDataList.push({ index: index + 1, unitId, description, photoData, photoType });
+                });
+
+                let currentPage = 1;
+                let cursorY = marginTop;
+
+                // ---- Draw page header ----
+                function drawPageHeader() {
+                    doc.setFillColor(...NAVY);
+                    doc.rect(0, 0, pageW, 14, 'F');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(...WHITE);
+                    doc.text('FRONTLINE FACILITY SERVICES', marginL, 9);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.text('Preventative Maintenance Report', pageW - marginR, 9, { align: 'right' });
+
+                    doc.setDrawColor(...NAVY);
+                    doc.setLineWidth(0.5);
+                    doc.line(marginL, 16, pageW - marginR, 16);
+
+                    cursorY = 22;
+                }
+
+                // ---- Draw page footer ----
+                function drawPageFooter(pageNum) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7);
+                    doc.setTextColor(...GRAY_TEXT);
+                    doc.text(
+                        'Frontline PM App v1.0  |  PM Report  |  Page ' + pageNum + ' of {{TOTAL_PAGES}}',
+                        pageW / 2, pageH - 8, { align: 'center' }
+                    );
+                }
+
+                // ---- Check if we need a new page ----
+                function ensureSpace(needed) {
+                    if (cursorY + needed > usableBottom) {
+                        drawPageFooter(currentPage);
+                        doc.addPage();
+                        currentPage++;
+                        drawPageHeader();
+                    }
+                }
+
+                // ---- Start building PDF ----
+                drawPageHeader();
+
+                // ---- Report Info Block ----
+                const colW = contentW / 2;
+                const infoLineH = 7;
+
+                function drawInfoPair(label, value, x, y) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8);
+                    doc.setTextColor(...GRAY_TEXT);
+                    doc.text(label + ':', x, y);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(...BLACK);
+                    const labelWidth = doc.getTextWidth(label + ': ');
+                    const maxValW = colW - labelWidth - 2;
+                    const valText = doc.splitTextToSize(value, maxValW);
+                    doc.text(valText, x + labelWidth, y);
+                    return valText.length;
+                }
+
+                let lines1 = drawInfoPair('Technician', techName, marginL, cursorY);
+                let lines2 = drawInfoPair('Date', formattedDate, marginL + colW, cursorY);
+                cursorY += infoLineH * Math.max(lines1, lines2);
+
+                lines1 = drawInfoPair('Facility Address', facilityAddr, marginL, cursorY);
+                lines2 = drawInfoPair('Tracking #', trackingNum, marginL + colW, cursorY);
+                cursorY += infoLineH * Math.max(lines1, lines2);
+
+                lines1 = drawInfoPair('Facility ID', facilityId, marginL, cursorY);
+                lines2 = drawInfoPair('Total Items', String(totalItems), marginL + colW, cursorY);
+                cursorY += infoLineH * Math.max(lines1, lines2) + 2;
+
+                doc.setDrawColor(...NAVY);
+                doc.setLineWidth(0.6);
+                doc.line(marginL, cursorY, pageW - marginR, cursorY);
+                cursorY += 6;
+
+                // ---- Inspection Items ----
+                const thumbW = 45;
+                const thumbH = 35;
+                const textStartX = marginL + thumbW + 6;
+                const textAreaW = contentW - thumbW - 6;
+
+                itemDataList.forEach((item, idx) => {
+                    doc.setFontSize(8);
+                    const descLines = doc.splitTextToSize(item.description, textAreaW);
+                    const textBlockH = 8 + 6 + 4 + (descLines.length * 3.5) + 4;
+                    const blockH = Math.max(thumbH + 4, textBlockH);
+
+                    ensureSpace(blockH + 4);
+
+                    const blockTop = cursorY;
+
+                    if (item.photoData) {
+                        try {
+                            let imgFormat = 'JPEG';
+                            if (item.photoType && item.photoType.toLowerCase().includes('png')) {
+                                imgFormat = 'PNG';
+                            }
+                            doc.addImage(item.photoData, imgFormat, marginL, cursorY, thumbW, thumbH);
+                        } catch (e) {
+                            doc.setFillColor(240, 240, 240);
+                            doc.roundedRect(marginL, cursorY, thumbW, thumbH, 2, 2, 'F');
+                            doc.setFontSize(7);
+                            doc.setTextColor(...GRAY_TEXT);
+                            doc.text('Image Error', marginL + thumbW / 2, cursorY + thumbH / 2, { align: 'center' });
+                        }
+                    } else {
+                        doc.setFillColor(242, 244, 247);
+                        doc.setDrawColor(...GRAY_LIGHT);
+                        doc.setLineWidth(0.3);
+                        doc.roundedRect(marginL, cursorY, thumbW, thumbH, 2, 2, 'FD');
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(...GRAY_TEXT);
+                        doc.text('No Photo', marginL + thumbW / 2, cursorY + thumbH / 2, { align: 'center' });
+                    }
+
+                    let textY = cursorY + 1;
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(...NAVY);
+                    doc.text('Item ' + item.index, textStartX, textY + 4);
+                    textY += 8;
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8);
+                    doc.setTextColor(...GRAY_TEXT);
+                    doc.text('Unit ID: ', textStartX, textY + 3);
+                    const uidLabelW = doc.getTextWidth('Unit ID: ');
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(...BLACK);
+                    doc.text(item.unitId, textStartX + uidLabelW, textY + 3);
+                    textY += 6;
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8);
+                    doc.setTextColor(...GRAY_TEXT);
+                    doc.text('Description:', textStartX, textY + 3);
+                    textY += 5;
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(...BLACK);
+
+                    const wrappedDesc = doc.splitTextToSize(item.description, textAreaW);
+                    wrappedDesc.forEach((line, lineIdx) => {
+                        if (textY + 4 > usableBottom) {
+                            drawPageFooter(currentPage);
+                            doc.addPage();
+                            currentPage++;
+                            drawPageHeader();
+                            textY = cursorY;
+                        }
+                        doc.text(line, textStartX, textY + 3);
+                        textY += 3.5;
+                    });
+
+                    const blockBottom = Math.max(blockTop + thumbH + 2, textY + 2);
+                    cursorY = blockBottom + 2;
+
+                    if (idx < itemDataList.length - 1) {
+                        doc.setDrawColor(...GRAY_LIGHT);
+                        doc.setLineWidth(0.3);
+                        doc.line(marginL, cursorY, pageW - marginR, cursorY);
+                        cursorY += 5;
+                    }
+                });
+
+                drawPageFooter(currentPage);
+
+                const totalPages = currentPage;
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFillColor(255, 255, 255);
+                    doc.rect(0, pageH - 14, pageW, 14, 'F');
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7);
+                    doc.setTextColor(...GRAY_TEXT);
+                    doc.text(
+                        'Frontline PM App v1.0  |  PM Report  |  Page ' + i + ' of ' + totalPages,
+                        pageW / 2, pageH - 8, { align: 'center' }
+                    );
+                }
+
+                // Save
+                const safeFacId = facilityId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const safeDate = reportDateInput.value || 'undated';
+                const filename = 'Frontline_PM_' + safeFacId + '_' + safeDate + '.pdf';
+                if (mode === 'share') {
+                    const blob = doc.output('blob');
+                    const pdfFile = new File([blob], filename, { type: 'application/pdf' });
+                    const shareData = {
+                        title: 'Frontline PM Report - ' + facilityId,
+                        text: 'Preventative Maintenance report for ' + facilityId + ' - tracking ' + trackingNum,
+                        files: [pdfFile]
+                    };
+                    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [pdfFile] }))) {
+                        await navigator.share(shareData);
+                        removeToast(loadingToast);
+                        showToast('PDF ready to send from your selected email app.', 'success');
+                    } else {
+                        doc.save(filename);
+                        const subject = encodeURIComponent('Frontline PM Report - ' + facilityId + ' - ' + trackingNum);
+                        const body = encodeURIComponent('The PM report PDF has been downloaded. Please attach ' + filename + ' to this email.');
+                        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+                        removeToast(loadingToast);
+                        showToast('PDF downloaded. Attach it to the prepared email.', 'info');
+                    }
+                } else {
+                    doc.save(filename);
+                    removeToast(loadingToast);
+                    showToast('PDF downloaded successfully!', 'success');
+                }
+
+            } catch (err) {
+                if (err && err.name === 'AbortError') {
+                    removeToast(loadingToast);
+                    showToast('Email sharing canceled. Your report is still saved on this device.', 'info');
+                    return;
+                }
+                console.error('PDF generation error:', err);
+                removeToast(loadingToast);
+                showToast('Error generating PDF. Please try again.', 'error');
+            }
+        }
+
+        // ===================== NEW REPORT =====================
+        function handleClearAll() {
+            if (!confirm('Clear all data and start a new report? This cannot be undone.')) return;
+            resetForm();
+            showToast('Report cleared. Ready for a new inspection.', 'info');
+        }
+
+        function resetForm() {
+            techNameInput.value = '';
+            reportDateInput.value = new Date().toISOString().split('T')[0];
+            facilityAddrInput.value = '';
+            trackingNumInput.value = '';
+            facilityIdInput.value = '';
+
+            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput].forEach(clearFieldError);
+
+            itemsContainer.innerHTML = '';
+            items = [];
+            itemCounter = 0;
+            Object.keys(photoFilenames).forEach(k => delete photoFilenames[k]);
+            Object.keys(photoDataStore).forEach(k => delete photoDataStore[k]);
+            Object.keys(photoTypeStore).forEach(k => delete photoTypeStore[k]);
+            inspectionSection.classList.add('hidden');
+            actionsBar.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            updateCounts();
+            localStorage.removeItem(STORAGE_KEY);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ===================== LOCAL STORAGE =====================
+        function saveState() {
+            const cards = itemsContainer.querySelectorAll('.item-card');
+            const itemsData = [];
+            cards.forEach(card => {
+                const unitId = card.querySelector('.unit-id-input').value;
+                const description = card.querySelector('.desc-textarea').value;
+                const cardId = card.dataset.itemId;
+                let photoData = '';
+                const storedPhoto = photoDataStore[cardId];
+                if (storedPhoto && storedPhoto.length < 500000) {
+                    photoData = storedPhoto;
+                }
+                itemsData.push({
+                    id: cardId,
+                    unitId,
+                    description,
+                    photoData,
+                    photoFilename: photoFilenames[cardId] || '',
+                    photoType: photoTypeStore[cardId] || ''
+                });
+            });
+
+            const state = {
+                techName: techNameInput.value,
+                reportDate: reportDateInput.value,
+                facilityAddr: facilityAddrInput.value,
+                trackingNum: trackingNumInput.value,
+                facilityId: facilityIdInput.value,
+                inspectionStarted: !inspectionSection.classList.contains('hidden'),
+                items: itemsData
+            };
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                flashSaved();
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full — photos may not be saved. Consider exporting your report.', 'warning');
+                }
+            }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const state = JSON.parse(raw);
+
+                techNameInput.value = state.techName || '';
+                reportDateInput.value = state.reportDate || new Date().toISOString().split('T')[0];
+                facilityAddrInput.value = state.facilityAddr || '';
+                trackingNumInput.value = state.trackingNum || '';
+                facilityIdInput.value = state.facilityId || '';
+
+                if (state.inspectionStarted) {
+                    inspectionSection.classList.remove('hidden');
+                    actionsBar.classList.remove('hidden');
+                    if (state.items && state.items.length > 0) {
+                        emptyState.classList.add('hidden');
+                        state.items.forEach(itemData => addItem(itemData));
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load saved state:', e);
+            }
+        }
+
+        // ===================== UTILS =====================
+        function debounce(fn, delay) {
+            let timer;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // ===================== BOOT =====================
+        init();
+    </script>
+</body>
+</html>
