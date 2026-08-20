@@ -16,19 +16,23 @@ function apiHeaders(key: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const { url, key, table } = config();
-  if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
-  const body = await request.json();
-  const report = body?.report;
-  if (!report?.id || !report?.pdfBase64) return NextResponse.json({ error: "A completed PDF report is required" }, { status: 400 });
-  const data = { ...report, recordType: "pm-report" };
-  const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
-    method: "POST",
-    headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify([{ tracking_number: `PMREPORT:${report.id}`, data, updated_at: new Date().toISOString() }]),
-  });
-  if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
-  return NextResponse.json({ ok: true, id: report.id });
+  try {
+    const { url, key, table } = config();
+    if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
+    const body = await request.json();
+    const report = body?.report;
+    if (!report?.id || !report?.pdfBase64) return NextResponse.json({ error: "A completed PDF report is required" }, { status: 400 });
+    const data = { ...report, recordType: "pm-report" };
+    const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+      method: "POST",
+      headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify([{ tracking_number: `PMREPORT:${report.id}`, data, updated_at: new Date().toISOString() }]),
+    });
+    if (!response.ok) return NextResponse.json({ error: (await response.text()) || `Storage returned ${response.status}` }, { status: response.status });
+    return NextResponse.json({ ok: true, id: report.id });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unexpected archive error" }, { status: 500 });
+  }
 }
 
 export async function GET(request: NextRequest) {
