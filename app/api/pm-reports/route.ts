@@ -15,6 +15,19 @@ function apiHeaders(key: string) {
   return { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
 }
 
+async function fetchWithRetry(input: string, init: RequestInit, attempts = 3) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await fetch(input, init);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { url, key, table } = config();
@@ -23,7 +36,7 @@ export async function POST(request: NextRequest) {
     const report = body?.report;
     if (!report?.id || !report?.pdfBase64) return NextResponse.json({ error: "A completed PDF report is required" }, { status: 400 });
     const data = { ...report, recordType: "pm-report" };
-    const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+    const response = await fetchWithRetry(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
       method: "POST",
       headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify([{ tracking_number: `PMREPORT:${report.id}`, data, updated_at: new Date().toISOString() }]),
@@ -31,7 +44,10 @@ export async function POST(request: NextRequest) {
     if (!response.ok) return NextResponse.json({ error: (await response.text()) || `Storage returned ${response.status}` }, { status: response.status });
     return NextResponse.json({ ok: true, id: report.id });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unexpected archive error" }, { status: 500 });
+    const cause = error instanceof Error && error.cause && typeof error.cause === "object"
+      ? String((error.cause as { code?: string; message?: string }).code || (error.cause as { message?: string }).message || "")
+      : "";
+    return NextResponse.json({ error: [error instanceof Error ? error.message : "Unexpected archive error", cause].filter(Boolean).join(" — ") }, { status: 500 });
   }
 }
 
