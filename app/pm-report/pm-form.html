@@ -352,7 +352,9 @@
             addItemBtn.addEventListener('click', () => addItem());
             printBtn.addEventListener('click', handlePrint);
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
-            emailPdfBtn.addEventListener('click', () => handleExportPDF('share'));
+            emailPdfBtn.addEventListener('click', () => {
+                if (confirm('Email this PDF now to Jacob, Daniel, and Gary?')) handleExportPDF('share');
+            });
             completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
 
@@ -923,12 +925,27 @@
                     removeToast(loadingToast);
                     showToast('Completed report saved. It is now available under Completed Reports.', 'success');
                 } else if (mode === 'share') {
-                    doc.save(filename);
-                    const subject = encodeURIComponent('Frontline PM Report - ' + facilityId + ' - ' + trackingNum);
-                    const body = encodeURIComponent('The completed PM report is ready. Please attach the downloaded file named ' + filename + '.');
-                    window.location.href = 'mailto:' + EMAIL_RECIPIENTS + '?subject=' + subject + '&body=' + body;
+                    const pdfBase64 = await blobToBase64(doc.output('blob'));
+                    const response = await fetch('/api/pm-reports/email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ report: {
+                            technician: techName,
+                            reportDate: dateVal,
+                            facilityAddress: facilityAddr,
+                            trackingNumber: trackingNum,
+                            facilityId,
+                            filename,
+                            pdfBase64
+                        } })
+                    });
+                    if (!response.ok) {
+                        const details = await response.text();
+                        doc.save(filename);
+                        throw new Error('EMAIL_FAILED:' + details);
+                    }
                     removeToast(loadingToast);
-                    showToast('PDF downloaded and addressed email opened. Attach the downloaded PDF before sending.', 'info');
+                    showToast('PDF emailed successfully to Jacob, Daniel, and Gary.', 'success');
                 } else {
                     doc.save(filename);
                     removeToast(loadingToast);
@@ -943,7 +960,9 @@
                 }
                 console.error('PDF generation error:', err);
                 removeToast(loadingToast);
-                if (mode === 'complete' || String(err && err.message || '').startsWith('SAVE_FAILED:')) {
+                if (String(err && err.message || '').startsWith('EMAIL_FAILED:')) {
+                    showToast('The PDF was downloaded, but automatic email failed. Please attach the downloaded PDF manually.', 'error');
+                } else if (mode === 'complete' || String(err && err.message || '').startsWith('SAVE_FAILED:')) {
                     const detail = String(err && err.message || '').replace('SAVE_FAILED:', '');
                     showToast('The PDF was created, but the completed report could not be saved.' + (detail ? ' ' + detail.slice(0, 180) : ''), 'error');
                 } else {
