@@ -427,23 +427,23 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger ID #</label>
-                        <input type="text" class="input-field tugger-id" placeholder="e.g. TUG-01" value="${escapeAttr(data?.tuggerId || '')}" />
+                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger ID # <span class="text-danger-500">*</span></label>
+                        <input type="text" required class="input-field tugger-id" placeholder="e.g. TUG-01" value="${escapeAttr(data?.tuggerId || '')}" />
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger Manufacturer</label>
-                        <input type="text" class="input-field tugger-mfr" placeholder="e.g. Toyota, Crown, Raymond" value="${escapeAttr(data?.manufacturer || '')}" />
+                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger Manufacturer <span class="text-danger-500">*</span></label>
+                        <input type="text" required class="input-field tugger-mfr" placeholder="e.g. Toyota, Crown, Raymond" value="${escapeAttr(data?.manufacturer || '')}" />
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger Serial #</label>
-                        <input type="text" class="input-field tugger-serial" placeholder="e.g. SN-123456" value="${escapeAttr(data?.serialNum || '')}" />
+                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger Serial # <span class="text-danger-500">*</span></label>
+                        <input type="text" required class="input-field tugger-serial" placeholder="e.g. SN-123456" value="${escapeAttr(data?.serialNum || '')}" />
                     </div>
                 </div>
                 ${photoSectionHtml('before', 'Before Pictures')}
                 ${photoSectionHtml('after', 'After Pictures')}
                 <div>
-                    <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Description of Findings</label>
-                    <textarea class="input-field findings-text" rows="3" placeholder="Describe repair performed, condition found, parts replaced...">${escapeHtml(data?.description || '')}</textarea>
+                    <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Description of Findings <span class="text-danger-500">*</span></label>
+                    <textarea required class="input-field findings-text" rows="3" placeholder="Describe repair performed, condition found, parts replaced...">${escapeHtml(data?.description || '')}</textarea>
                 </div>
             `;
 
@@ -490,6 +490,9 @@
 
             // Auto-save on input changes
             card.querySelectorAll('input, textarea').forEach(el => {
+                el.addEventListener('input', function() {
+                    if (el.value.trim()) el.style.borderColor = '#D0D5DD';
+                });
                 el.addEventListener('change', saveState);
                 el.addEventListener('blur', saveState);
             });
@@ -527,6 +530,39 @@
                 showToast('Please fill in all required fields', 'error');
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstInvalid.focus();
+                return false;
+            }
+            return true;
+        }
+
+        function validateTuggerItems() {
+            const cards = Array.from(itemsContainer.querySelectorAll('.item-card'));
+            if (!cards.length) {
+                showToast('Add at least one tugger before completing the report', 'error');
+                addItemBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            const requiredSelectors = ['.tugger-id', '.tugger-mfr', '.tugger-serial', '.findings-text'];
+            let firstInvalid = null;
+            let invalidItem = 0;
+            cards.forEach((card, index) => {
+                requiredSelectors.forEach(selector => {
+                    const field = card.querySelector(selector);
+                    if (!field.value.trim()) {
+                        field.style.borderColor = '#F04438';
+                        if (!firstInvalid) {
+                            firstInvalid = field;
+                            invalidItem = index + 1;
+                        }
+                    } else {
+                        field.style.borderColor = '#D0D5DD';
+                    }
+                });
+            });
+            if (firstInvalid) {
+                showToast('Complete all required fields for Tugger #' + invalidItem, 'error');
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus({ preventScroll: true });
                 return false;
             }
             return true;
@@ -593,6 +629,7 @@
 
         // ─── PDF Export ───
         exportPdfBtn.addEventListener('click', function() {
+            if (!validateHeader() || !validateTuggerItems()) return;
             if (typeof window.jspdf === 'undefined') {
                 showToast('PDF library not loaded. Please try again.', 'error');
                 return;
@@ -608,6 +645,7 @@
         });
 
         async function runPdfAction(mode) {
+            if (!validateHeader() || !validateTuggerItems()) return;
             const button = mode === 'share' ? emailPdfBtn : completeReportBtn;
             const originalText = button.textContent;
             button.disabled = true;
