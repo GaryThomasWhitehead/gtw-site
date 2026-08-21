@@ -15,6 +15,7 @@ type TuggerWorkRecord = {
   tuggerId?: string;
   manufacturer?: string;
   serialNumber?: string;
+  legacy?: boolean;
 };
 type Report = {
   id: string;
@@ -70,9 +71,23 @@ export default function ReportsClient() {
     () =>
       reports
         .filter((report) => categoryOf(report) === "tugger")
-        .flatMap((report) =>
-          (report.tuggerWorkRecords || []).map((item) => ({ item, report })),
-        )
+        .flatMap((report) => {
+          if (report.tuggerWorkRecords?.length) {
+            return report.tuggerWorkRecords.map((item) => ({ item, report }));
+          }
+          return Array.from({ length: Math.max(1, report.itemCount || 1) }, (_, index) => ({
+            report,
+            item: {
+              itemNumber: index + 1,
+              location: report.facilityAddress,
+              facilityId: report.facilityId,
+              trackingNumber: report.trackingNumber,
+              reportDate: report.reportDate,
+              description: "Legacy completed report — view the PDF for the original tugger details.",
+              legacy: true,
+            } satisfies TuggerWorkRecord,
+          }));
+        })
         .filter((row) =>
           JSON.stringify(row).toLowerCase().includes(query.toLowerCase()),
         ),
@@ -197,9 +212,9 @@ export default function ReportsClient() {
                       <span>{item.location || report.facilityAddress || ""}</span>
                     </td>
                     <td>{item.trackingNumber || report.trackingNumber || "—"}</td>
-                    <td>{item.tuggerId || "—"}</td>
-                    <td>{item.manufacturer || "—"}</td>
-                    <td>{item.serialNumber || "—"}</td>
+                    <td>{item.tuggerId || (item.legacy ? "See PDF" : "—")}</td>
+                    <td>{item.manufacturer || (item.legacy ? "See PDF" : "—")}</td>
+                    <td>{item.serialNumber || (item.legacy ? "See PDF" : "—")}</td>
                     <td className={styles.description}>{item.description || "—"}</td>
                     <td>
                       <a
