@@ -38,6 +38,26 @@ const TABS: { key: Category; label: string }[] = [
   { key: "tugger", label: "Tugger" },
 ];
 const categoryOf = (report: Report) => report.category || "pm";
+const normalizedSearch = (value: unknown) =>
+  String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const reportMatches = (report: Report, query: string) => {
+  const terms = [
+    report.technician,
+    report.trackingNumber,
+    report.facilityId,
+    report.facilityAddress,
+    report.reportDate,
+    report.reportTypeLabel,
+  ];
+  const plainQuery = query.trim().toLowerCase();
+  const compactQuery = normalizedSearch(query);
+  if (!plainQuery) return true;
+  return terms.some((term) => {
+    const value = String(term || "");
+    return value.toLowerCase().includes(plainQuery) ||
+      (compactQuery && normalizedSearch(value).includes(compactQuery));
+  });
+};
 
 export default function ReportsClient() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -62,7 +82,7 @@ export default function ReportsClient() {
       reports.filter(
         (report) =>
           (tab === "all" || categoryOf(report) === tab) &&
-          JSON.stringify(report).toLowerCase().includes(query.toLowerCase()),
+          reportMatches(report, query),
       ),
     [reports, query, tab],
   );
@@ -88,9 +108,17 @@ export default function ReportsClient() {
             } satisfies TuggerWorkRecord,
           }));
         })
-        .filter((row) =>
-          JSON.stringify(row).toLowerCase().includes(query.toLowerCase()),
-        ),
+        .filter(({ item, report }) => {
+          if (reportMatches(report, query)) return true;
+          const plainQuery = query.trim().toLowerCase();
+          const compactQuery = normalizedSearch(query);
+          return [item.tuggerId, item.manufacturer, item.serialNumber, item.description]
+            .some((term) => {
+              const value = String(term || "");
+              return value.toLowerCase().includes(plainQuery) ||
+                (compactQuery && normalizedSearch(value).includes(compactQuery));
+            });
+        }),
     [reports, query],
   );
   const historyMode = tab === "tugger" && tuggerView === "history";
@@ -178,8 +206,8 @@ export default function ReportsClient() {
             aria-label="Search reports"
             placeholder={
               historyMode
-                ? "Search location, tracking, tugger, serial…"
-                : "Search tracking, facility, technician…"
+                ? "Search technician, tracking, tugger, serial…"
+                : "Search technician or tracking number…"
             }
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -194,6 +222,7 @@ export default function ReportsClient() {
               <thead>
                 <tr>
                   <th>Date</th>
+                  <th>Technician</th>
                   <th>Location</th>
                   <th>Tracking #</th>
                   <th>Tugger #</th>
@@ -207,6 +236,7 @@ export default function ReportsClient() {
                 {tuggerHistory.map(({ item, report }, index) => (
                   <tr key={`${report.id}-${item.itemNumber || index}`}>
                     <td>{item.reportDate || report.reportDate || "—"}</td>
+                    <td>{report.technician || "—"}</td>
                     <td>
                       <strong>{item.facilityId || report.facilityId || "—"}</strong>
                       <span>{item.location || report.facilityAddress || ""}</span>
