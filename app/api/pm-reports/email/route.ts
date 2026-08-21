@@ -23,14 +23,15 @@ export async function POST(request: NextRequest) {
 
     const facilityId = clean(report.facilityId) || "Facility";
     const trackingNumber = clean(report.trackingNumber) || "No tracking number";
+    const reportType = clean(report.reportTypeLabel) || "Preventive Maintenance Report";
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from,
         to: RECIPIENTS,
-        subject: `Frontline PM Report - ${facilityId} - ${trackingNumber}`,
-        html: `<p>The completed Frontline PM report is attached.</p><p><strong>Facility:</strong> ${facilityId}<br><strong>Tracking:</strong> ${trackingNumber}<br><strong>Technician:</strong> ${clean(report.technician) || "Not entered"}<br><strong>Date:</strong> ${clean(report.reportDate) || "Not entered"}<br><strong>Address:</strong> ${clean(report.facilityAddress) || "Not entered"}</p>`,
+        subject: `Frontline ${reportType} - ${facilityId} - ${trackingNumber}`,
+        html: `<p>The completed Frontline ${reportType} is attached.</p><p><strong>Facility:</strong> ${facilityId}<br><strong>Tracking:</strong> ${trackingNumber}<br><strong>Technician:</strong> ${clean(report.technician) || "Not entered"}<br><strong>Date:</strong> ${clean(report.reportDate) || "Not entered"}<br><strong>Address:</strong> ${clean(report.facilityAddress) || "Not entered"}</p>`,
         attachments: [{ filename: clean(report.filename) || "Frontline_PM_Report.pdf", content: report.pdfBase64 }],
       }),
     });

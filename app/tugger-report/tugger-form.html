@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontline Tugger Repairs & Maintenance Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#EEF1F6',
+                            100: '#D5DAE5',
+                            200: '#A8B3C8',
+                            300: '#7B8DAB',
+                            400: '#4E668E',
+                            500: '#1B2A4A',
+                            600: '#17243F',
+                            700: '#121C32',
+                            800: '#0E1525',
+                            900: '#090D18',
+                        },
+                        slate_alt: {
+                            50: '#F9FAFB',
+                            100: '#F2F4F7',
+                            200: '#E5E8ED',
+                            300: '#D0D5DD',
+                            400: '#98A2B3',
+                            500: '#667085',
+                            600: '#475467',
+                            700: '#344054',
+                            800: '#1D2939',
+                        },
+                        success: {
+                            50: '#ECFDF3',
+                            100: '#D1FADF',
+                            400: '#32D583',
+                            500: '#12B76A',
+                            600: '#039855',
+                            700: '#027A48',
+                        },
+                        danger: {
+                            50: '#FEF3F2',
+                            100: '#FEE4E2',
+                            400: '#F97066',
+                            500: '#F04438',
+                            600: '#D92D20',
+                            700: '#B42318',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; color: #1D2939; }
+
+        .item-card { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast {
+            animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s forwards;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .save-indicator {
+            animation: fadeInOut 2s ease-in-out forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            15% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #1B2A4A;
+            box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.12);
+        }
+
+        .input-field {
+            min-height: 44px;
+            font-size: 16px;
+            border: 1.5px solid #D0D5DD;
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .photo-btn {
+            min-height: 44px;
+            border: 1.5px solid #1B2A4A;
+            border-radius: 10px;
+            background: #fff;
+            color: #1B2A4A;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 12px;
+            flex: 1;
+        }
+        .photo-btn:hover { background: #1B2A4A; color: #fff; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: #fff; font-size: 11pt; }
+            .item-card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #D0D5DD !important; }
+            @page { margin: 1.5cm; @bottom-center { content: counter(page) " of " counter(pages); } }
+        }
+        .print-only { display: none; }
+
+        .sticky-section { position: sticky; top: 0; z-index: 30; }
+        .sticky-bottom { position: sticky; bottom: 0; z-index: 30; }
+    </style>
+</head>
+<body data-id="0" class="min-h-screen flex flex-col">
+    <app-icon data-id="1" hidden data-icon="wrench" data-palette="Blue"></app-icon>
+
+    <!-- HEADER BAR -->
+    <header data-id="2" id="header-bar-h1kz" class="bg-navy-500 text-white px-4 py-3 no-print">
+        <div data-id="3" class="max-w-3xl mx-auto flex items-center justify-between">
+            <div data-id="4">
+                <div data-id="5" class="text-xl font-extrabold tracking-wide leading-tight">FRONTLINE</div>
+                <div data-id="6" class="text-xs font-medium text-navy-100 tracking-wide opacity-90">Tugger Repairs &amp; Maintenance</div>
+            </div>
+            <div data-id="7" class="flex items-center gap-3">
+                <a href="/pm-reports" class="text-xs text-navy-100 hover:text-white underline">Completed Reports</a>
+                <a href="/pm-report" class="text-xs text-navy-100 hover:text-white underline">Other Report Types</a>
+                <span data-id="8" id="save-indicator-s9qx" class="text-xs text-green-300 font-medium hidden">Saved ✓</span>
+                <button data-id="9" id="clear-all-btn-c4re" class="text-xs text-navy-200 hover:text-white underline underline-offset-2 font-medium">Clear All / New Report</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PRINT HEADER -->
+    <div data-id="10" class="print-only text-center border-b-2 border-navy-500 pb-4 mb-4">
+        <div data-id="11" class="text-2xl font-extrabold text-navy-500 tracking-wide">FRONTLINE FACILITY SERVICES</div>
+        <div data-id="12" class="text-sm font-semibold text-slate_alt-600 mt-1">Tugger Repairs &amp; Maintenance Report</div>
+    </div>
+
+    <main data-id="13" class="flex-1 max-w-3xl mx-auto w-full px-4 pt-5 pb-28 md:pb-24">
+
+        <!-- SECTION 1: REPORT HEADER -->
+        <section data-id="14" id="report-header-s1ab" class="bg-white rounded-2xl shadow-sm border border-slate_alt-200 p-5 md:p-7 mb-6">
+            <h2 data-id="15" class="text-lg font-bold text-navy-500 mb-5 flex items-center gap-2">
+                <i data-id="16" data-lucide="clipboard-list" class="w-5 h-5"></i>
+                Report Details
+            </h2>
+            <div data-id="17" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div data-id="18">
+                    <label data-id="19" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tech-name-f1">Technician Name <span data-id="20" class="text-danger-500">*</span></label>
+                    <input data-id="21" id="tech-name-f1" type="text" class="input-field" placeholder="e.g. John Smith" required />
+                </div>
+                <div data-id="22">
+                    <label data-id="23" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="report-date-f2">Date <span data-id="24" class="text-danger-500">*</span></label>
+                    <input data-id="25" id="report-date-f2" type="date" class="input-field" required />
+                </div>
+                <div data-id="26">
+                    <label data-id="27" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="facility-addr-f3">Facility Address <span data-id="28" class="text-danger-500">*</span></label>
+                    <input data-id="29" id="facility-addr-f3" type="text" class="input-field" placeholder="e.g. 123 Industrial Blvd, Suite 100" required />
+                </div>
+                <div data-id="30">
+                    <label data-id="31" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tracking-num-f4">Tracking Number <span data-id="32" class="text-danger-500">*</span></label>
+                    <input data-id="33" id="tracking-num-f4" type="text" class="input-field" placeholder="e.g. TRK-2026-0815" required />
+                </div>
+                <div data-id="34">
+                    <label data-id="35" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="facility-id-f5">Facility ID <span data-id="36" class="text-danger-500">*</span></label>
+                    <input data-id="37" id="facility-id-f5" type="text" class="input-field" placeholder="e.g. FAC-001" required />
+                </div>
+            </div>
+            <button data-id="38" id="start-inspection-btn-b1" class="mt-6 w-full bg-navy-500 hover:bg-navy-600 text-white font-bold text-base rounded-xl py-3.5 transition-colors flex items-center justify-center gap-2 min-h-[48px] no-print">
+                <i data-id="39" data-lucide="play" class="w-5 h-5"></i>
+                Start Inspection
+            </button>
+        </section>
+
+        <!-- SECTION 2: INSPECTION ITEMS -->
+        <section data-id="40" id="inspection-section-s2cd" class="hidden">
+            <!-- Sticky Section Header -->
+            <div data-id="41" id="items-sticky-bar-sk1" class="sticky-section bg-slate_alt-50 py-3 mb-4 no-print">
+                <div data-id="42" class="flex items-center justify-between flex-wrap gap-3">
+                    <div data-id="43" class="flex items-center gap-3">
+                        <h2 data-id="44" class="text-lg font-bold text-navy-500 flex items-center gap-2">
+                            <i data-id="45" data-lucide="list-checks" class="w-5 h-5"></i>
+                            Inspection Items
+                        </h2>
+                        <span data-id="46" id="item-count-badge-b2" class="bg-navy-100 text-navy-500 text-xs font-bold px-2.5 py-1 rounded-full tabular-nums">0 items</span>
+                    </div>
+                    <button data-id="47" id="add-item-btn-a1" class="bg-success-600 hover:bg-success-700 text-white font-bold text-sm rounded-xl px-5 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
+                        <i data-id="48" data-lucide="plus" class="w-4 h-4"></i>
+                        Add Item
+                    </button>
+                </div>
+            </div>
+
+            <!-- Items Container -->
+            <div data-id="49" id="items-container-ic1" class="space-y-4">
+                <!-- Dynamic item cards render here -->
+            </div>
+
+            <div data-id="50" id="empty-state-es1" class="text-center py-16">
+                <i data-id="51" data-lucide="clipboard" class="w-12 h-12 text-slate_alt-300 mx-auto mb-3"></i>
+                <p data-id="52" class="text-slate_alt-500 font-medium">No inspection items yet</p>
+                <p data-id="53" class="text-slate_alt-400 text-sm mt-1">Tap "+ Add Item" to begin logging</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- STICKY BOTTOM ACTION BAR -->
+    <div data-id="54" id="action-bar-ab1" class="sticky-bottom bg-white border-t border-slate_alt-200 px-4 py-3 no-print hidden">
+        <div data-id="55" class="max-w-3xl mx-auto flex items-center justify-between flex-wrap gap-3">
+            <span data-id="56" id="logged-count-lc1" class="text-sm font-semibold text-slate_alt-600 tabular-nums">0 items logged</span>
+            <div data-id="57" class="flex items-center gap-2">
+                <button id="complete-report-btn" class="bg-[#0f766e] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Complete &amp; Save</button>
+                <button data-id="58" id="print-btn-p1" class="bg-slate_alt-200 hover:bg-slate_alt-300 text-slate_alt-700 font-semibold text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
+                    <i data-id="59" data-lucide="printer" class="w-4 h-4"></i>
+                    Print
+                </button>
+                <button data-id="60" id="export-pdf-btn-e1" class="bg-success-600 hover:bg-success-700 text-white font-bold text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
+                    <i data-id="61" data-lucide="file-down" class="w-4 h-4"></i>
+                    Export PDF
+                </button>
+                <button id="email-pdf-btn" class="bg-[#2563eb] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Email PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div data-id="62" id="toast-container-tc1" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none"></div>
+
+    <footer data-id="63" class="py-6 mt-auto text-center no-print">
+        <p data-id="64" class="text-xs text-slate_alt-400">Frontline Pro Services · Tugger Repairs &amp; Maintenance</p>
+    </footer>
+
+    <script>
+    (function() {
+        // ─── Icons (progressive enhancement) ───
+        if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+            lucide.createIcons();
+        }
+
+        // ─── Constants ───
+        const MAX_ITEMS = 80;
+        const LS_KEY = 'frontline_tugger_rm_data';
+
+        // ─── State ───
+        let state = {
+            reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+            header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '' },
+            items: [],
+            inspectionStarted: false
+        };
+
+        // ─── DOM Refs ───
+        const techNameEl = document.getElementById('tech-name-f1');
+        const dateEl = document.getElementById('report-date-f2');
+        const addrEl = document.getElementById('facility-addr-f3');
+        const trackingEl = document.getElementById('tracking-num-f4');
+        const facilityIdEl = document.getElementById('facility-id-f5');
+        const startBtn = document.getElementById('start-inspection-btn-b1');
+        const inspectionSection = document.getElementById('inspection-section-s2cd');
+        const itemsContainer = document.getElementById('items-container-ic1');
+        const addItemBtn = document.getElementById('add-item-btn-a1');
+        const itemCountBadge = document.getElementById('item-count-badge-b2');
+        const actionBar = document.getElementById('action-bar-ab1');
+        const loggedCount = document.getElementById('logged-count-lc1');
+        const printBtn = document.getElementById('print-btn-p1');
+        const exportPdfBtn = document.getElementById('export-pdf-btn-e1');
+        const emailPdfBtn = document.getElementById('email-pdf-btn');
+        const completeReportBtn = document.getElementById('complete-report-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn-c4re');
+        const saveIndicator = document.getElementById('save-indicator-s9qx');
+        const emptyState = document.getElementById('empty-state-es1');
+        const toastContainer = document.getElementById('toast-container-tc1');
+
+        // ─── Helpers ───
+        function today() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function showToast(msg, type) {
+            const t = document.createElement('div');
+            const bgClass = type === 'error' ? 'bg-danger-600' : type === 'warning' ? 'bg-yellow-600' : 'bg-navy-500';
+            t.className = `toast ${bgClass} text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg pointer-events-auto`;
+            t.textContent = msg;
+            toastContainer.appendChild(t);
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 3200);
+        }
+
+        function showSaveIndicator() {
+            saveIndicator.classList.remove('hidden');
+            saveIndicator.classList.remove('save-indicator');
+            void saveIndicator.offsetWidth;
+            saveIndicator.classList.add('save-indicator');
+            setTimeout(() => saveIndicator.classList.add('hidden'), 2200);
+        }
+
+        function saveState() {
+            state.header.techName = techNameEl.value;
+            state.header.date = dateEl.value;
+            state.header.facilityAddr = addrEl.value;
+            state.header.trackingNum = trackingEl.value;
+            state.header.facilityId = facilityIdEl.value;
+
+            state.items = [];
+            document.querySelectorAll('.item-card').forEach((card, idx) => {
+                const item = {
+                    tuggerId: card.querySelector('.tugger-id').value,
+                    manufacturer: card.querySelector('.tugger-mfr').value,
+                    serialNum: card.querySelector('.tugger-serial').value,
+                    description: card.querySelector('.findings-text').value,
+                    photoData: card._photoData || null,
+                    photoType: card._photoType || null,
+                    photoWidth: card._photoWidth || null,
+                    photoHeight: card._photoHeight || null,
+                };
+                state.items.push(item);
+            });
+
+            try {
+                localStorage.setItem(LS_KEY, JSON.stringify(state));
+                showSaveIndicator();
+            } catch (e) {
+                // localStorage full
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(LS_KEY);
+                if (saved) {
+                    state = JSON.parse(saved);
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function updateCounts() {
+            const count = document.querySelectorAll('.item-card').length;
+            itemCountBadge.textContent = count + (count === 1 ? ' item' : ' items');
+            loggedCount.textContent = count + (count === 1 ? ' item logged' : ' items logged');
+            emptyState.classList.toggle('hidden', count > 0);
+        }
+
+        function renumberItems() {
+            document.querySelectorAll('.item-card').forEach((card, idx) => {
+                card.querySelector('.row-num').textContent = '#' + (idx + 1);
+            });
+            updateCounts();
+        }
+
+        // ─── Create Item Card ───
+        function createItemCard(data) {
+            const count = document.querySelectorAll('.item-card').length;
+            if (count >= MAX_ITEMS) {
+                showToast('Maximum 80 items reached', 'warning');
+                return null;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'item-card bg-white rounded-2xl border border-slate_alt-200 shadow-sm p-5 md:p-6';
+            const num = count + 1;
+
+            const hasPhoto = data && data.photoData;
+            const cameraLabel = hasPhoto ? '📷 Retake' : '📷 Camera';
+            const libraryLabel = hasPhoto ? '🖼 Replace' : '🖼 Library';
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <span class="row-num text-lg font-extrabold text-navy-500 tabular-nums">#${num}</span>
+                    <button class="remove-item-btn text-danger-500 hover:text-danger-700 text-sm font-semibold flex items-center gap-1 min-h-[44px] min-w-[44px] justify-center transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        Remove
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger ID #</label>
+                        <input type="text" class="input-field tugger-id" placeholder="e.g. TUG-01" value="${escapeAttr(data?.tuggerId || '')}" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger Manufacturer</label>
+                        <input type="text" class="input-field tugger-mfr" placeholder="e.g. Toyota, Crown, Raymond" value="${escapeAttr(data?.manufacturer || '')}" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Tugger Serial #</label>
+                        <input type="text" class="input-field tugger-serial" placeholder="e.g. SN-123456" value="${escapeAttr(data?.serialNum || '')}" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Photo</label>
+                    <div class="flex gap-2 mb-2">
+                        <button class="photo-btn camera-btn">${cameraLabel}</button>
+                        <button class="photo-btn library-btn">${libraryLabel}</button>
+                    </div>
+                    <input type="file" accept="image/*" capture="environment" class="hidden camera-input" />
+                    <input type="file" accept="image/*" class="hidden library-input" />
+                    <div class="photo-preview-wrap ${hasPhoto ? '' : 'hidden'}">
+                        <img class="photo-preview rounded-lg border border-slate_alt-200 mt-2" style="max-width:100%;max-height:200px;object-fit:contain;" alt="Captured photo" src="${hasPhoto ? data.photoData : ''}" />
+                        <button class="remove-photo-link text-xs text-danger-500 hover:text-danger-700 font-semibold mt-1.5 underline underline-offset-2">Remove photo</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Description of Findings</label>
+                    <textarea class="input-field findings-text" rows="3" placeholder="Describe repair performed, condition found, parts replaced...">${escapeHtml(data?.description || '')}</textarea>
+                </div>
+            `;
+
+            // Store photo data on card
+            if (hasPhoto) {
+                card._photoData = data.photoData;
+                card._photoType = data.photoType;
+                card._photoWidth = data.photoWidth;
+                card._photoHeight = data.photoHeight;
+            }
+
+            // Event: Remove item
+            card.querySelector('.remove-item-btn').addEventListener('click', function() {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-10px)';
+                card.style.transition = 'opacity 0.2s, transform 0.2s';
+                setTimeout(() => {
+                    card.remove();
+                    renumberItems();
+                    saveState();
+                }, 220);
+            });
+
+            // Event: Camera button
+            card.querySelector('.camera-btn').addEventListener('click', function() {
+                card.querySelector('.camera-input').click();
+            });
+
+            // Event: Library button
+            card.querySelector('.library-btn').addEventListener('click', function() {
+                card.querySelector('.library-input').click();
+            });
+
+            // Photo handling
+            function handlePhoto(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    const img = new Image();
+                    img.onload = function() {
+                        card._photoData = dataUrl;
+                        card._photoType = file.type;
+                        card._photoWidth = img.naturalWidth;
+                        card._photoHeight = img.naturalHeight;
+
+                        const preview = card.querySelector('.photo-preview');
+                        preview.src = dataUrl;
+                        card.querySelector('.photo-preview-wrap').classList.remove('hidden');
+                        card.querySelector('.camera-btn').textContent = '📷 Retake';
+                        card.querySelector('.library-btn').textContent = '🖼 Replace';
+                        saveState();
+                    };
+                    img.src = dataUrl;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            card.querySelector('.camera-input').addEventListener('change', function() {
+                handlePhoto(this.files[0]);
+                this.value = '';
+            });
+            card.querySelector('.library-input').addEventListener('change', function() {
+                handlePhoto(this.files[0]);
+                this.value = '';
+            });
+
+            // Event: Remove photo
+            card.querySelector('.remove-photo-link').addEventListener('click', function() {
+                card._photoData = null;
+                card._photoType = null;
+                card._photoWidth = null;
+                card._photoHeight = null;
+                card.querySelector('.photo-preview').src = '';
+                card.querySelector('.photo-preview-wrap').classList.add('hidden');
+                card.querySelector('.camera-btn').textContent = '📷 Camera';
+                card.querySelector('.library-btn').textContent = '🖼 Library';
+                saveState();
+            });
+
+            // Auto-save on input changes
+            card.querySelectorAll('input, textarea').forEach(el => {
+                el.addEventListener('change', saveState);
+                el.addEventListener('blur', saveState);
+            });
+
+            // Refresh lucide icons inside card
+            if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+                setTimeout(() => lucide.createIcons(), 10);
+            }
+
+            return card;
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+        }
+        function escapeAttr(s) {
+            return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ─── Validate Header ───
+        function validateHeader() {
+            const fields = [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl];
+            let firstInvalid = null;
+            fields.forEach(f => {
+                if (!f.value.trim()) {
+                    f.style.borderColor = '#F04438';
+                    if (!firstInvalid) firstInvalid = f;
+                } else {
+                    f.style.borderColor = '#D0D5DD';
+                }
+            });
+            if (firstInvalid) {
+                showToast('Please fill in all required fields', 'error');
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+                return false;
+            }
+            return true;
+        }
+
+        // ─── Start Inspection ───
+        startBtn.addEventListener('click', function() {
+            if (!validateHeader()) return;
+            state.inspectionStarted = true;
+            inspectionSection.classList.remove('hidden');
+            actionBar.classList.remove('hidden');
+            inspectionSection.scrollIntoView({ behavior: 'smooth' });
+            saveState();
+        });
+
+        // ─── Add Item ───
+        addItemBtn.addEventListener('click', function() {
+            const card = createItemCard(null);
+            if (card) {
+                itemsContainer.appendChild(card);
+                renumberItems();
+                saveState();
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // ─── Print ───
+        printBtn.addEventListener('click', function() {
+            window.print();
+        });
+
+        // ─── Clear All ───
+        clearAllBtn.addEventListener('click', function() {
+            if (confirm('Clear all data and start a new report? This cannot be undone.')) {
+                localStorage.removeItem(LS_KEY);
+                state = {
+                    reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+                    header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '' },
+                    items: [],
+                    inspectionStarted: false
+                };
+                techNameEl.value = '';
+                dateEl.value = today();
+                addrEl.value = '';
+                trackingEl.value = '';
+                facilityIdEl.value = '';
+                itemsContainer.innerHTML = '';
+                inspectionSection.classList.add('hidden');
+                actionBar.classList.add('hidden');
+                updateCounts();
+                showToast('Report cleared', 'success');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+        // ─── Clear border on input ───
+        [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl].forEach(f => {
+            f.addEventListener('input', function() {
+                if (f.value.trim()) f.style.borderColor = '#D0D5DD';
+            });
+            f.addEventListener('change', saveState);
+            f.addEventListener('blur', saveState);
+        });
+
+        // ─── PDF Export ───
+        exportPdfBtn.addEventListener('click', function() {
+            if (typeof window.jspdf === 'undefined') {
+                showToast('PDF library not loaded. Please try again.', 'error');
+                return;
+            }
+            showToast('Generating PDF...', 'success');
+
+            setTimeout(() => generatePDF('download'), 100);
+        });
+
+        completeReportBtn.addEventListener('click', () => generatePDF('complete'));
+        emailPdfBtn.addEventListener('click', () => {
+            if (confirm('Email this PDF now to Jacob, Daniel, and Gary?')) generatePDF('share');
+        });
+
+        function imageUrlToDataUrl(url) {
+            return fetch(url).then(r => r.blob()).then(blob => new Promise((resolve, reject) => {
+                const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob);
+            }));
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1] || ''); reader.onerror = reject; reader.readAsDataURL(blob); });
+        }
+
+        async function generatePDF(mode = 'download') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            const contentW = pageW - margin * 2;
+            let y = 0;
+            let pageNum = 1;
+            let logoData = null;
+            try { logoData = await imageUrlToDataUrl('/frontline-pro-services-logo.png'); } catch (_) {}
+
+            function drawHeader() {
+                if (pageNum === 1 && logoData) {
+                    doc.addImage(logoData, 'PNG', margin, 7, contentW, 31.7);
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(27,42,74);
+                    doc.text('Tugger Repairs & Maintenance Report', pageW / 2, 46, { align: 'center' });
+                    y = 54;
+                    return;
+                }
+                doc.setFillColor(27, 42, 74);
+                doc.rect(0, 0, pageW, 16, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(255, 255, 255);
+                doc.text('FRONTLINE FACILITY SERVICES', margin, 10.5);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Tugger Repairs & Maintenance Report', pageW - margin, 10.5, { align: 'right' });
+                y = 24;
+            }
+
+            function drawFooter() {
+                doc.setFontSize(7);
+                doc.setTextColor(100, 112, 133);
+                doc.setFont('helvetica', 'normal');
+                const footerText = 'Frontline Facility Services | Tugger R&M Report | Page ' + pageNum;
+                doc.text(footerText, pageW / 2, pageH - 8, { align: 'center' });
+            }
+
+            function addPage() {
+                drawFooter();
+                doc.addPage();
+                pageNum++;
+                drawHeader();
+            }
+
+            function checkPageBreak(neededHeight) {
+                if (y + neededHeight > pageH - 20) {
+                    addPage();
+                    return true;
+                }
+                return false;
+            }
+
+            // Page 1
+            drawHeader();
+
+            // Report Info Block
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(27, 42, 74);
+            doc.text('Report Information', margin, y);
+            y += 6;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(52, 64, 84);
+
+            const hdr = state.header;
+            const infoLeft = [
+                ['Technician:', hdr.techName],
+                ['Date:', hdr.date],
+                ['Facility Address:', hdr.facilityAddr],
+            ];
+            const infoRight = [
+                ['Facility ID:', hdr.facilityId],
+                ['Tracking #:', hdr.trackingNum],
+                ['Total Items:', '' + state.items.length],
+            ];
+
+            infoLeft.forEach((pair, i) => {
+                doc.setFont('helvetica', 'bold');
+                doc.text(pair[0], margin, y + i * 5);
+                doc.setFont('helvetica', 'normal');
+                doc.text(pair[1] || '—', margin + 30, y + i * 5);
+            });
+            infoRight.forEach((pair, i) => {
+                doc.setFont('helvetica', 'bold');
+                doc.text(pair[0], pageW / 2 + 5, y + i * 5);
+                doc.setFont('helvetica', 'normal');
+                doc.text(pair[1] || '—', pageW / 2 + 30, y + i * 5);
+            });
+            y += 20;
+
+            // Divider
+            doc.setDrawColor(208, 213, 221);
+            doc.setLineWidth(0.3);
+            doc.line(margin, y, pageW - margin, y);
+            y += 8;
+
+            // Items
+            for (let idx = 0; idx < state.items.length; idx++) {
+                const item = state.items[idx];
+                if (idx > 0) addPage();
+                // Estimate block height
+                let blockHeight = 30;
+                if (item.description) {
+                    const descLines = doc.splitTextToSize(item.description, contentW - 4);
+                    blockHeight += descLines.length * 4;
+                }
+                if (item.photoData) {
+                    blockHeight += 90;
+                }
+                blockHeight = Math.min(blockHeight, pageH - 40);
+
+                checkPageBreak(Math.min(blockHeight, 50));
+
+                // Item header
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(27, 42, 74);
+                const itemTitle = 'Item ' + (idx + 1);
+                doc.text(itemTitle, margin, y);
+                if (item.tuggerId) {
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('  —  Tugger ID: ' + item.tuggerId, margin + doc.getTextWidth(itemTitle) + 2, y);
+                }
+                y += 5;
+
+                // Details line
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(71, 84, 103);
+                let detailParts = [];
+                if (item.manufacturer) detailParts.push('Manufacturer: ' + item.manufacturer);
+                if (item.serialNum) detailParts.push('Serial #: ' + item.serialNum);
+                if (detailParts.length) {
+                    const detailText = detailParts.join('  |  ');
+                    doc.text(detailText, margin, y);
+                    y += 5;
+                }
+
+                // Description
+                if (item.description) {
+                    checkPageBreak(15);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(52, 64, 84);
+                    doc.text('Description:', margin, y);
+                    y += 4;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(71, 84, 103);
+                    const descLines = doc.splitTextToSize(item.description, contentW - 4);
+                    descLines.forEach(line => {
+                        checkPageBreak(5);
+                        doc.text(line, margin + 2, y);
+                        y += 4;
+                    });
+                    y += 2;
+                }
+
+                // Photo
+                if (item.photoData) {
+                    const renderW = 127;
+                    const renderH = 127;
+
+                    checkPageBreak(renderH + 5);
+
+                    const x = (pageW - renderW) / 2;
+                    try {
+                        doc.addImage(item.photoData, 'JPEG', x, y, renderW, renderH);
+                    } catch (e) {
+                        doc.setFillColor(242, 244, 247);
+                        doc.rect(x, y, renderW, renderH, 'F');
+                        doc.setFontSize(9);
+                        doc.setTextColor(152, 162, 179);
+                        doc.text('Photo could not be embedded', pageW / 2, y + renderH / 2, { align: 'center' });
+                    }
+                    y += renderH + 4;
+                } else {
+                    checkPageBreak(22);
+                    const placeholderW = 80;
+                    const placeholderH = 18;
+                    const px = (pageW - placeholderW) / 2;
+                    doc.setFillColor(242, 244, 247);
+                    doc.roundedRect(px, y, placeholderW, placeholderH, 2, 2, 'F');
+                    doc.setFontSize(8);
+                    doc.setTextColor(152, 162, 179);
+                    doc.text('No Photo', pageW / 2, y + placeholderH / 2 + 1.5, { align: 'center' });
+                    y += placeholderH + 4;
+                }
+
+                // Divider
+                if (idx < state.items.length - 1) {
+                    checkPageBreak(8);
+                    doc.setDrawColor(228, 232, 237);
+                    doc.setLineWidth(0.2);
+                    doc.line(margin, y, pageW - margin, y);
+                    y += 6;
+                }
+            }
+
+            // Final footer
+            drawFooter();
+
+            // Update total page count
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(7);
+                doc.setTextColor(100, 112, 133);
+                doc.setFillColor(255, 255, 255);
+                doc.rect(0, pageH - 14, pageW, 14, 'F');
+                doc.text('Frontline Facility Services | Tugger R&M Report | Page ' + i + ' of ' + totalPages, pageW / 2, pageH - 8, { align: 'center' });
+            }
+
+            const facilityId = (hdr.facilityId || 'UNKNOWN').replace(/[^a-zA-Z0-9_-]/g, '');
+            const dateStr = (hdr.date || today()).replace(/-/g, '');
+            const filename = 'Frontline_Tugger_' + facilityId + '_' + dateStr + '.pdf';
+            if (mode === 'download') {
+                doc.save(filename);
+                showToast('PDF downloaded successfully', 'success');
+                return;
+            }
+            const pdfBase64 = await blobToBase64(doc.output('blob'));
+            const report = {
+                id: state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+                technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
+                trackingNumber: hdr.trackingNum, facilityId: hdr.facilityId, itemCount: state.items.length,
+                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', filename, pdfBase64,
+                completedAt: new Date().toISOString()
+            };
+            const endpoint = mode === 'share' ? '/api/pm-reports/email' : '/api/pm-reports';
+            const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
+            if (!response.ok) throw new Error(await response.text());
+            showToast(mode === 'share' ? 'PDF emailed successfully' : 'Completed report saved', 'success');
+        }
+
+        // ─── Initialize ───
+        dateEl.value = today();
+
+        if (loadState()) {
+            techNameEl.value = state.header.techName || '';
+            dateEl.value = state.header.date || today();
+            addrEl.value = state.header.facilityAddr || '';
+            trackingEl.value = state.header.trackingNum || '';
+            facilityIdEl.value = state.header.facilityId || '';
+
+            if (state.inspectionStarted) {
+                inspectionSection.classList.remove('hidden');
+                actionBar.classList.remove('hidden');
+
+                state.items.forEach(itemData => {
+                    const card = createItemCard(itemData);
+                    if (card) itemsContainer.appendChild(card);
+                });
+                renumberItems();
+            }
+        }
+
+        updateCounts();
+
+    })();
+    </script>
+</body>
+</html>

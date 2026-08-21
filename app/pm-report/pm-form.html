@@ -146,6 +146,17 @@
 
     <main data-id="16" class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
+        <section class="no-print bg-white rounded-2xl shadow-sm border border-field-border/40 p-4">
+            <p class="text-xs font-bold tracking-widest text-navy-300 mb-3">SELECT REPORT TYPE</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="report-type-buttons">
+                <button type="button" data-category="regular" class="report-type-btn h-16 border-2 border-navy-500 rounded-xl font-bold text-navy-500">Regular<br>Job</button>
+                <button type="button" data-category="proposed" class="report-type-btn h-16 border-2 border-navy-500 rounded-xl font-bold text-navy-500">Proposed<br>Work</button>
+                <button type="button" data-category="pm" class="report-type-btn h-16 border-2 border-navy-500 rounded-xl font-bold text-navy-500">Preventive<br>Maintenance</button>
+                <a href="/tugger-report" class="h-16 border-2 border-navy-500 rounded-xl font-bold text-navy-500 flex items-center justify-center text-center">Tugger</a>
+            </div>
+            <h2 id="selected-report-title" class="text-center mt-4 text-xl font-bold text-navy-500">Preventive Maintenance Report</h2>
+        </section>
+
         <!-- SECTION 1: Report Header -->
         <section data-id="17" id="header-card-c1a2" class="bg-white rounded-2xl shadow-sm border border-field-border/40 p-5 md:p-7">
             <div data-id="18" class="flex items-center gap-2 mb-5">
@@ -256,7 +267,7 @@
     </div>
 
     <footer data-id="81" class="py-6 text-center no-print">
-        <p data-id="82" class="text-xs text-navy-300">Frontline Pro Services · Preventative Maintenance</p>
+        <p data-id="82" id="report-footer-label" class="text-xs text-navy-300">Frontline Pro Services · Preventive Maintenance</p>
     </footer>
 
     <!-- Item Card Template -->
@@ -307,7 +318,13 @@
 
         // ===================== STATE =====================
         const MAX_ITEMS = 80;
-        const STORAGE_KEY = 'frontline_pm_report';
+        const STORAGE_KEY = 'frontline_field_report';
+        const REPORT_TYPES = {
+            regular: { label: 'Regular Job Report', short: 'Regular Job', file: 'Regular_Job' },
+            proposed: { label: 'Proposed Work Report', short: 'Proposed Work', file: 'Proposed_Work' },
+            pm: { label: 'Preventive Maintenance Report', short: 'Preventive Maintenance', file: 'PM' }
+        };
+        let reportCategory = localStorage.getItem('frontline_report_category') || 'pm';
         const EMAIL_RECIPIENTS = 'jacob@frontlineworldwide.com;daniel@frontlineworldwide.com;gary@frontlineworldwide.com';
         let itemCounter = 0;
         let items = [];
@@ -348,6 +365,9 @@
 
             loadState();
 
+            document.querySelectorAll('.report-type-btn').forEach(button => button.addEventListener('click', () => setReportCategory(button.dataset.category)));
+            setReportCategory(reportCategory, false);
+
             startBtn.addEventListener('click', handleStartInspection);
             addItemBtn.addEventListener('click', () => addItem());
             printBtn.addEventListener('click', handlePrint);
@@ -370,6 +390,22 @@
             });
 
             updateCounts();
+        }
+
+        function setReportCategory(category, persist = true) {
+            if (!REPORT_TYPES[category]) category = 'pm';
+            reportCategory = category;
+            if (persist) localStorage.setItem('frontline_report_category', category);
+            document.querySelectorAll('.report-type-btn').forEach(button => {
+                const active = button.dataset.category === category;
+                button.classList.toggle('bg-navy-500', active);
+                button.classList.toggle('text-white', active);
+                button.classList.toggle('text-navy-500', !active);
+            });
+            document.getElementById('selected-report-title').textContent = REPORT_TYPES[category].label;
+            document.getElementById('report-footer-label').textContent = 'Frontline Pro Services · ' + REPORT_TYPES[category].short;
+            document.title = 'Frontline ' + REPORT_TYPES[category].label;
+            if (persist) saveState();
         }
 
         // ===================== TOAST =====================
@@ -655,10 +691,42 @@
             });
         }
 
+        function imageUrlToDataUrl(url) {
+            return fetch(url).then(response => response.blob()).then(blob => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            }));
+        }
+
+        function makeHighResolutionSquare(imageData) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => {
+                    const size = 1500;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const context = canvas.getContext('2d');
+                    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+                    const sourceX = (image.naturalWidth - sourceSize) / 2;
+                    const sourceY = (image.naturalHeight - sourceSize) / 2;
+                    context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/jpeg', 0.9));
+                };
+                image.onerror = reject;
+                image.src = imageData;
+            });
+        }
+
         async function generatePDF(loadingToast, mode = 'download') {
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+                const reportType = REPORT_TYPES[reportCategory] || REPORT_TYPES.pm;
+                let logoData = null;
+                try { logoData = await imageUrlToDataUrl('/frontline-pro-services-logo.png'); } catch (_) {}
 
                 const pageW = doc.internal.pageSize.getWidth();   // 215.9
                 const pageH = doc.internal.pageSize.getHeight();  // 279.4
@@ -706,6 +774,17 @@
 
                 // ---- Draw page header ----
                 function drawPageHeader() {
+                    if (currentPage === 1 && logoData) {
+                        doc.addImage(logoData, 'PNG', marginL, 7, contentW, 32.5);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(13);
+                        doc.setTextColor(...NAVY);
+                        doc.text(reportType.label, pageW / 2, 47, { align: 'center' });
+                        doc.setDrawColor(...NAVY);
+                        doc.line(marginL, 51, pageW - marginR, 51);
+                        cursorY = 57;
+                        return;
+                    }
                     doc.setFillColor(...NAVY);
                     doc.rect(0, 0, pageW, 14, 'F');
 
@@ -716,7 +795,7 @@
 
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
-                    doc.text('Preventative Maintenance Report', pageW - marginR, 9, { align: 'right' });
+                    doc.text(reportType.label, pageW - marginR, 9, { align: 'right' });
 
                     doc.setDrawColor(...NAVY);
                     doc.setLineWidth(0.5);
@@ -731,7 +810,7 @@
                     doc.setFontSize(7);
                     doc.setTextColor(...GRAY_TEXT);
                     doc.text(
-                        'Frontline PM App v1.0  |  PM Report  |  Page ' + pageNum + ' of {{TOTAL_PAGES}}',
+                        'Frontline Reports  |  ' + reportType.short + '  |  Page ' + pageNum + ' of {{TOTAL_PAGES}}',
                         pageW / 2, pageH - 8, { align: 'center' }
                     );
                 }
@@ -786,98 +865,63 @@
                 cursorY += 6;
 
                 // ---- Inspection Items ----
-                const thumbW = 45;
-                const thumbH = 35;
-                const textStartX = marginL + thumbW + 6;
-                const textAreaW = contentW - thumbW - 6;
+                const thumbW = 127;
+                const thumbH = 127;
+                const textAreaW = contentW;
 
-                itemDataList.forEach((item, idx) => {
-                    doc.setFontSize(8);
-                    const descLines = doc.splitTextToSize(item.description, textAreaW);
-                    const textBlockH = 8 + 6 + 4 + (descLines.length * 3.5) + 4;
-                    const blockH = Math.max(thumbH + 4, textBlockH);
+                for (let idx = 0; idx < itemDataList.length; idx++) {
+                    const item = itemDataList[idx];
+                    if (idx > 0) {
+                        drawPageFooter(currentPage);
+                        doc.addPage();
+                        currentPage++;
+                        drawPageHeader();
+                    }
 
-                    ensureSpace(blockH + 4);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(11);
+                    doc.setTextColor(...NAVY);
+                    doc.text('Item ' + item.index + '  |  Unit ID: ' + item.unitId, marginL, cursorY);
+                    cursorY += 7;
 
-                    const blockTop = cursorY;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(...BLACK);
+                    const wrappedDesc = doc.splitTextToSize(item.description, textAreaW);
+                    doc.text(wrappedDesc, marginL, cursorY);
+                    cursorY += wrappedDesc.length * 4.2 + 6;
+
+                    const imageX = (pageW - thumbW) / 2;
+                    if (cursorY + thumbH > usableBottom) {
+                        drawPageFooter(currentPage);
+                        doc.addPage();
+                        currentPage++;
+                        drawPageHeader();
+                    }
 
                     if (item.photoData) {
                         try {
-                            let imgFormat = 'JPEG';
-                            if (item.photoType && item.photoType.toLowerCase().includes('png')) {
-                                imgFormat = 'PNG';
-                            }
-                            doc.addImage(item.photoData, imgFormat, marginL, cursorY, thumbW, thumbH);
+                            const squarePhoto = await makeHighResolutionSquare(item.photoData);
+                            doc.addImage(squarePhoto, 'JPEG', imageX, cursorY, thumbW, thumbH, undefined, 'FAST');
                         } catch (e) {
                             doc.setFillColor(240, 240, 240);
-                            doc.roundedRect(marginL, cursorY, thumbW, thumbH, 2, 2, 'F');
+                            doc.roundedRect(imageX, cursorY, thumbW, thumbH, 2, 2, 'F');
                             doc.setFontSize(7);
                             doc.setTextColor(...GRAY_TEXT);
-                            doc.text('Image Error', marginL + thumbW / 2, cursorY + thumbH / 2, { align: 'center' });
+                            doc.text('Image Error', pageW / 2, cursorY + thumbH / 2, { align: 'center' });
                         }
                     } else {
                         doc.setFillColor(242, 244, 247);
                         doc.setDrawColor(...GRAY_LIGHT);
                         doc.setLineWidth(0.3);
-                        doc.roundedRect(marginL, cursorY, thumbW, thumbH, 2, 2, 'FD');
+                        doc.roundedRect(imageX, cursorY, thumbW, thumbH, 2, 2, 'FD');
                         doc.setFont('helvetica', 'normal');
                         doc.setFontSize(7);
                         doc.setTextColor(...GRAY_TEXT);
-                        doc.text('No Photo', marginL + thumbW / 2, cursorY + thumbH / 2, { align: 'center' });
+                        doc.text('No Photo', pageW / 2, cursorY + thumbH / 2, { align: 'center' });
                     }
-
-                    let textY = cursorY + 1;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(10);
-                    doc.setTextColor(...NAVY);
-                    doc.text('Item ' + item.index, textStartX, textY + 4);
-                    textY += 8;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(8);
-                    doc.setTextColor(...GRAY_TEXT);
-                    doc.text('Unit ID: ', textStartX, textY + 3);
-                    const uidLabelW = doc.getTextWidth('Unit ID: ');
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(8);
-                    doc.setTextColor(...BLACK);
-                    doc.text(item.unitId, textStartX + uidLabelW, textY + 3);
-                    textY += 6;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(8);
-                    doc.setTextColor(...GRAY_TEXT);
-                    doc.text('Description:', textStartX, textY + 3);
-                    textY += 5;
-
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(8);
-                    doc.setTextColor(...BLACK);
-
-                    const wrappedDesc = doc.splitTextToSize(item.description, textAreaW);
-                    wrappedDesc.forEach((line, lineIdx) => {
-                        if (textY + 4 > usableBottom) {
-                            drawPageFooter(currentPage);
-                            doc.addPage();
-                            currentPage++;
-                            drawPageHeader();
-                            textY = cursorY;
-                        }
-                        doc.text(line, textStartX, textY + 3);
-                        textY += 3.5;
-                    });
-
-                    const blockBottom = Math.max(blockTop + thumbH + 2, textY + 2);
-                    cursorY = blockBottom + 2;
-
-                    if (idx < itemDataList.length - 1) {
-                        doc.setDrawColor(...GRAY_LIGHT);
-                        doc.setLineWidth(0.3);
-                        doc.line(marginL, cursorY, pageW - marginR, cursorY);
-                        cursorY += 5;
-                    }
-                });
+                    cursorY += thumbH + 5;
+                }
 
                 drawPageFooter(currentPage);
 
@@ -891,7 +935,7 @@
                     doc.setFontSize(7);
                     doc.setTextColor(...GRAY_TEXT);
                     doc.text(
-                        'Frontline PM App v1.0  |  PM Report  |  Page ' + i + ' of ' + totalPages,
+                        'Frontline Reports  |  ' + reportType.short + '  |  Page ' + i + ' of ' + totalPages,
                         pageW / 2, pageH - 8, { align: 'center' }
                     );
                 }
@@ -899,7 +943,7 @@
                 // Save
                 const safeFacId = facilityId.replace(/[^a-zA-Z0-9_-]/g, '_');
                 const safeDate = reportDateInput.value || 'undated';
-                const filename = 'Frontline_PM_' + safeFacId + '_' + safeDate + '.pdf';
+                const filename = 'Frontline_' + reportType.file + '_' + safeFacId + '_' + safeDate + '.pdf';
                 if (mode === 'complete') {
                     const pdfBase64 = await blobToBase64(doc.output('blob'));
                     const response = await fetch('/api/pm-reports', {
@@ -913,6 +957,8 @@
                             trackingNumber: trackingNum,
                             facilityId,
                             itemCount: totalItems,
+                            category: reportCategory,
+                            reportTypeLabel: reportType.label,
                             filename,
                             pdfBase64,
                             completedAt: new Date().toISOString()
@@ -935,6 +981,8 @@
                             facilityAddress: facilityAddr,
                             trackingNumber: trackingNum,
                             facilityId,
+                            category: reportCategory,
+                            reportTypeLabel: reportType.label,
                             filename,
                             pdfBase64
                         } })
@@ -1031,6 +1079,7 @@
                 facilityAddr: facilityAddrInput.value,
                 trackingNum: trackingNumInput.value,
                 facilityId: facilityIdInput.value,
+                reportCategory,
                 reportId,
                 inspectionStarted: !inspectionSection.classList.contains('hidden'),
                 items: itemsData
@@ -1051,6 +1100,7 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) return;
                 const state = JSON.parse(raw);
+                if (state.reportCategory && REPORT_TYPES[state.reportCategory]) reportCategory = state.reportCategory;
 
                 techNameInput.value = state.techName || '';
                 reportDateInput.value = state.reportDate || new Date().toISOString().split('T')[0];
