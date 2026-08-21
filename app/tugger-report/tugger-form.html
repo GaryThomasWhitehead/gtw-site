@@ -642,12 +642,14 @@
             return new Promise((resolve, reject) => {
                 const image = new Image();
                 image.onload = () => {
-                    const size = 1200;
+                    // 1000px provides 200 DPI in the 5-inch PDF layout while
+                    // allowing all 8 Before and 8 After photos to upload.
+                    const size = 1000;
                     const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
                     const canvas = document.createElement('canvas');
                     canvas.width = size; canvas.height = size;
                     canvas.getContext('2d').drawImage(image, (image.naturalWidth-sourceSize)/2, (image.naturalHeight-sourceSize)/2, sourceSize, sourceSize, 0, 0, size, size);
-                    resolve(canvas.toDataURL('image/jpeg', 0.82));
+                    resolve(canvas.toDataURL('image/jpeg', 0.72));
                 };
                 image.onerror = reject;
                 image.src = dataUrl;
