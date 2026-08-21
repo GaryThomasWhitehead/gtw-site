@@ -271,7 +271,7 @@
 
         // ─── Constants ───
         const MAX_ITEMS = 80;
-        const MAX_PHOTOS_PER_SECTION = 8;
+        const MAX_PHOTOS_PER_SECTION = 5;
         const LS_KEY = 'frontline_tugger_rm_data';
 
         // ─── State ───
@@ -381,7 +381,7 @@
 
         function photoSectionHtml(kind, label) {
             return `<div class="mb-4 p-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50">
-                <label class="block text-xs font-bold text-navy-500 uppercase tracking-wide mb-2">${label} (up to 8)</label>
+                <label class="block text-xs font-bold text-navy-500 uppercase tracking-wide mb-2">${label} (up to ${MAX_PHOTOS_PER_SECTION})</label>
                 <div class="flex gap-2 mb-2 flex-wrap">
                     <button type="button" class="photo-btn ${kind}-camera-btn">📷 Take Photo</button>
                     <button type="button" class="photo-btn ${kind}-library-btn">🖼 Upload Photos</button>
@@ -472,10 +472,10 @@
                 const photos = kind === 'before' ? card._beforePhotos : card._afterPhotos;
                 const available = MAX_PHOTOS_PER_SECTION - photos.length;
                 const files = Array.from(fileList || []).slice(0, available);
-                if (!files.length) { showToast('Maximum 8 ' + kind + ' photos reached', 'warning'); return; }
+                if (!files.length) { showToast('Maximum ' + MAX_PHOTOS_PER_SECTION + ' ' + kind + ' photos reached', 'warning'); return; }
                 Promise.all(files.map(file => fileToOptimizedPhoto(file))).then(newPhotos => {
                     photos.push(...newPhotos); renderPhotoGallery(kind); saveState();
-                    if ((fileList || []).length > available) showToast('Only ' + available + ' photos were added. Maximum is 8.', 'warning');
+                    if ((fileList || []).length > available) showToast('Only ' + available + ' photos were added. Maximum is ' + MAX_PHOTOS_PER_SECTION + '.', 'warning');
                 });
             }
 
@@ -643,7 +643,7 @@
                 const image = new Image();
                 image.onload = () => {
                     // 1000px provides 200 DPI in the 5-inch PDF layout while
-                    // allowing all 8 Before and 8 After photos to upload.
+                    // allowing all 5 Before and 5 After photos to upload.
                     const size = 1000;
                     const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
                     const canvas = document.createElement('canvas');
