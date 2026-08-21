@@ -271,6 +271,7 @@
 
         // ─── Constants ───
         const MAX_ITEMS = 80;
+        const MAX_PHOTOS_PER_SECTION = 8;
         const LS_KEY = 'frontline_tugger_rm_data';
 
         // ─── State ───
@@ -339,10 +340,8 @@
                     manufacturer: card.querySelector('.tugger-mfr').value,
                     serialNum: card.querySelector('.tugger-serial').value,
                     description: card.querySelector('.findings-text').value,
-                    photoData: card._photoData || null,
-                    photoType: card._photoType || null,
-                    photoWidth: card._photoWidth || null,
-                    photoHeight: card._photoHeight || null,
+                    beforePhotos: (card._beforePhotos || []).slice(0, MAX_PHOTOS_PER_SECTION),
+                    afterPhotos: (card._afterPhotos || []).slice(0, MAX_PHOTOS_PER_SECTION),
                 };
                 state.items.push(item);
             });
@@ -380,6 +379,28 @@
             updateCounts();
         }
 
+        function photoSectionHtml(kind, label) {
+            return `<div class="mb-4 p-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50">
+                <label class="block text-xs font-bold text-navy-500 uppercase tracking-wide mb-2">${label} (up to 8)</label>
+                <div class="flex gap-2 mb-2 flex-wrap">
+                    <button type="button" class="photo-btn ${kind}-camera-btn">📷 Take Photo</button>
+                    <button type="button" class="photo-btn ${kind}-library-btn">🖼 Upload Photos</button>
+                </div>
+                <input type="file" accept="image/*" capture="environment" class="hidden ${kind}-camera-input" />
+                <input type="file" accept="image/*" multiple class="hidden ${kind}-library-input" />
+                <div class="${kind}-photo-gallery grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+            </div>`;
+        }
+
+        function fileToOptimizedPhoto(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => optimizePhotoData(reader.result).then(resolve).catch(reject);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         // ─── Create Item Card ───
         function createItemCard(data) {
             const count = document.querySelectorAll('.item-card').length;
@@ -392,9 +413,8 @@
             card.className = 'item-card bg-white rounded-2xl border border-slate_alt-200 shadow-sm p-5 md:p-6';
             const num = count + 1;
 
-            const hasPhoto = data && data.photoData;
-            const cameraLabel = hasPhoto ? '📷 Retake' : '📷 Camera';
-            const libraryLabel = hasPhoto ? '🖼 Replace' : '🖼 Library';
+            const beforePhotos = data?.beforePhotos || (data?.photoData ? [data.photoData] : []);
+            const afterPhotos = data?.afterPhotos || [];
 
             card.innerHTML = `
                 <div class="flex items-center justify-between mb-4">
@@ -418,32 +438,16 @@
                         <input type="text" class="input-field tugger-serial" placeholder="e.g. SN-123456" value="${escapeAttr(data?.serialNum || '')}" />
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Photo</label>
-                    <div class="flex gap-2 mb-2">
-                        <button class="photo-btn camera-btn">${cameraLabel}</button>
-                        <button class="photo-btn library-btn">${libraryLabel}</button>
-                    </div>
-                    <input type="file" accept="image/*" capture="environment" class="hidden camera-input" />
-                    <input type="file" accept="image/*" class="hidden library-input" />
-                    <div class="photo-preview-wrap ${hasPhoto ? '' : 'hidden'}">
-                        <img class="photo-preview rounded-lg border border-slate_alt-200 mt-2" style="max-width:100%;max-height:200px;object-fit:contain;" alt="Captured photo" src="${hasPhoto ? data.photoData : ''}" />
-                        <button class="remove-photo-link text-xs text-danger-500 hover:text-danger-700 font-semibold mt-1.5 underline underline-offset-2">Remove photo</button>
-                    </div>
-                </div>
+                ${photoSectionHtml('before', 'Before Pictures')}
+                ${photoSectionHtml('after', 'After Pictures')}
                 <div>
                     <label class="block text-xs font-semibold text-slate_alt-500 uppercase tracking-wide mb-1">Description of Findings</label>
                     <textarea class="input-field findings-text" rows="3" placeholder="Describe repair performed, condition found, parts replaced...">${escapeHtml(data?.description || '')}</textarea>
                 </div>
             `;
 
-            // Store photo data on card
-            if (hasPhoto) {
-                card._photoData = data.photoData;
-                card._photoType = data.photoType;
-                card._photoWidth = data.photoWidth;
-                card._photoHeight = data.photoHeight;
-            }
+            card._beforePhotos = beforePhotos.slice(0, MAX_PHOTOS_PER_SECTION);
+            card._afterPhotos = afterPhotos.slice(0, MAX_PHOTOS_PER_SECTION);
 
             // Event: Remove item
             card.querySelector('.remove-item-btn').addEventListener('click', function() {
@@ -457,73 +461,30 @@
                 }, 220);
             });
 
-            // Event: Camera button
-            card.querySelector('.camera-btn').addEventListener('click', function() {
-                card.querySelector('.camera-input').click();
-            });
-
-            // Event: Library button
-            card.querySelector('.library-btn').addEventListener('click', function() {
-                card.querySelector('.library-input').click();
-            });
-
-            // Photo handling
-            function handlePhoto(file) {
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const dataUrl = e.target.result;
-                    const img = new Image();
-                    img.onload = function() {
-                        // Phone photos can be 5–15 MB each. Resize to a 1200px square
-                        // (240 DPI at 5 inches) so saving and emailing stay below the
-                        // mobile/server upload limit while remaining print-quality.
-                        const size = 1200;
-                        const sourceSize = Math.min(img.naturalWidth, img.naturalHeight);
-                        const sourceX = (img.naturalWidth - sourceSize) / 2;
-                        const sourceY = (img.naturalHeight - sourceSize) / 2;
-                        const canvas = document.createElement('canvas');
-                        canvas.width = size;
-                        canvas.height = size;
-                        canvas.getContext('2d').drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
-                        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-                        card._photoData = optimizedDataUrl;
-                        card._photoType = 'image/jpeg';
-                        card._photoWidth = size;
-                        card._photoHeight = size;
-
-                        const preview = card.querySelector('.photo-preview');
-                        preview.src = optimizedDataUrl;
-                        card.querySelector('.photo-preview-wrap').classList.remove('hidden');
-                        card.querySelector('.camera-btn').textContent = '📷 Retake';
-                        card.querySelector('.library-btn').textContent = '🖼 Replace';
-                        saveState();
-                    };
-                    img.src = dataUrl;
-                };
-                reader.readAsDataURL(file);
+            function renderPhotoGallery(kind) {
+                const photos = kind === 'before' ? card._beforePhotos : card._afterPhotos;
+                const gallery = card.querySelector('.' + kind + '-photo-gallery');
+                gallery.innerHTML = photos.map((photo,index) => `<div class="relative"><img src="${photo}" class="w-full aspect-square object-cover rounded-lg border border-slate_alt-200" alt="${kind} photo ${index+1}"/><button type="button" data-index="${index}" class="absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button></div>`).join('');
+                gallery.querySelectorAll('button').forEach(button => button.addEventListener('click', () => { photos.splice(Number(button.dataset.index),1); renderPhotoGallery(kind); saveState(); }));
             }
 
-            card.querySelector('.camera-input').addEventListener('change', function() {
-                handlePhoto(this.files[0]);
-                this.value = '';
-            });
-            card.querySelector('.library-input').addEventListener('change', function() {
-                handlePhoto(this.files[0]);
-                this.value = '';
-            });
+            function addPhotoFiles(kind, fileList) {
+                const photos = kind === 'before' ? card._beforePhotos : card._afterPhotos;
+                const available = MAX_PHOTOS_PER_SECTION - photos.length;
+                const files = Array.from(fileList || []).slice(0, available);
+                if (!files.length) { showToast('Maximum 8 ' + kind + ' photos reached', 'warning'); return; }
+                Promise.all(files.map(file => fileToOptimizedPhoto(file))).then(newPhotos => {
+                    photos.push(...newPhotos); renderPhotoGallery(kind); saveState();
+                    if ((fileList || []).length > available) showToast('Only ' + available + ' photos were added. Maximum is 8.', 'warning');
+                });
+            }
 
-            // Event: Remove photo
-            card.querySelector('.remove-photo-link').addEventListener('click', function() {
-                card._photoData = null;
-                card._photoType = null;
-                card._photoWidth = null;
-                card._photoHeight = null;
-                card.querySelector('.photo-preview').src = '';
-                card.querySelector('.photo-preview-wrap').classList.add('hidden');
-                card.querySelector('.camera-btn').textContent = '📷 Camera';
-                card.querySelector('.library-btn').textContent = '🖼 Library';
-                saveState();
+            ['before','after'].forEach(kind => {
+                card.querySelector('.' + kind + '-camera-btn').addEventListener('click', () => card.querySelector('.' + kind + '-camera-input').click());
+                card.querySelector('.' + kind + '-library-btn').addEventListener('click', () => card.querySelector('.' + kind + '-library-input').click());
+                card.querySelector('.' + kind + '-camera-input').addEventListener('change', function(){ addPhotoFiles(kind,this.files); this.value=''; });
+                card.querySelector('.' + kind + '-library-input').addEventListener('change', function(){ addPhotoFiles(kind,this.files); this.value=''; });
+                renderPhotoGallery(kind);
             });
 
             // Auto-save on input changes
@@ -804,7 +765,7 @@
                     const descLines = doc.splitTextToSize(item.description, contentW - 4);
                     blockHeight += descLines.length * 4;
                 }
-                if (item.photoData) {
+                if ((item.beforePhotos || []).length || (item.afterPhotos || []).length || item.photoData) {
                     blockHeight += 90;
                 }
                 blockHeight = Math.min(blockHeight, pageH - 40);
@@ -855,25 +816,31 @@
                     y += 2;
                 }
 
-                // Photo
-                if (item.photoData) {
-                    const renderW = 127;
-                    const renderH = 127;
-
-                    checkPageBreak(renderH + 5);
-
-                    const x = (pageW - renderW) / 2;
-                    try {
-                        const optimizedPhoto = await optimizePhotoData(item.photoData);
-                        doc.addImage(optimizedPhoto, 'JPEG', x, y, renderW, renderH, undefined, 'FAST');
-                    } catch (e) {
-                        doc.setFillColor(242, 244, 247);
-                        doc.rect(x, y, renderW, renderH, 'F');
-                        doc.setFontSize(9);
-                        doc.setTextColor(152, 162, 179);
-                        doc.text('Photo could not be embedded', pageW / 2, y + renderH / 2, { align: 'center' });
+                // Before and after pictures
+                const photoGroups = [
+                    { label: 'BEFORE PICTURES', photos: item.beforePhotos || (item.photoData ? [item.photoData] : []) },
+                    { label: 'AFTER PICTURES', photos: item.afterPhotos || [] }
+                ];
+                const totalPhotos = photoGroups.reduce((sum, group) => sum + group.photos.length, 0);
+                if (totalPhotos) {
+                    let renderedCount = 0;
+                    for (const group of photoGroups) {
+                        for (let photoIndex = 0; photoIndex < group.photos.length; photoIndex++) {
+                            if (renderedCount > 0) addPage();
+                            const renderW = 127, renderH = 127, x = (pageW-renderW)/2;
+                            doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(27,42,74);
+                            doc.text(group.label + ' · ' + (photoIndex+1) + ' OF ' + group.photos.length, margin, y);
+                            y += 7;
+                            try {
+                                const optimizedPhoto = await optimizePhotoData(group.photos[photoIndex]);
+                                doc.addImage(optimizedPhoto,'JPEG',x,y,renderW,renderH,undefined,'FAST');
+                            } catch (e) {
+                                doc.setFillColor(242,244,247); doc.rect(x,y,renderW,renderH,'F');
+                                doc.setFontSize(9); doc.setTextColor(152,162,179); doc.text('Photo could not be embedded',pageW/2,y+renderH/2,{align:'center'});
+                            }
+                            y += renderH + 4; renderedCount++;
+                        }
                     }
-                    y += renderH + 4;
                 } else {
                     checkPageBreak(22);
                     const placeholderW = 80;

@@ -290,14 +290,12 @@
             <div data-id="94" class="mb-3">
                 <label data-id="95" class="block text-xs font-medium text-navy-400 mb-1.5">Photo Evidence</label>
                 <div data-id="96" class="photo-area flex items-center gap-3 flex-wrap">
+                    <label class="no-print cursor-pointer h-11 px-4 bg-field-bg border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 flex items-center gap-2">📷 Take Photo<input type="file" accept="image/*" capture="environment" class="photo-camera-input hidden" /></label>
                     <label data-id="97" class="photo-upload-label no-print cursor-pointer h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 transition-colors flex items-center gap-2 min-w-[44px]">
-                        <span data-id="98" class="text-base">📷</span> Upload Photo
-                        <input data-id="99" type="file" accept="image/*" capture="environment" class="photo-input hidden" />
+                        <span data-id="98" class="text-base">🖼</span> Upload Photos (up to 8)
+                        <input data-id="99" type="file" accept="image/*" multiple class="photo-input hidden" />
                     </label>
-                    <div data-id="100" class="photo-preview hidden flex items-center gap-2">
-                        <img data-id="101" class="photo-thumb border border-field-border" alt="Uploaded photo preview" />
-                        <button data-id="102" class="remove-photo-btn no-print text-xs text-danger-500 hover:text-danger-700 underline underline-offset-2 min-h-[44px] flex items-center">Remove</button>
-                    </div>
+                    <div data-id="100" class="photo-preview grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"></div>
                 </div>
             </div>
             <!-- Description -->
@@ -318,6 +316,7 @@
 
         // ===================== STATE =====================
         const MAX_ITEMS = 80;
+        const MAX_PHOTOS_PER_ITEM = 8;
         const STORAGE_KEY = 'frontline_field_report';
         const REPORT_TYPES = {
             regular: { label: 'Regular Job Report', short: 'Regular Job', file: 'Regular_Job' },
@@ -519,51 +518,44 @@
             const unitInput = card.querySelector('.unit-id-input');
             const descTextarea = card.querySelector('.desc-textarea');
             const photoInput = card.querySelector('.photo-input');
+            const photoCameraInput = card.querySelector('.photo-camera-input');
             const photoPreview = card.querySelector('.photo-preview');
-            const photoThumb = card.querySelector('.photo-thumb');
-            const removePhotoBtn = card.querySelector('.remove-photo-btn');
             const removeItemBtn = card.querySelector('.remove-item-btn');
+
+            function renderPhotoPreviews() {
+                const photos = photoDataStore[id] || [];
+                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" class="remove-photo-btn absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button></div>`).join('');
+                photoPreview.querySelectorAll('.remove-photo-btn').forEach(button => button.addEventListener('click', () => {
+                    photos.splice(Number(button.dataset.photoIndex), 1);
+                    renderPhotoPreviews(); saveState();
+                }));
+            }
 
             if (data) {
                 unitInput.value = data.unitId || '';
                 descTextarea.value = data.description || '';
-                if (data.photoData) {
-                    photoThumb.src = data.photoData;
-                    photoPreview.classList.remove('hidden');
-                    photoDataStore[id] = data.photoData;
-                    photoTypeStore[id] = data.photoType || 'image/jpeg';
-                }
+                const restoredPhotos = Array.isArray(data.photos) ? data.photos : (data.photoData ? [data.photoData] : []);
+                if (restoredPhotos.length) { photoDataStore[id] = restoredPhotos; renderPhotoPreviews(); }
                 if (data.photoFilename) {
                     photoFilenames[id] = data.photoFilename;
                 }
             }
 
             // Photo upload handler
-            photoInput.addEventListener('change', function () {
-                const file = this.files[0];
-                if (!file) return;
-                photoFilenames[id] = file.name;
-                photoTypeStore[id] = file.type || 'image/jpeg';
-                const reader = new FileReader();
-                reader.addEventListener('load', function () {
-                    photoThumb.src = reader.result;
-                    photoPreview.classList.remove('hidden');
-                    photoDataStore[id] = reader.result;
-                    saveState();
+            function addSelectedPhotos(input) {
+                const current = photoDataStore[id] || [];
+                const available = MAX_PHOTOS_PER_ITEM - current.length;
+                const selected = Array.from(input.files || []).slice(0, available);
+                if (!selected.length) { showToast('This item already has 8 photos.', 'warning'); return; }
+                Promise.all(selected.map(file => optimizeUploadedPhoto(file))).then(photos => {
+                    photoDataStore[id] = current.concat(photos);
+                    renderPhotoPreviews(); saveState();
+                    if ((input.files || []).length > available) showToast('Only the first ' + available + ' photos were added. Maximum is 8.', 'warning');
+                    input.value = '';
                 });
-                reader.readAsDataURL(file);
-            });
-
-            // Remove photo
-            removePhotoBtn.addEventListener('click', function () {
-                photoThumb.src = '';
-                photoPreview.classList.add('hidden');
-                photoInput.value = '';
-                delete photoFilenames[id];
-                delete photoDataStore[id];
-                delete photoTypeStore[id];
-                saveState();
-            });
+            }
+            photoInput.addEventListener('change', function () { addSelectedPhotos(this); });
+            photoCameraInput.addEventListener('change', function () { addSelectedPhotos(this); });
 
             // Remove item
             removeItemBtn.addEventListener('click', function () {
@@ -720,6 +712,15 @@
             });
         }
 
+        function optimizeUploadedPhoto(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => makeHighResolutionSquare(reader.result).then(resolve).catch(reject);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         async function generatePDF(loadingToast, mode = 'download') {
             try {
                 const { jsPDF } = window.jspdf;
@@ -764,9 +765,9 @@
                     const unitId = card.querySelector('.unit-id-input').value.trim() || 'Not specified';
                     const description = card.querySelector('.desc-textarea').value.trim() || 'No description provided';
                     const cardId = card.dataset.itemId;
-                    const photoData = photoDataStore[cardId] || null;
-                    const photoType = photoTypeStore[cardId] || 'image/jpeg';
-                    itemDataList.push({ index: index + 1, unitId, description, photoData, photoType });
+                    const storedPhotos = photoDataStore[cardId] || [];
+                    const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
+                    itemDataList.push({ index: index + 1, unitId, description, photos });
                 });
 
                 let currentPage = 1;
@@ -899,16 +900,22 @@
                         drawPageHeader();
                     }
 
-                    if (item.photoData) {
-                        try {
-                            const squarePhoto = await makeHighResolutionSquare(item.photoData);
-                            doc.addImage(squarePhoto, 'JPEG', imageX, cursorY, thumbW, thumbH, undefined, 'FAST');
-                        } catch (e) {
-                            doc.setFillColor(240, 240, 240);
-                            doc.roundedRect(imageX, cursorY, thumbW, thumbH, 2, 2, 'F');
-                            doc.setFontSize(7);
-                            doc.setTextColor(...GRAY_TEXT);
-                            doc.text('Image Error', pageW / 2, cursorY + thumbH / 2, { align: 'center' });
+                    if (item.photos.length) {
+                        for (let photoIndex = 0; photoIndex < item.photos.length; photoIndex++) {
+                            if (photoIndex > 0) {
+                                drawPageFooter(currentPage); doc.addPage(); currentPage++; drawPageHeader();
+                                doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...NAVY);
+                                doc.text('Item ' + item.index + '  |  Photo ' + (photoIndex + 1) + ' of ' + item.photos.length, marginL, cursorY);
+                                cursorY += 8;
+                            }
+                            try {
+                                const squarePhoto = await makeHighResolutionSquare(item.photos[photoIndex]);
+                                doc.addImage(squarePhoto, 'JPEG', imageX, cursorY, thumbW, thumbH, undefined, 'FAST');
+                            } catch (e) {
+                                doc.setFillColor(240,240,240); doc.roundedRect(imageX,cursorY,thumbW,thumbH,2,2,'F');
+                                doc.setFontSize(7); doc.setTextColor(...GRAY_TEXT); doc.text('Image Error',pageW/2,cursorY+thumbH/2,{align:'center'});
+                            }
+                            cursorY += thumbH + 5;
                         }
                     } else {
                         doc.setFillColor(242, 244, 247);
@@ -920,7 +927,7 @@
                         doc.setTextColor(...GRAY_TEXT);
                         doc.text('No Photo', pageW / 2, cursorY + thumbH / 2, { align: 'center' });
                     }
-                    cursorY += thumbH + 5;
+                    if (!item.photos.length) cursorY += thumbH + 5;
                 }
 
                 drawPageFooter(currentPage);
@@ -1058,16 +1065,13 @@
                 const unitId = card.querySelector('.unit-id-input').value;
                 const description = card.querySelector('.desc-textarea').value;
                 const cardId = card.dataset.itemId;
-                let photoData = '';
-                const storedPhoto = photoDataStore[cardId];
-                if (storedPhoto && storedPhoto.length < 500000) {
-                    photoData = storedPhoto;
-                }
+                const storedPhotos = photoDataStore[cardId] || [];
+                const photos = (Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos]).filter(photo => photo && photo.length < 900000).slice(0, MAX_PHOTOS_PER_ITEM);
                 itemsData.push({
                     id: cardId,
                     unitId,
                     description,
-                    photoData,
+                    photos,
                     photoFilename: photoFilenames[cardId] || '',
                     photoType: photoTypeStore[cardId] || ''
                 });
