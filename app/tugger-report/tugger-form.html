@@ -894,6 +894,17 @@
                 id: state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
                 trackingNumber: hdr.trackingNum, facilityId: hdr.facilityId, itemCount: state.items.length,
+                tuggerWorkRecords: state.items.map((item, index) => ({
+                    itemNumber: index + 1,
+                    location: hdr.facilityAddr,
+                    facilityId: hdr.facilityId,
+                    trackingNumber: hdr.trackingNum,
+                    reportDate: hdr.date,
+                    description: item.description || '',
+                    tuggerId: item.tuggerId || '',
+                    manufacturer: item.manufacturer || '',
+                    serialNumber: item.serialNum || ''
+                })),
                 category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', filename, pdfBase64,
                 completedAt: new Date().toISOString()
             };

@@ -1,18 +1,267 @@
 "use client";
+
 import { useEffect, useMemo, useState } from "react";
 import styles from "./reports.module.css";
-type Category="all"|"regular"|"proposed"|"pm"|"tugger";
-type Report={id:string;category?:string;reportTypeLabel?:string;technician?:string;reportDate?:string;facilityAddress?:string;trackingNumber?:string;facilityId?:string;itemCount?:number};
-const TABS:{key:Category;label:string}[]=[{key:"all",label:"All Reports"},{key:"regular",label:"Regular Jobs"},{key:"proposed",label:"Proposed Work"},{key:"pm",label:"Preventive Maintenance"},{key:"tugger",label:"Tugger"}];
-const categoryOf=(r:Report)=>r.category||"pm";
-export default function ReportsClient(){
- const[reports,setReports]=useState<Report[]>([]),[query,setQuery]=useState(""),[tab,setTab]=useState<Category>("all"),[error,setError]=useState(""),[deletingId,setDeletingId]=useState("");
- useEffect(()=>{fetch("/api/pm-reports",{cache:"no-store"}).then(async r=>{if(!r.ok)throw new Error(await r.text());return r.json()}).then(setReports).catch(e=>setError(String(e)))},[]);
- const shown=useMemo(()=>reports.filter(r=>(tab==="all"||categoryOf(r)===tab)&&JSON.stringify(r).toLowerCase().includes(query.toLowerCase())),[reports,query,tab]);
- async function deleteReport(report:Report){const label=report.trackingNumber||report.facilityId||"this report";if(!confirm(`Permanently delete ${label}? This cannot be undone.`))return;setDeletingId(report.id);setError("");try{const response=await fetch(`/api/pm-reports?id=${encodeURIComponent(report.id)}`,{method:"DELETE"});if(!response.ok)throw new Error(await response.text());setReports(current=>current.filter(item=>item.id!==report.id))}catch(cause){setError(`Could not delete report: ${cause instanceof Error?cause.message:String(cause)}`)}finally{setDeletingId("")}}
- return <main className={styles.page}><header className={styles.header}><div><p>FRONTLINE PRO SERVICES</p><h1>Completed Reports</h1></div><div className={styles.actions}><a href="/pm-report">New Report</a><a href="/fedex-tracker">Back to Tracker</a></div></header><section className={styles.content}>
- <div className={styles.tabs}>{TABS.map(item=><button key={item.key} className={tab===item.key?styles.activeTab:""} onClick={()=>setTab(item.key)}>{item.label}<span>{item.key==="all"?reports.length:reports.filter(r=>categoryOf(r)===item.key).length}</span></button>)}</div>
- <div className={styles.summary}><div><strong>{shown.length}</strong><span>{tab==="all"?"completed reports":TABS.find(t=>t.key===tab)?.label}</span></div><input aria-label="Search reports" placeholder="Search tracking, facility, technician…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
- {error&&<p className={styles.error}>Could not load reports: {error}</p>}<div className={styles.list}>{shown.map(r=><article key={r.id}><div><p className={styles.eyebrow}>{r.reportTypeLabel||"Preventive Maintenance Report"}</p><h2>{r.facilityId||"Facility"} · {r.trackingNumber||"No tracking number"}</h2><p>{r.facilityAddress||"Address not entered"}</p><p>{r.technician||"Technician not entered"} · {r.reportDate||"No date"} · {r.itemCount||0} items</p></div><div className={styles.reportActions}><a target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(r.id)}`}>View PDF</a><button type="button" onClick={()=>deleteReport(r)} disabled={deletingId===r.id}>{deletingId===r.id?"Deleting…":"Delete"}</button></div></article>)}</div>{!error&&shown.length===0&&<p className={styles.empty}>No completed reports found in this category.</p>}
- </section></main>;
+
+type Category = "all" | "regular" | "proposed" | "pm" | "tugger";
+type TuggerView = "reports" | "history";
+type TuggerWorkRecord = {
+  itemNumber?: number;
+  location?: string;
+  facilityId?: string;
+  trackingNumber?: string;
+  reportDate?: string;
+  description?: string;
+  tuggerId?: string;
+  manufacturer?: string;
+  serialNumber?: string;
+};
+type Report = {
+  id: string;
+  category?: string;
+  reportTypeLabel?: string;
+  technician?: string;
+  reportDate?: string;
+  facilityAddress?: string;
+  trackingNumber?: string;
+  facilityId?: string;
+  itemCount?: number;
+  tuggerWorkRecords?: TuggerWorkRecord[];
+};
+
+const TABS: { key: Category; label: string }[] = [
+  { key: "all", label: "All Reports" },
+  { key: "regular", label: "Regular Jobs" },
+  { key: "proposed", label: "Proposed Work" },
+  { key: "pm", label: "Preventive Maintenance" },
+  { key: "tugger", label: "Tugger" },
+];
+const categoryOf = (report: Report) => report.category || "pm";
+
+export default function ReportsClient() {
+  const [reports, setReports] = useState<Report[]>([]);
+  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<Category>("all");
+  const [tuggerView, setTuggerView] = useState<TuggerView>("reports");
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState("");
+
+  useEffect(() => {
+    fetch("/api/pm-reports", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(await response.text());
+        return response.json();
+      })
+      .then(setReports)
+      .catch((cause) => setError(String(cause)));
+  }, []);
+
+  const shown = useMemo(
+    () =>
+      reports.filter(
+        (report) =>
+          (tab === "all" || categoryOf(report) === tab) &&
+          JSON.stringify(report).toLowerCase().includes(query.toLowerCase()),
+      ),
+    [reports, query, tab],
+  );
+
+  const tuggerHistory = useMemo(
+    () =>
+      reports
+        .filter((report) => categoryOf(report) === "tugger")
+        .flatMap((report) =>
+          (report.tuggerWorkRecords || []).map((item) => ({ item, report })),
+        )
+        .filter((row) =>
+          JSON.stringify(row).toLowerCase().includes(query.toLowerCase()),
+        ),
+    [reports, query],
+  );
+  const historyMode = tab === "tugger" && tuggerView === "history";
+
+  async function deleteReport(report: Report) {
+    const label = report.trackingNumber || report.facilityId || "this report";
+    if (!confirm(`Permanently delete ${label}? This cannot be undone.`)) return;
+    setDeletingId(report.id);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/pm-reports?id=${encodeURIComponent(report.id)}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) throw new Error(await response.text());
+      setReports((current) => current.filter((item) => item.id !== report.id));
+    } catch (cause) {
+      setError(
+        `Could not delete report: ${cause instanceof Error ? cause.message : String(cause)}`,
+      );
+    } finally {
+      setDeletingId("");
+    }
+  }
+
+  return (
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <p>FRONTLINE PRO SERVICES</p>
+          <h1>Completed Reports</h1>
+        </div>
+        <div className={styles.actions}>
+          <a href="/pm-report">New Report</a>
+          <a href="/fedex-tracker">Back to Tracker</a>
+        </div>
+      </header>
+      <section className={styles.content}>
+        <div className={styles.tabs}>
+          {TABS.map((item) => (
+            <button
+              key={item.key}
+              className={tab === item.key ? styles.activeTab : ""}
+              onClick={() => setTab(item.key)}
+            >
+              {item.label}
+              <span>
+                {item.key === "all"
+                  ? reports.length
+                  : reports.filter((report) => categoryOf(report) === item.key).length}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {tab === "tugger" && (
+          <div className={styles.subtabs}>
+            <button
+              className={tuggerView === "reports" ? styles.activeSubtab : ""}
+              onClick={() => setTuggerView("reports")}
+            >
+              Completed Tugger Reports
+            </button>
+            <button
+              className={tuggerView === "history" ? styles.activeSubtab : ""}
+              onClick={() => setTuggerView("history")}
+            >
+              Tugger Work History
+            </button>
+          </div>
+        )}
+
+        <div className={styles.summary}>
+          <div>
+            <strong>{historyMode ? tuggerHistory.length : shown.length}</strong>
+            <span>
+              {historyMode
+                ? "tuggers worked on"
+                : tab === "all"
+                  ? "completed reports"
+                  : TABS.find((item) => item.key === tab)?.label}
+            </span>
+          </div>
+          <input
+            aria-label="Search reports"
+            placeholder={
+              historyMode
+                ? "Search location, tracking, tugger, serial…"
+                : "Search tracking, facility, technician…"
+            }
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+
+        {error && <p className={styles.error}>Could not load reports: {error}</p>}
+
+        {historyMode ? (
+          <div className={styles.historyWrap}>
+            <table className={styles.historyTable}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Tracking #</th>
+                  <th>Tugger #</th>
+                  <th>Manufacturer</th>
+                  <th>Serial #</th>
+                  <th>Description of Work</th>
+                  <th>Report</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tuggerHistory.map(({ item, report }, index) => (
+                  <tr key={`${report.id}-${item.itemNumber || index}`}>
+                    <td>{item.reportDate || report.reportDate || "—"}</td>
+                    <td>
+                      <strong>{item.facilityId || report.facilityId || "—"}</strong>
+                      <span>{item.location || report.facilityAddress || ""}</span>
+                    </td>
+                    <td>{item.trackingNumber || report.trackingNumber || "—"}</td>
+                    <td>{item.tuggerId || "—"}</td>
+                    <td>{item.manufacturer || "—"}</td>
+                    <td>{item.serialNumber || "—"}</td>
+                    <td className={styles.description}>{item.description || "—"}</td>
+                    <td>
+                      <a
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}
+                      >
+                        View PDF
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className={styles.list}>
+            {shown.map((report) => (
+              <article key={report.id}>
+                <div>
+                  <p className={styles.eyebrow}>
+                    {report.reportTypeLabel || "Preventive Maintenance Report"}
+                  </p>
+                  <h2>
+                    {report.facilityId || "Facility"} ·{" "}
+                    {report.trackingNumber || "No tracking number"}
+                  </h2>
+                  <p>{report.facilityAddress || "Address not entered"}</p>
+                  <p>
+                    {report.technician || "Technician not entered"} ·{" "}
+                    {report.reportDate || "No date"} · {report.itemCount || 0} items
+                  </p>
+                </div>
+                <div className={styles.reportActions}>
+                  <a
+                    target="_blank"
+                    rel="noreferrer"
+                    href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}
+                  >
+                    View PDF
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => deleteReport(report)}
+                    disabled={deletingId === report.id}
+                  >
+                    {deletingId === report.id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {!error && (historyMode ? tuggerHistory.length === 0 : shown.length === 0) && (
+          <p className={styles.empty}>
+            {historyMode
+              ? "No Tugger work-history records yet. New completed Tugger reports will be added automatically."
+              : "No completed reports found in this category."}
+          </p>
+        )}
+      </section>
+    </main>
+  );
 }
