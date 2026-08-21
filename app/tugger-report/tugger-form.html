@@ -475,13 +475,25 @@
                     const dataUrl = e.target.result;
                     const img = new Image();
                     img.onload = function() {
-                        card._photoData = dataUrl;
-                        card._photoType = file.type;
-                        card._photoWidth = img.naturalWidth;
-                        card._photoHeight = img.naturalHeight;
+                        // Phone photos can be 5–15 MB each. Resize to a 1200px square
+                        // (240 DPI at 5 inches) so saving and emailing stay below the
+                        // mobile/server upload limit while remaining print-quality.
+                        const size = 1200;
+                        const sourceSize = Math.min(img.naturalWidth, img.naturalHeight);
+                        const sourceX = (img.naturalWidth - sourceSize) / 2;
+                        const sourceY = (img.naturalHeight - sourceSize) / 2;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = size;
+                        canvas.height = size;
+                        canvas.getContext('2d').drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+                        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                        card._photoData = optimizedDataUrl;
+                        card._photoType = 'image/jpeg';
+                        card._photoWidth = size;
+                        card._photoHeight = size;
 
                         const preview = card.querySelector('.photo-preview');
-                        preview.src = dataUrl;
+                        preview.src = optimizedDataUrl;
                         card.querySelector('.photo-preview-wrap').classList.remove('hidden');
                         card.querySelector('.camera-btn').textContent = '📷 Retake';
                         card.querySelector('.library-btn').textContent = '🖼 Replace';
@@ -628,10 +640,32 @@
             setTimeout(() => generatePDF('download'), 100);
         });
 
-        completeReportBtn.addEventListener('click', () => generatePDF('complete'));
+        completeReportBtn.addEventListener('click', () => runPdfAction('complete'));
         emailPdfBtn.addEventListener('click', () => {
-            if (confirm('Email this PDF now to Jacob, Daniel, and Gary?')) generatePDF('share');
+            if (confirm('Email this PDF now to Jacob, Daniel, and Gary?')) runPdfAction('share');
         });
+
+        async function runPdfAction(mode) {
+            const button = mode === 'share' ? emailPdfBtn : completeReportBtn;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = mode === 'share' ? 'Emailing…' : 'Saving…';
+            showToast(mode === 'share' ? 'Preparing and emailing PDF…' : 'Preparing and saving report…', 'success');
+            try {
+                await generatePDF(mode);
+            } catch (error) {
+                console.error('Tugger report action failed:', error);
+                const message = String(error && error.message || error);
+                if (message.includes('413') || message.toLowerCase().includes('too large')) {
+                    showToast('This report is still too large to upload. Remove one photo and try again.', 'error');
+                } else {
+                    showToast(mode === 'share' ? 'Email failed. Check your connection and try again.' : 'Save failed. Check your connection and try again.', 'error');
+                }
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
 
         function imageUrlToDataUrl(url) {
             return fetch(url).then(r => r.blob()).then(blob => new Promise((resolve, reject) => {
@@ -641,6 +675,22 @@
 
         function blobToBase64(blob) {
             return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1] || ''); reader.onerror = reject; reader.readAsDataURL(blob); });
+        }
+
+        function optimizePhotoData(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => {
+                    const size = 1200;
+                    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size; canvas.height = size;
+                    canvas.getContext('2d').drawImage(image, (image.naturalWidth-sourceSize)/2, (image.naturalHeight-sourceSize)/2, sourceSize, sourceSize, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/jpeg', 0.82));
+                };
+                image.onerror = reject;
+                image.src = dataUrl;
+            });
         }
 
         async function generatePDF(mode = 'download') {
@@ -814,7 +864,8 @@
 
                     const x = (pageW - renderW) / 2;
                     try {
-                        doc.addImage(item.photoData, 'JPEG', x, y, renderW, renderH);
+                        const optimizedPhoto = await optimizePhotoData(item.photoData);
+                        doc.addImage(optimizedPhoto, 'JPEG', x, y, renderW, renderH, undefined, 'FAST');
                     } catch (e) {
                         doc.setFillColor(242, 244, 247);
                         doc.rect(x, y, renderW, renderH, 'F');
