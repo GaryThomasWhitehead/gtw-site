@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import readXlsxFile from "read-excel-file/browser";
 
 type Receipt = { id: string; visitJob: string; name: string; category: string; amount: number; dataUrl: string };
 type Visit = { jobNumber: string; date: string; endTime: string; customer: string; address: string; employee: string; onJobHours: number; travelHours: number; status: string; notes: string; miles: number; receiptTotal: number; receipts: Receipt[]; manualOnJob?: boolean; manualTravel?: boolean };
 type ImportRange = { from: string; to: string; importedAt: string };
-type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange; sourceType?: "hcp" | "contracted"; contractorName?: string; contractorCost?: number; invoiceSent?: boolean; invoiceSentDate?: string };
+type Job = { trackingNumber: string; store: string; trade: string; status: string; statusDetail: string; parentJobs: string[]; housecallJobs: string[]; employees: string[]; onJobHours: number; travelHours: number; nte: number; invoiceNumber: string; invoiceDate: string; invoiceAmount: number; problemDescription: string; resolution: string; billingStatus: string; visits: Visit[]; hcpImportRange?: ImportRange; sourceType?: "hcp" | "contracted"; contractorName?: string; contractorCost?: number; invoiceSent?: boolean; invoiceSentDate?: string; serviceChannelInvoiceStatus?: string; approvedBy?: string; approvedDate?: string; postedDate?: string; completedDate?: string };
 type CsvRow = Record<string, string>;
+type InvoiceRow = Record<string, unknown>;
 type ServiceChannelOrder = { trackingNumber?: string; location?: string; classOfWork?: string; status?: string; statusDetail?: string; cost?: string; jobDescription?: string; notes?: string };
 type UpdateNotice = { from: string; to: string; rows: number; matched: number; updated: number; added: number; serviceNotComplete: number; missingTrackingInHcp: number; notInServiceChannel: number; applied: boolean };
 
-const statuses = ["Needs pricing", "Ready for QBO review", "Approved for export", "Exported", "Invoiced", "Paid", "Hold"];
+const statuses = ["Needs pricing", "Ready for QBO review", "Approved for export", "Exported", "Invoiced", "Approved & complete", "Paid", "Hold"];
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const hours = (n: number) => `${n.toFixed(2)} hrs`;
 
@@ -115,6 +117,21 @@ function followingDay(value: string) {
   return displayDay(isoDay(date));
 }
 
+function excelDay(value: unknown) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return isoDay(value);
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const date = new Date(Date.UTC(1899, 11, 30) + Math.floor(value) * 86400000);
+    return date.toISOString().slice(0, 10);
+  }
+  const text = String(value || "").trim();
+  const parsed = parseHcpDate(text);
+  return parsed ? isoDay(parsed) : text;
+}
+
+function invoiceText(row: InvoiceRow, key: string) {
+  return String(row[key] ?? "").trim();
+}
+
 function contractedJob(order: ServiceChannelOrder): Job {
   const trackingNumber = String(order.trackingNumber || "").trim();
   return {
@@ -137,7 +154,7 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All billing statuses");
   const [onlyIssues, setOnlyIssues] = useState(false);
-  const [reviewSection, setReviewSection] = useState<"active" | "sent">("active");
+  const [reviewSection, setReviewSection] = useState<"active" | "sent" | "approved">("active");
   const [checked, setChecked] = useState<string[]>([]);
   const [receiptVisit, setReceiptVisit] = useState("");
   const [receiptCategory, setReceiptCategory] = useState("Materials");
@@ -146,6 +163,7 @@ export default function Home() {
   const [hcpImportRange, setHcpImportRange] = useState<ImportRange | null>(null);
   const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
   const [serviceOrders, setServiceOrders] = useState<ServiceChannelOrder[]>([]);
+  const [invoiceImportSummary, setInvoiceImportSummary] = useState({ rows: 0, matched: 0, approved: 0, open: 0 });
 
   useEffect(() => {
     Promise.all([
@@ -297,9 +315,58 @@ export default function Home() {
     }
   }
 
+  async function updateFromServiceChannelInvoices(file?: File) {
+    if (!file) return;
+    setSaveState("Comparing ServiceChannel invoices…");
+    try {
+      const workbook = await readXlsxFile(file);
+      const sheet = workbook[0]?.data || [];
+      const headers = (sheet[0] || []).map((value) => String(value ?? "").trim());
+      const invoiceRows: InvoiceRow[] = sheet.slice(1).filter((row) => row.some((value) => value !== null && value !== "")).map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? null])));
+      const invoiceByTracking = new Map(invoiceRows.map((row) => [invoiceText(row, "Tr.#") || invoiceText(row, "W.O.#"), row]));
+      let matched = 0;
+      let approved = 0;
+      let open = 0;
+      const merged = jobs.map((item) => {
+        const invoice = invoiceByTracking.get(item.trackingNumber);
+        if (!invoice) return item;
+        matched += 1;
+        const invoiceStatus = invoiceText(invoice, "Inv.Status").toUpperCase();
+        if (invoiceStatus === "APPROVED") approved += 1;
+        else open += 1;
+        return {
+          ...item,
+          invoiceNumber: invoiceText(invoice, "Invoice Number") || item.invoiceNumber,
+          invoiceDate: excelDay(invoice["Inv. Date"]) || item.invoiceDate,
+          invoiceAmount: Number(invoice["Inv.Total"]) || item.invoiceAmount,
+          resolution: item.resolution || invoiceText(invoice, "Inv.Text"),
+          billingStatus: invoiceStatus === "APPROVED" ? "Approved & complete" : "Invoiced",
+          invoiceSent: true,
+          invoiceSentDate: excelDay(invoice["Posted Date"] || invoice["Inv. Date"]),
+          serviceChannelInvoiceStatus: invoiceStatus,
+          approvedBy: invoiceText(invoice, "Approved By"),
+          approvedDate: excelDay(invoice["Approved Date"]),
+          postedDate: excelDay(invoice["Posted Date"]),
+          completedDate: excelDay(invoice["Completed Date"]),
+        };
+      });
+      setJobs(merged);
+      setInvoiceImportSummary({ rows: invoiceRows.length, matched, approved, open });
+      const response = matched ? await fetch("/api/fedex-invoice-review", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviews: merged.map((item) => ({ trackingNumber: item.trackingNumber, review: item })) }) }) : null;
+      const message = matched ? `${matched} invoices matched: ${approved} approved and complete, ${open} still open.` : "No invoice rows matched completed tracker jobs.";
+      setSaveState(response?.ok ? `${message} Changes saved.` : message);
+      alert(message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "ServiceChannel invoice import failed";
+      setSaveState(message);
+      alert(`Invoice import failed: ${message}`);
+    }
+  }
+
   const filtered = useMemo(() => jobs.filter((job) => {
     const text = `${job.trackingNumber} ${job.store} ${job.trade} ${job.housecallJobs.join(" ")} ${job.employees.join(" ")} ${job.contractorName || ""}`.toLowerCase();
-    const inSection = reviewSection === "sent" ? Boolean(job.invoiceSent) : !job.invoiceSent;
+    const approvedComplete = job.serviceChannelInvoiceStatus === "APPROVED";
+    const inSection = reviewSection === "approved" ? approvedComplete : reviewSection === "sent" ? Boolean(job.invoiceSent) && !approvedComplete : !job.invoiceSent && !approvedComplete;
     return inSection && text.includes(query.toLowerCase()) && (statusFilter === "All billing statuses" || job.billingStatus === statusFilter) && (!onlyIssues || job.billingStatus === "Needs pricing" || job.visits.some((visit) => !visit.employee || !visit.onJobHours));
   }), [jobs, query, statusFilter, onlyIssues, reviewSection]);
 
@@ -313,7 +380,8 @@ export default function Home() {
     receipts: jobs.reduce((sum, item) => sum + item.visits.reduce((n, visit) => n + (visit.receipts || []).reduce((x, receipt) => x + receipt.amount, 0), 0), 0),
     receivables: jobs.reduce((sum, item) => sum + (Number(item.invoiceAmount) || 0), 0),
     ready: jobs.filter((item) => ["Ready for QBO review", "Approved for export"].includes(item.billingStatus)).length,
-    sent: jobs.filter((item) => item.invoiceSent).length,
+    sent: jobs.filter((item) => item.invoiceSent && item.serviceChannelInvoiceStatus !== "APPROVED").length,
+    approved: jobs.filter((item) => item.serviceChannelInvoiceStatus === "APPROVED").length,
   }), [jobs]);
 
   function updateJob(tracking: string, patch: Partial<Job>) {
@@ -396,8 +464,8 @@ export default function Home() {
       </header>
 
       <section className="hero">
-        <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p>{hcpImportRange ? <div className="hcpRange"><span>HCP jobs uploaded</span><strong>{displayDay(hcpImportRange.from)} – {displayDay(hcpImportRange.to)}</strong><small>Next update should begin {followingDay(hcpImportRange.to)}</small></div> : <div className="hcpRange empty"><span>HCP jobs uploaded</span><strong>No date range recorded yet</strong><small>Import the next Housecall Pro jobs CSV to begin tracking coverage.</small></div>}</div>
-        <div className="heroActions"><label className="mergeButton">Update from Housecall Pro<input type="file" accept=".csv,text/csv" onChange={(event) => { updateFromHousecall(event.target.files?.[0]); event.target.value = ""; }} /></label><button className="primary" onClick={exportQbo} disabled={!checked.length}>Export {checked.length || "selected"} to QBO CSV</button></div>
+        <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p>{hcpImportRange ? <div className="hcpRange"><span>HCP jobs uploaded</span><strong>{displayDay(hcpImportRange.from)} – {displayDay(hcpImportRange.to)}</strong><small>Next update should begin {followingDay(hcpImportRange.to)}</small></div> : <div className="hcpRange empty"><span>HCP jobs uploaded</span><strong>No date range recorded yet</strong><small>Import the next Housecall Pro jobs CSV to begin tracking coverage.</small></div>}<div className="scInvoiceSummary"><span>ServiceChannel invoice report</span><strong>{invoiceImportSummary.matched} matched · {invoiceImportSummary.approved} approved · {invoiceImportSummary.open} open</strong><small>{invoiceImportSummary.rows} invoice rows compared</small></div></div>
+        <div className="heroActions"><label className="mergeButton">Update from Housecall Pro<input type="file" accept=".csv,text/csv" onChange={(event) => { updateFromHousecall(event.target.files?.[0]); event.target.value = ""; }} /></label><label className="mergeButton invoiceImport">Import ServiceChannel Invoices<input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { updateFromServiceChannelInvoices(event.target.files?.[0]); event.target.value = ""; }} /></label><button className="primary" onClick={exportQbo} disabled={!checked.length}>Export {checked.length || "selected"} to QBO CSV</button></div>
       </section>
 
       <section className="kpis">
@@ -410,11 +478,13 @@ export default function Home() {
         <Kpi label="Total receivables" value={money.format(totals.receivables)} hint="Combined invoice totals" />
         <Kpi label="Ready for review" value={String(totals.ready)} hint="Before QBO export" accent />
         <Kpi label="Awaiting payment" value={String(totals.sent)} hint="Invoice sent" />
+        <Kpi label="Approved & complete" value={String(totals.approved)} hint="ServiceChannel approved" accent />
       </section>
 
       <nav className="reviewTabs" aria-label="Invoice work sections">
-        <button className={reviewSection === "active" ? "active" : ""} onClick={() => { setReviewSection("active"); setSelected(""); }}>Review &amp; edit <strong>{jobs.length - totals.sent}</strong></button>
+        <button className={reviewSection === "active" ? "active" : ""} onClick={() => { setReviewSection("active"); setSelected(""); }}>Review &amp; edit <strong>{jobs.length - totals.sent - totals.approved}</strong></button>
         <button className={reviewSection === "sent" ? "active" : ""} onClick={() => { setReviewSection("sent"); setSelected(""); }}>Invoice sent — awaiting payment <strong>{totals.sent}</strong></button>
+        <button className={reviewSection === "approved" ? "active" : ""} onClick={() => { setReviewSection("approved"); setSelected(""); }}>Approved &amp; complete <strong>{totals.approved}</strong></button>
       </nav>
 
       <section className="toolbar">
@@ -438,7 +508,7 @@ export default function Home() {
         </aside>
 
         <section className="detail">
-          {!filtered.length && <div className="emptySection"><strong>{reviewSection === "sent" ? "No invoices are awaiting payment" : "No invoices need review"}</strong><span>Invoices will appear here when their billing stage changes.</span></div>}
+          {!filtered.length && <div className="emptySection"><strong>{reviewSection === "approved" ? "No invoices are approved and complete" : reviewSection === "sent" ? "No invoices are awaiting payment" : "No invoices need review"}</strong><span>Invoices will appear here when their billing stage changes.</span></div>}
           {!!filtered.length && <>
           {job.sourceType === "contracted" && <div className="contractBanner"><strong>Contracted or pre-HCP work — no Housecall Pro record</strong><span>Enter the outside provider, cost, charge, work details, and supporting receipts below.</span></div>}
           <div className="detailhead">
@@ -456,6 +526,7 @@ export default function Home() {
             <section className="panel financial">
               <div className="paneltitle"><h4>Billing review</h4><span>NTE {money.format(job.nte)}</span></div>
               <div className="formgrid">{job.sourceType === "contracted" && <><label>Outside provider<input value={job.contractorName || ""} placeholder="Company or person used" onChange={(e) => updateJob(job.trackingNumber, { contractorName: e.target.value })} /></label><label>Contractor cost<input type="number" value={job.contractorCost || ""} placeholder="Amount paid" onChange={(e) => updateJob(job.trackingNumber, { contractorCost: Number(e.target.value) })} /></label></>}<label>Invoice #<input value={job.invoiceNumber} onChange={(e) => updateJob(job.trackingNumber, { invoiceNumber: e.target.value })} /></label><label>Invoice date<input value={job.invoiceDate} onChange={(e) => updateJob(job.trackingNumber, { invoiceDate: e.target.value })} /></label><label>Amount to charge<input type="number" value={job.invoiceAmount || ""} onChange={(e) => updateJob(job.trackingNumber, { invoiceAmount: Number(e.target.value) })} /></label><label>Receipt expenses<input value={money.format(receiptTotal)} readOnly /></label></div>
+              {job.serviceChannelInvoiceStatus && <div className={`approvalInfo ${job.serviceChannelInvoiceStatus === "APPROVED" ? "approved" : "open"}`}><strong>ServiceChannel invoice: {job.serviceChannelInvoiceStatus}</strong><span>{job.approvedBy ? `Approved by ${job.approvedBy}` : "Waiting for ServiceChannel approval"}{job.approvedDate ? ` on ${displayDay(job.approvedDate)}` : ""}</span></div>}
               <label className="invoiceSentCheck"><input type="checkbox" checked={Boolean(job.invoiceSent)} onChange={(e) => setInvoiceSent(job.trackingNumber, e.target.checked)} /><span><strong>Invoice sent</strong><small>Our work and billing are complete; move this invoice to awaiting payment.</small></span></label>
               <div className="financefoot"><span>Total field cost entered</span><strong>{money.format(fieldCost)}</strong></div>
             </section>

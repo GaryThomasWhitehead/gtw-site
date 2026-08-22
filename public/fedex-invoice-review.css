@@ -44,7 +44,7 @@ button { cursor:pointer; }
 .heroActions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
 .mergeButton { padding:12px 17px; border:1px solid #77b1df; border-radius:10px; background:#174f7c; color:#fff; font-weight:800; cursor:pointer; white-space:nowrap; }
 .mergeButton input { display:none; }
-.kpis { max-width:1540px; margin:-28px auto 0; padding:0 28px; display:grid; grid-template-columns:repeat(9,1fr); gap:12px; position:relative; }
+.kpis { max-width:1540px; margin:-28px auto 0; padding:0 28px; display:grid; grid-template-columns:repeat(10,1fr); gap:12px; position:relative; }
 .kpi { min-height:112px; padding:18px; display:flex; flex-direction:column; background:white; border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 30px #1c38550e; }
 .kpi span { font-size:12px; color:var(--muted); font-weight:700; }
 .kpi strong { margin:7px 0 6px; font-size:25px; letter-spacing:-.03em; }
@@ -57,6 +57,14 @@ button { cursor:pointer; }
 .reviewTabs button { padding:11px 15px; border:1px solid var(--line); border-radius:10px; background:#fff; color:#385069; font-weight:800; }
 .reviewTabs button.active { border-color:#2875b5; background:#eaf4ff; color:#104f82; }
 .reviewTabs strong { margin-left:8px; padding:2px 7px; border-radius:999px; background:#dbeaf7; }
+.scInvoiceSummary { margin-top:10px; display:grid; width:max-content; max-width:100%; padding:10px 16px; border:1px solid rgba(255,255,255,.28); border-radius:12px; background:rgba(5,39,69,.32); }
+.scInvoiceSummary span { color:#88cbff; font-size:11px; font-weight:900; letter-spacing:.09em; text-transform:uppercase; }
+.scInvoiceSummary strong { color:#fff; font-size:15px; }
+.scInvoiceSummary small { color:#d8ebfb; }
+.approvalInfo { margin-top:14px; display:flex; flex-direction:column; gap:3px; padding:12px 14px; border-radius:10px; }
+.approvalInfo.approved { background:#e8f8ef; border:1px solid #9bd7b5; color:#14643a; }
+.approvalInfo.open { background:#fff5dc; border:1px solid #e8c768; color:#76540b; }
+.approvalInfo span { font-size:13px; }
 .toolbar { max-width:1540px; margin:0 auto 12px; padding:0 28px; display:flex; align-items:center; gap:10px; }
 .search { flex:1; min-width:300px; height:42px; display:flex; align-items:center; gap:8px; padding:0 13px; background:white; border:1px solid var(--line); border-radius:10px; }
 .search input { width:100%; border:0; outline:0; }
