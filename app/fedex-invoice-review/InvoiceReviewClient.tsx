@@ -271,6 +271,7 @@ export default function Home() {
             const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
             const saved = priorVisits.get(jobNumber);
             const notes = csvValue(row, "Notes");
+            const summaryOfWork = csvValue(row, "Summary of Work", "Summary of work", "Description");
             return {
               jobNumber,
               date: csvValue(row, "Date", "Finished"),
@@ -282,7 +283,7 @@ export default function Home() {
               travelHours: saved?.manualTravel ? saved.travelHours : durationHours(csvValue(row, "Travel Duration")),
               status: csvValue(row, "Job Status"),
               notes,
-              miles: saved?.miles || mileageFromNotes(notes),
+              miles: saved?.miles || mileageFromNotes(`${summaryOfWork}\n${notes}`),
               receiptTotal: saved?.receiptTotal || 0,
               receipts: saved?.receipts || [],
               manualOnJob: saved?.manualOnJob || false,
