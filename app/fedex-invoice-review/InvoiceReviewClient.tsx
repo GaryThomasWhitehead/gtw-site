@@ -518,7 +518,7 @@ export default function Home() {
         <Kpi label="Mileage entered" value={`${totals.miles.toFixed(1)} mi`} hint="Editable by visit" />
         <Kpi label="Receipt expenses" value={money.format(totals.receipts)} hint="Saved with shared tracker" />
         <Kpi label="Total receivables" value={money.format(totals.receivables)} hint="Combined invoice totals" />
-        <Kpi label="Ready for review" value={String(totals.ready)} hint="Before QBO export" accent />
+        <Kpi label="Ready for QBO export" value={String(totals.ready)} hint="Prepared and waiting to export" accent />
         <Kpi label="Awaiting payment" value={String(totals.sent)} hint="Invoice sent" />
         <Kpi label="Approved & complete" value={String(totals.approved)} hint="ServiceChannel approved" accent />
       </section>
