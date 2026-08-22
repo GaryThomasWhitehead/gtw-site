@@ -91,6 +91,20 @@ function trackingFromNotes(value: string) {
   return value.match(/\b\d{9}\b/)?.[0] || "";
 }
 
+function mileageFromNotes(value: string) {
+  const text = String(value || "");
+  const patterns = [
+    /total\s+distance\s+travel(?:l)?ed(?:\s+in\s+(?:a\s+)?personal\s+vehicle)?\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*(?:mi(?:les?)?)\b/i,
+    /drove\s+(\d+(?:\.\d+)?)\s*(?:mi(?:les?)?)\b/i,
+    /miles?\s+(?:drove|driven)\s*[:\-]?\s*(\d+(?:\.\d+)?)/i,
+  ];
+  for (const pattern of patterns) {
+    const miles = Number(text.match(pattern)?.[1] || 0);
+    if (Number.isFinite(miles) && miles > 0) return miles;
+  }
+  return 0;
+}
+
 function parseHcpDate(value: string) {
   const match = value.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})|^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
   if (!match) return null;
@@ -256,6 +270,7 @@ export default function Home() {
           const visits = hcpRows.map((row) => {
             const jobNumber = cleanJobNumber(csvValue(row, "Job #", "Job Number"));
             const saved = priorVisits.get(jobNumber);
+            const notes = csvValue(row, "Notes");
             return {
               jobNumber,
               date: csvValue(row, "Date", "Finished"),
@@ -266,8 +281,8 @@ export default function Home() {
               onJobHours: saved?.manualOnJob ? saved.onJobHours : durationHours(csvValue(row, "On Job Duration")),
               travelHours: saved?.manualTravel ? saved.travelHours : durationHours(csvValue(row, "Travel Duration")),
               status: csvValue(row, "Job Status"),
-              notes: csvValue(row, "Notes"),
-              miles: saved?.miles || 0,
+              notes,
+              miles: saved?.miles || mileageFromNotes(notes),
               receiptTotal: saved?.receiptTotal || 0,
               receipts: saved?.receipts || [],
               manualOnJob: saved?.manualOnJob || false,
