@@ -198,6 +198,23 @@
                     <label data-id="35" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="facility-id-f5">Facility ID <span data-id="36" class="text-danger-500">*</span></label>
                     <input data-id="37" id="facility-id-f5" type="text" class="input-field" placeholder="e.g. FAC-001" required />
                 </div>
+                <fieldset class="md:col-span-2 no-print">
+                    <legend class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-2">Report Status <span class="text-danger-500">*</span></legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <label class="flex items-center gap-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50 px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="workflow-status" value="complete" class="h-5 w-5 accent-[#1468a5]" checked />
+                            Job Complete
+                        </label>
+                        <label class="flex items-center gap-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50 px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="workflow-status" value="parts" class="h-5 w-5 accent-[#1468a5]" />
+                            Need Parts
+                        </label>
+                        <label class="flex items-center gap-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50 px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="workflow-status" value="return" class="h-5 w-5 accent-[#1468a5]" />
+                            Need to Return
+                        </label>
+                    </div>
+                </fieldset>
             </div>
             <button data-id="38" id="start-inspection-btn-b1" class="mt-6 w-full bg-navy-500 hover:bg-navy-600 text-white font-bold text-base rounded-xl py-3.5 transition-colors flex items-center justify-center gap-2 min-h-[48px] no-print">
                 <i data-id="39" data-lucide="play" class="w-5 h-5"></i>
@@ -279,6 +296,7 @@
         let state = {
             reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
             header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '' },
+            workflowStatus: 'complete',
             items: [],
             inspectionStarted: false
         };
@@ -289,6 +307,7 @@
         const addrEl = document.getElementById('facility-addr-f3');
         const trackingEl = document.getElementById('tracking-num-f4');
         const facilityIdEl = document.getElementById('facility-id-f5');
+        const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
         const startBtn = document.getElementById('start-inspection-btn-b1');
         const inspectionSection = document.getElementById('inspection-section-s2cd');
         const itemsContainer = document.getElementById('items-container-ic1');
@@ -308,6 +327,15 @@
         // ─── Helpers ───
         function today() {
             return new Date().toISOString().split('T')[0];
+        }
+
+        function selectedWorkflowStatus() {
+            return workflowStatusInputs.find(input => input.checked)?.value || 'complete';
+        }
+
+        function setWorkflowStatus(status) {
+            const selected = ['complete', 'parts', 'return'].includes(status) ? status : 'complete';
+            workflowStatusInputs.forEach(input => { input.checked = input.value === selected; });
         }
 
         function showToast(msg, type) {
@@ -333,6 +361,7 @@
             state.header.facilityAddr = addrEl.value;
             state.header.trackingNum = trackingEl.value;
             state.header.facilityId = facilityIdEl.value;
+            state.workflowStatus = selectedWorkflowStatus();
 
             state.items = [];
             document.querySelectorAll('.item-card').forEach((card, idx) => {
@@ -601,6 +630,7 @@
                 state = {
                     reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
                     header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '' },
+                    workflowStatus: 'complete',
                     items: [],
                     inspectionStarted: false
                 };
@@ -609,6 +639,7 @@
                 addrEl.value = '';
                 trackingEl.value = '';
                 facilityIdEl.value = '';
+                setWorkflowStatus('complete');
                 itemsContainer.innerHTML = '';
                 inspectionSection.classList.add('hidden');
                 actionBar.classList.add('hidden');
@@ -626,6 +657,7 @@
             f.addEventListener('change', saveState);
             f.addEventListener('blur', saveState);
         });
+        workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
 
         // ─── PDF Export ───
         exportPdfBtn.addEventListener('click', function() {
@@ -943,7 +975,7 @@
                     manufacturer: item.manufacturer || '',
                     serialNumber: item.serialNum || ''
                 })),
-                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', workflowStatus: 'complete', filename, pdfBase64,
+                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', workflowStatus: selectedWorkflowStatus(), filename, pdfBase64,
                 completedAt: new Date().toISOString()
             };
             const endpoint = mode === 'share' ? '/api/pm-reports/email' : '/api/pm-reports';
@@ -961,6 +993,7 @@
             addrEl.value = state.header.facilityAddr || '';
             trackingEl.value = state.header.trackingNum || '';
             facilityIdEl.value = state.header.facilityId || '';
+            setWorkflowStatus(state.workflowStatus || 'complete');
 
             if (state.inspectionStarted) {
                 inspectionSection.classList.remove('hidden');

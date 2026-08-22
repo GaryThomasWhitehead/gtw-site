@@ -200,6 +200,23 @@
                     <span data-id="50" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
                     <p data-id="51" class="text-xs text-danger-500 mt-1 hidden" id="err-facility-id-q7r8"></p>
                 </div>
+                <fieldset class="md:col-span-2 no-print">
+                    <legend class="block text-sm font-medium text-navy-700 mb-2">Report Status <span class="text-danger-500">*</span></legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <label class="flex items-center gap-3 rounded-xl border border-field-border bg-field-bg px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="workflow-status" value="complete" class="h-5 w-5 accent-[#1468a5]" checked />
+                            Job Complete
+                        </label>
+                        <label class="flex items-center gap-3 rounded-xl border border-field-border bg-field-bg px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="workflow-status" value="parts" class="h-5 w-5 accent-[#1468a5]" />
+                            Need Parts
+                        </label>
+                        <label class="flex items-center gap-3 rounded-xl border border-field-border bg-field-bg px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="workflow-status" value="return" class="h-5 w-5 accent-[#1468a5]" />
+                            Need to Return
+                        </label>
+                    </div>
+                </fieldset>
             </div>
             <!-- Start Inspection Button -->
             <button data-id="52" id="start-inspection-btn-s9t0" class="no-print w-full mt-6 h-12 bg-navy-500 hover:bg-navy-600 active:bg-navy-700 text-white font-semibold rounded-xl text-base transition-colors flex items-center justify-center gap-2">
@@ -341,6 +358,7 @@
         const facilityAddrInput = document.getElementById('facility-addr-g7h8');
         const trackingNumInput = document.getElementById('tracking-num-k1l2');
         const facilityIdInput = document.getElementById('facility-id-o5p6');
+        const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
         const startBtn = document.getElementById('start-inspection-btn-s9t0');
         const inspectionSection = document.getElementById('inspection-section-u1v2');
         const addItemBtn = document.getElementById('add-item-btn-y5z6');
@@ -357,6 +375,15 @@
         const savedBadge = document.getElementById('saved-badge-r2t5');
         const toastContainer = document.getElementById('toast-container-q8w3');
         const itemTemplate = document.getElementById('item-template-a3b4');
+
+        function selectedWorkflowStatus() {
+            return workflowStatusInputs.find(input => input.checked)?.value || 'complete';
+        }
+
+        function setWorkflowStatus(status) {
+            const selected = ['complete', 'parts', 'return'].includes(status) ? status : 'complete';
+            workflowStatusInputs.forEach(input => { input.checked = input.value === selected; });
+        }
 
         // ===================== INIT =====================
         function init() {
@@ -388,6 +415,7 @@
                     }
                 });
             });
+            workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
 
             updateCounts();
         }
@@ -969,7 +997,7 @@
                             itemCount: totalItems,
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
-                            workflowStatus: 'complete',
+                            workflowStatus: selectedWorkflowStatus(),
                             filename,
                             pdfBase64,
                             completedAt: new Date().toISOString()
@@ -1043,6 +1071,7 @@
             facilityAddrInput.value = '';
             trackingNumInput.value = '';
             facilityIdInput.value = '';
+            setWorkflowStatus('complete');
 
             [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput].forEach(clearFieldError);
 
@@ -1087,6 +1116,7 @@
                 facilityAddr: facilityAddrInput.value,
                 trackingNum: trackingNumInput.value,
                 facilityId: facilityIdInput.value,
+                workflowStatus: selectedWorkflowStatus(),
                 reportCategory,
                 reportId,
                 inspectionStarted: !inspectionSection.classList.contains('hidden'),
@@ -1115,6 +1145,7 @@
                 facilityAddrInput.value = state.facilityAddr || '';
                 trackingNumInput.value = state.trackingNum || '';
                 facilityIdInput.value = state.facilityId || '';
+                setWorkflowStatus(state.workflowStatus || 'complete');
                 reportId = state.reportId || reportId;
 
                 if (state.inspectionStarted) {
