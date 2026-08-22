@@ -97,12 +97,16 @@ function mileageFromNotes(value: string) {
     /total\s+distance\s+travel(?:l)?ed(?:\s+in\s+(?:a\s+)?personal\s+vehicle)?\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*(?:mi(?:les?)?)\b/i,
     /drove\s+(\d+(?:\.\d+)?)\s*(?:mi(?:les?)?)\b/i,
     /miles?\s+(?:drove|driven)\s*[:\-]?\s*(\d+(?:\.\d+)?)/i,
+    /total\s+miles?\s*[:\-]?\s*(\d+(?:\.\d+)?)/i,
   ];
   for (const pattern of patterns) {
     const miles = Number(text.match(pattern)?.[1] || 0);
     if (Number.isFinite(miles) && miles > 0) return miles;
   }
-  return 0;
+  const mileageValues = [...text.matchAll(/(\d+(?:\.\d+)?)\s*(?:mi|mile|miles)\b/gi)]
+    .map((match) => Number(match[1]))
+    .filter((miles) => Number.isFinite(miles) && miles > 0);
+  return mileageValues.length ? Math.max(...mileageValues) : 0;
 }
 
 function parseHcpDate(value: string) {
