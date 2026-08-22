@@ -109,6 +109,21 @@ function mileageFromNotes(value: string) {
   return mileageValues.length ? Math.max(...mileageValues) : 0;
 }
 
+function receiptTotalFromText(value: string) {
+  const text = String(value || "");
+  const labeledTotal = text.match(/(?:receipts?|expenses?|materials?)\s*(?:total)?\s*[:=\-]?\s*\$?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if (labeledTotal) return currencyNumber(labeledTotal[1]);
+  const itemizedAmounts = [...text.matchAll(/\$\s*([\d,]+(?:\.\d{1,2})?)/g)]
+    .map((match) => currencyNumber(match[1]))
+    .filter((amount) => amount > 0);
+  return Number(itemizedAmounts.reduce((sum, amount) => sum + amount, 0).toFixed(2));
+}
+
+function visitReceiptTotal(visit: Visit) {
+  if (visit.receiptTotal > 0) return visit.receiptTotal;
+  return (visit.receipts || []).reduce((sum, receipt) => sum + receipt.amount, 0);
+}
+
 function parseHcpDate(value: string) {
   const match = value.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})|^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
   if (!match) return null;
@@ -276,6 +291,7 @@ export default function Home() {
             const saved = priorVisits.get(jobNumber);
             const notes = csvValue(row, "Notes");
             const summaryOfWork = csvValue(row, "Summary of Work", "Summary of work", "Description");
+            const importedReceiptTotal = receiptTotalFromText(`${summaryOfWork}\n${notes}`);
             return {
               jobNumber,
               date: csvValue(row, "Date", "Finished"),
@@ -288,7 +304,7 @@ export default function Home() {
               status: csvValue(row, "Job Status"),
               notes,
               miles: saved?.miles || mileageFromNotes(`${summaryOfWork}\n${notes}`),
-              receiptTotal: saved?.receiptTotal || 0,
+              receiptTotal: importedReceiptTotal || saved?.receiptTotal || 0,
               receipts: saved?.receipts || [],
               manualOnJob: saved?.manualOnJob || false,
               manualTravel: saved?.manualTravel || false,
@@ -397,7 +413,7 @@ export default function Home() {
     visits: jobs.reduce((sum, item) => sum + item.visits.length, 0),
     labor: jobs.reduce((sum, item) => sum + item.onJobHours, 0),
     miles: jobs.reduce((sum, item) => sum + item.visits.reduce((n, visit) => n + (visit.miles || 0), 0), 0),
-    receipts: jobs.reduce((sum, item) => sum + item.visits.reduce((n, visit) => n + (visit.receipts || []).reduce((x, receipt) => x + receipt.amount, 0), 0), 0),
+    receipts: jobs.reduce((sum, item) => sum + item.visits.reduce((n, visit) => n + visitReceiptTotal(visit), 0), 0),
     receivables: jobs.reduce((sum, item) => sum + (Number(item.invoiceAmount) || 0), 0),
     ready: jobs.filter((item) => ["Ready for QBO review", "Approved for export"].includes(item.billingStatus)).length,
     sent: jobs.filter((item) => item.invoiceSent && item.serviceChannelInvoiceStatus !== "APPROVED").length,
@@ -473,7 +489,7 @@ export default function Home() {
   if (!jobs.length) return <main className="loading">Loading matched work orders…</main>;
 
   const jobMiles = job.visits.reduce((sum, visit) => sum + (visit.miles || 0), 0);
-  const receiptTotal = job.visits.reduce((sum, visit) => sum + (visit.receipts || []).reduce((n, receipt) => n + receipt.amount, 0), 0);
+  const receiptTotal = job.visits.reduce((sum, visit) => sum + visitReceiptTotal(visit), 0);
   const fieldCost = receiptTotal + (Number(job.contractorCost) || 0);
 
   return (
@@ -564,7 +580,7 @@ export default function Home() {
               <div className="visitnum">{index + 1}</div><div className="visitwho"><strong>{job.sourceType === "contracted" ? "Contract work" : `HCP ${visit.jobNumber}`}</strong><input className="visitTextInput" aria-label="Technician or provider" value={visit.employee} placeholder="Technician or provider" onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { employee: e.target.value })} /><input className="visitTextInput" aria-label="Work date" value={visit.date} placeholder="Work date" onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { date: e.target.value })} /></div>
               <label className="timeInput">On job hrs<input aria-label={`On job hours for HCP ${visit.jobNumber}`} type="number" min="0" step="0.25" value={visit.onJobHours || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { onJobHours: Number(e.target.value), manualOnJob: true })} /></label><label className="timeInput">Travel hrs<input aria-label={`Travel hours for HCP ${visit.jobNumber}`} type="number" min="0" step="0.25" value={visit.travelHours || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { travelHours: Number(e.target.value), manualTravel: true })} /></label>
               <label className="miles">Miles<input type="number" min="0" step="0.1" value={visit.miles || ""} onChange={(e) => updateVisit(job.trackingNumber, visit.jobNumber, { miles: Number(e.target.value) })} /></label>
-              <div className="receiptcount"><span>Receipts</span><b>{visit.receipts?.length || 0} · {money.format((visit.receipts || []).reduce((sum, receipt) => sum + receipt.amount, 0))}</b></div>
+              <div className="receiptcount"><span>{visit.receiptTotal > 0 ? "HCP receipt total" : "Receipts"}</span><b>{visit.receipts?.length || 0} · {money.format(visitReceiptTotal(visit))}</b></div>
               {(visit.receipts || []).length > 0 && <div className="receiptstrip">{visit.receipts.map((receipt) => <div className="receiptthumb" key={receipt.id}><a href={receipt.dataUrl} target="_blank"><img src={receipt.dataUrl} alt={receipt.name} /></a><span>{receipt.category}<b>{money.format(receipt.amount)}</b></span><button onClick={() => removeReceipt(visit.jobNumber, receipt.id)}>×</button></div>)}</div>}
             </article>)}</div>
 
