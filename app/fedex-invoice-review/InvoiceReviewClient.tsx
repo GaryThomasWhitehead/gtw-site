@@ -383,6 +383,12 @@ export default function Home() {
     sent: jobs.filter((item) => item.invoiceSent && item.serviceChannelInvoiceStatus !== "APPROVED").length,
     approved: jobs.filter((item) => item.serviceChannelInvoiceStatus === "APPROVED").length,
   }), [jobs]);
+  const displayedInvoiceSummary = useMemo(() => {
+    if (invoiceImportSummary.rows) return invoiceImportSummary;
+    const compared = jobs.filter((item) => Boolean(item.serviceChannelInvoiceStatus));
+    const approved = compared.filter((item) => item.serviceChannelInvoiceStatus === "APPROVED").length;
+    return { rows: compared.length, matched: compared.length, approved, open: compared.length - approved };
+  }, [invoiceImportSummary, jobs]);
 
   function updateJob(tracking: string, patch: Partial<Job>) {
     setSaveState("Unsaved changes");
@@ -464,7 +470,7 @@ export default function Home() {
       </header>
 
       <section className="hero">
-        <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p>{hcpImportRange ? <div className="hcpRange"><span>HCP jobs uploaded</span><strong>{displayDay(hcpImportRange.from)} – {displayDay(hcpImportRange.to)}</strong><small>Next update should begin {followingDay(hcpImportRange.to)}</small></div> : <div className="hcpRange empty"><span>HCP jobs uploaded</span><strong>No date range recorded yet</strong><small>Import the next Housecall Pro jobs CSV to begin tracking coverage.</small></div>}<div className="scInvoiceSummary"><span>ServiceChannel invoice report</span><strong>{invoiceImportSummary.matched} matched · {invoiceImportSummary.approved} approved · {invoiceImportSummary.open} open</strong><small>{invoiceImportSummary.rows} invoice rows compared</small></div></div>
+        <div><p className="eyebrow pale">SERVICECHANNEL + HOUSECALL PRO</p><h2>From field work to invoice-ready.</h2><p>Review matched visits, mileage, receipts, and billing details before anything reaches QuickBooks. <strong>{saveState}</strong></p>{hcpImportRange ? <div className="hcpRange"><span>HCP jobs uploaded</span><strong>{displayDay(hcpImportRange.from)} – {displayDay(hcpImportRange.to)}</strong><small>Next update should begin {followingDay(hcpImportRange.to)}</small></div> : <div className="hcpRange empty"><span>HCP jobs uploaded</span><strong>No date range recorded yet</strong><small>Import the next Housecall Pro jobs CSV to begin tracking coverage.</small></div>}<div className="scInvoiceSummary"><span>ServiceChannel invoice report</span><strong>{displayedInvoiceSummary.matched} matched · {displayedInvoiceSummary.approved} approved · {displayedInvoiceSummary.open} open</strong><small>{displayedInvoiceSummary.rows} invoice rows compared</small></div></div>
         <div className="heroActions"><label className="mergeButton">Update from Housecall Pro<input type="file" accept=".csv,text/csv" onChange={(event) => { updateFromHousecall(event.target.files?.[0]); event.target.value = ""; }} /></label><label className="mergeButton invoiceImport">Import ServiceChannel Invoices<input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { updateFromServiceChannelInvoices(event.target.files?.[0]); event.target.value = ""; }} /></label><button className="primary" onClick={exportQbo} disabled={!checked.length}>Export {checked.length || "selected"} to QBO CSV</button></div>
       </section>
 
