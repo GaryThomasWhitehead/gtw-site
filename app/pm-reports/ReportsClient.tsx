@@ -5,6 +5,7 @@ import styles from "./reports.module.css";
 
 type Category = "all" | "regular" | "proposed" | "pm" | "tugger";
 type TuggerView = "reports" | "history";
+type WorkflowStatus = "complete" | "parts" | "return";
 type TuggerWorkRecord = {
   itemNumber?: number;
   location?: string;
@@ -28,6 +29,7 @@ type Report = {
   facilityId?: string;
   itemCount?: number;
   tuggerWorkRecords?: TuggerWorkRecord[];
+  workflowStatus?: WorkflowStatus;
 };
 
 const TABS: { key: Category; label: string }[] = [
@@ -38,6 +40,12 @@ const TABS: { key: Category; label: string }[] = [
   { key: "tugger", label: "Tugger" },
 ];
 const categoryOf = (report: Report) => report.category || "pm";
+const statusOf = (report: Report): WorkflowStatus => report.workflowStatus || "complete";
+const STATUS_TABS: { key: WorkflowStatus; label: string }[] = [
+  { key: "complete", label: "Job Complete" },
+  { key: "parts", label: "Need Parts" },
+  { key: "return", label: "Need to Return" },
+];
 const normalizedSearch = (value: unknown) =>
   String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 const reportMatches = (report: Report, query: string) => {
@@ -63,9 +71,11 @@ export default function ReportsClient() {
   const [reports, setReports] = useState<Report[]>([]);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Category>("all");
+  const [statusTab, setStatusTab] = useState<WorkflowStatus>("complete");
   const [tuggerView, setTuggerView] = useState<TuggerView>("reports");
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
+  const [updatingId, setUpdatingId] = useState("");
 
   useEffect(() => {
     fetch("/api/pm-reports", { cache: "no-store" })
@@ -82,15 +92,17 @@ export default function ReportsClient() {
       reports.filter(
         (report) =>
           (tab === "all" || categoryOf(report) === tab) &&
+          statusOf(report) === statusTab &&
           reportMatches(report, query),
       ),
-    [reports, query, tab],
+    [reports, query, tab, statusTab],
   );
 
   const tuggerHistory = useMemo(
     () =>
       reports
         .filter((report) => categoryOf(report) === "tugger")
+        .filter((report) => statusOf(report) === statusTab)
         .flatMap((report) => {
           if (report.tuggerWorkRecords?.length) {
             return report.tuggerWorkRecords.map((item) => ({ item, report }));
@@ -119,7 +131,7 @@ export default function ReportsClient() {
                 (compactQuery && normalizedSearch(value).includes(compactQuery));
             });
         }),
-    [reports, query],
+    [reports, query, statusTab],
   );
   const historyMode = tab === "tugger" && tuggerView === "history";
 
@@ -141,6 +153,27 @@ export default function ReportsClient() {
       );
     } finally {
       setDeletingId("");
+    }
+  }
+
+  async function updateWorkflowStatus(report: Report, workflowStatus: WorkflowStatus) {
+    if (statusOf(report) === workflowStatus) return;
+    const previousStatus = statusOf(report);
+    setUpdatingId(report.id);
+    setError("");
+    setReports((current) => current.map((item) => item.id === report.id ? { ...item, workflowStatus } : item));
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: report.id, workflowStatus }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+    } catch (cause) {
+      setReports((current) => current.map((item) => item.id === report.id ? { ...item, workflowStatus: previousStatus } : item));
+      setError(`Could not update report status: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setUpdatingId("");
     }
   }
 
@@ -172,6 +205,15 @@ export default function ReportsClient() {
               </span>
             </button>
           ))}
+        </div>
+
+        <div className={styles.statusTabs} aria-label="Report workflow status">
+          {STATUS_TABS.map((item) => {
+            const count = reports.filter((report) =>
+              (tab === "all" || categoryOf(report) === tab) && statusOf(report) === item.key
+            ).length;
+            return <button key={item.key} className={statusTab === item.key ? styles.activeStatusTab : ""} onClick={() => setStatusTab(item.key)}>{item.label}<span>{count}</span></button>;
+          })}
         </div>
 
         {tab === "tugger" && (
@@ -279,6 +321,19 @@ export default function ReportsClient() {
                   </p>
                 </div>
                 <div className={styles.reportActions}>
+                  <div className={styles.statusChecks} aria-label="Report status">
+                    {STATUS_TABS.map((item) => (
+                      <label key={item.key}>
+                        <input
+                          type="checkbox"
+                          checked={statusOf(report) === item.key}
+                          disabled={updatingId === report.id}
+                          onChange={() => updateWorkflowStatus(report, item.key)}
+                        />
+                        <span>{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
                   <a
                     target="_blank"
                     rel="noreferrer"

@@ -943,7 +943,7 @@
                     manufacturer: item.manufacturer || '',
                     serialNumber: item.serialNum || ''
                 })),
-                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', filename, pdfBase64,
+                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', workflowStatus: 'complete', filename, pdfBase64,
                 completedAt: new Date().toISOString()
             };
             const endpoint = mode === 'share' ? '/api/pm-reports/email' : '/api/pm-reports';

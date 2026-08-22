@@ -73,6 +73,35 @@ export async function GET(request: NextRequest) {
   }), { headers: { "Cache-Control": "no-store" } });
 }
 
+export async function PATCH(request: NextRequest) {
+  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { url, key, table } = config();
+  if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
+  const body = await request.json();
+  const id = String(body?.id || "").trim();
+  const workflowStatus = String(body?.workflowStatus || "").trim();
+  if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
+  if (!["complete", "parts", "return"].includes(workflowStatus)) {
+    return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
+  }
+  const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
+  const currentResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
+    headers: apiHeaders(key),
+    cache: "no-store",
+  });
+  if (!currentResponse.ok) return NextResponse.json({ error: await currentResponse.text() }, { status: currentResponse.status });
+  const rows = await currentResponse.json();
+  if (!rows.length) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  const updatedData = { ...rows[0].data, workflowStatus };
+  const updateResponse = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
+    method: "PATCH",
+    headers: { ...apiHeaders(key), Prefer: "return=minimal" },
+    body: JSON.stringify({ data: updatedData, updated_at: new Date().toISOString() }),
+  });
+  if (!updateResponse.ok) return NextResponse.json({ error: await updateResponse.text() }, { status: updateResponse.status });
+  return NextResponse.json({ ok: true, id, workflowStatus });
+}
+
 export async function DELETE(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
