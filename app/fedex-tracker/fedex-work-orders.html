@@ -235,6 +235,18 @@
         gap: 10px;
       }
 
+      .list-section-title {
+        margin: 8px 0 0;
+        border: 1px solid #b7d8c6;
+        border-left: 5px solid var(--good);
+        border-radius: 8px;
+        background: #eefaf3;
+        color: #163f2b;
+        padding: 10px 12px;
+        font-size: 15px;
+        font-weight: 800;
+      }
+
       .work-card {
         width: 100%;
         border: 1px solid var(--line);
@@ -1561,7 +1573,7 @@
           els.list.innerHTML = `<div class="empty">No work orders match the current filters.</div>`;
           return;
         }
-        els.list.innerHTML = visible.map(order => {
+        const cardHtml = order => {
           const excerpt = searchResultExcerpt(order);
           return `
           <button class="work-card ${order.id === selectedId ? "active" : ""} ${isOldJob(order) ? "old-job" : ""}" type="button" data-id="${order.id}">
@@ -1573,7 +1585,21 @@
             ${isOldJob(order) ? `<p><span class="pill old">${getOrderAgeDays(order)} days old</span></p>` : ""}
             <p>${escapeHtml(excerpt).slice(0, 150)}${excerpt.length > 150 ? "..." : ""}</p>
           </button>
-        `}).join("");
+        `;
+        };
+
+        const isLocationPage = !["all", readyToBillPage, canceledPage].includes(activeLocation);
+        if (isLocationPage && !els.search.value.trim()) {
+          const currentJobs = visible.filter(order => order.status !== "Completed");
+          const completedJobs = visible.filter(order => order.status === "Completed");
+          els.list.innerHTML = `
+            ${currentJobs.map(cardHtml).join("")}
+            ${completedJobs.length ? `<div class="list-section-title">Jobs Completed (${completedJobs.length})</div>${completedJobs.map(cardHtml).join("")}` : ""}
+          `;
+          return;
+        }
+
+        els.list.innerHTML = visible.map(cardHtml).join("");
       }
 
       function renderBoard() {
