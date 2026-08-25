@@ -236,6 +236,7 @@
       }
 
       .list-section-title {
+        width: 100%;
         margin: 8px 0 0;
         border: 1px solid #b7d8c6;
         border-left: 5px solid var(--good);
@@ -245,6 +246,12 @@
         padding: 10px 12px;
         font-size: 15px;
         font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .list-section-title:hover {
+        background: #dcf4e6;
       }
 
       .work-card {
@@ -1344,6 +1351,7 @@
       let orders = loadOrders();
       let selectedId = orders[0]?.id || null;
       let activeLocation = "all";
+      let locationCompletedView = false;
 
       const els = {
         locationPages: document.querySelector("#locationPages"),
@@ -1592,10 +1600,17 @@
         if (isLocationPage && !els.search.value.trim()) {
           const currentJobs = visible.filter(order => order.status !== "Completed");
           const completedJobs = visible.filter(order => order.status === "Completed");
-          els.list.innerHTML = `
-            ${currentJobs.map(cardHtml).join("")}
-            ${completedJobs.length ? `<div class="list-section-title">Jobs Completed (${completedJobs.length})</div>${completedJobs.map(cardHtml).join("")}` : ""}
-          `;
+          if (locationCompletedView) {
+            els.list.innerHTML = `
+              <button class="list-section-title" type="button" data-completed-view="open">← Back to Open Jobs</button>
+              ${completedJobs.length ? completedJobs.map(cardHtml).join("") : `<div class="empty">No completed jobs at this location.</div>`}
+            `;
+          } else {
+            els.list.innerHTML = `
+              <button class="list-section-title" type="button" data-completed-view="completed">Completed Jobs (${completedJobs.length})</button>
+              ${currentJobs.length ? currentJobs.map(cardHtml).join("") : `<div class="empty">No open jobs at this location.</div>`}
+            `;
+          }
           return;
         }
 
@@ -1945,9 +1960,21 @@
         const button = event.target.closest("[data-location]");
         if (!button) return;
         activeLocation = button.dataset.location;
+        locationCompletedView = false;
+        if (!["all", readyToBillPage, canceledPage].includes(activeLocation)) {
+          selectedId = pageOrders().find(order => order.status !== "Completed")?.id || pageOrders()[0]?.id || null;
+        }
         render();
       });
       els.list.addEventListener("click", event => {
+        const completedToggle = event.target.closest("[data-completed-view]");
+        if (completedToggle) {
+          locationCompletedView = completedToggle.dataset.completedView === "completed";
+          const targetOrders = pageOrders().filter(order => locationCompletedView ? order.status === "Completed" : order.status !== "Completed");
+          selectedId = targetOrders[0]?.id || null;
+          render();
+          return;
+        }
         const card = event.target.closest("[data-id]");
         if (!card) return;
         selectedId = card.dataset.id;
