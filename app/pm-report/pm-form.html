@@ -351,6 +351,7 @@
         const photoFilenames = {};
         const photoDataStore = {};
         const photoTypeStore = {};
+        const facilityAddresses = new Map();
 
         // ===================== DOM REFS =====================
         const techNameInput = document.getElementById('tech-name-a1b2');
@@ -385,12 +386,45 @@
             workflowStatusInputs.forEach(input => { input.checked = input.value === selected; });
         }
 
+        function localToday() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function normalizedFacilityId(value) {
+            return String(value || '').toUpperCase().match(/(?:FEDEX\s+)?([A-Z0-9]{4})\b/)?.[1] || '';
+        }
+
+        function populateFacilityAddress() {
+            const address = facilityAddresses.get(normalizedFacilityId(facilityIdInput.value));
+            if (!address) return;
+            facilityAddrInput.value = address;
+            if (!reportDateInput.value) reportDateInput.value = localToday();
+            clearFieldError(facilityAddrInput);
+            saveState();
+        }
+
+        async function loadFacilityAddresses() {
+            try {
+                const response = await fetch('/api/fedex-facilities', { cache: 'no-store' });
+                const data = await response.json();
+                (data.facilities || []).forEach(facility => facilityAddresses.set(facility.id, facility.address));
+                populateFacilityAddress();
+            } catch (error) {
+                // Address remains manually editable if the lookup is unavailable.
+            }
+        }
+
         // ===================== INIT =====================
         function init() {
-            const now = new Date();
-            reportDateInput.value = now.toISOString().split('T')[0];
+            reportDateInput.value = localToday();
 
             loadState();
+            if (!reportDateInput.value) reportDateInput.value = localToday();
+            loadFacilityAddresses();
 
             document.querySelectorAll('.report-type-btn').forEach(button => button.addEventListener('click', () => setReportCategory(button.dataset.category)));
             setReportCategory(reportCategory, false);
@@ -416,6 +450,8 @@
                 });
             });
             workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
+            facilityIdInput.addEventListener('input', populateFacilityAddress);
+            facilityIdInput.addEventListener('change', populateFacilityAddress);
 
             updateCounts();
         }
@@ -1067,7 +1103,7 @@
 
         function resetForm() {
             techNameInput.value = '';
-            reportDateInput.value = new Date().toISOString().split('T')[0];
+            reportDateInput.value = localToday();
             facilityAddrInput.value = '';
             trackingNumInput.value = '';
             facilityIdInput.value = '';
@@ -1141,7 +1177,7 @@
                 if (state.reportCategory && REPORT_TYPES[state.reportCategory]) reportCategory = state.reportCategory;
 
                 techNameInput.value = state.techName || '';
-                reportDateInput.value = state.reportDate || new Date().toISOString().split('T')[0];
+                reportDateInput.value = state.reportDate || localToday();
                 facilityAddrInput.value = state.facilityAddr || '';
                 trackingNumInput.value = state.trackingNum || '';
                 facilityIdInput.value = state.facilityId || '';

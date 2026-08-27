@@ -291,6 +291,7 @@
         const MAX_ITEMS = 80;
         const MAX_PHOTOS_PER_SECTION = 5;
         const LS_KEY = 'frontline_tugger_rm_data';
+        const facilityAddresses = new Map();
 
         // ─── State ───
         let state = {
@@ -326,7 +327,34 @@
 
         // ─── Helpers ───
         function today() {
-            return new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function normalizedFacilityId(value) {
+            return String(value || '').toUpperCase().match(/(?:FEDEX\s+)?([A-Z0-9]{4})\b/)?.[1] || '';
+        }
+
+        function populateFacilityAddress() {
+            const address = facilityAddresses.get(normalizedFacilityId(facilityIdEl.value));
+            if (!address) return;
+            addrEl.value = address;
+            if (!dateEl.value) dateEl.value = today();
+            saveState();
+        }
+
+        async function loadFacilityAddresses() {
+            try {
+                const response = await fetch('/api/fedex-facilities', { cache: 'no-store' });
+                const data = await response.json();
+                (data.facilities || []).forEach(facility => facilityAddresses.set(facility.id, facility.address));
+                populateFacilityAddress();
+            } catch (error) {
+                // Address remains manually editable if the lookup is unavailable.
+            }
         }
 
         function selectedWorkflowStatus() {
@@ -658,6 +686,8 @@
             f.addEventListener('blur', saveState);
         });
         workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
+        facilityIdEl.addEventListener('input', populateFacilityAddress);
+        facilityIdEl.addEventListener('change', populateFacilityAddress);
 
         // ─── PDF Export ───
         exportPdfBtn.addEventListener('click', function() {
@@ -1006,6 +1036,8 @@
                 renumberItems();
             }
         }
+
+        loadFacilityAddresses();
 
         updateCounts();
 
