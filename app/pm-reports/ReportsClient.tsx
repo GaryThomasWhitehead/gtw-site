@@ -10,6 +10,7 @@ type TuggerWorkRecord = {
   itemNumber?: number;
   location?: string;
   facilityId?: string;
+  customerName?: string;
   trackingNumber?: string;
   reportDate?: string;
   description?: string;
@@ -27,6 +28,8 @@ type Report = {
   facilityAddress?: string;
   trackingNumber?: string;
   facilityId?: string;
+  customerName?: string;
+  fedexJob?: boolean;
   itemCount?: number;
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
@@ -53,6 +56,7 @@ const reportMatches = (report: Report, query: string) => {
     report.technician,
     report.trackingNumber,
     report.facilityId,
+    report.customerName,
     report.facilityAddress,
     report.reportDate,
     report.reportTypeLabel,
@@ -311,7 +315,7 @@ export default function ReportsClient() {
                     {report.reportTypeLabel || "Preventive Maintenance Report"}
                   </p>
                   <h2>
-                    {report.facilityId || "Facility"} ·{" "}
+                    {report.customerName || report.facilityId || "Customer"} ·{" "}
                     {report.trackingNumber || "No tracking number"}
                   </h2>
                   <p>{report.facilityAddress || "Address not entered"}</p>

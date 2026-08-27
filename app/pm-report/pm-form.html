@@ -165,6 +165,10 @@
                 <h2 data-id="20" class="text-lg font-semibold text-navy-500">Report Header</h2>
             </div>
             <div data-id="21" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="md:col-span-2 no-print flex items-center gap-3 rounded-xl border border-field-border bg-field-bg px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                    <input id="fedex-job-checkbox" type="checkbox" class="h-5 w-5 accent-[#1468a5]" checked />
+                    FedEx Job
+                </label>
                 <!-- Technician Name -->
                 <div data-id="22">
                     <label data-id="23" for="tech-name-a1b2" class="block text-sm font-medium text-navy-700 mb-1.5">Technician Name <span data-id="24" class="text-danger-500">*</span></label>
@@ -178,6 +182,11 @@
                     <input data-id="31" type="date" id="report-date-c3d4" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 print-hide-input" required />
                     <span data-id="32" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
                     <p data-id="33" class="text-xs text-danger-500 mt-1 hidden" id="err-report-date-e5f6"></p>
+                </div>
+                <div id="customer-name-group" class="md:col-span-2 hidden">
+                    <label for="customer-name-input" class="block text-sm font-medium text-navy-700 mb-1.5">Customer Name <span class="text-danger-500">*</span></label>
+                    <input type="text" id="customer-name-input" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="Customer full name" />
+                    <span class="print-header-value hidden text-base text-navy-800 font-medium"></span>
                 </div>
                 <!-- Facility Address -->
                 <div data-id="34" class="md:col-span-2">
@@ -194,7 +203,7 @@
                     <p data-id="45" class="text-xs text-danger-500 mt-1 hidden" id="err-tracking-num-m3n4"></p>
                 </div>
                 <!-- Facility ID -->
-                <div data-id="46">
+                <div data-id="46" id="facility-id-group">
                     <label data-id="47" for="facility-id-o5p6" class="block text-sm font-medium text-navy-700 mb-1.5">Facility ID <span data-id="48" class="text-danger-500">*</span></label>
                     <input data-id="49" type="text" id="facility-id-o5p6" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. FAC-1001" required />
                     <span data-id="50" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
@@ -359,6 +368,10 @@
         const facilityAddrInput = document.getElementById('facility-addr-g7h8');
         const trackingNumInput = document.getElementById('tracking-num-k1l2');
         const facilityIdInput = document.getElementById('facility-id-o5p6');
+        const fedexJobInput = document.getElementById('fedex-job-checkbox');
+        const customerNameInput = document.getElementById('customer-name-input');
+        const customerNameGroup = document.getElementById('customer-name-group');
+        const facilityIdGroup = document.getElementById('facility-id-group');
         const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
         const startBtn = document.getElementById('start-inspection-btn-s9t0');
         const inspectionSection = document.getElementById('inspection-section-u1v2');
@@ -399,11 +412,22 @@
         }
 
         function populateFacilityAddress() {
+            if (!fedexJobInput.checked) return;
             const address = facilityAddresses.get(normalizedFacilityId(facilityIdInput.value));
             if (!address) return;
             facilityAddrInput.value = address;
             if (!reportDateInput.value) reportDateInput.value = localToday();
             clearFieldError(facilityAddrInput);
+            saveState();
+        }
+
+        function updateJobTypeFields() {
+            const isFedEx = fedexJobInput.checked;
+            facilityIdGroup.classList.toggle('hidden', !isFedEx);
+            customerNameGroup.classList.toggle('hidden', isFedEx);
+            facilityIdInput.required = isFedEx;
+            customerNameInput.required = !isFedEx;
+            if (isFedEx) populateFacilityAddress();
             saveState();
         }
 
@@ -424,6 +448,7 @@
 
             loadState();
             if (!reportDateInput.value) reportDateInput.value = localToday();
+            updateJobTypeFields();
             loadFacilityAddresses();
 
             document.querySelectorAll('.report-type-btn').forEach(button => button.addEventListener('click', () => setReportCategory(button.dataset.category)));
@@ -439,7 +464,7 @@
             completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
 
-            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput];
+            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput];
             headerFields.forEach(f => {
                 f.addEventListener('input', debounce(saveState, 500));
                 f.addEventListener('blur', () => {
@@ -452,6 +477,7 @@
             workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
             facilityIdInput.addEventListener('input', populateFacilityAddress);
             facilityIdInput.addEventListener('change', populateFacilityAddress);
+            fedexJobInput.addEventListener('change', updateJobTypeFields);
 
             updateCounts();
         }
@@ -530,7 +556,7 @@
         }
 
         function validateHeaderFields() {
-            const fields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput];
+            const fields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, fedexJobInput.checked ? facilityIdInput : customerNameInput];
             let firstInvalid = null;
             let valid = true;
             fields.forEach(f => {
@@ -686,7 +712,8 @@
                 { input: reportDateInput },
                 { input: facilityAddrInput },
                 { input: trackingNumInput },
-                { input: facilityIdInput }
+                { input: facilityIdInput },
+                { input: customerNameInput }
             ];
             headerFields.forEach(({ input }) => {
                 const printSpan = input.parentElement.querySelector('.print-header-value');
@@ -704,20 +731,7 @@
 
         // ===================== EXPORT PDF =====================
         function handleExportPDF(mode = 'download') {
-            const techName = techNameInput.value.trim();
-            const facilityId = facilityIdInput.value.trim();
-
-            if (!techName || !facilityId) {
-                showToast('Please fill in Technician Name and Facility ID before exporting.', 'error');
-                if (!techName) {
-                    techNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    techNameInput.focus();
-                } else {
-                    facilityIdInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    facilityIdInput.focus();
-                }
-                return;
-            }
+            if (!validateHeaderFields()) return;
 
             const loadingToast = showToast('Generating PDF…', 'info');
 
@@ -814,6 +828,7 @@
                 // Gather data
                 const techName = techNameInput.value.trim();
                 const facilityId = facilityIdInput.value.trim();
+                const customerName = fedexJobInput.checked ? 'FedEx' : customerNameInput.value.trim();
                 const facilityAddr = facilityAddrInput.value.trim() || 'Not specified';
                 const trackingNum = trackingNumInput.value.trim() || 'Not specified';
                 const dateVal = reportDateInput.value;
@@ -923,7 +938,11 @@
                 lines2 = drawInfoPair('Tracking #', trackingNum, marginL + colW, cursorY);
                 cursorY += infoLineH * Math.max(lines1, lines2);
 
-                lines1 = drawInfoPair('Facility ID', facilityId, marginL, cursorY);
+                lines1 = drawInfoPair('Customer', customerName, marginL, cursorY);
+                lines2 = drawInfoPair('Facility ID', facilityId || 'Not applicable', marginL + colW, cursorY);
+                cursorY += infoLineH * Math.max(lines1, lines2);
+
+                lines1 = drawInfoPair('Job Type', fedexJobInput.checked ? 'FedEx Job' : 'Non-FedEx Job', marginL, cursorY);
                 lines2 = drawInfoPair('Total Items', String(totalItems), marginL + colW, cursorY);
                 cursorY += infoLineH * Math.max(lines1, lines2) + 2;
 
@@ -1015,7 +1034,7 @@
                 }
 
                 // Save
-                const safeFacId = facilityId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const safeFacId = (facilityId || customerName || 'Customer').replace(/[^a-zA-Z0-9_-]/g, '_');
                 const safeDate = reportDateInput.value || 'undated';
                 const filename = 'Frontline_' + reportType.file + '_' + safeFacId + '_' + safeDate + '.pdf';
                 if (mode === 'complete') {
@@ -1030,6 +1049,8 @@
                             facilityAddress: facilityAddr,
                             trackingNumber: trackingNum,
                             facilityId,
+                            customerName: fedexJobInput.checked ? '' : customerName,
+                            fedexJob: fedexJobInput.checked,
                             itemCount: totalItems,
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
@@ -1056,6 +1077,8 @@
                             facilityAddress: facilityAddr,
                             trackingNumber: trackingNum,
                             facilityId,
+                            customerName: fedexJobInput.checked ? '' : customerName,
+                            fedexJob: fedexJobInput.checked,
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
                             filename,
@@ -1107,9 +1130,12 @@
             facilityAddrInput.value = '';
             trackingNumInput.value = '';
             facilityIdInput.value = '';
+            customerNameInput.value = '';
+            fedexJobInput.checked = true;
+            updateJobTypeFields();
             setWorkflowStatus('complete');
 
-            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput].forEach(clearFieldError);
+            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput].forEach(clearFieldError);
 
             itemsContainer.innerHTML = '';
             items = [];
@@ -1152,6 +1178,8 @@
                 facilityAddr: facilityAddrInput.value,
                 trackingNum: trackingNumInput.value,
                 facilityId: facilityIdInput.value,
+                customerName: customerNameInput.value,
+                fedexJob: fedexJobInput.checked,
                 workflowStatus: selectedWorkflowStatus(),
                 reportCategory,
                 reportId,
@@ -1181,6 +1209,8 @@
                 facilityAddrInput.value = state.facilityAddr || '';
                 trackingNumInput.value = state.trackingNum || '';
                 facilityIdInput.value = state.facilityId || '';
+                customerNameInput.value = state.customerName || '';
+                fedexJobInput.checked = state.fedexJob !== false;
                 setWorkflowStatus(state.workflowStatus || 'complete');
                 reportId = state.reportId || reportId;
 

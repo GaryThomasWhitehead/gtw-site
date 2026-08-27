@@ -178,6 +178,10 @@
                 Report Details
             </h2>
             <div data-id="17" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="md:col-span-2 no-print flex items-center gap-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50 px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                    <input id="tugger-fedex-job" type="checkbox" class="h-5 w-5 accent-[#1468a5]" checked />
+                    FedEx Job
+                </label>
                 <div data-id="18">
                     <label data-id="19" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tech-name-f1">Technician Name <span data-id="20" class="text-danger-500">*</span></label>
                     <input data-id="21" id="tech-name-f1" type="text" class="input-field" placeholder="e.g. John Smith" required />
@@ -185,6 +189,10 @@
                 <div data-id="22">
                     <label data-id="23" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="report-date-f2">Date <span data-id="24" class="text-danger-500">*</span></label>
                     <input data-id="25" id="report-date-f2" type="date" class="input-field" required />
+                </div>
+                <div id="tugger-customer-name-group" class="md:col-span-2 hidden">
+                    <label class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tugger-customer-name">Customer Name <span class="text-danger-500">*</span></label>
+                    <input id="tugger-customer-name" type="text" class="input-field" placeholder="Customer full name" />
                 </div>
                 <div data-id="26">
                     <label data-id="27" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="facility-addr-f3">Facility Address <span data-id="28" class="text-danger-500">*</span></label>
@@ -194,7 +202,7 @@
                     <label data-id="31" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tracking-num-f4">Tracking Number <span data-id="32" class="text-danger-500">*</span></label>
                     <input data-id="33" id="tracking-num-f4" type="text" class="input-field" placeholder="e.g. TRK-2026-0815" required />
                 </div>
-                <div data-id="34">
+                <div data-id="34" id="tugger-facility-id-group">
                     <label data-id="35" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="facility-id-f5">Facility ID <span data-id="36" class="text-danger-500">*</span></label>
                     <input data-id="37" id="facility-id-f5" type="text" class="input-field" placeholder="e.g. FAC-001" required />
                 </div>
@@ -296,7 +304,7 @@
         // ─── State ───
         let state = {
             reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
-            header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '' },
+            header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '', customerName: '', fedexJob: true },
             workflowStatus: 'complete',
             items: [],
             inspectionStarted: false
@@ -308,6 +316,10 @@
         const addrEl = document.getElementById('facility-addr-f3');
         const trackingEl = document.getElementById('tracking-num-f4');
         const facilityIdEl = document.getElementById('facility-id-f5');
+        const fedexJobEl = document.getElementById('tugger-fedex-job');
+        const customerNameEl = document.getElementById('tugger-customer-name');
+        const customerNameGroup = document.getElementById('tugger-customer-name-group');
+        const facilityIdGroup = document.getElementById('tugger-facility-id-group');
         const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
         const startBtn = document.getElementById('start-inspection-btn-b1');
         const inspectionSection = document.getElementById('inspection-section-s2cd');
@@ -339,10 +351,21 @@
         }
 
         function populateFacilityAddress() {
+            if (!fedexJobEl.checked) return;
             const address = facilityAddresses.get(normalizedFacilityId(facilityIdEl.value));
             if (!address) return;
             addrEl.value = address;
             if (!dateEl.value) dateEl.value = today();
+            saveState();
+        }
+
+        function updateJobTypeFields() {
+            const isFedEx = fedexJobEl.checked;
+            facilityIdGroup.classList.toggle('hidden', !isFedEx);
+            customerNameGroup.classList.toggle('hidden', isFedEx);
+            facilityIdEl.required = isFedEx;
+            customerNameEl.required = !isFedEx;
+            if (isFedEx) populateFacilityAddress();
             saveState();
         }
 
@@ -389,6 +412,8 @@
             state.header.facilityAddr = addrEl.value;
             state.header.trackingNum = trackingEl.value;
             state.header.facilityId = facilityIdEl.value;
+            state.header.customerName = customerNameEl.value;
+            state.header.fedexJob = fedexJobEl.checked;
             state.workflowStatus = selectedWorkflowStatus();
 
             state.items = [];
@@ -573,7 +598,7 @@
 
         // ─── Validate Header ───
         function validateHeader() {
-            const fields = [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl];
+            const fields = [techNameEl, dateEl, addrEl, trackingEl, fedexJobEl.checked ? facilityIdEl : customerNameEl];
             let firstInvalid = null;
             fields.forEach(f => {
                 if (!f.value.trim()) {
@@ -657,7 +682,7 @@
                 localStorage.removeItem(LS_KEY);
                 state = {
                     reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
-                    header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '' },
+                    header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '', customerName: '', fedexJob: true },
                     workflowStatus: 'complete',
                     items: [],
                     inspectionStarted: false
@@ -667,6 +692,9 @@
                 addrEl.value = '';
                 trackingEl.value = '';
                 facilityIdEl.value = '';
+                customerNameEl.value = '';
+                fedexJobEl.checked = true;
+                updateJobTypeFields();
                 setWorkflowStatus('complete');
                 itemsContainer.innerHTML = '';
                 inspectionSection.classList.add('hidden');
@@ -678,7 +706,7 @@
         });
 
         // ─── Clear border on input ───
-        [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl].forEach(f => {
+        [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl, customerNameEl].forEach(f => {
             f.addEventListener('input', function() {
                 if (f.value.trim()) f.style.borderColor = '#D0D5DD';
             });
@@ -688,6 +716,7 @@
         workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
         facilityIdEl.addEventListener('input', populateFacilityAddress);
         facilityIdEl.addEventListener('change', populateFacilityAddress);
+        fedexJobEl.addEventListener('change', updateJobTypeFields);
 
         // ─── PDF Export ───
         exportPdfBtn.addEventListener('click', function() {
@@ -831,11 +860,13 @@
                 ['Technician:', hdr.techName],
                 ['Date:', hdr.date],
                 ['Facility Address:', hdr.facilityAddr],
+                ['Customer:', hdr.fedexJob === false ? hdr.customerName : 'FedEx'],
             ];
             const infoRight = [
-                ['Facility ID:', hdr.facilityId],
+                ['Facility ID:', hdr.facilityId || 'Not applicable'],
                 ['Tracking #:', hdr.trackingNum],
                 ['Total Items:', '' + state.items.length],
+                ['Job Type:', hdr.fedexJob === false ? 'Non-FedEx Job' : 'FedEx Job'],
             ];
 
             infoLeft.forEach((pair, i) => {
@@ -850,7 +881,7 @@
                 doc.setFont('helvetica', 'normal');
                 doc.text(pair[1] || '—', pageW / 2 + 30, y + i * 5);
             });
-            y += 20;
+            y += 25;
 
             // Divider
             doc.setDrawColor(208, 213, 221);
@@ -981,7 +1012,7 @@
                 doc.text('Frontline Facility Services | Tugger R&M Report | Page ' + i + ' of ' + totalPages, pageW / 2, pageH - 8, { align: 'center' });
             }
 
-            const facilityId = (hdr.facilityId || 'UNKNOWN').replace(/[^a-zA-Z0-9_-]/g, '');
+            const facilityId = (hdr.facilityId || hdr.customerName || 'CUSTOMER').replace(/[^a-zA-Z0-9_-]/g, '');
             const dateStr = (hdr.date || today()).replace(/-/g, '');
             const filename = 'Frontline_Tugger_' + facilityId + '_' + dateStr + '.pdf';
             if (mode === 'download') {
@@ -994,10 +1025,12 @@
                 id: state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
                 trackingNumber: hdr.trackingNum, facilityId: hdr.facilityId, itemCount: state.items.length,
+                customerName: hdr.fedexJob === false ? hdr.customerName : '', fedexJob: hdr.fedexJob !== false,
                 tuggerWorkRecords: state.items.map((item, index) => ({
                     itemNumber: index + 1,
                     location: hdr.facilityAddr,
                     facilityId: hdr.facilityId,
+                    customerName: hdr.fedexJob === false ? hdr.customerName : '',
                     trackingNumber: hdr.trackingNum,
                     reportDate: hdr.date,
                     description: item.description || '',
@@ -1023,6 +1056,8 @@
             addrEl.value = state.header.facilityAddr || '';
             trackingEl.value = state.header.trackingNum || '';
             facilityIdEl.value = state.header.facilityId || '';
+            customerNameEl.value = state.header.customerName || '';
+            fedexJobEl.checked = state.header.fedexJob !== false;
             setWorkflowStatus(state.workflowStatus || 'complete');
 
             if (state.inspectionStarted) {
@@ -1037,6 +1072,7 @@
             }
         }
 
+        updateJobTypeFields();
         loadFacilityAddresses();
 
         updateCounts();
