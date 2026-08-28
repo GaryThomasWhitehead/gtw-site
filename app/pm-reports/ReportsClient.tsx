@@ -102,6 +102,17 @@ export default function ReportsClient() {
     [reports, query, tab, statusTab],
   );
 
+  const technicianGroups = useMemo(() => {
+    const groups = new Map<string, Report[]>();
+    shown.forEach((report) => {
+      const technician = report.technician?.trim() || "Technician not entered";
+      groups.set(technician, [...(groups.get(technician) || []), report]);
+    });
+    return Array.from(groups.entries()).sort(([left], [right]) =>
+      left.localeCompare(right, undefined, { sensitivity: "base" }),
+    );
+  }, [shown]);
+
   const tuggerHistory = useMemo(
     () =>
       reports
@@ -308,52 +319,62 @@ export default function ReportsClient() {
           </div>
         ) : (
           <div className={styles.list}>
-            {shown.map((report) => (
-              <article key={report.id}>
-                <div>
-                  <p className={styles.eyebrow}>
-                    {report.reportTypeLabel || "Preventive Maintenance Report"}
-                  </p>
-                  <h2>
-                    {report.customerName || report.facilityId || "Customer"} ·{" "}
-                    {report.trackingNumber || "No tracking number"}
-                  </h2>
-                  <p>{report.facilityAddress || "Address not entered"}</p>
-                  <p>
-                    {report.technician || "Technician not entered"} ·{" "}
-                    {report.reportDate || "No date"} · {report.itemCount || 0} items
-                  </p>
+            {technicianGroups.map(([technician, technicianReports]) => (
+              <details className={styles.technicianGroup} key={technician} open={query.trim() ? true : undefined}>
+                <summary>
+                  <span>{technician}</span>
+                  <strong>{technicianReports.length} {technicianReports.length === 1 ? "report" : "reports"}</strong>
+                </summary>
+                <div className={styles.technicianReports}>
+                  {technicianReports.map((report) => (
+                    <article key={report.id}>
+                      <div>
+                        <p className={styles.eyebrow}>
+                          {report.reportTypeLabel || "Preventive Maintenance Report"}
+                        </p>
+                        <h2>
+                          {report.customerName || report.facilityId || "Customer"} ·{" "}
+                          {report.trackingNumber || "No tracking number"}
+                        </h2>
+                        <p>{report.facilityAddress || "Address not entered"}</p>
+                        <p>
+                          {report.technician || "Technician not entered"} ·{" "}
+                          {report.reportDate || "No date"} · {report.itemCount || 0} items
+                        </p>
+                      </div>
+                      <div className={styles.reportActions}>
+                        <div className={styles.statusChecks} aria-label="Report status">
+                          {STATUS_TABS.map((item) => (
+                            <label key={item.key}>
+                              <input
+                                type="checkbox"
+                                checked={statusOf(report) === item.key}
+                                disabled={updatingId === report.id}
+                                onChange={() => updateWorkflowStatus(report, item.key)}
+                              />
+                              <span>{item.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <a
+                          target="_blank"
+                          rel="noreferrer"
+                          href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}
+                        >
+                          View PDF
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => deleteReport(report)}
+                          disabled={deletingId === report.id}
+                        >
+                          {deletingId === report.id ? "Deleting…" : "Delete"}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-                <div className={styles.reportActions}>
-                  <div className={styles.statusChecks} aria-label="Report status">
-                    {STATUS_TABS.map((item) => (
-                      <label key={item.key}>
-                        <input
-                          type="checkbox"
-                          checked={statusOf(report) === item.key}
-                          disabled={updatingId === report.id}
-                          onChange={() => updateWorkflowStatus(report, item.key)}
-                        />
-                        <span>{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <a
-                    target="_blank"
-                    rel="noreferrer"
-                    href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}
-                  >
-                    View PDF
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => deleteReport(report)}
-                    disabled={deletingId === report.id}
-                  >
-                    {deletingId === report.id ? "Deleting…" : "Delete"}
-                  </button>
-                </div>
-              </article>
+              </details>
             ))}
           </div>
         )}
