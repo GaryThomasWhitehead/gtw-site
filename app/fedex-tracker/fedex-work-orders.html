@@ -1855,6 +1855,7 @@
           id: row.id || crypto.randomUUID(),
           trackingNumber,
           location: normalizeImportedLocation(getImportValue(row, ["location", "Location", "Locations ID // Name", "Store"])),
+          address: getImportValue(row, ["address", "Address", "Location Address", "Site Address", "Street Address"]),
           classOfWork: toTitleCase(getImportValue(row, ["classOfWork", "ClassOfWork", "Class of Work", "Trade"])),
           jobDescription: getImportValue(row, ["jobDescription", "JobDescription", "Job Description", "Problem Description"]),
           cost: formatImportedCost(nte),
@@ -1881,6 +1882,7 @@
           orders[index] = {
             ...orders[index],
             location: imported.location || orders[index].location,
+            address: imported.address || orders[index].address,
             classOfWork: imported.classOfWork || orders[index].classOfWork,
             jobDescription: imported.jobDescription || orders[index].jobDescription,
             cost: imported.cost || orders[index].cost,

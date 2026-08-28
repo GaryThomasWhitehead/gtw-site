@@ -17,12 +17,16 @@ function facilityId(value: unknown) {
   return text.match(/(?:FEDEX\s+)?([A-Z0-9]{4})\b/)?.[1] || "";
 }
 
+function firstText(...values: unknown[]) {
+  return values.map((value) => String(value || "").trim()).find(Boolean) || "";
+}
+
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ facilities: [] });
 
-  const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=not.like.PMREPORT%3A*`, {
+  const response = await fetch(`${url}/rest/v1/${table}?select=data`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
     cache: "no-store",
   });
@@ -32,7 +36,16 @@ export async function GET(request: NextRequest) {
   const facilities = new Map<string, { id: string; address: string; date: string }>();
 
   rows.forEach((row) => {
-    const review = row.data?.invoiceReview as { store?: unknown; visits?: Visit[] } | undefined;
+    const data = row.data || {};
+    const directId = facilityId(data.facilityId) || facilityId(data.location) || facilityId(data.store) || facilityId(data.customer);
+    const directAddress = firstText(data.facilityAddress, data.address, data.locationAddress, data.siteAddress, data.streetAddress);
+    const directDate = firstText(data.reportDate, data.callDate, data.updatedAt);
+    if (directId && directAddress) {
+      const current = facilities.get(directId);
+      if (!current || directDate >= current.date) facilities.set(directId, { id: directId, address: directAddress, date: directDate });
+    }
+
+    const review = data.invoiceReview as { store?: unknown; visits?: Visit[] } | undefined;
     (review?.visits || []).forEach((visit) => {
       const id = facilityId(review?.store) || facilityId(visit.customer);
       const address = String(visit.address || "").trim();
