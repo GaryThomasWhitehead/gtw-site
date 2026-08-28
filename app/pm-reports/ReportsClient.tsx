@@ -51,6 +51,12 @@ const STATUS_TABS: { key: WorkflowStatus; label: string }[] = [
 ];
 const normalizedSearch = (value: unknown) =>
   String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const technicianIdentity = (value: unknown) => {
+  const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "technician-not-entered";
+  if (parts.length === 1) return normalizedSearch(parts[0]);
+  return `${normalizedSearch(parts[0])}-${normalizedSearch(parts.at(-1))}`;
+};
 const reportMatches = (report: Report, query: string) => {
   const terms = [
     report.technician,
@@ -103,13 +109,18 @@ export default function ReportsClient() {
   );
 
   const technicianGroups = useMemo(() => {
-    const groups = new Map<string, Report[]>();
+    const groups = new Map<string, { label: string; reports: Report[] }>();
     shown.forEach((report) => {
       const technician = report.technician?.trim() || "Technician not entered";
-      groups.set(technician, [...(groups.get(technician) || []), report]);
+      const key = technicianIdentity(technician);
+      const current = groups.get(key);
+      groups.set(key, {
+        label: current && current.label.length <= technician.length ? current.label : technician,
+        reports: [...(current?.reports || []), report],
+      });
     });
-    return Array.from(groups.entries()).sort(([left], [right]) =>
-      left.localeCompare(right, undefined, { sensitivity: "base" }),
+    return Array.from(groups.entries()).sort(([, left], [, right]) =>
+      left.label.localeCompare(right.label, undefined, { sensitivity: "base" }),
     );
   }, [shown]);
 
@@ -319,14 +330,14 @@ export default function ReportsClient() {
           </div>
         ) : (
           <div className={styles.list}>
-            {technicianGroups.map(([technician, technicianReports]) => (
-              <details className={styles.technicianGroup} key={technician} open={query.trim() ? true : undefined}>
+            {technicianGroups.map(([technicianKey, group]) => (
+              <details className={styles.technicianGroup} key={technicianKey} open={query.trim() ? true : undefined}>
                 <summary>
-                  <span>{technician}</span>
-                  <strong>{technicianReports.length} {technicianReports.length === 1 ? "report" : "reports"}</strong>
+                  <span>{group.label}</span>
+                  <strong>{group.reports.length} {group.reports.length === 1 ? "report" : "reports"}</strong>
                 </summary>
                 <div className={styles.technicianReports}>
-                  {technicianReports.map((report) => (
+                  {group.reports.map((report) => (
                     <article key={report.id}>
                       <div>
                         <p className={styles.eyebrow}>
