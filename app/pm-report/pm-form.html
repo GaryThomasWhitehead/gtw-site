@@ -205,7 +205,13 @@
                 <!-- Facility ID -->
                 <div data-id="46" id="facility-id-group">
                     <label data-id="47" for="facility-id-o5p6" class="block text-sm font-medium text-navy-700 mb-1.5">Facility ID <span data-id="48" class="text-danger-500">*</span></label>
-                    <input data-id="49" type="text" id="facility-id-o5p6" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. FAC-1001" required />
+                    <select id="facility-location-select" class="no-print w-full h-12 px-4 mb-2 bg-white border border-field-border rounded-xl text-base text-navy-800">
+                        <option value="">Choose a saved FedEx location</option>
+                    </select>
+                    <div class="no-print flex gap-2">
+                        <input data-id="49" type="text" id="facility-id-o5p6" class="min-w-0 flex-1 h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="Or enter Facility ID" required />
+                        <button type="button" id="fill-facility-address" class="h-12 px-4 rounded-xl bg-[#1468a5] text-white font-semibold">Fill Address</button>
+                    </div>
                     <span data-id="50" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
                     <p data-id="51" class="text-xs text-danger-500 mt-1 hidden" id="err-facility-id-q7r8"></p>
                 </div>
@@ -372,6 +378,8 @@
         const customerNameInput = document.getElementById('customer-name-input');
         const customerNameGroup = document.getElementById('customer-name-group');
         const facilityIdGroup = document.getElementById('facility-id-group');
+        const facilityLocationSelect = document.getElementById('facility-location-select');
+        const fillFacilityAddressBtn = document.getElementById('fill-facility-address');
         const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
         const startBtn = document.getElementById('start-inspection-btn-s9t0');
         const inspectionSection = document.getElementById('inspection-section-u1v2');
@@ -415,10 +423,13 @@
                 .toUpperCase();
         }
 
-        function populateFacilityAddress() {
+        function populateFacilityAddress(showMissing = false) {
             if (!fedexJobInput.checked) return;
             const address = facilityAddresses.get(normalizedFacilityId(facilityIdInput.value));
-            if (!address) return;
+            if (!address) {
+                if (showMissing) showToast('No saved address was found for that Facility ID. Choose a location or enter the address manually.', 'error');
+                return;
+            }
             facilityAddrInput.value = address;
             if (!reportDateInput.value) reportDateInput.value = localToday();
             clearFieldError(facilityAddrInput);
@@ -441,8 +452,15 @@
                 const data = await response.json();
                 (data.facilities || []).forEach(facility => {
                     const id = normalizedFacilityId(facility.id);
-                    if (id) facilityAddresses.set(id, facility.address);
+                    if (id) {
+                        facilityAddresses.set(id, facility.address);
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = `${id} — ${facility.address}`;
+                        facilityLocationSelect.appendChild(option);
+                    }
                 });
+                facilityLocationSelect.value = normalizedFacilityId(facilityIdInput.value);
                 populateFacilityAddress();
             } catch (error) {
                 // Address remains manually editable if the lookup is unavailable.
@@ -482,8 +500,20 @@
                 });
             });
             workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
-            facilityIdInput.addEventListener('input', populateFacilityAddress);
-            facilityIdInput.addEventListener('change', populateFacilityAddress);
+            facilityIdInput.addEventListener('input', () => populateFacilityAddress(false));
+            facilityIdInput.addEventListener('change', () => populateFacilityAddress(false));
+            facilityIdInput.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    populateFacilityAddress(true);
+                }
+            });
+            facilityLocationSelect.addEventListener('change', () => {
+                if (!facilityLocationSelect.value) return;
+                facilityIdInput.value = facilityLocationSelect.value;
+                populateFacilityAddress(true);
+            });
+            fillFacilityAddressBtn.addEventListener('click', () => populateFacilityAddress(true));
             fedexJobInput.addEventListener('change', updateJobTypeFields);
 
             updateCounts();
@@ -723,7 +753,7 @@
                 { input: customerNameInput }
             ];
             headerFields.forEach(({ input }) => {
-                const printSpan = input.parentElement.querySelector('.print-header-value');
+                const printSpan = input.parentElement.querySelector('.print-header-value') || input.parentElement.parentElement?.querySelector('.print-header-value');
                 if (printSpan) {
                     let val = input.value;
                     if (input.type === 'date' && val) {
@@ -1135,6 +1165,7 @@
             facilityAddrInput.value = '';
             trackingNumInput.value = '';
             facilityIdInput.value = '';
+            facilityLocationSelect.value = '';
             customerNameInput.value = '';
             fedexJobInput.checked = true;
             updateJobTypeFields();
