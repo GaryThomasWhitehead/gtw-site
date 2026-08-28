@@ -408,7 +408,11 @@
         }
 
         function normalizedFacilityId(value) {
-            return String(value || '').toUpperCase().match(/(?:FEDEX\s+)?([A-Z0-9]{4})\b/)?.[1] || '';
+            return String(value || '')
+                .replace(/^\s*fedex\s*/i, '')
+                .replace(/[^a-z0-9]/gi, '')
+                .slice(0, 4)
+                .toUpperCase();
         }
 
         function populateFacilityAddress() {
@@ -435,7 +439,10 @@
             try {
                 const response = await fetch('/api/fedex-facilities', { cache: 'no-store' });
                 const data = await response.json();
-                (data.facilities || []).forEach(facility => facilityAddresses.set(facility.id, facility.address));
+                (data.facilities || []).forEach(facility => {
+                    const id = normalizedFacilityId(facility.id);
+                    if (id) facilityAddresses.set(id, facility.address);
+                });
                 populateFacilityAddress();
             } catch (error) {
                 // Address remains manually editable if the lookup is unavailable.
