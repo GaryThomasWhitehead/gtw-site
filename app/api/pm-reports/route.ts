@@ -56,20 +56,46 @@ export async function GET(request: NextRequest) {
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
   const id = request.nextUrl.searchParams.get("id");
-  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data,updated_at&tracking_number=like.PMREPORT%3A*&order=updated_at.desc`, { headers: apiHeaders(key), cache: "no-store" });
-  if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
-  const rows = (await response.json()).filter((row: { data?: { recordType?: string; id?: string } }) =>
-    row.data?.recordType === "pm-report" && !String(row.data?.id || "").startsWith("connection-test-")
-  );
   if (id) {
-    const row = rows.find((entry: { data: { id?: string } }) => entry.data.id === id);
+    const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
+    const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
+      headers: apiHeaders(key),
+      cache: "no-store",
+    });
+    if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
+    const [row] = await response.json();
     if (!row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     const pdf = Buffer.from(row.data.pdfBase64, "base64");
     return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${String(row.data.filename || "pm-report.pdf").replace(/\"/g, "")}"` } });
   }
-  return NextResponse.json(rows.map((row: { data: Record<string, unknown>; updated_at: string }) => {
-    const { pdfBase64: _pdf, ...metadata } = row.data;
-    return { ...metadata, savedAt: row.updated_at };
+
+  // Project only report-list metadata. Pulling every base64 PDF from the JSONB
+  // column makes the database scan and response large enough to time out.
+  const select = [
+    "updated_at",
+    "id:data->>id",
+    "category:data->>category",
+    "reportTypeLabel:data->>reportTypeLabel",
+    "technician:data->>technician",
+    "reportDate:data->>reportDate",
+    "facilityAddress:data->>facilityAddress",
+    "trackingNumber:data->>trackingNumber",
+    "facilityId:data->>facilityId",
+    "customerName:data->>customerName",
+    "fedexJob:data->fedexJob",
+    "itemCount:data->itemCount",
+    "tuggerWorkRecords:data->tuggerWorkRecords",
+    "workflowStatus:data->>workflowStatus",
+  ].join(",");
+  const params = new URLSearchParams({ select, tracking_number: "like.PMREPORT:*", order: "updated_at.desc" });
+  const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
+  if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
+  const rows = (await response.json()).filter((row: { id?: string }) =>
+    row.id && !String(row.id).startsWith("connection-test-")
+  );
+  return NextResponse.json(rows.map((row: Record<string, unknown>) => {
+    const { updated_at: savedAt, ...metadata } = row;
+    return { ...metadata, savedAt };
   }), { headers: { "Cache-Control": "no-store" } });
 }
 
