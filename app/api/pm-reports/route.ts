@@ -35,7 +35,47 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const report = body?.report;
     if (!report?.id || !report?.pdfBase64) return NextResponse.json({ error: "A completed PDF report is required" }, { status: 400 });
-    const data = { ...report, recordType: "pm-report" };
+    if (report.recoveryImport) {
+      const select = [
+        "id:data->>id",
+        "category:data->>category",
+        "reportDate:data->>reportDate",
+        "trackingNumber:data->>trackingNumber",
+        "facilityId:data->>facilityId",
+        "recoveryFingerprint:data->>recoveryFingerprint",
+        "tuggerWorkRecords:data->tuggerWorkRecords",
+      ].join(",");
+      const params = new URLSearchParams({ select, tracking_number: "like.PMREPORT:*" });
+      const existingResponse = await fetch(`${url}/rest/v1/${table}?${params}`, {
+        headers: apiHeaders(key),
+        cache: "no-store",
+      });
+      if (!existingResponse.ok) {
+        return NextResponse.json({ error: (await existingResponse.text()) || "Could not compare recovered reports" }, { status: existingResponse.status });
+      }
+      const normalized = (value: unknown) => String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+      const normalizeWork = (records: unknown) => (Array.isArray(records) ? records : []).map((record: Record<string, unknown>) => ({
+        tuggerId: normalized(record?.tuggerId),
+        manufacturer: normalized(record?.manufacturer),
+        serialNumber: normalized(record?.serialNumber),
+        description: normalized(record?.description),
+      }));
+      const targetWork = JSON.stringify(normalizeWork(report.tuggerWorkRecords));
+      const existingRows = await existingResponse.json();
+      const duplicate = existingRows.find((row: Record<string, unknown>) => {
+        if (report.recoveryFingerprint && row.recoveryFingerprint === report.recoveryFingerprint) return true;
+        const sameHeader = normalized(row.category) === normalized(report.category)
+          && normalized(row.reportDate) === normalized(report.reportDate)
+          && normalized(row.trackingNumber) === normalized(report.trackingNumber)
+          && normalized(row.facilityId) === normalized(report.facilityId);
+        if (!sameHeader) return false;
+        if (normalized(report.category) !== "tugger") return true;
+        return JSON.stringify(normalizeWork(row.tuggerWorkRecords)) === targetWork;
+      });
+      if (duplicate) return NextResponse.json({ ok: true, skipped: true, existingId: duplicate.id });
+    }
+    const { recoveryImport: _recoveryImport, ...storedReport } = report;
+    const data = { ...storedReport, recordType: "pm-report" };
     const response = await fetchWithRetry(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
       method: "POST",
       headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },

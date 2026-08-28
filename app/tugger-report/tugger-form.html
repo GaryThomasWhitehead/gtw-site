@@ -1090,7 +1090,9 @@
 
             const facilityId = (hdr.facilityId || hdr.customerName || 'CUSTOMER').replace(/[^a-zA-Z0-9_-]/g, '');
             const dateStr = (hdr.date || today()).replace(/-/g, '');
-            const filename = 'Frontline_Tugger_' + facilityId + '_' + dateStr + '.pdf';
+            const reportUniqueId = state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+            const uniqueReportNumber = String(reportUniqueId).replace(/[^a-zA-Z0-9]/g, '').slice(-10);
+            const filename = 'Frontline_Tugger_' + facilityId + '_' + dateStr + '_' + uniqueReportNumber + '.pdf';
             if (mode === 'download') {
                 doc.save(filename);
                 showToast('PDF downloaded successfully', 'success');
@@ -1098,7 +1100,7 @@
             }
             const pdfBase64 = await blobToBase64(doc.output('blob'));
             const report = {
-                id: state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+                id: reportUniqueId,
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
                 trackingNumber: hdr.trackingNum, facilityId: hdr.facilityId, itemCount: state.items.length,
                 customerName: hdr.fedexJob === false ? hdr.customerName : '', fedexJob: hdr.fedexJob !== false,

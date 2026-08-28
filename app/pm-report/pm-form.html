@@ -1111,7 +1111,8 @@
                 // Save
                 const safeFacId = (facilityId || customerName || 'Customer').replace(/[^a-zA-Z0-9_-]/g, '_');
                 const safeDate = reportDateInput.value || 'undated';
-                const filename = 'Frontline_' + reportType.file + '_' + safeFacId + '_' + safeDate + '.pdf';
+                const uniqueReportNumber = String(reportId || Date.now()).replace(/[^a-zA-Z0-9]/g, '').slice(-10);
+                const filename = 'Frontline_' + reportType.file + '_' + safeFacId + '_' + safeDate + '_' + uniqueReportNumber + '.pdf';
                 if (mode === 'complete') {
                     const pdfBase64 = await blobToBase64(doc.output('blob'));
                     const response = await fetch('/api/pm-reports', {
