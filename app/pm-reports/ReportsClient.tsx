@@ -34,6 +34,12 @@ type Report = {
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
 };
+type ReportAttachment = {
+  id: string;
+  reportId: string;
+  trackingNumber?: string;
+  filename?: string;
+};
 
 const TABS: { key: Category; label: string }[] = [
   { key: "all", label: "All Reports" },
@@ -86,6 +92,9 @@ export default function ReportsClient() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/pm-reports", { cache: "no-store" })
@@ -94,6 +103,16 @@ export default function ReportsClient() {
         return response.json();
       })
       .then(setReports)
+      .catch((cause) => setError(String(cause)));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/pm-report-attachments", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(await response.text());
+        return response.json();
+      })
+      .then(setAttachments)
       .catch((cause) => setError(String(cause)));
   }, []);
 
@@ -164,12 +183,14 @@ export default function ReportsClient() {
   async function deleteReport(report: Report) {
     const label = report.trackingNumber || report.facilityId || "this report";
     if (!confirm(`Permanently delete ${label}? This cannot be undone.`)) return;
+    const password = prompt("Enter the management password to delete this completed report:");
+    if (!password) return;
     setDeletingId(report.id);
     setError("");
     try {
       const response = await fetch(
         `/api/pm-reports?id=${encodeURIComponent(report.id)}`,
-        { method: "DELETE" },
+        { method: "DELETE", headers: { "x-management-password": password } },
       );
       if (!response.ok) throw new Error(await response.text());
       setReports((current) => current.filter((item) => item.id !== report.id));
@@ -179,6 +200,55 @@ export default function ReportsClient() {
       );
     } finally {
       setDeletingId("");
+    }
+  }
+
+  function startAttachmentUpload() {
+    const entered = prompt("Enter the completed report tracking number:");
+    if (!entered) return;
+    const normalize = (value: unknown) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const report = reports.find((item) => normalize(item.trackingNumber) === normalize(entered));
+    if (!report) {
+      setError(`No saved completed report was found for tracking number ${entered}.`);
+      return;
+    }
+    setError("");
+    setPendingUpload({ report, trackingNumber: entered });
+    document.getElementById("report-attachment-input")?.click();
+  }
+
+  async function prepareUploadFile(file: File) {
+    if (!file.type.startsWith("image/") || file.size <= 2_500_000) return file;
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+    bitmap.close();
+    return blob ? new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }) : file;
+  }
+
+  async function uploadAttachment(file: File) {
+    if (!pendingUpload) return;
+    setUploading(true);
+    setError("");
+    try {
+      const prepared = await prepareUploadFile(file);
+      const form = new FormData();
+      form.set("reportId", pendingUpload.report.id);
+      form.set("trackingNumber", pendingUpload.trackingNumber);
+      form.set("file", prepared);
+      const response = await fetch("/api/pm-report-attachments", { method: "POST", body: form });
+      if (!response.ok) throw new Error(await response.text());
+      const attachment = await response.json();
+      setAttachments((current) => [attachment, ...current]);
+    } catch (cause) {
+      setError(`Could not upload attachment: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setUploading(false);
+      setPendingUpload(null);
     }
   }
 
@@ -211,6 +281,20 @@ export default function ReportsClient() {
           <h1>Completed Reports</h1>
         </div>
         <div className={styles.actions}>
+          <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
+            {uploading ? "Uploading…" : "Upload to Report"}
+          </button>
+          <input
+            id="report-attachment-input"
+            className={styles.hiddenFileInput}
+            type="file"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void uploadAttachment(file);
+              event.currentTarget.value = "";
+            }}
+          />
           <a href="/pm-report">New Report</a>
           <a href="/fedex-tracker">Back to Tracker</a>
         </div>
@@ -352,6 +436,16 @@ export default function ReportsClient() {
                           {report.technician || "Technician not entered"} ·{" "}
                           {report.reportDate || "No date"} · {report.itemCount || 0} items
                         </p>
+                        {attachments.some((attachment) => attachment.reportId === report.id) && (
+                          <div className={styles.attachments}>
+                            <strong>Attachments</strong>
+                            {attachments.filter((attachment) => attachment.reportId === report.id).map((attachment) => (
+                              <a key={attachment.id} target="_blank" rel="noreferrer" href={`/api/pm-report-attachments?id=${encodeURIComponent(attachment.id)}`}>
+                                {attachment.filename || "Open attachment"}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className={styles.reportActions}>
                         <div className={styles.statusChecks} aria-label="Report status">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { expectedFedExTrackerPassword, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -133,7 +133,11 @@ export async function DELETE(request: NextRequest) {
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
   const id = String(request.nextUrl.searchParams.get("id") || "").trim();
+  const password = request.headers.get("x-management-password") || "";
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
+  if (!expectedFedExTrackerPassword() || password !== expectedFedExTrackerPassword()) {
+    return NextResponse.json({ error: "Incorrect management password" }, { status: 403 });
+  }
   const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
   const response = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
     method: "DELETE",
