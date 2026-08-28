@@ -297,7 +297,7 @@
                 </button>
                 <button id="email-pdf-btn" class="h-11 px-4 bg-[#2563eb] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
                     <span class="text-base leading-none">✉</span>
-                    <span class="hidden sm:inline">Email Report</span>
+                    <span class="hidden sm:inline">Save & Email</span>
                 </button>
             </div>
         </div>
@@ -522,7 +522,7 @@
             printBtn.addEventListener('click', handlePrint);
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
             emailPdfBtn.addEventListener('click', () => {
-                if (confirm('Email this report notice now to Jacob, Daniel, and Gary?')) handleExportPDF('share');
+                if (confirm('Save this completed report and email the notice to Jacob, Daniel, and Gary?')) handleExportPDF('share');
             });
             completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
@@ -1142,6 +1142,32 @@
                     removeToast(loadingToast);
                     showToast('Completed report saved. It is now available under Completed Reports.', 'success');
                 } else if (mode === 'share') {
+                    const pdfBase64 = await blobToBase64(doc.output('blob'));
+                    const archiveResponse = await fetch('/api/pm-reports', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ report: {
+                            id: reportId,
+                            technician: techName,
+                            reportDate: dateVal,
+                            facilityAddress: facilityAddr,
+                            trackingNumber: trackingNum,
+                            facilityId,
+                            customerName: fedexJobInput.checked ? '' : customerName,
+                            fedexJob: fedexJobInput.checked,
+                            itemCount: totalItems,
+                            category: reportCategory,
+                            reportTypeLabel: reportType.label,
+                            workflowStatus: selectedWorkflowStatus(),
+                            filename,
+                            pdfBase64,
+                            completedAt: new Date().toISOString()
+                        } })
+                    });
+                    if (!archiveResponse.ok) {
+                        const details = await archiveResponse.text();
+                        throw new Error('SAVE_FAILED:' + details);
+                    }
                     const response = await fetch('/api/pm-reports/email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1164,7 +1190,7 @@
                         throw new Error('EMAIL_FAILED:' + details);
                     }
                     removeToast(loadingToast);
-                    showToast('Report notice emailed successfully to Jacob, Daniel, and Gary.', 'success');
+                    showToast('Report saved and notice emailed successfully to Jacob, Daniel, and Gary.', 'success');
                 } else {
                     doc.save(filename);
                     removeToast(loadingToast);

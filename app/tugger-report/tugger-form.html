@@ -286,7 +286,7 @@
                     <i data-id="61" data-lucide="file-down" class="w-4 h-4"></i>
                     Export PDF
                 </button>
-                <button id="email-pdf-btn" class="bg-[#2563eb] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Email Report</button>
+                <button id="email-pdf-btn" class="bg-[#2563eb] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Save & Email</button>
             </div>
         </div>
     </div>
@@ -808,7 +808,7 @@
 
         completeReportBtn.addEventListener('click', () => runPdfAction('complete'));
         emailPdfBtn.addEventListener('click', () => {
-            if (confirm('Email this report notice now to Jacob, Daniel, and Gary?')) runPdfAction('share');
+            if (confirm('Save this completed report and email the notice to Jacob, Daniel, and Gary?')) runPdfAction('share');
         });
 
         async function runPdfAction(mode) {
@@ -1096,7 +1096,7 @@
                 showToast('PDF downloaded successfully', 'success');
                 return;
             }
-            const pdfBase64 = mode === 'share' ? '' : await blobToBase64(doc.output('blob'));
+            const pdfBase64 = await blobToBase64(doc.output('blob'));
             const report = {
                 id: state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
@@ -1117,10 +1117,14 @@
                 category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', workflowStatus: selectedWorkflowStatus(), filename, pdfBase64,
                 completedAt: new Date().toISOString()
             };
-            const endpoint = mode === 'share' ? '/api/pm-reports/email' : '/api/pm-reports';
-            const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
-            if (!response.ok) throw new Error(await response.text());
-            showToast(mode === 'share' ? 'Report notice emailed successfully' : 'Completed report saved', 'success');
+            const archiveResponse = await fetch('/api/pm-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
+            if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
+            if (mode === 'share') {
+                const { pdfBase64: _pdfBase64, ...emailReport } = report;
+                const emailResponse = await fetch('/api/pm-reports/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report: emailReport }) });
+                if (!emailResponse.ok) throw new Error(await emailResponse.text());
+            }
+            showToast(mode === 'share' ? 'Report saved and notice emailed successfully' : 'Completed report saved', 'success');
         }
 
         // ─── Initialize ───
