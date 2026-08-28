@@ -207,6 +207,10 @@
                     <select id="tugger-facility-location-select" class="input-field mb-2">
                         <option value="">Choose a saved FedEx location</option>
                     </select>
+                    <div id="tugger-facility-location-lock" class="hidden no-print mb-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                        <p class="mb-2">Saved locations are locked on this phone.</p>
+                        <button type="button" id="tugger-unlock-facility-locations" class="w-full min-h-12 rounded-xl bg-[#1468a5] px-4 py-3 text-white font-semibold">Unlock Locations</button>
+                    </div>
                     <div class="flex gap-2">
                         <input data-id="37" id="facility-id-f5" type="text" class="input-field min-w-0 flex-1" placeholder="Or enter Facility ID" required />
                         <button type="button" id="tugger-fill-facility-address" class="h-12 px-4 rounded-xl bg-[#1468a5] text-white font-semibold">Fill Address</button>
@@ -328,6 +332,8 @@
         const facilityIdGroup = document.getElementById('tugger-facility-id-group');
         const facilityLocationSelect = document.getElementById('tugger-facility-location-select');
         const fillFacilityAddressBtn = document.getElementById('tugger-fill-facility-address');
+        const facilityLocationLock = document.getElementById('tugger-facility-location-lock');
+        const unlockFacilityLocationsBtn = document.getElementById('tugger-unlock-facility-locations');
         const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
         const startBtn = document.getElementById('start-inspection-btn-b1');
         const inspectionSection = document.getElementById('inspection-section-s2cd');
@@ -387,7 +393,15 @@
         async function loadFacilityAddresses() {
             try {
                 const response = await fetch('/api/fedex-facilities', { cache: 'no-store' });
+                if (response.status === 401) {
+                    facilityLocationSelect.innerHTML = '<option value="">Locations locked — tap Unlock Locations</option>';
+                    facilityLocationLock.classList.remove('hidden');
+                    return;
+                }
+                if (!response.ok) throw new Error('Location lookup failed');
                 const data = await response.json();
+                facilityAddresses.clear();
+                facilityLocationSelect.innerHTML = '<option value="">Choose a saved FedEx location</option>';
                 (data.facilities || []).forEach(facility => {
                     const id = normalizedFacilityId(facility.id);
                     if (id) {
@@ -399,9 +413,32 @@
                     }
                 });
                 facilityLocationSelect.value = normalizedFacilityId(facilityIdEl.value);
+                facilityLocationLock.classList.add('hidden');
                 populateFacilityAddress();
             } catch (error) {
-                // Address remains manually editable if the lookup is unavailable.
+                facilityLocationSelect.innerHTML = '<option value="">Locations unavailable — enter address manually</option>';
+            }
+        }
+
+        async function unlockFacilityLocations() {
+            const password = prompt('Enter the tracker password to load saved FedEx locations:');
+            if (!password) return;
+            const form = new FormData();
+            form.set('password', password);
+            form.set('return', 'json');
+            try {
+                const response = await fetch('/api/fedex-work-orders/login', {
+                    method: 'POST', headers: { Accept: 'application/json' }, body: form
+                });
+                if (response.status === 401) {
+                    showToast('Incorrect tracker password.', 'error');
+                    return;
+                }
+                if (!response.ok) throw new Error('Unlock failed');
+                await loadFacilityAddresses();
+                showToast('Saved FedEx locations are now available.', 'success');
+            } catch (error) {
+                showToast('Locations could not be unlocked. Try again.', 'error');
             }
         }
 
@@ -754,6 +791,7 @@
             populateFacilityAddress(true);
         });
         fillFacilityAddressBtn.addEventListener('click', () => populateFacilityAddress(true));
+        unlockFacilityLocationsBtn.addEventListener('click', unlockFacilityLocations);
         fedexJobEl.addEventListener('change', updateJobTypeFields);
 
         // ─── PDF Export ───
