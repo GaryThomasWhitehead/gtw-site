@@ -276,7 +276,7 @@
                     <i data-id="61" data-lucide="file-down" class="w-4 h-4"></i>
                     Export PDF
                 </button>
-                <button id="email-pdf-btn" class="bg-[#2563eb] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Email PDF</button>
+                <button id="email-pdf-btn" class="bg-[#2563eb] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Email Report</button>
             </div>
         </div>
     </div>
@@ -732,7 +732,7 @@
 
         completeReportBtn.addEventListener('click', () => runPdfAction('complete'));
         emailPdfBtn.addEventListener('click', () => {
-            if (confirm('Email this PDF now to Jacob, Daniel, and Gary?')) runPdfAction('share');
+            if (confirm('Email this report notice now to Jacob, Daniel, and Gary?')) runPdfAction('share');
         });
 
         async function runPdfAction(mode) {
@@ -741,7 +741,7 @@
             const originalText = button.textContent;
             button.disabled = true;
             button.textContent = mode === 'share' ? 'Emailing…' : 'Saving…';
-            showToast(mode === 'share' ? 'Preparing and emailing PDF…' : 'Preparing and saving report…', 'success');
+            showToast(mode === 'share' ? 'Preparing report email…' : 'Preparing and saving report…', 'success');
             try {
                 await generatePDF(mode);
             } catch (error) {
@@ -1020,7 +1020,7 @@
                 showToast('PDF downloaded successfully', 'success');
                 return;
             }
-            const pdfBase64 = await blobToBase64(doc.output('blob'));
+            const pdfBase64 = mode === 'share' ? '' : await blobToBase64(doc.output('blob'));
             const report = {
                 id: state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
@@ -1044,7 +1044,7 @@
             const endpoint = mode === 'share' ? '/api/pm-reports/email' : '/api/pm-reports';
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
             if (!response.ok) throw new Error(await response.text());
-            showToast(mode === 'share' ? 'PDF emailed successfully' : 'Completed report saved', 'success');
+            showToast(mode === 'share' ? 'Report notice emailed successfully' : 'Completed report saved', 'success');
         }
 
         // ─── Initialize ───

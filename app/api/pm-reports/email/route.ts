@@ -19,9 +19,7 @@ export async function POST(request: NextRequest) {
     if (!apiKey || !from) return NextResponse.json({ error: "Email service is not configured" }, { status: 503 });
     const body = await request.json();
     const report = body?.report || {};
-    if (!report.pdfBase64 || !report.filename) return NextResponse.json({ error: "PDF attachment is required" }, { status: 400 });
-
-    const facilityId = clean(report.facilityId) || "Facility";
+    const facilityId = clean(report.customerName) || clean(report.facilityId) || "Facility";
     const trackingNumber = clean(report.trackingNumber) || "No tracking number";
     const reportType = clean(report.reportTypeLabel) || "Preventive Maintenance Report";
     const response = await fetch("https://api.resend.com/emails", {
@@ -31,8 +29,7 @@ export async function POST(request: NextRequest) {
         from,
         to: RECIPIENTS,
         subject: `Frontline ${reportType} - ${facilityId} - ${trackingNumber}`,
-        html: `<p>The completed Frontline ${reportType} is attached.</p><p><strong>Facility:</strong> ${facilityId}<br><strong>Tracking:</strong> ${trackingNumber}<br><strong>Technician:</strong> ${clean(report.technician) || "Not entered"}<br><strong>Date:</strong> ${clean(report.reportDate) || "Not entered"}<br><strong>Address:</strong> ${clean(report.facilityAddress) || "Not entered"}</p>`,
-        attachments: [{ filename: clean(report.filename) || "Frontline_PM_Report.pdf", content: report.pdfBase64 }],
+        html: `<p>A Frontline ${reportType} has been completed.</p><p><strong>Facility/Customer:</strong> ${facilityId}<br><strong>Tracking:</strong> ${trackingNumber}<br><strong>Technician:</strong> ${clean(report.technician) || "Not entered"}<br><strong>Date:</strong> ${clean(report.reportDate) || "Not entered"}<br><strong>Address:</strong> ${clean(report.facilityAddress) || "Not entered"}</p>`,
       }),
     });
     const result = await response.json().catch(() => ({}));
