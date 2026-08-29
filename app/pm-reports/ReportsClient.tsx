@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./reports.module.css";
 
 type Category = "all" | "regular" | "proposed" | "pm" | "tugger";
@@ -95,16 +95,54 @@ export default function ReportsClient() {
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
+  const [loadingReports, setLoadingReports] = useState(true);
+  const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0 });
 
-  useEffect(() => {
-    fetch("/api/pm-reports", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(await response.text());
-        return response.json();
-      })
-      .then(setReports)
-      .catch((cause) => setError(String(cause)));
+  const loadReports = useCallback(async () => {
+    setLoadingReports(true);
+    setError("");
+    setReports([]);
+    setLoadProgress({ loaded: 0, total: 0 });
+    try {
+      const listResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
+      if (!listResponse.ok) throw new Error(await listResponse.text());
+      const index: { id: string }[] = await listResponse.json();
+      setLoadProgress({ loaded: 0, total: index.length });
+      const chunks: string[][] = [];
+      for (let offset = 0; offset < index.length; offset += 5) {
+        chunks.push(index.slice(offset, offset + 5).map((item) => item.id));
+      }
+      let nextChunk = 0;
+      const workers = Array.from({ length: Math.min(4, chunks.length) }, async () => {
+        while (nextChunk < chunks.length) {
+          const chunk = chunks[nextChunk++];
+          let response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(chunk.join(","))}`, { cache: "no-store" });
+          if (!response.ok) {
+            // A single unusually large report should not prevent the rest of
+            // the archive from loading. Retry that batch one report at a time.
+            for (const reportId of chunk) {
+              response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(reportId)}`, { cache: "no-store" });
+              if (!response.ok) throw new Error(await response.text());
+              const rows: Report[] = await response.json();
+              setReports((current) => [...current, ...rows]);
+              setLoadProgress((current) => ({ ...current, loaded: current.loaded + rows.length }));
+            }
+          } else {
+            const rows: Report[] = await response.json();
+            setReports((current) => [...current, ...rows]);
+            setLoadProgress((current) => ({ ...current, loaded: current.loaded + rows.length }));
+          }
+        }
+      });
+      await Promise.all(workers);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setLoadingReports(false);
+    }
   }, []);
+
+  useEffect(() => { void loadReports(); }, [loadReports]);
 
   useEffect(() => {
     fetch("/api/pm-report-attachments", { cache: "no-store" })
@@ -366,7 +404,16 @@ export default function ReportsClient() {
           />
         </div>
 
-        {error && <p className={styles.error}>Could not load reports: {error}</p>}
+        {loadingReports && (
+          <p className={styles.empty}>
+            Loading completed reports{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : "…"}
+          </p>
+        )}
+        {error && (
+          <p className={styles.error}>
+            Could not load all reports. <button type="button" onClick={() => void loadReports()}>Try again</button>
+          </p>
+        )}
 
         {historyMode ? (
           <div className={styles.historyWrap}>
@@ -484,7 +531,7 @@ export default function ReportsClient() {
           </div>
         )}
 
-        {!error && (historyMode ? tuggerHistory.length === 0 : shown.length === 0) && (
+        {!loadingReports && !error && (historyMode ? tuggerHistory.length === 0 : shown.length === 0) && (
           <p className={styles.empty}>
             {historyMode
               ? "No Tugger work-history records yet. New completed Tugger reports will be added automatically."
