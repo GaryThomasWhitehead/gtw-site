@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { expectedFedExTrackerPassword, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 
 export const dynamic = "force-dynamic";
@@ -62,17 +63,39 @@ export async function POST(request: NextRequest) {
       }));
       const targetWork = JSON.stringify(normalizeWork(report.tuggerWorkRecords));
       const existingRows = await existingResponse.json();
-      const duplicate = existingRows.find((row: Record<string, unknown>) => {
+      const exactFingerprint = existingRows.find((row: Record<string, unknown>) => {
         if (report.recoveryFingerprint && row.recoveryFingerprint === report.recoveryFingerprint) return true;
+        return false;
+      });
+      if (exactFingerprint) return NextResponse.json({ ok: true, skipped: true, existingId: exactFingerprint.id });
+      const sameHeaderRows = existingRows.filter((row: Record<string, unknown>) => {
         const sameHeader = normalized(row.category) === normalized(report.category)
           && normalized(row.reportDate) === normalized(report.reportDate)
           && normalized(row.trackingNumber) === normalized(report.trackingNumber)
           && normalized(row.facilityId) === normalized(report.facilityId);
-        if (!sameHeader) return false;
-        if (normalized(report.category) !== "tugger") return true;
-        return JSON.stringify(normalizeWork(row.tuggerWorkRecords)) === targetWork;
+        return sameHeader;
       });
-      if (duplicate) return NextResponse.json({ ok: true, skipped: true, existingId: duplicate.id });
+      for (const candidate of sameHeaderRows) {
+        const candidateTracking = encodeURIComponent(`PMREPORT:${candidate.id}`);
+        const fullResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${candidateTracking}&limit=1`, {
+          headers: apiHeaders(key),
+          cache: "no-store",
+        });
+        if (fullResponse.ok) {
+          const [fullRow] = await fullResponse.json();
+          const existingBase64 = String(fullRow?.data?.pdfBase64 || "");
+          const existingFingerprint = existingBase64
+            ? createHash("sha256").update(Buffer.from(existingBase64, "base64")).digest("hex")
+            : "";
+          if (existingFingerprint && existingFingerprint === report.recoveryFingerprint) {
+            return NextResponse.json({ ok: true, skipped: true, existingId: candidate.id });
+          }
+        }
+        if (normalized(report.category) === "tugger"
+          && JSON.stringify(normalizeWork(candidate.tuggerWorkRecords)) === targetWork) {
+          return NextResponse.json({ ok: true, skipped: true, existingId: candidate.id });
+        }
+      }
     }
     const { recoveryImport: _recoveryImport, ...storedReport } = report;
     const data = { ...storedReport, recordType: "pm-report" };
