@@ -57,12 +57,22 @@ const STATUS_TABS: { key: WorkflowStatus; label: string }[] = [
   { key: "return", label: "Need to Return" },
 ];
 const normalizedSearch = (value: unknown) =>
-  String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 const technicianIdentity = (value: unknown) => {
   const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "technician-not-entered";
+  const firstName = normalizedSearch(parts[0]);
+  // Historical reports contain two name variations for each of these techs.
+  // Keep their reports together without rewriting the original PDFs.
+  if (firstName === "jose") return "technician-jose-fonseca";
+  if (firstName === "dennis") return "technician-dennis-white";
   if (parts.length === 1) return normalizedSearch(parts[0]);
   return `${normalizedSearch(parts[0])}-${normalizedSearch(parts.at(-1))}`;
+};
+const preferredTechnicianLabel = (key: string, entered: string) => {
+  if (key === "technician-jose-fonseca") return "Jose Fonseca";
+  if (key === "technician-dennis-white") return "Dennis White";
+  return entered;
 };
 const reportMatches = (report: Report, query: string) => {
   const terms = [
@@ -219,7 +229,7 @@ export default function ReportsClient() {
       const key = technicianIdentity(technician);
       const current = groups.get(key);
       groups.set(key, {
-        label: current && current.label.length <= technician.length ? current.label : technician,
+        label: preferredTechnicianLabel(key, current && current.label.length <= technician.length ? current.label : technician),
         reports: [...(current?.reports || []), report],
       });
     });
