@@ -6,6 +6,25 @@ export const revalidate = 0;
 
 type WorkOrder = Record<string, unknown> & { trackingNumber?: string; id?: string };
 
+function hasImportValue(value: unknown) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function mergeDuplicateOrders(previous: WorkOrder, current: WorkOrder) {
+  const merged: WorkOrder = { ...previous };
+
+  for (const [field, value] of Object.entries(current)) {
+    // ServiceChannel exports can repeat a tracking number. Let the later row
+    // update populated values without erasing useful data with blank cells.
+    if (hasImportValue(value)) merged[field] = value;
+  }
+
+  return merged;
+}
+
 function supabaseConfig() {
   return {
     url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -59,13 +78,27 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Expected an array of work orders." }, { status: 400 });
   }
 
-  const rows = orders
-    .map((order: WorkOrder) => ({
-      tracking_number: String(order.trackingNumber || order.id || "").trim(),
-      data: order,
-      updated_at: new Date().toISOString()
-    }))
-    .filter((row: { tracking_number: string }) => row.tracking_number);
+  const ordersByTrackingNumber = new Map<string, WorkOrder>();
+  let ordersWithTrackingNumbers = 0;
+
+  for (const order of orders as WorkOrder[]) {
+    const trackingNumber = String(order.trackingNumber || order.id || "").trim();
+    if (!trackingNumber) continue;
+
+    ordersWithTrackingNumbers += 1;
+    const previous = ordersByTrackingNumber.get(trackingNumber);
+    ordersByTrackingNumber.set(
+      trackingNumber,
+      previous ? mergeDuplicateOrders(previous, order) : order
+    );
+  }
+
+  const updatedAt = new Date().toISOString();
+  const rows = Array.from(ordersByTrackingNumber, ([tracking_number, data]) => ({
+    tracking_number,
+    data,
+    updated_at: updatedAt
+  }));
 
   for (let index = 0; index < rows.length; index += 75) {
     const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
@@ -82,5 +115,9 @@ export async function PUT(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, saved: rows.length });
+  return NextResponse.json({
+    ok: true,
+    saved: rows.length,
+    duplicatesCombined: ordersWithTrackingNumbers - rows.length
+  });
 }
