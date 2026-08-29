@@ -156,6 +156,7 @@
             <div data-id="7" class="flex items-center gap-3 flex-wrap justify-end">
                 <a href="/fedex-tracker" class="text-xs text-navy-100 hover:text-white underline">← Return to Tracker</a>
                 <a href="/pm-reports" class="text-xs text-navy-100 hover:text-white underline">Completed Reports</a>
+                <button type="button" id="tugger-tech-signout" class="text-xs text-navy-100 hover:text-white underline">Sign Out</button>
                 <a href="/pm-report" class="text-xs text-navy-100 hover:text-white underline">Other Report Types</a>
                 <span data-id="8" id="save-indicator-s9qx" class="text-xs text-green-300 font-medium hidden">Saved ✓</span>
                 <button data-id="9" id="clear-all-btn-c4re" class="text-xs text-navy-200 hover:text-white underline underline-offset-2 font-medium">Clear All / New Report</button>
@@ -300,6 +301,7 @@
 
     <script>
     (function() {
+        const LOGGED_IN_TECH = __TECH_SESSION__;
         // ─── Icons (progressive enhancement) ───
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
             lucide.createIcons();
@@ -749,7 +751,7 @@
                     items: [],
                     inspectionStarted: false
                 };
-                techNameEl.value = '';
+                techNameEl.value = LOGGED_IN_TECH.name;
                 dateEl.value = today();
                 addrEl.value = '';
                 trackingEl.value = '';
@@ -1153,6 +1155,16 @@
                 renumberItems();
             }
         }
+
+        techNameEl.value = LOGGED_IN_TECH.name;
+        techNameEl.readOnly = true;
+        dateEl.value = today();
+        state.header.techName = LOGGED_IN_TECH.name;
+        state.header.date = dateEl.value;
+        document.getElementById('tugger-tech-signout').addEventListener('click', async () => {
+            await fetch('/api/pm-techs/login', { method: 'DELETE' });
+            location.href = '/pm-tech-login?return=/tugger-report';
+        });
 
         updateJobTypeFields();
         loadFacilityAddresses();

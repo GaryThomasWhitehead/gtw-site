@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { validatePmTechSession } from "@/lib/pmTechAuth";
 import baselineReview from "@/public/fedex-review-data.json";
 
 type StoredRow = { data?: Record<string, unknown> };
@@ -23,11 +24,12 @@ function firstText(...values: unknown[]) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!hasFedExTrackerAccess(request) && !await validatePmTechSession(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ facilities: [] });
 
-  const response = await fetch(`${url}/rest/v1/${table}?select=data`, {
+  const params = new URLSearchParams({ select: "data", tracking_number: "not.like.PM*" });
+  const response = await fetch(`${url}/rest/v1/${table}?${params}`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
     cache: "no-store",
   });

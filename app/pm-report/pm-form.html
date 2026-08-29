@@ -132,6 +132,7 @@
             <div data-id="11" class="flex items-center gap-3 flex-wrap justify-end">
                 <a href="/fedex-tracker" class="text-navy-100 hover:text-white text-xs font-semibold underline underline-offset-2 min-h-[44px] flex items-center">← Return to Tracker</a>
                 <a href="/pm-reports" class="text-navy-100 hover:text-white text-xs font-semibold underline underline-offset-2 min-h-[44px] flex items-center">Completed Reports</a>
+                <button type="button" id="tech-signout" class="text-navy-100 hover:text-white text-xs font-semibold underline underline-offset-2 min-h-[44px]">Sign Out</button>
                 <span data-id="12" id="saved-badge-r2t5" class="hidden saved-indicator text-xs text-emerald-300 font-medium bg-navy-600 px-2 py-1 rounded-lg">
                     <i data-id="13" data-lucide="check" class="w-3 h-3 inline -mt-0.5"></i> Saved
                 </span>
@@ -346,6 +347,7 @@
     </template>
 
     <script>
+        const LOGGED_IN_TECH = __TECH_SESSION__;
         // Guard Lucide
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
             lucide.createIcons();
@@ -509,7 +511,9 @@
             reportDateInput.value = localToday();
 
             loadState();
-            if (!reportDateInput.value) reportDateInput.value = localToday();
+            techNameInput.value = LOGGED_IN_TECH.name;
+            techNameInput.readOnly = true;
+            reportDateInput.value = localToday();
             updateJobTypeFields();
             loadFacilityAddresses();
             unlockFacilityLocationsBtn.addEventListener('click', unlockFacilityLocations);
@@ -526,6 +530,10 @@
             });
             completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
+            document.getElementById('tech-signout').addEventListener('click', async () => {
+                await fetch('/api/pm-techs/login', { method: 'DELETE' });
+                location.href = '/pm-tech-login?return=/pm-report';
+            });
 
             const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput];
             headerFields.forEach(f => {
@@ -1225,7 +1233,7 @@
         }
 
         function resetForm() {
-            techNameInput.value = '';
+            techNameInput.value = LOGGED_IN_TECH.name;
             reportDateInput.value = localToday();
             facilityAddrInput.value = '';
             trackingNumInput.value = '';

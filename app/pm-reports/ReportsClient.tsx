@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import styles from "./reports.module.css";
 
 type Category = "all" | "regular" | "proposed" | "pm" | "tugger";
@@ -40,6 +40,7 @@ type ReportAttachment = {
   trackingNumber?: string;
   filename?: string;
 };
+type Technician = { id: string; name: string; active: boolean };
 
 const TABS: { key: Category; label: string }[] = [
   { key: "all", label: "All Reports" },
@@ -97,6 +98,11 @@ export default function ReportsClient() {
   const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0 });
+  const [showTechAccess, setShowTechAccess] = useState(false);
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
+  const [techName, setTechName] = useState("");
+  const [techPin, setTechPin] = useState("");
+  const [savingTech, setSavingTech] = useState(false);
 
   const loadReports = useCallback(async () => {
     setLoadingReports(true);
@@ -153,6 +159,47 @@ export default function ReportsClient() {
       .then(setAttachments)
       .catch((cause) => setError(String(cause)));
   }, []);
+
+  const loadTechnicians = useCallback(async () => {
+    const response = await fetch("/api/pm-techs", { cache: "no-store" });
+    if (!response.ok) throw new Error(await response.text());
+    setTechnicians(await response.json());
+  }, []);
+
+  async function openTechAccess() {
+    setShowTechAccess(true);
+    setError("");
+    try { await loadTechnicians(); } catch (cause) { setError(String(cause)); }
+  }
+
+  async function addTechnician(event: FormEvent) {
+    event.preventDefault();
+    setSavingTech(true);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-techs", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: techName, pin: techPin }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setTechName(""); setTechPin(""); await loadTechnicians();
+    } catch (cause) { setError(`Could not add technician: ${cause instanceof Error ? cause.message : String(cause)}`); }
+    finally { setSavingTech(false); }
+  }
+
+  async function setTechnicianActive(tech: Technician, active: boolean) {
+    const response = await fetch("/api/pm-techs", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: tech.id, active }),
+    });
+    if (!response.ok) { setError(await response.text()); return; }
+    await loadTechnicians();
+  }
+
+  async function deleteTechnician(tech: Technician) {
+    if (!confirm(`Delete report access for ${tech.name}?`)) return;
+    const response = await fetch(`/api/pm-techs?id=${encodeURIComponent(tech.id)}`, { method: "DELETE" });
+    if (!response.ok) { setError(await response.text()); return; }
+    await loadTechnicians();
+  }
 
   const shown = useMemo(
     () =>
@@ -319,6 +366,7 @@ export default function ReportsClient() {
           <h1>Completed Reports</h1>
         </div>
         <div className={styles.actions}>
+          <button type="button" onClick={() => void openTechAccess()}>Manage Tech Access</button>
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload to Report"}
           </button>
@@ -338,6 +386,29 @@ export default function ReportsClient() {
         </div>
       </header>
       <section className={styles.content}>
+        {showTechAccess && (
+          <section className={styles.techManager}>
+            <div className={styles.techManagerHeader}>
+              <div><h2>Technician Report Access</h2><p>Add a technician and assign a unique four-digit code.</p></div>
+              <button type="button" onClick={() => setShowTechAccess(false)}>Close</button>
+            </div>
+            <form onSubmit={addTechnician}>
+              <input aria-label="Technician name" placeholder="Technician full name" value={techName} onChange={(event) => setTechName(event.target.value)} required />
+              <input aria-label="Four-digit code" placeholder="4-digit code" type="password" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={techPin} onChange={(event) => setTechPin(event.target.value.replace(/\D/g, ""))} required />
+              <button disabled={savingTech}>{savingTech ? "Adding…" : "Add Technician"}</button>
+            </form>
+            <div className={styles.techList}>
+              {technicians.map((tech) => (
+                <div key={tech.id}>
+                  <strong>{tech.name}</strong>
+                  <label><input type="checkbox" checked={tech.active} onChange={(event) => void setTechnicianActive(tech, event.target.checked)} /> Access active</label>
+                  <button type="button" onClick={() => void deleteTechnician(tech)}>Delete</button>
+                </div>
+              ))}
+              {!technicians.length && <p>No technician access codes have been added yet.</p>}
+            </div>
+          </section>
+        )}
         <div className={styles.tabs}>
           {TABS.map((item) => (
             <button
