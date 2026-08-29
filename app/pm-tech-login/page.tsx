@@ -18,7 +18,10 @@ export default async function TechLoginPage({ searchParams }: { searchParams: Pr
           <input id="pin" name="pin" type="password" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="one-time-code" autoFocus required />
           <button type="submit">Open Report Forms</button>
         </form>
-        <a href="/fedex-tracker">Management: return to tracker</a>
+        <div className={styles.managementLinks}>
+          <a href="/pm-reports">Management: Manage Technician Access</a>
+          <a href="/fedex-tracker">Return to Tracker</a>
+        </div>
       </section>
     </main>
   );
