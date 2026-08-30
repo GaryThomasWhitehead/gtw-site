@@ -1383,6 +1383,15 @@
       const oldJobDays = 45;
       const fields = ["trackingNumber", "location", "classOfWork", "status", "cost", "priority", "assignedTo", "dueDate", "callDate", "jobDescription", "notes", "nextStep"];
 
+      function isEmptyUnclassifiedOrder(order) {
+        const classification = String(order?.classOfWork || "").trim();
+        const location = String(order?.location || "").trim();
+        const address = String(order?.address || "").trim();
+        const unclassified = !classification || /^unclassified$/i.test(classification);
+        const missingLocation = !location || /^unassigned location$/i.test(location);
+        return unclassified && missingLocation && !address;
+      }
+
       function loadOrders() {
         const saved = localStorage.getItem(storageKey);
         if (!saved) {
@@ -1392,7 +1401,7 @@
         try {
           const parsed = JSON.parse(saved);
           if (!Array.isArray(parsed) || !parsed.length) return defaultOrders;
-          const merged = mergeDefaultOrders(parsed);
+          const merged = mergeDefaultOrders(parsed.filter(order => !isEmptyUnclassifiedOrder(order)));
           localStorage.setItem(storageKey, JSON.stringify(merged));
           return merged;
         } catch {
@@ -1414,7 +1423,11 @@
           if (!response.ok) throw new Error(`Server returned ${response.status}`);
           const remoteOrders = await response.json();
           if (Array.isArray(remoteOrders) && remoteOrders.length) {
-            orders = remoteOrders;
+            const emptyUnclassified = remoteOrders.filter(isEmptyUnclassifiedOrder);
+            orders = remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order));
+            if (emptyUnclassified.length) {
+              await deleteRemoteOrders(emptyUnclassified.map(order => order.trackingNumber || order.id));
+            }
             localStorage.setItem(storageKey, JSON.stringify(orders));
             selectedId = orders[0]?.id || null;
           }
@@ -1427,6 +1440,7 @@
       }
 
       async function saveOrders() {
+        orders = orders.filter(order => !isEmptyUnclassifiedOrder(order));
         localStorage.setItem(storageKey, JSON.stringify(orders));
         try {
           const response = await fetch("/api/fedex-work-orders", {
@@ -1443,6 +1457,18 @@
           console.warn("Unable to save work orders to shared storage:", error);
           return { shared: false, error: error.message || "Shared save failed." };
         }
+      }
+
+      async function deleteRemoteOrders(trackingNumbers) {
+        const response = await fetch("/api/fedex-work-orders", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ trackingNumbers })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || `Server returned ${response.status}`);
+        return result;
       }
 
       function statusClass(status) {
@@ -1876,7 +1902,7 @@
           ["Source priority", rawPriority]
         ].filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`);
 
-        return {
+        const mapped = {
           id: row.id || crypto.randomUUID(),
           trackingNumber,
           location: normalizeImportedLocation(getImportValue(row, ["location", "Location", "Locations ID // Name", "Store"])),
@@ -1892,6 +1918,7 @@
           notes: additionalNotes || sourceNotes.join("\n"),
           nextStep: getImportValue(row, ["nextStep", "NextStep", "Next Step"]) || (dueDate ? `Schedule with station by ${dueDate}.` : "Schedule with station.")
         };
+        return isEmptyUnclassifiedOrder(mapped) ? null : mapped;
       }
 
       function upsertImportedOrders(importedOrders) {
