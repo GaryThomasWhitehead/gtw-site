@@ -1523,11 +1523,11 @@
       }
 
       function pageOrders() {
-        if (activeLocation === outOfStatePage) return orders.filter(isOutOfState);
-        if (activeLocation === "all") return orders.filter(order => !isOutOfState(order) && order.status !== "Completed");
+        if (activeLocation === outOfStatePage) return orders.filter(order => isOutOfState(order) && order.status !== "Canceled");
+        if (activeLocation === "all") return orders.filter(order => !isOutOfState(order) && !["Completed", "Canceled"].includes(order.status));
         if (activeLocation === readyToBillPage) return orders.filter(order => !isOutOfState(order) && order.status === "Completed");
-        if (activeLocation === canceledPage) return orders.filter(order => !isOutOfState(order) && order.status === "Canceled");
-        return orders.filter(order => normalizeLocation(order.location) === activeLocation);
+        if (activeLocation === canceledPage) return orders.filter(order => order.status === "Canceled");
+        return orders.filter(order => normalizeLocation(order.location) === activeLocation && order.status !== "Canceled");
       }
 
       function ensureActivePage() {
@@ -1578,12 +1578,12 @@
       function renderLocationPages() {
         const openJobs = items => items.filter(order => !["Completed", "Canceled"].includes(order.status)).length;
         const inStateOrders = orders.filter(order => !isOutOfState(order));
-        const outOfState = orders.filter(isOutOfState);
+        const outOfState = orders.filter(order => isOutOfState(order) && order.status !== "Canceled");
         const readyToBill = inStateOrders.filter(order => order.status === "Completed");
-        const canceled = inStateOrders.filter(order => order.status === "Canceled");
-        const allJobs = inStateOrders.filter(order => order.status !== "Completed");
+        const canceled = orders.filter(order => order.status === "Canceled");
+        const allJobs = inStateOrders.filter(order => !["Completed", "Canceled"].includes(order.status));
         const locationButtons = locations().map(location => {
-          const items = orders.filter(order => normalizeLocation(order.location) === location);
+          const items = orders.filter(order => normalizeLocation(order.location) === location && order.status !== "Canceled");
           return `
             <button class="location-page ${activeLocation === location ? "active" : ""}" type="button" data-location="${escapeHtml(location)}">
               <strong>${escapeHtml(location)}</strong>
