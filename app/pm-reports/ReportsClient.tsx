@@ -309,7 +309,6 @@ export default function ReportsClient() {
     }
     setError("");
     setPendingUpload({ report, trackingNumber: entered });
-    document.getElementById("report-attachment-input")?.click();
   }
 
   async function prepareUploadFile(file: File) {
@@ -380,22 +379,38 @@ export default function ReportsClient() {
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload to Report"}
           </button>
-          <input
-            id="report-attachment-input"
-            className={styles.hiddenFileInput}
-            type="file"
-            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void uploadAttachment(file);
-              event.currentTarget.value = "";
-            }}
-          />
           <a href="/pm-report">New Report</a>
           <a href="/fedex-tracker">Back to Tracker</a>
         </div>
       </header>
       <section className={styles.content}>
+        {pendingUpload && (
+          <section className={styles.uploadPanel}>
+            <div>
+              <h2>Add to completed report</h2>
+              <p>
+                Tracking #{pendingUpload.report.trackingNumber || pendingUpload.trackingNumber}
+                {pendingUpload.report.facilityId ? ` · ${pendingUpload.report.facilityId}` : ""}
+              </p>
+            </div>
+            <div className={styles.uploadPanelActions}>
+              <label className={styles.chooseFileButton}>
+                {uploading ? "Uploading…" : "Choose Photo or File"}
+                <input
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  disabled={uploading}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void uploadAttachment(file);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              <button type="button" disabled={uploading} onClick={() => setPendingUpload(null)}>Cancel</button>
+            </div>
+          </section>
+        )}
         {showTechAccess && (
           <section className={styles.techManager}>
             <div className={styles.techManagerHeader}>
