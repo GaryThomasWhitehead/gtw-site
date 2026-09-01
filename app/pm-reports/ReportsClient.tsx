@@ -227,9 +227,9 @@ export default function ReportsClient() {
     await loadTechnicians();
   }
 
-  const jobHistories = useMemo(() => {
+  const allJobHistories = useMemo(() => {
     const groups = new Map<string, Report[]>();
-    reports.filter((report) => tab === "all" || categoryOf(report) === tab).forEach((report) => {
+    reports.forEach((report) => {
       const key = trackingIdentity(report);
       groups.set(key, [...(groups.get(key) || []), report]);
     });
@@ -237,7 +237,14 @@ export default function ReportsClient() {
       const sorted = [...groupedReports].sort(newestFirst);
       return { key, latest: sorted[0], reports: sorted, status: statusOf(sorted[0]) } satisfies JobHistory;
     });
-  }, [reports, tab]);
+  }, [reports]);
+
+  // Determine a tracking number's current status from its complete history
+  // before applying category tabs. That keeps an old Need Parts/Return visit
+  // from lingering in those tabs after a later report completes the job.
+  const jobHistories = useMemo(() => allJobHistories.filter((history) =>
+    tab === "all" || history.reports.some((report) => categoryOf(report) === tab)
+  ), [allJobHistories, tab]);
 
   const shown = useMemo(() => jobHistories.filter((history) =>
     history.status === statusTab && history.reports.some((report) => reportMatches(report, query))
@@ -466,8 +473,10 @@ export default function ReportsClient() {
               {item.label}
               <span>
                 {item.key === "all"
-                  ? new Set(reports.map(trackingIdentity)).size
-                  : new Set(reports.filter((report) => categoryOf(report) === item.key).map(trackingIdentity)).size}
+                  ? allJobHistories.length
+                  : allJobHistories.filter((history) =>
+                    history.reports.some((report) => categoryOf(report) === item.key)
+                  ).length}
               </span>
             </button>
           ))}
