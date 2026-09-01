@@ -396,6 +396,34 @@ export default function ReportsClient() {
     }
   }
 
+  async function updateTrackingNumber(history: JobHistory) {
+    const currentTracking = history.latest.trackingNumber || "";
+    const entered = prompt("Enter the corrected tracking number:", currentTracking);
+    if (entered === null) return;
+    const trackingNumber = entered.trim();
+    if (!trackingNumber || normalizedSearch(trackingNumber) === normalizedSearch(currentTracking)) return;
+    setUpdatingId(history.key);
+    setError("");
+    try {
+      for (const report of history.reports) {
+        const response = await fetch("/api/pm-reports", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: report.id, trackingNumber }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+      }
+      setReports((current) => current.map((report) =>
+        history.reports.some((item) => item.id === report.id) ? { ...report, trackingNumber } : report
+      ));
+    } catch (cause) {
+      setError(`Could not update tracking number: ${cause instanceof Error ? cause.message : String(cause)}`);
+      await loadReports();
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -600,6 +628,16 @@ export default function ReportsClient() {
                           <strong>{history.latest.customerName || history.latest.facilityId || "Customer"}</strong>
                           <small>Tracking #{history.latest.trackingNumber || "not entered"}</small>
                         </span>
+                        {statusTab === "complete" && (
+                          <button
+                            type="button"
+                            className={styles.editTracking}
+                            disabled={updatingId === history.key}
+                            onClick={(event) => { event.preventDefault(); event.stopPropagation(); void updateTrackingNumber(history); }}
+                          >
+                            {updatingId === history.key ? "Saving…" : "Edit Tracking #"}
+                          </button>
+                        )}
                         <b>{history.reports.length} {history.reports.length === 1 ? "report" : "reports"}</b>
                       </summary>
                       <div className={styles.jobHistoryReports}>
