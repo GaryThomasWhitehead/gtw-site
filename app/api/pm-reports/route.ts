@@ -175,6 +175,8 @@ export async function GET(request: NextRequest) {
     "tuggerWorkRecords:data->tuggerWorkRecords",
     "workflowStatus:data->>workflowStatus",
     "partsNotes:data->>partsNotes",
+    "workArrangement:data->>workArrangement",
+    "teamMembers:data->>teamMembers",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {

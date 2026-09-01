@@ -34,6 +34,8 @@ type Report = {
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
   partsNotes?: string;
+  workArrangement?: "alone" | "team";
+  teamMembers?: string;
   savedAt?: string;
 };
 type JobHistory = { key: string; latest: Report; reports: Report[]; status: WorkflowStatus };
@@ -699,6 +701,7 @@ export default function ReportsClient() {
                           {report.technician || "Technician not entered"} ·{" "}
                           {report.reportDate || "No date"} · {report.itemCount || 0} items
                         </p>
+                        {report.workArrangement && <p>{report.workArrangement === "team" ? `With team: ${report.teamMembers || "Names not entered"}` : "Worked alone"}</p>}
                         {reportIndex > 0 && <p className={styles.priorReport}>Prior visit · {STATUS_TABS.find((item) => item.key === statusOf(report))?.label}</p>}
                         {report.partsNotes && <div className={styles.savedPartsNotes}><strong>Parts Notes</strong><span>{report.partsNotes}</span></div>}
                         {attachments.some((attachment) => attachment.reportId === report.id) && (

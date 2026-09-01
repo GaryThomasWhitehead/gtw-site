@@ -191,6 +191,21 @@
                     <label data-id="23" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="report-date-f2">Date <span data-id="24" class="text-danger-500">*</span></label>
                     <input data-id="25" id="report-date-f2" type="date" class="input-field" required />
                 </div>
+                <fieldset class="md:col-span-2 no-print">
+                    <legend class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-2">Working Arrangement <span class="text-danger-500">*</span></legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50 px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="work-arrangement" value="alone" class="h-5 w-5 accent-[#1468a5]" checked /> Alone
+                        </label>
+                        <label class="flex items-center gap-3 rounded-xl border border-slate_alt-200 bg-slate_alt-50 px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="work-arrangement" value="team" class="h-5 w-5 accent-[#1468a5]" /> With Team
+                        </label>
+                    </div>
+                </fieldset>
+                <div id="tugger-team-members-group" class="md:col-span-2 hidden">
+                    <label class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tugger-team-members">Other Technician Names <span class="text-danger-500">*</span></label>
+                    <input id="tugger-team-members" type="text" class="input-field" placeholder="Enter everyone who worked with you" />
+                </div>
                 <div id="tugger-customer-name-group" class="md:col-span-2 hidden">
                     <label class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tugger-customer-name">Customer Name <span class="text-danger-500">*</span></label>
                     <input id="tugger-customer-name" type="text" class="input-field" placeholder="Customer full name" />
@@ -316,7 +331,7 @@
         // ─── State ───
         let state = {
             reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
-            header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '', customerName: '', fedexJob: true },
+            header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '', customerName: '', fedexJob: true, workArrangement: 'alone', teamMembers: '' },
             workflowStatus: 'complete',
             items: [],
             inspectionStarted: false
@@ -337,6 +352,9 @@
         const facilityLocationLock = document.getElementById('tugger-facility-location-lock');
         const unlockFacilityLocationsBtn = document.getElementById('tugger-unlock-facility-locations');
         const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
+        const workArrangementInputs = Array.from(document.querySelectorAll('input[name="work-arrangement"]'));
+        const teamMembersEl = document.getElementById('tugger-team-members');
+        const teamMembersGroup = document.getElementById('tugger-team-members-group');
         const startBtn = document.getElementById('start-inspection-btn-b1');
         const inspectionSection = document.getElementById('inspection-section-s2cd');
         const itemsContainer = document.getElementById('items-container-ic1');
@@ -455,6 +473,16 @@
         function selectedWorkflowStatus() {
             return workflowStatusInputs.find(input => input.checked)?.value || 'complete';
         }
+        function selectedWorkArrangement() {
+            return workArrangementInputs.find(input => input.checked)?.value || 'alone';
+        }
+        function updateTeamFields() {
+            const withTeam = selectedWorkArrangement() === 'team';
+            teamMembersGroup.classList.toggle('hidden', !withTeam);
+            teamMembersEl.required = withTeam;
+            if (!withTeam) teamMembersEl.value = '';
+            saveState();
+        }
 
         function setWorkflowStatus(status) {
             const selected = ['complete', 'parts', 'return'].includes(status) ? status : 'complete';
@@ -486,6 +514,8 @@
             state.header.facilityId = facilityIdEl.value;
             state.header.customerName = customerNameEl.value;
             state.header.fedexJob = fedexJobEl.checked;
+            state.header.workArrangement = selectedWorkArrangement();
+            state.header.teamMembers = teamMembersEl.value;
             state.workflowStatus = selectedWorkflowStatus();
 
             state.items = [];
@@ -671,6 +701,7 @@
         // ─── Validate Header ───
         function validateHeader() {
             const fields = [techNameEl, dateEl, addrEl, trackingEl, fedexJobEl.checked ? facilityIdEl : customerNameEl];
+            if (selectedWorkArrangement() === 'team') fields.push(teamMembersEl);
             let firstInvalid = null;
             fields.forEach(f => {
                 if (!f.value.trim()) {
@@ -754,7 +785,7 @@
                 localStorage.removeItem(LS_KEY);
                 state = {
                     reportId: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
-                    header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '', customerName: '', fedexJob: true },
+                    header: { techName: '', date: '', facilityAddr: '', trackingNum: '', facilityId: '', customerName: '', fedexJob: true, workArrangement: 'alone', teamMembers: '' },
                     workflowStatus: 'complete',
                     items: [],
                     inspectionStarted: false
@@ -767,6 +798,9 @@
                 facilityLocationSelect.value = '';
                 customerNameEl.value = '';
                 fedexJobEl.checked = true;
+                workArrangementInputs.forEach(input => { input.checked = input.value === 'alone'; });
+                teamMembersEl.value = '';
+                updateTeamFields();
                 updateJobTypeFields();
                 setWorkflowStatus('complete');
                 itemsContainer.innerHTML = '';
@@ -779,7 +813,7 @@
         });
 
         // ─── Clear border on input ───
-        [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl, customerNameEl].forEach(f => {
+        [techNameEl, dateEl, addrEl, trackingEl, facilityIdEl, customerNameEl, teamMembersEl].forEach(f => {
             f.addEventListener('input', function() {
                 if (f.value.trim()) f.style.borderColor = '#D0D5DD';
             });
@@ -787,6 +821,7 @@
             f.addEventListener('blur', saveState);
         });
         workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
+        workArrangementInputs.forEach(input => input.addEventListener('change', updateTeamFields));
         facilityIdEl.addEventListener('input', () => populateFacilityAddress(false));
         facilityIdEl.addEventListener('change', () => populateFacilityAddress(false));
         facilityIdEl.addEventListener('keydown', event => {
@@ -955,6 +990,8 @@
                 ['Total Items:', '' + state.items.length],
                 ['Job Type:', hdr.fedexJob === false ? 'Non-FedEx Job' : 'FedEx Job'],
             ];
+            infoLeft.push(['Work Arrangement:', hdr.workArrangement === 'team' ? 'With Team' : 'Alone']);
+            infoRight.push(['Other Technicians:', hdr.workArrangement === 'team' ? (hdr.teamMembers || 'Not entered') : 'None']);
 
             infoLeft.forEach((pair, i) => {
                 doc.setFont('helvetica', 'bold');
@@ -1115,6 +1152,7 @@
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
                 trackingNumber: hdr.trackingNum, facilityId: hdr.facilityId, itemCount: state.items.length,
                 customerName: hdr.fedexJob === false ? hdr.customerName : '', fedexJob: hdr.fedexJob !== false,
+                workArrangement: hdr.workArrangement || 'alone', teamMembers: hdr.workArrangement === 'team' ? (hdr.teamMembers || '') : '',
                 tuggerWorkRecords: state.items.map((item, index) => ({
                     itemNumber: index + 1,
                     location: hdr.facilityAddr,
@@ -1151,6 +1189,9 @@
             facilityIdEl.value = state.header.facilityId || '';
             customerNameEl.value = state.header.customerName || '';
             fedexJobEl.checked = state.header.fedexJob !== false;
+            workArrangementInputs.forEach(input => { input.checked = input.value === (state.header.workArrangement || 'alone'); });
+            teamMembersEl.value = state.header.teamMembers || '';
+            updateTeamFields();
             setWorkflowStatus(state.workflowStatus || 'complete');
 
             if (state.inspectionStarted) {

@@ -184,6 +184,21 @@
                     <span data-id="32" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
                     <p data-id="33" class="text-xs text-danger-500 mt-1 hidden" id="err-report-date-e5f6"></p>
                 </div>
+                <fieldset class="md:col-span-2 no-print">
+                    <legend class="block text-sm font-medium text-navy-700 mb-2">Working Arrangement <span class="text-danger-500">*</span></legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-3 rounded-xl border border-field-border bg-field-bg px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="work-arrangement" value="alone" class="h-5 w-5 accent-[#1468a5]" checked /> Alone
+                        </label>
+                        <label class="flex items-center gap-3 rounded-xl border border-field-border bg-field-bg px-4 py-3 font-semibold text-navy-700 cursor-pointer">
+                            <input type="radio" name="work-arrangement" value="team" class="h-5 w-5 accent-[#1468a5]" /> With Team
+                        </label>
+                    </div>
+                </fieldset>
+                <div id="team-members-group" class="md:col-span-2 hidden">
+                    <label for="team-members-input" class="block text-sm font-medium text-navy-700 mb-1.5">Other Technician Names <span class="text-danger-500">*</span></label>
+                    <input id="team-members-input" type="text" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300" placeholder="Enter everyone who worked with you" />
+                </div>
                 <div id="customer-name-group" class="md:col-span-2 hidden">
                     <label for="customer-name-input" class="block text-sm font-medium text-navy-700 mb-1.5">Customer Name <span class="text-danger-500">*</span></label>
                     <input type="text" id="customer-name-input" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="Customer full name" />
@@ -389,6 +404,9 @@
         const facilityLocationLock = document.getElementById('facility-location-lock');
         const unlockFacilityLocationsBtn = document.getElementById('unlock-facility-locations');
         const workflowStatusInputs = Array.from(document.querySelectorAll('input[name="workflow-status"]'));
+        const workArrangementInputs = Array.from(document.querySelectorAll('input[name="work-arrangement"]'));
+        const teamMembersInput = document.getElementById('team-members-input');
+        const teamMembersGroup = document.getElementById('team-members-group');
         const startBtn = document.getElementById('start-inspection-btn-s9t0');
         const inspectionSection = document.getElementById('inspection-section-u1v2');
         const addItemBtn = document.getElementById('add-item-btn-y5z6');
@@ -408,6 +426,16 @@
 
         function selectedWorkflowStatus() {
             return workflowStatusInputs.find(input => input.checked)?.value || 'complete';
+        }
+        function selectedWorkArrangement() {
+            return workArrangementInputs.find(input => input.checked)?.value || 'alone';
+        }
+        function updateTeamFields() {
+            const withTeam = selectedWorkArrangement() === 'team';
+            teamMembersGroup.classList.toggle('hidden', !withTeam);
+            teamMembersInput.required = withTeam;
+            if (!withTeam) teamMembersInput.value = '';
+            saveState();
         }
 
         function setWorkflowStatus(status) {
@@ -543,7 +571,7 @@
                 location.href = '/pm-tech-login?return=/pm-report';
             });
 
-            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput];
+            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput];
             headerFields.forEach(f => {
                 f.addEventListener('input', debounce(saveState, 500));
                 f.addEventListener('blur', () => {
@@ -554,6 +582,7 @@
                 });
             });
             workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
+            workArrangementInputs.forEach(input => input.addEventListener('change', updateTeamFields));
             facilityIdInput.addEventListener('input', () => populateFacilityAddress(false));
             facilityIdInput.addEventListener('change', () => populateFacilityAddress(false));
             facilityIdInput.addEventListener('keydown', event => {
@@ -649,6 +678,7 @@
 
         function validateHeaderFields() {
             const fields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, fedexJobInput.checked ? facilityIdInput : customerNameInput];
+            if (selectedWorkArrangement() === 'team') fields.push(teamMembersInput);
             let firstInvalid = null;
             let valid = true;
             fields.forEach(f => {
@@ -921,6 +951,7 @@
                 const techName = techNameInput.value.trim();
                 const facilityId = facilityIdInput.value.trim();
                 const customerName = fedexJobInput.checked ? 'FedEx' : customerNameInput.value.trim();
+                const teamMembers = selectedWorkArrangement() === 'team' ? teamMembersInput.value.trim() : '';
                 const facilityAddr = facilityAddrInput.value.trim() || 'Not specified';
                 const trackingNum = trackingNumInput.value.trim() || 'Not specified';
                 const dateVal = reportDateInput.value;
@@ -1038,6 +1069,10 @@
                 lines2 = drawInfoPair('Total Items', String(totalItems), marginL + colW, cursorY);
                 cursorY += infoLineH * Math.max(lines1, lines2) + 2;
 
+                lines1 = drawInfoPair('Work Arrangement', teamMembers ? 'With Team' : 'Alone', marginL, cursorY);
+                lines2 = drawInfoPair('Other Technicians', teamMembers || 'None', marginL + colW, cursorY);
+                cursorY += infoLineH * Math.max(lines1, lines2) + 2;
+
                 doc.setDrawColor(...NAVY);
                 doc.setLineWidth(0.6);
                 doc.line(marginL, cursorY, pageW - marginR, cursorY);
@@ -1144,6 +1179,8 @@
                             facilityId,
                             customerName: fedexJobInput.checked ? '' : customerName,
                             fedexJob: fedexJobInput.checked,
+                            workArrangement: selectedWorkArrangement(),
+                            teamMembers,
                             itemCount: totalItems,
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
@@ -1173,6 +1210,8 @@
                             facilityId,
                             customerName: fedexJobInput.checked ? '' : customerName,
                             fedexJob: fedexJobInput.checked,
+                            workArrangement: selectedWorkArrangement(),
+                            teamMembers,
                             itemCount: totalItems,
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
@@ -1250,10 +1289,13 @@
             facilityLocationSelect.value = '';
             customerNameInput.value = '';
             fedexJobInput.checked = true;
+            workArrangementInputs.forEach(input => { input.checked = input.value === 'alone'; });
+            teamMembersInput.value = '';
+            updateTeamFields();
             updateJobTypeFields();
             setWorkflowStatus('complete');
 
-            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput].forEach(clearFieldError);
+            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput].forEach(clearFieldError);
 
             itemsContainer.innerHTML = '';
             items = [];
@@ -1298,6 +1340,8 @@
                 facilityId: facilityIdInput.value,
                 customerName: customerNameInput.value,
                 fedexJob: fedexJobInput.checked,
+                workArrangement: selectedWorkArrangement(),
+                teamMembers: teamMembersInput.value,
                 workflowStatus: selectedWorkflowStatus(),
                 reportCategory,
                 reportId,
@@ -1329,6 +1373,9 @@
                 facilityIdInput.value = state.facilityId || '';
                 customerNameInput.value = state.customerName || '';
                 fedexJobInput.checked = state.fedexJob !== false;
+                workArrangementInputs.forEach(input => { input.checked = input.value === (state.workArrangement || 'alone'); });
+                teamMembersInput.value = state.teamMembers || '';
+                updateTeamFields();
                 setWorkflowStatus(state.workflowStatus || 'complete');
                 reportId = state.reportId || reportId;
 
