@@ -33,7 +33,9 @@ type Report = {
   itemCount?: number;
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
+  savedAt?: string;
 };
+type JobHistory = { key: string; latest: Report; reports: Report[]; status: WorkflowStatus };
 type ReportAttachment = {
   id: string;
   reportId: string;
@@ -92,6 +94,20 @@ const reportMatches = (report: Report, query: string) => {
     return value.toLowerCase().includes(plainQuery) ||
       (compactQuery && normalizedSearch(value).includes(compactQuery));
   });
+};
+const trackingIdentity = (report: Report) => {
+  const tracking = normalizedSearch(report.trackingNumber);
+  return tracking ? `tracking-${tracking}` : `report-${report.id}`;
+};
+const reportTime = (report: Report) => {
+  const reportDate = Date.parse(String(report.reportDate || ""));
+  const savedAt = Date.parse(String(report.savedAt || ""));
+  return { reportDate: Number.isNaN(reportDate) ? 0 : reportDate, savedAt: Number.isNaN(savedAt) ? 0 : savedAt };
+};
+const newestFirst = (left: Report, right: Report) => {
+  const leftTime = reportTime(left);
+  const rightTime = reportTime(right);
+  return rightTime.reportDate - leftTime.reportDate || rightTime.savedAt - leftTime.savedAt;
 };
 
 export default function ReportsClient() {
@@ -211,26 +227,32 @@ export default function ReportsClient() {
     await loadTechnicians();
   }
 
-  const shown = useMemo(
-    () =>
-      reports.filter(
-        (report) =>
-          (tab === "all" || categoryOf(report) === tab) &&
-          statusOf(report) === statusTab &&
-          reportMatches(report, query),
-      ),
-    [reports, query, tab, statusTab],
-  );
+  const jobHistories = useMemo(() => {
+    const groups = new Map<string, Report[]>();
+    reports.filter((report) => tab === "all" || categoryOf(report) === tab).forEach((report) => {
+      const key = trackingIdentity(report);
+      groups.set(key, [...(groups.get(key) || []), report]);
+    });
+    return Array.from(groups.entries()).map(([key, groupedReports]) => {
+      const sorted = [...groupedReports].sort(newestFirst);
+      return { key, latest: sorted[0], reports: sorted, status: statusOf(sorted[0]) } satisfies JobHistory;
+    });
+  }, [reports, tab]);
+
+  const shown = useMemo(() => jobHistories.filter((history) =>
+    history.status === statusTab && history.reports.some((report) => reportMatches(report, query))
+  ), [jobHistories, query, statusTab]);
 
   const technicianGroups = useMemo(() => {
-    const groups = new Map<string, { label: string; reports: Report[] }>();
-    shown.forEach((report) => {
-      const technician = report.technician?.trim() || "Technician not entered";
+    const groups = new Map<string, { label: string; histories: JobHistory[]; reportCount: number }>();
+    shown.forEach((history) => {
+      const technician = history.latest.technician?.trim() || "Technician not entered";
       const key = technicianIdentity(technician);
       const current = groups.get(key);
       groups.set(key, {
         label: preferredTechnicianLabel(key, current && current.label.length <= technician.length ? current.label : technician),
-        reports: [...(current?.reports || []), report],
+        histories: [...(current?.histories || []), history],
+        reportCount: (current?.reportCount || 0) + history.reports.length,
       });
     });
     return Array.from(groups.entries()).sort(([, left], [, right]) =>
@@ -240,9 +262,9 @@ export default function ReportsClient() {
 
   const tuggerHistory = useMemo(
     () =>
-      reports
-        .filter((report) => categoryOf(report) === "tugger")
-        .filter((report) => statusOf(report) === statusTab)
+      jobHistories
+        .filter((history) => categoryOf(history.latest) === "tugger" && history.status === statusTab)
+        .flatMap((history) => history.reports)
         .flatMap((report) => {
           if (report.tuggerWorkRecords?.length) {
             return report.tuggerWorkRecords.map((item) => ({ item, report }));
@@ -271,7 +293,7 @@ export default function ReportsClient() {
                 (compactQuery && normalizedSearch(value).includes(compactQuery));
             });
         }),
-    [reports, query, statusTab],
+    [jobHistories, query, statusTab],
   );
   const historyMode = tab === "tugger" && tuggerView === "history";
 
@@ -444,8 +466,8 @@ export default function ReportsClient() {
               {item.label}
               <span>
                 {item.key === "all"
-                  ? reports.length
-                  : reports.filter((report) => categoryOf(report) === item.key).length}
+                  ? new Set(reports.map(trackingIdentity)).size
+                  : new Set(reports.filter((report) => categoryOf(report) === item.key).map(trackingIdentity)).size}
               </span>
             </button>
           ))}
@@ -453,9 +475,7 @@ export default function ReportsClient() {
 
         <div className={styles.statusTabs} aria-label="Report workflow status">
           {STATUS_TABS.map((item) => {
-            const count = reports.filter((report) =>
-              (tab === "all" || categoryOf(report) === tab) && statusOf(report) === item.key
-            ).length;
+            const count = jobHistories.filter((history) => history.status === item.key).length;
             return <button key={item.key} className={statusTab === item.key ? styles.activeStatusTab : ""} onClick={() => setStatusTab(item.key)}>{item.label}<span>{count}</span></button>;
           })}
         </div>
@@ -484,7 +504,7 @@ export default function ReportsClient() {
               {historyMode
                 ? "tuggers worked on"
                 : tab === "all"
-                  ? "completed reports"
+                  ? "completed jobs"
                   : TABS.find((item) => item.key === tab)?.label}
             </span>
           </div>
@@ -561,10 +581,20 @@ export default function ReportsClient() {
               <details className={styles.technicianGroup} key={technicianKey} open={query.trim() ? true : undefined}>
                 <summary>
                   <span>{group.label}</span>
-                  <strong>{group.reports.length} {group.reports.length === 1 ? "report" : "reports"}</strong>
+                  <strong>{group.histories.length} {group.histories.length === 1 ? "job" : "jobs"} · {group.reportCount} {group.reportCount === 1 ? "report" : "reports"}</strong>
                 </summary>
                 <div className={styles.technicianReports}>
-                  {group.reports.map((report) => (
+                  {group.histories.map((history) => (
+                    <details className={styles.jobHistory} key={history.key} open={query.trim() ? true : undefined}>
+                      <summary>
+                        <span>
+                          <strong>{history.latest.customerName || history.latest.facilityId || "Customer"}</strong>
+                          <small>Tracking #{history.latest.trackingNumber || "not entered"}</small>
+                        </span>
+                        <b>{history.reports.length} {history.reports.length === 1 ? "report" : "reports"}</b>
+                      </summary>
+                      <div className={styles.jobHistoryReports}>
+                  {history.reports.map((report, reportIndex) => (
                     <article key={report.id}>
                       <div>
                         <p className={styles.eyebrow}>
@@ -579,6 +609,7 @@ export default function ReportsClient() {
                           {report.technician || "Technician not entered"} ·{" "}
                           {report.reportDate || "No date"} · {report.itemCount || 0} items
                         </p>
+                        {reportIndex > 0 && <p className={styles.priorReport}>Prior visit · {STATUS_TABS.find((item) => item.key === statusOf(report))?.label}</p>}
                         {attachments.some((attachment) => attachment.reportId === report.id) && (
                           <div className={styles.attachments}>
                             <strong>Attachments</strong>
@@ -620,6 +651,9 @@ export default function ReportsClient() {
                         </button>
                       </div>
                     </article>
+                  ))}
+                      </div>
+                    </details>
                   ))}
                 </div>
               </details>
