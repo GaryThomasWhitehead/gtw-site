@@ -420,6 +420,11 @@ export default function ReportsClient() {
       });
       if (!response.ok) throw new Error(await response.text());
       setReports((current) => current.map((item) => item.id === report.id ? { ...item, trackingNumber } : item));
+      // Keep the edited report visible even when separating it from a job
+      // history reveals that its own saved status is Need Parts or Return.
+      setTab("all");
+      setStatusTab(statusOf(report));
+      setQuery(trackingNumber);
     } catch (cause) {
       setError(`Could not update tracking number: ${cause instanceof Error ? cause.message : String(cause)}`);
       await loadReports();
