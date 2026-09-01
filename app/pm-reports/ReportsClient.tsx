@@ -33,6 +33,7 @@ type Report = {
   itemCount?: number;
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
+  partsNotes?: string;
   savedAt?: string;
 };
 type JobHistory = { key: string; latest: Report; reports: Report[]; status: WorkflowStatus };
@@ -119,6 +120,8 @@ export default function ReportsClient() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [savingNoteId, setSavingNoteId] = useState("");
+  const [partsNoteDrafts, setPartsNoteDrafts] = useState<Record<string, string>>({});
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
@@ -435,6 +438,26 @@ export default function ReportsClient() {
     }
   }
 
+  async function savePartsNotes(report: Report) {
+    const partsNotes = (partsNoteDrafts[report.id] ?? report.partsNotes ?? "").trim();
+    setSavingNoteId(report.id);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: report.id, partsNotes }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setReports((current) => current.map((item) => item.id === report.id ? { ...item, partsNotes } : item));
+      setPartsNoteDrafts((current) => ({ ...current, [report.id]: partsNotes }));
+    } catch (cause) {
+      setError(`Could not save parts notes: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setSavingNoteId("");
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -644,6 +667,22 @@ export default function ReportsClient() {
                         </span>
                         <b>{history.reports.length} {history.reports.length === 1 ? "report" : "reports"}</b>
                       </summary>
+                      {history.status === "parts" && (
+                        <section className={styles.partsNotesEditor}>
+                          <label htmlFor={`parts-notes-${history.latest.id}`}>Parts Notes</label>
+                          <p>Record parts ordered, order dates, expected arrival, and follow-up details.</p>
+                          <textarea
+                            id={`parts-notes-${history.latest.id}`}
+                            maxLength={5000}
+                            placeholder="Example: Ordered replacement control board on 9/1. Expected delivery 9/6."
+                            value={partsNoteDrafts[history.latest.id] ?? history.latest.partsNotes ?? ""}
+                            onChange={(event) => setPartsNoteDrafts((current) => ({ ...current, [history.latest.id]: event.target.value }))}
+                          />
+                          <button type="button" disabled={savingNoteId === history.latest.id} onClick={() => void savePartsNotes(history.latest)}>
+                            {savingNoteId === history.latest.id ? "Saving…" : "Save Parts Notes"}
+                          </button>
+                        </section>
+                      )}
                       <div className={styles.jobHistoryReports}>
                   {history.reports.map((report, reportIndex) => (
                     <article key={report.id}>
@@ -661,6 +700,7 @@ export default function ReportsClient() {
                           {report.reportDate || "No date"} · {report.itemCount || 0} items
                         </p>
                         {reportIndex > 0 && <p className={styles.priorReport}>Prior visit · {STATUS_TABS.find((item) => item.key === statusOf(report))?.label}</p>}
+                        {report.partsNotes && <div className={styles.savedPartsNotes}><strong>Parts Notes</strong><span>{report.partsNotes}</span></div>}
                         {attachments.some((attachment) => attachment.reportId === report.id) && (
                           <div className={styles.attachments}>
                             <strong>Attachments</strong>

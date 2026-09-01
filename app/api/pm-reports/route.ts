@@ -174,6 +174,7 @@ export async function GET(request: NextRequest) {
     "itemCount:data->itemCount",
     "tuggerWorkRecords:data->tuggerWorkRecords",
     "workflowStatus:data->>workflowStatus",
+    "partsNotes:data->>partsNotes",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {
@@ -215,12 +216,16 @@ export async function PATCH(request: NextRequest) {
   const id = String(body?.id || "").trim();
   const workflowStatus = String(body?.workflowStatus || "").trim();
   const trackingNumberUpdate = body?.trackingNumber === undefined ? undefined : String(body.trackingNumber).trim();
+  const partsNotesUpdate = body?.partsNotes === undefined ? undefined : String(body.partsNotes).trim();
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
-  if (trackingNumberUpdate === undefined && !["complete", "parts", "return"].includes(workflowStatus)) {
+  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && !["complete", "parts", "return"].includes(workflowStatus)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
   }
   if (trackingNumberUpdate !== undefined && !trackingNumberUpdate) {
     return NextResponse.json({ error: "Tracking number is required" }, { status: 400 });
+  }
+  if (partsNotesUpdate !== undefined && partsNotesUpdate.length > 5000) {
+    return NextResponse.json({ error: "Parts notes must be 5,000 characters or fewer" }, { status: 400 });
   }
   const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
   const currentResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
@@ -234,6 +239,7 @@ export async function PATCH(request: NextRequest) {
     ...rows[0].data,
     ...(workflowStatus ? { workflowStatus } : {}),
     ...(trackingNumberUpdate !== undefined ? { trackingNumber: trackingNumberUpdate } : {}),
+    ...(partsNotesUpdate !== undefined ? { partsNotes: partsNotesUpdate } : {}),
   };
   const updateResponse = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
     method: "PATCH",
@@ -241,7 +247,7 @@ export async function PATCH(request: NextRequest) {
     body: JSON.stringify({ data: updatedData, updated_at: new Date().toISOString() }),
   });
   if (!updateResponse.ok) return NextResponse.json({ error: await updateResponse.text() }, { status: updateResponse.status });
-  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber });
+  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes });
 }
 
 export async function DELETE(request: NextRequest) {
