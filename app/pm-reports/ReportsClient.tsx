@@ -246,9 +246,11 @@ export default function ReportsClient() {
     tab === "all" || history.reports.some((report) => categoryOf(report) === tab)
   ), [allJobHistories, tab]);
 
+  const searchingAllReports = tab === "all" && Boolean(query.trim());
   const shown = useMemo(() => jobHistories.filter((history) =>
-    history.status === statusTab && history.reports.some((report) => reportMatches(report, query))
-  ), [jobHistories, query, statusTab]);
+    (searchingAllReports || history.status === statusTab) &&
+    history.reports.some((report) => reportMatches(report, query))
+  ), [jobHistories, query, searchingAllReports, statusTab]);
 
   const technicianGroups = useMemo(() => {
     const groups = new Map<string, { label: string; histories: JobHistory[]; reportCount: number }>();
@@ -565,6 +567,9 @@ export default function ReportsClient() {
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
+        {searchingAllReports && (
+          <p className={styles.searchScope}>Searching Job Complete, Need Parts, and Need to Return</p>
+        )}
 
         {loadingReports && (
           <p className={styles.empty}>
