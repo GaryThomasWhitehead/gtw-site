@@ -451,6 +451,14 @@
             facilityIdInput.required = isFedEx;
             customerNameInput.required = !isFedEx;
             if (isFedEx) populateFacilityAddress();
+            else syncNonFedExTrackingNumber();
+            saveState();
+        }
+
+        function syncNonFedExTrackingNumber() {
+            if (fedexJobInput.checked) return;
+            trackingNumInput.value = customerNameInput.value.trim();
+            if (trackingNumInput.value) clearFieldError(trackingNumInput);
             saveState();
         }
 
@@ -561,6 +569,7 @@
             });
             fillFacilityAddressBtn.addEventListener('click', () => populateFacilityAddress(true));
             fedexJobInput.addEventListener('change', updateJobTypeFields);
+            customerNameInput.addEventListener('input', syncNonFedExTrackingNumber);
 
             updateCounts();
         }
