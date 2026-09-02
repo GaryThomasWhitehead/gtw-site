@@ -124,6 +124,9 @@ export default function ReportsClient() {
   const [updatingId, setUpdatingId] = useState("");
   const [savingNoteId, setSavingNoteId] = useState("");
   const [partsNoteDrafts, setPartsNoteDrafts] = useState<Record<string, string>>({});
+  const [editingCustomerId, setEditingCustomerId] = useState("");
+  const [savingCustomerId, setSavingCustomerId] = useState("");
+  const [customerDrafts, setCustomerDrafts] = useState<Record<string, { fedexJob: boolean; customerName: string }>>({});
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
@@ -423,6 +426,39 @@ export default function ReportsClient() {
     }
   }
 
+  function editCustomer(report: Report) {
+    setCustomerDrafts((current) => ({
+      ...current,
+      [report.id]: { fedexJob: report.fedexJob !== false, customerName: report.customerName || "" },
+    }));
+    setEditingCustomerId(report.id);
+  }
+
+  async function saveCustomer(report: Report) {
+    const draft = customerDrafts[report.id] || { fedexJob: report.fedexJob !== false, customerName: report.customerName || "" };
+    const customerName = draft.fedexJob ? "" : draft.customerName.trim();
+    if (!draft.fedexJob && !customerName) {
+      setError("Enter a customer name before saving a non-FedEx report.");
+      return;
+    }
+    setSavingCustomerId(report.id);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: report.id, fedexJob: draft.fedexJob, customerName }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setReports((current) => current.map((item) => item.id === report.id ? { ...item, fedexJob: draft.fedexJob, customerName } : item));
+      setEditingCustomerId("");
+    } catch (cause) {
+      setError(`Could not update the report customer: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setSavingCustomerId("");
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -665,6 +701,11 @@ export default function ReportsClient() {
                           {report.reportDate || "No date"} · {report.itemCount || 0} items
                         </p>
                         {report.workArrangement && <p>{report.workArrangement === "team" ? `With team: ${report.teamMembers || "Names not entered"}` : "Worked alone"}</p>}
+                        {editingCustomerId === report.id && <section className={styles.customerEditor}>
+                          <label className={styles.fedexJobCheck}><input type="checkbox" checked={(customerDrafts[report.id]?.fedexJob ?? report.fedexJob) !== false} onChange={(event) => setCustomerDrafts((current) => ({ ...current, [report.id]: { fedexJob: event.target.checked, customerName: current[report.id]?.customerName ?? report.customerName ?? "" } }))} /><span>FedEx Job</span></label>
+                          {(customerDrafts[report.id]?.fedexJob ?? report.fedexJob) === false && <label>Customer name<input autoFocus maxLength={250} value={customerDrafts[report.id]?.customerName ?? report.customerName ?? ""} onChange={(event) => setCustomerDrafts((current) => ({ ...current, [report.id]: { fedexJob: false, customerName: event.target.value } }))} placeholder="Enter customer name" /></label>}
+                          <div><button type="button" disabled={savingCustomerId === report.id} onClick={() => void saveCustomer(report)}>{savingCustomerId === report.id ? "Saving…" : "Save Customer"}</button><button type="button" className={styles.cancelCustomerButton} onClick={() => setEditingCustomerId("")}>Cancel</button></div>
+                        </section>}
                         {reportIndex > 0 && <p className={styles.priorReport}>Prior visit · {STATUS_TABS.find((item) => item.key === statusOf(report))?.label}</p>}
                         {report.partsNotes && <div className={styles.savedPartsNotes}><strong>Parts Notes</strong><span>{report.partsNotes}</span></div>}
                         {attachments.some((attachment) => attachment.reportId === report.id) && (
@@ -699,6 +740,7 @@ export default function ReportsClient() {
                         >
                           View PDF
                         </a>
+                        <button type="button" className={styles.editCustomerButton} onClick={() => editCustomer(report)}>Edit Customer</button>
                         <button
                           type="button"
                           onClick={() => deleteReport(report)}
