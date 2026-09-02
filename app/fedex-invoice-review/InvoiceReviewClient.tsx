@@ -589,7 +589,7 @@ export default function Home() {
             <section className="panel overview">
               <div className="paneltitle"><h4>Work order overview</h4><span>{job.housecallJobs.length} HCP record{job.housecallJobs.length === 1 ? "" : "s"}</span></div>
               <p className="description">{job.problemDescription}</p>
-              <dl><div><dt>Housecall jobs</dt><dd>{job.housecallJobs.join(", ") || "None — contracted work"}</dd></div><div><dt>Technicians</dt><dd>{job.employees.join(", ") || job.contractorName || "Not recorded"}</dd></div><div><dt>Resolution</dt><dd>{job.sourceType === "contracted" ? <textarea className="inlineEdit" value={job.resolution} placeholder="Enter completed work or contractor notes" onChange={(e) => updateJob(job.trackingNumber, { resolution: e.target.value })} /> : (job.resolution || "No resolution imported")}</dd></div></dl>
+              <dl><div><dt>Housecall jobs</dt><dd>{job.housecallJobs.join(", ") || "None — contracted work"}</dd></div><div><dt>Technicians</dt><dd>{job.employees.join(", ") || job.contractorName || "Not recorded"}</dd></div><div><dt>Notes / resolution</dt><dd><textarea className="inlineEdit" value={job.resolution} placeholder="Enter work notes or resolution" onChange={(e) => updateJob(job.trackingNumber, { resolution: e.target.value })} /></dd></div></dl>
             </section>
 
             <section className="panel financial">
