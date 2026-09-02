@@ -437,6 +437,33 @@ export default function Home() {
     setSelected(next?.trackingNumber || "");
   }
 
+  async function deleteReviewJob(tracking: string) {
+    const item = jobs.find((candidate) => candidate.trackingNumber === tracking);
+    if (!item) return;
+    const confirmed = confirm(`Delete ${tracking} — ${item.store}?\n\nThis permanently removes the job from Review & edit and the work-order tracker. Use this only when the job was removed or reassigned.`);
+    if (!confirmed) return;
+
+    setSaveState(`Deleting ${tracking}…`);
+    const response = await fetch("/api/fedex-work-orders", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trackingNumbers: [tracking] }),
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      alert(result.error || "The job could not be deleted. Please try again.");
+      setSaveState("Delete failed");
+      return;
+    }
+
+    const remaining = jobs.filter((candidate) => candidate.trackingNumber !== tracking);
+    setJobs(remaining);
+    setServiceOrders((orders) => orders.filter((order) => String(order.trackingNumber || "").trim() !== tracking));
+    setChecked((items) => items.filter((id) => id !== tracking));
+    setSelected(remaining.find((candidate) => !candidate.invoiceSent && candidate.serviceChannelInvoiceStatus !== "APPROVED")?.trackingNumber || "");
+    setSaveState(`${tracking} deleted from the tracker`);
+  }
+
   function updateVisit(tracking: string, jobNumber: string, patch: Partial<Visit>) {
     setSaveState("Unsaved changes");
     setJobs((items) => items.map((item) => {
@@ -555,7 +582,7 @@ export default function Home() {
           {job.sourceType === "contracted" && <div className="contractBanner"><strong>Contracted or pre-HCP work — no Housecall Pro record</strong><span>Enter the outside provider, cost, charge, work details, and supporting receipts below.</span></div>}
           <div className="detailhead">
             <div><p className="eyebrow">SERVICECHANNEL {job.trackingNumber}</p><h3>{job.store}</h3><p>{job.trade} · {job.statusDetail}</p></div>
-            <select className="statusSelect" value={job.billingStatus} onChange={(e) => updateJob(job.trackingNumber, { billingStatus: e.target.value })}>{statuses.map((status) => <option key={status}>{status}</option>)}</select>
+            <div className="detailActions"><select className="statusSelect" value={job.billingStatus} onChange={(e) => updateJob(job.trackingNumber, { billingStatus: e.target.value })}>{statuses.map((status) => <option key={status}>{status}</option>)}</select>{reviewSection === "active" && <button className="deleteJobButton" onClick={() => deleteReviewJob(job.trackingNumber)}>Delete job</button>}</div>
           </div>
 
           <div className="detailgrid">
