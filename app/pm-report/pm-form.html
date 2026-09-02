@@ -697,6 +697,21 @@
             return valid;
         }
 
+        function validateMinimumPhotos() {
+            const photoCount = Object.values(photoDataStore).reduce((total, storedPhotos) => {
+                const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
+                return total + photos.filter(Boolean).length;
+            }, 0);
+            if (photoCount >= 2) return true;
+
+            const remaining = 2 - photoCount;
+            const message = `At least two pictures are required to complete and save this report. Please take or upload ${remaining} more picture${remaining === 1 ? '' : 's'}.`;
+            alert(message);
+            showToast(message, 'error');
+            inspectionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return false;
+        }
+
         // ===================== START INSPECTION =====================
         function handleStartInspection() {
             if (!validateHeaderFields()) return;
@@ -854,6 +869,7 @@
         // ===================== EXPORT PDF =====================
         function handleExportPDF(mode = 'download') {
             if (!validateHeaderFields()) return;
+            if ((mode === 'complete' || mode === 'share') && !validateMinimumPhotos()) return;
 
             const loadingToast = showToast('Generating PDF…', 'info');
 

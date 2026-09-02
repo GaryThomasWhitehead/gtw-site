@@ -753,6 +753,22 @@
             return true;
         }
 
+        function validateMinimumPhotos() {
+            const photoCount = Array.from(itemsContainer.querySelectorAll('.item-card')).reduce((total, card) => {
+                const beforePhotos = Array.isArray(card._beforePhotos) ? card._beforePhotos : [];
+                const afterPhotos = Array.isArray(card._afterPhotos) ? card._afterPhotos : [];
+                return total + beforePhotos.filter(Boolean).length + afterPhotos.filter(Boolean).length;
+            }, 0);
+            if (photoCount >= 2) return true;
+
+            const remaining = 2 - photoCount;
+            const message = `At least two pictures are required to complete and save this report. Please take or upload ${remaining} more picture${remaining === 1 ? '' : 's'}.`;
+            alert(message);
+            showToast(message, 'error');
+            inspectionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return false;
+        }
+
         // ─── Start Inspection ───
         startBtn.addEventListener('click', function() {
             if (!validateHeader()) return;
@@ -859,6 +875,7 @@
 
         async function runPdfAction(mode) {
             if (!validateHeader() || !validateTuggerItems()) return;
+            if (!validateMinimumPhotos()) return;
             const button = mode === 'share' ? emailPdfBtn : completeReportBtn;
             const originalText = button.textContent;
             button.disabled = true;
