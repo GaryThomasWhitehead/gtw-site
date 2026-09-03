@@ -296,7 +296,7 @@
                 <button id="complete-report-btn" class="bg-[#0f766e] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Complete &amp; Save</button>
                 <button data-id="58" id="print-btn-p1" class="bg-slate_alt-200 hover:bg-slate_alt-300 text-slate_alt-700 font-semibold text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
                     <i data-id="59" data-lucide="printer" class="w-4 h-4"></i>
-                    Print
+                    Download PDF
                 </button>
                 <button data-id="60" id="export-pdf-btn-e1" class="bg-success-600 hover:bg-success-700 text-white font-bold text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
                     <i data-id="61" data-lucide="file-down" class="w-4 h-4"></i>
@@ -792,7 +792,7 @@
 
         // ─── Print ───
         printBtn.addEventListener('click', function() {
-            window.print();
+            exportPdfBtn.click();
         });
 
         // ─── Clear All ───

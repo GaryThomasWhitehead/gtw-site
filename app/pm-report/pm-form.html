@@ -305,7 +305,7 @@
                 </button>
                 <button data-id="75" id="print-btn-i5j6" class="h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border text-navy-500 font-medium rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
                     <i data-id="76" data-lucide="printer" class="w-4 h-4"></i>
-                    <span data-id="77" class="hidden sm:inline">Print / PDF</span>
+                    <span data-id="77" class="hidden sm:inline">Download PDF</span>
                 </button>
                 <button data-id="78" id="export-pdf-btn-p4q5" class="h-11 px-4 bg-[#16a34a] hover:bg-[#15803d] active:bg-[#166534] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
                     <span data-id="79" class="text-base leading-none">📄</span>
@@ -559,7 +559,7 @@
 
             startBtn.addEventListener('click', handleStartInspection);
             addItemBtn.addEventListener('click', () => addItem());
-            printBtn.addEventListener('click', handlePrint);
+            printBtn.addEventListener('click', () => handleExportPDF('download'));
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
             emailPdfBtn.addEventListener('click', () => {
                 if (confirm('Save this completed report and email the notice to Jacob, Daniel, and Gary?')) handleExportPDF('share');
