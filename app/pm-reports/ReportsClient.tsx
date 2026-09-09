@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import styles from "./reports.module.css";
 
-type Category = "all" | "regular" | "proposed" | "pm" | "tugger";
+type Category = "all" | "regular" | "proposed" | "pm" | "tugger" | "gas";
 type TuggerView = "reports" | "history";
 type WorkflowStatus = "complete" | "parts" | "return";
 type TuggerWorkRecord = {
@@ -53,6 +53,7 @@ const TABS: { key: Category; label: string }[] = [
   { key: "proposed", label: "Proposed Work" },
   { key: "pm", label: "Preventive Maintenance" },
   { key: "tugger", label: "Tugger" },
+  { key: "gas", label: "Gas Sensor" },
 ];
 const categoryOf = (report: Report) => report.category || "pm";
 const statusOf = (report: Report): WorkflowStatus => report.workflowStatus || "complete";

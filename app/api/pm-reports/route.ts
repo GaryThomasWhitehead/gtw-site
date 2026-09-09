@@ -177,6 +177,11 @@ export async function GET(request: NextRequest) {
     "partsNotes:data->>partsNotes",
     "workArrangement:data->>workArrangement",
     "teamMembers:data->>teamMembers",
+    "manufacturer:data->>manufacturer",
+    "model:data->>model",
+    "serialNumber:data->>serialNumber",
+    "sensorType:data->>sensorType",
+    "sensorTag:data->>sensorTag",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {
