@@ -16,7 +16,14 @@ function config() {
 
 function facilityId(value: unknown) {
   const text = String(value || "").toUpperCase().trim();
-  return text.match(/(?:FEDEX\s+)?([A-Z0-9]{4})\b/)?.[1] || "";
+  if (!text) return "";
+  // Imports normally use "SFOA - SAN FRANCISCO,CA" or "0912 // SOUTH SF".
+  // Some out-of-state facilities have IDs longer or shorter than four characters,
+  // so keep the complete location prefix instead of silently discarding them.
+  const prefixed = text.match(/^(?:FEDEX\s+)?([A-Z0-9]{2,16})(?=\s*(?:-|\/\/|\||,|$))/)?.[1];
+  if (prefixed) return prefixed;
+  const embedded = text.match(/\b(?:FEDEX\s+)?([A-Z0-9]{4})\b/)?.[1];
+  return embedded || "";
 }
 
 function firstText(...values: unknown[]) {

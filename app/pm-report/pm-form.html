@@ -456,7 +456,7 @@
             return String(value || '')
                 .replace(/^\s*fedex\s*/i, '')
                 .replace(/[^a-z0-9]/gi, '')
-                .slice(0, 4)
+                .slice(0, 16)
                 .toUpperCase();
         }
 
