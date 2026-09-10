@@ -427,6 +427,27 @@ export default function ReportsClient() {
     }
   }
 
+  async function editFedExTrackingNumber(report: Report) {
+    if (report.fedexJob === false) return;
+    const trackingNumber = prompt("Enter the correct FedEx tracking number:", report.trackingNumber || "")?.trim();
+    if (!trackingNumber || trackingNumber === report.trackingNumber) return;
+    setUpdatingId(report.id);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: report.id, trackingNumber }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setReports((current) => current.map((item) => item.id === report.id ? { ...item, trackingNumber } : item));
+    } catch (cause) {
+      setError(`Could not update the FedEx tracking number: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
   function editCustomer(report: Report) {
     setCustomerDrafts((current) => ({
       ...current,
@@ -741,6 +762,11 @@ export default function ReportsClient() {
                         >
                           View PDF
                         </a>
+                        {report.fedexJob !== false && (
+                          <button type="button" className={styles.editCustomerButton} disabled={updatingId === report.id} onClick={() => void editFedExTrackingNumber(report)}>
+                            Edit Tracking #
+                          </button>
+                        )}
                         <button type="button" className={styles.editCustomerButton} onClick={() => editCustomer(report)}>Edit Customer</button>
                         <button
                           type="button"
