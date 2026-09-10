@@ -30,6 +30,13 @@ function firstText(...values: unknown[]) {
   return values.map((value) => String(value || "").trim()).find(Boolean) || "";
 }
 
+function locationAddress(value: unknown) {
+  return String(value || "")
+    .trim()
+    .replace(/^(?:FEDEX\s+)?[A-Z0-9]{2,16}\s*(?:-|\/\/|\|)\s*/i, "")
+    .replace(/,\s*([A-Z]{2})\s*$/i, ", $1");
+}
+
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request) && !await validatePmTechSession(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
@@ -43,23 +50,27 @@ export async function GET(request: NextRequest) {
   if (!response.ok) return NextResponse.json({ facilities: [] });
 
   const rows = await response.json() as StoredRow[];
-  const facilities = new Map<string, { id: string; address: string; date: string }>();
+  const facilities = new Map<string, { id: string; address: string; date: string; fullAddress: boolean }>();
 
-  function addFacility(idValue: unknown, addressValue: unknown, dateValue: unknown) {
+  function addFacility(idValue: unknown, addressValue: unknown, dateValue: unknown, fullAddress = true) {
     const id = facilityId(idValue);
     const address = String(addressValue || "").trim();
     const date = String(dateValue || "");
     if (!id || !address) return;
     const current = facilities.get(id);
-    if (!current || date >= current.date) facilities.set(id, { id, address, date });
+    // Never let a newer city/state fallback replace a complete street address.
+    if (!current || (fullAddress && !current.fullAddress) || (fullAddress === current.fullAddress && date >= current.date)) {
+      facilities.set(id, { id, address, date, fullAddress });
+    }
   }
 
   rows.forEach((row) => {
     const data = row.data || {};
     const directId = facilityId(data.facilityId) || facilityId(data.location) || facilityId(data.store) || facilityId(data.customer);
     const directAddress = firstText(data.facilityAddress, data.address, data.locationAddress, data.siteAddress, data.streetAddress);
+    const fallbackAddress = locationAddress(data.location);
     const directDate = firstText(data.reportDate, data.callDate, data.updatedAt);
-    addFacility(directId, directAddress, directDate);
+    addFacility(directId, directAddress || fallbackAddress, directDate, Boolean(directAddress));
 
     const review = data.invoiceReview as { store?: unknown; visits?: Visit[] } | undefined;
     (review?.visits || []).forEach((visit) => {
