@@ -857,15 +857,23 @@
         customerNameEl.addEventListener('input', syncNonFedExTrackingNumber);
 
         // ─── PDF Export ───
-        exportPdfBtn.addEventListener('click', function() {
+        exportPdfBtn.addEventListener('click', async function() {
             if (!validateHeader() || !validateTuggerItems()) return;
+            if (!validateMinimumPhotos()) return;
             if (typeof window.jspdf === 'undefined') {
                 showToast('PDF library not loaded. Please try again.', 'error');
                 return;
             }
-            showToast('Generating PDF...', 'success');
-
-            setTimeout(() => generatePDF('download'), 100);
+            showToast('Saving report and generating PDF...', 'success');
+            exportPdfBtn.disabled = true;
+            try {
+                await generatePDF('download');
+            } catch (error) {
+                console.error('Tugger report download failed:', error);
+                showToast('The report could not be saved, so the PDF was not downloaded. Check your connection and try again.', 'error');
+            } finally {
+                exportPdfBtn.disabled = false;
+            }
         });
 
         completeReportBtn.addEventListener('click', () => runPdfAction('complete'));
@@ -1158,11 +1166,6 @@
             const reportUniqueId = state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
             const uniqueReportNumber = String(reportUniqueId).replace(/[^a-zA-Z0-9]/g, '').slice(-10);
             const filename = 'Frontline_Tugger_' + facilityId + '_' + dateStr + '_' + uniqueReportNumber + '.pdf';
-            if (mode === 'download') {
-                doc.save(filename);
-                showToast('PDF downloaded successfully', 'success');
-                return;
-            }
             const pdfBase64 = await blobToBase64(doc.output('blob'));
             const report = {
                 id: reportUniqueId,
@@ -1187,6 +1190,11 @@
             };
             const archiveResponse = await fetch('/api/pm-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
             if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
+            if (mode === 'download') {
+                doc.save(filename);
+                showToast('Report saved and PDF downloaded successfully', 'success');
+                return;
+            }
             if (mode === 'share') {
                 const { pdfBase64: _pdfBase64, ...emailReport } = report;
                 const emailResponse = await fetch('/api/pm-reports/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report: emailReport }) });

@@ -870,7 +870,7 @@
         // ===================== EXPORT PDF =====================
         function handleExportPDF(mode = 'download') {
             if (!validateHeaderFields()) return;
-            if ((mode === 'complete' || mode === 'share') && !validateMinimumPhotos()) return;
+            if (!validateMinimumPhotos()) return;
 
             const loadingToast = showToast('Generating PDF…', 'info');
 
@@ -1266,9 +1266,37 @@
                     removeToast(loadingToast);
                     showToast('Report saved and notice emailed successfully to Jacob, Daniel, and Gary.', 'success');
                 } else {
+                    const pdfBase64 = await blobToBase64(doc.output('blob'));
+                    const response = await fetch('/api/pm-reports', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ report: {
+                            id: reportId,
+                            technician: techName,
+                            reportDate: dateVal,
+                            facilityAddress: facilityAddr,
+                            trackingNumber: trackingNum,
+                            facilityId,
+                            customerName: fedexJobInput.checked ? '' : customerName,
+                            fedexJob: fedexJobInput.checked,
+                            workArrangement: selectedWorkArrangement(),
+                            teamMembers,
+                            itemCount: totalItems,
+                            category: reportCategory,
+                            reportTypeLabel: reportType.label,
+                            workflowStatus: selectedWorkflowStatus(),
+                            filename,
+                            pdfBase64,
+                            completedAt: new Date().toISOString()
+                        } })
+                    });
+                    if (!response.ok) {
+                        const details = await response.text();
+                        throw new Error('SAVE_FAILED:' + details);
+                    }
                     doc.save(filename);
                     removeToast(loadingToast);
-                    showToast('PDF downloaded successfully!', 'success');
+                    showToast('Report saved and PDF downloaded successfully!', 'success');
                 }
 
             } catch (err) {
