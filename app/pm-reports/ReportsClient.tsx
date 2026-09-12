@@ -111,7 +111,10 @@ const reportTime = (report: Report) => {
 const newestFirst = (left: Report, right: Report) => {
   const leftTime = reportTime(left);
   const rightTime = reportTime(right);
-  return rightTime.reportDate - leftTime.reportDate || rightTime.savedAt - leftTime.savedAt;
+  // A report completed later should appear first, even when both reports use
+  // the same job date. Fall back to the entered report date for recovered
+  // historical reports that do not have a saved timestamp.
+  return rightTime.savedAt - leftTime.savedAt || rightTime.reportDate - leftTime.reportDate;
 };
 
 export default function ReportsClient() {
@@ -269,7 +272,7 @@ export default function ReportsClient() {
       const current = groups.get(key);
       groups.set(key, {
         label: preferredTechnicianLabel(key, current && current.label.length <= technician.length ? current.label : technician),
-        histories: [...(current?.histories || []), history],
+        histories: [...(current?.histories || []), history].sort((left, right) => newestFirst(left.latest, right.latest)),
         reportCount: (current?.reportCount || 0) + history.reports.length,
       });
     });
