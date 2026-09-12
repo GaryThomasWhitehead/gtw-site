@@ -153,32 +153,59 @@ export default function ReportsClient() {
       const index: { id: string }[] = await listResponse.json();
       setLoadProgress({ loaded: 0, total: index.length });
       const chunks: string[][] = [];
-      for (let offset = 0; offset < index.length; offset += 5) {
-        chunks.push(index.slice(offset, offset + 5).map((item) => item.id));
+      for (let offset = 0; offset < index.length; offset += 3) {
+        chunks.push(index.slice(offset, offset + 3).map((item) => item.id));
       }
+      const failedIds: string[] = [];
+      const fetchChunk = async (ids: string[], attempts = 3): Promise<Report[] | null> => {
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          try {
+            const response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(ids.join(","))}`, { cache: "no-store" });
+            if (response.ok) return await response.json();
+          } catch (_) {}
+          if (attempt < attempts - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+          }
+        }
+        return null;
+      };
+      const addRows = (rows: Report[]) => {
+        setReports((current) => {
+          const existing = new Set(current.map((report) => report.id));
+          return [...current, ...rows.filter((report) => !existing.has(report.id))];
+        });
+        setLoadProgress((current) => ({ ...current, loaded: current.loaded + rows.length }));
+      };
       let nextChunk = 0;
-      const workers = Array.from({ length: Math.min(4, chunks.length) }, async () => {
+      const workers = Array.from({ length: Math.min(2, chunks.length) }, async () => {
         while (nextChunk < chunks.length) {
           const chunk = chunks[nextChunk++];
-          let response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(chunk.join(","))}`, { cache: "no-store" });
-          if (!response.ok) {
-            // A single unusually large report should not prevent the rest of
-            // the archive from loading. Retry that batch one report at a time.
-            for (const reportId of chunk) {
-              response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(reportId)}`, { cache: "no-store" });
-              if (!response.ok) throw new Error(await response.text());
-              const rows: Report[] = await response.json();
-              setReports((current) => [...current, ...rows]);
-              setLoadProgress((current) => ({ ...current, loaded: current.loaded + rows.length }));
+          const rows = await fetchChunk(chunk);
+          if (rows) {
+            addRows(rows);
+            const received = new Set(rows.map((report) => report.id));
+            const missing = chunk.filter((id) => !received.has(id));
+            for (const reportId of missing) {
+              const recovered = await fetchChunk([reportId]);
+              if (recovered?.length) addRows(recovered);
+              else failedIds.push(reportId);
             }
-          } else {
-            const rows: Report[] = await response.json();
-            setReports((current) => [...current, ...rows]);
-            setLoadProgress((current) => ({ ...current, loaded: current.loaded + rows.length }));
+            continue;
+          }
+          // A single unusually large report should not prevent the rest of
+          // the archive from loading. Retry every report separately and keep
+          // processing later batches even if one remains temporarily slow.
+          for (const reportId of chunk) {
+            const recovered = await fetchChunk([reportId]);
+            if (recovered?.length) addRows(recovered);
+            else failedIds.push(reportId);
           }
         }
       });
       await Promise.all(workers);
+      if (failedIds.length) {
+        setError(`${failedIds.length} report${failedIds.length === 1 ? " is" : "s are"} temporarily unavailable.`);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
