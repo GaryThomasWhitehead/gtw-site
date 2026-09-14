@@ -34,6 +34,18 @@ function isEmptyUnclassifiedOrder(order: WorkOrder) {
   return unclassified && missingLocation && !address;
 }
 
+function isInvalidNtsOrder(order: WorkOrder) {
+  if (String(order.status || "").trim().toUpperCase() !== "NTS") return false;
+  const trackingNumber = String(order.trackingNumber || "").trim();
+  const location = String(order.location || "").trim();
+  const classification = String(order.classOfWork || "").trim();
+  const description = String(order.jobDescription || "").trim();
+  const hasRealTrackingNumber = /^\d{6,12}$/.test(trackingNumber);
+  const hasLocation = Boolean(location) && !/^unassigned location$/i.test(location);
+  const hasJobDetails = (Boolean(classification) && !/^unclassified$/i.test(classification)) || description.length >= 10;
+  return !hasRealTrackingNumber || !hasLocation || !hasJobDetails;
+}
+
 function supabaseConfig() {
   return {
     url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -91,7 +103,7 @@ export async function PUT(request: NextRequest) {
   let ordersWithTrackingNumbers = 0;
 
   for (const order of orders as WorkOrder[]) {
-    if (isEmptyUnclassifiedOrder(order)) continue;
+    if (isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order)) continue;
     const trackingNumber = String(order.trackingNumber || order.id || "").trim();
     if (!trackingNumber) continue;
 

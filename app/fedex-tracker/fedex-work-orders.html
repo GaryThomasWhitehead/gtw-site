@@ -1392,6 +1392,18 @@
         return unclassified && missingLocation && !address;
       }
 
+      function isInvalidNtsOrder(order) {
+        if (String(order?.status || "").trim().toUpperCase() !== "NTS") return false;
+        const trackingNumber = String(order?.trackingNumber || "").trim();
+        const location = String(order?.location || "").trim();
+        const classification = String(order?.classOfWork || "").trim();
+        const description = String(order?.jobDescription || "").trim();
+        const hasRealTrackingNumber = /^\d{6,12}$/.test(trackingNumber);
+        const hasLocation = Boolean(location) && !/^unassigned location$/i.test(location);
+        const hasJobDetails = (Boolean(classification) && !/^unclassified$/i.test(classification)) || description.length >= 10;
+        return !hasRealTrackingNumber || !hasLocation || !hasJobDetails;
+      }
+
       function loadOrders() {
         const saved = localStorage.getItem(storageKey);
         if (!saved) {
@@ -1423,10 +1435,10 @@
           if (!response.ok) throw new Error(`Server returned ${response.status}`);
           const remoteOrders = await response.json();
           if (Array.isArray(remoteOrders) && remoteOrders.length) {
-            const emptyUnclassified = remoteOrders.filter(isEmptyUnclassifiedOrder);
-            orders = remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order));
-            if (emptyUnclassified.length) {
-              await deleteRemoteOrders(emptyUnclassified.map(order => order.trackingNumber || order.id));
+            const invalidOrders = remoteOrders.filter(order => isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order));
+            orders = remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order) && !isInvalidNtsOrder(order));
+            if (invalidOrders.length) {
+              await deleteRemoteOrders(invalidOrders.map(order => order.trackingNumber || order.id));
             }
             localStorage.setItem(storageKey, JSON.stringify(orders));
             selectedId = orders[0]?.id || null;
@@ -1918,7 +1930,7 @@
           notes: additionalNotes || sourceNotes.join("\n"),
           nextStep: getImportValue(row, ["nextStep", "NextStep", "Next Step"]) || (dueDate ? `Schedule with station by ${dueDate}.` : "Schedule with station.")
         };
-        return isEmptyUnclassifiedOrder(mapped) ? null : mapped;
+        return isEmptyUnclassifiedOrder(mapped) || isInvalidNtsOrder(mapped) ? null : mapped;
       }
 
       function upsertImportedOrders(importedOrders) {
