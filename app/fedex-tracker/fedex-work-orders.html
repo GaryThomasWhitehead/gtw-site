@@ -284,6 +284,21 @@
         border-color: var(--bad);
       }
 
+      .work-card.urgent-alert h3,
+      .work-card.urgent-alert p {
+        color: #8b0000;
+      }
+
+      .work-card.urgent-alert {
+        border-color: #b64040;
+        box-shadow: inset 4px 0 0 #8b0000;
+      }
+
+      .work-card.urgent-alert.active {
+        border-color: #8b0000;
+        box-shadow: inset 4px 0 0 #8b0000;
+      }
+
       .work-card h3 {
         margin: 0 0 6px;
         font-size: 15px;
@@ -395,6 +410,16 @@
       .mini-card.old-job {
         border-color: var(--bad);
         background: #fff5f5;
+      }
+
+      .mini-card.urgent-alert strong,
+      .mini-card.urgent-alert span {
+        color: #8b0000;
+      }
+
+      .mini-card.urgent-alert {
+        border-color: #b64040;
+        box-shadow: inset 4px 0 0 #8b0000;
       }
 
       .mini-card strong {
@@ -1647,7 +1672,7 @@
         const cardHtml = order => {
           const excerpt = searchResultExcerpt(order);
           return `
-          <button class="work-card ${order.id === selectedId ? "active" : ""} ${isOldJob(order) ? "old-job" : ""}" type="button" data-id="${order.id}">
+          <button class="work-card ${order.id === selectedId ? "active" : ""} ${isOldJob(order) ? "old-job" : ""} ${order.noActivityAlert ? "urgent-alert" : ""}" type="button" data-id="${order.id}">
             <div class="card-row">
               <h3>${escapeHtml(order.trackingNumber)} - ${escapeHtml(order.classOfWork || "Unclassified")}</h3>
               <span class="pill ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
@@ -1689,7 +1714,7 @@
         els.board.innerHTML = groups.map(status => {
           const items = pageOrders().filter(order => order.status === status);
           const cards = items.length ? items.map(order => `
-            <div class="mini-card ${isOldJob(order) ? "old-job" : ""}">
+            <div class="mini-card ${isOldJob(order) ? "old-job" : ""} ${order.noActivityAlert ? "urgent-alert" : ""}">
               <strong>${escapeHtml(order.trackingNumber)}</strong>
               <span>${escapeHtml(order.classOfWork || "Work order")} - ${escapeHtml(order.cost || "No cost")}${order.callDate ? ` - ${escapeHtml(order.callDate)}` : ""}</span>
               <span>${escapeHtml(order.nextStep || "No next step set")}</span>
