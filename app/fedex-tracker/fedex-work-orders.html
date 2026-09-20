@@ -1897,6 +1897,8 @@
       function mapImportedRow(row) {
         const trackingNumber = getImportValue(row, ["trackingNumber", "TrackingNumber", "Tracking #", "Tracking Number"]);
         if (!trackingNumber) return null;
+        const noActivityDays = getImportValue(row, ["Days of No activity", "Days of No Activity"]);
+        const isNoActivityAlert = Object.keys(row).some(key => /^days of no activity$/i.test(String(key).trim()));
         const rawStatus = getImportValue(row, ["status", "Status"]);
         const rawStatusExt = getImportValue(row, ["statusExt", "StatusExt", "Status Ext."]);
         const rawPriority = getImportValue(row, ["priority", "Priority"]);
@@ -1911,24 +1913,27 @@
           ["Equipment", getImportValue(row, ["Equipment"])],
           ["Source status", rawStatus],
           ["Status detail", rawStatusExt],
-          ["Source priority", rawPriority]
+          ["Source priority", rawPriority],
+          ["No activity alert", noActivityDays ? `${noActivityDays} days` : (isNoActivityAlert ? "Listed" : "")]
         ].filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`);
 
         const mapped = {
           id: row.id || crypto.randomUUID(),
           trackingNumber,
-          location: normalizeImportedLocation(getImportValue(row, ["location", "Location", "Locations ID // Name", "Store"])),
+          location: normalizeImportedLocation(getImportValue(row, ["location", "Location", "Location ID", "Locations ID // Name", "Store"])),
           address: getImportValue(row, ["address", "Address", "Location Address", "Site Address", "Street Address"]),
           classOfWork: toTitleCase(getImportValue(row, ["classOfWork", "ClassOfWork", "Class of Work", "Trade"])),
-          jobDescription: getImportValue(row, ["jobDescription", "JobDescription", "Job Description", "Problem Description"]),
+          jobDescription: getImportValue(row, ["jobDescription", "JobDescription", "Job Description", "Problem Description", "Problem"]),
           cost: formatImportedCost(nte),
           status: mapImportedStatus(rawStatus || getImportValue(row, ["Status"]), rawStatusExt),
-          priority: mapImportedPriority(rawPriority),
+          priority: isNoActivityAlert ? "High" : mapImportedPriority(rawPriority),
           assignedTo: getImportValue(row, ["assignedTo", "AssignedTo", "Assigned to Technician(s)", "Assignee"]),
           dueDate,
           callDate,
-          notes: additionalNotes || sourceNotes.join("\n"),
-          nextStep: getImportValue(row, ["nextStep", "NextStep", "Next Step"]) || (dueDate ? `Schedule with station by ${dueDate}.` : "Schedule with station.")
+          notes: [additionalNotes, ...sourceNotes].filter(Boolean).join("\n"),
+          nextStep: isNoActivityAlert
+            ? `URGENT: Follow up now${noActivityDays ? ` — ${noActivityDays} days with no activity` : ""}.`
+            : (getImportValue(row, ["nextStep", "NextStep", "Next Step"]) || (dueDate ? `Schedule with station by ${dueDate}.` : "Schedule with station."))
         };
         return isEmptyUnclassifiedOrder(mapped) || isInvalidNtsOrder(mapped) ? null : mapped;
       }
@@ -1951,11 +1956,15 @@
             jobDescription: imported.jobDescription || orders[index].jobDescription,
             cost: imported.cost || orders[index].cost,
             status: imported.status || orders[index].status,
+            priority: imported.priority === "High" ? "High" : (orders[index].priority || imported.priority),
             dueDate: imported.dueDate || orders[index].dueDate,
             callDate: imported.callDate || orders[index].callDate,
             assignedTo: orders[index].assignedTo || imported.assignedTo,
-            notes: orders[index].notes || imported.notes,
-            nextStep: orders[index].nextStep || imported.nextStep
+            notes: [orders[index].notes, imported.notes]
+              .filter(Boolean)
+              .filter((value, noteIndex, values) => values.indexOf(value) === noteIndex)
+              .join("\n"),
+            nextStep: imported.priority === "High" ? imported.nextStep : (orders[index].nextStep || imported.nextStep)
           };
           updated += 1;
         });
