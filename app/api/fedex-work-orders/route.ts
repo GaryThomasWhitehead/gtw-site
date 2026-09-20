@@ -144,6 +144,74 @@ export async function PUT(request: NextRequest) {
   });
 }
 
+export async function PATCH(request: NextRequest) {
+  if (!hasFedExTrackerAccess(request)) return unauthorized();
+  const { url, key, table } = supabaseConfig();
+  if (!url || !key) return missingConfig();
+
+  const body = await request.json().catch(() => ({}));
+  const alerts = Array.isArray(body?.noActivityAlerts) ? body.noActivityAlerts : [];
+  if (!alerts.length) {
+    return NextResponse.json({ error: "Expected no-activity alert records." }, { status: 400 });
+  }
+
+  const allowedFields = ["location", "classOfWork", "jobDescription", "callDate", "dueDate"];
+  const updatedAt = new Date().toISOString();
+  const rows: Array<{ tracking_number: string; data: WorkOrder; updated_at: string }> = [];
+  let matched = 0;
+  let created = 0;
+
+  for (const alert of alerts as WorkOrder[]) {
+    const trackingNumber = String(alert.trackingNumber || "").trim();
+    if (!trackingNumber) continue;
+
+    const lookup = await fetch(
+      `${url}/rest/v1/${table}?select=data&tracking_number=eq.${encodeURIComponent(trackingNumber)}&limit=1`,
+      { headers: headers(key), cache: "no-store" }
+    );
+    if (!lookup.ok) {
+      return NextResponse.json({ error: await lookup.text() }, { status: lookup.status });
+    }
+    const existingRows = await lookup.json() as Array<{ data?: WorkOrder }>;
+    const existing = existingRows[0]?.data || {};
+    if (existingRows.length) matched += 1;
+    else created += 1;
+
+    const data: WorkOrder = { ...existing };
+    data.id = data.id || crypto.randomUUID();
+    data.trackingNumber = trackingNumber;
+    for (const field of allowedFields) {
+      if (!hasImportValue(data[field]) && hasImportValue(alert[field])) data[field] = alert[field];
+    }
+    if (!hasImportValue(data.status) || String(data.status).toUpperCase() === "NTS") data.status = "Scheduled";
+    data.priority = "High";
+    data.noActivityAlert = true;
+    data.noActivityDays = alert.noActivityDays;
+    data.urgentReason = "Listed on the ServiceChannel No Activity Alert report";
+    data.nextStep = alert.nextStep || "URGENT: Follow up now.";
+
+    const alertNote = String(alert.alertNote || "").trim();
+    const currentNotes = String(data.notes || "").trim();
+    if (alertNote && !currentNotes.includes(alertNote)) {
+      data.notes = [currentNotes, alertNote].filter(Boolean).join("\n");
+    }
+    rows.push({ tracking_number: trackingNumber, data, updated_at: updatedAt });
+  }
+
+  for (let index = 0; index < rows.length; index += 75) {
+    const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+      method: "POST",
+      headers: { ...headers(key), Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(rows.slice(index, index + 75))
+    });
+    if (!response.ok) {
+      return NextResponse.json({ error: await response.text(), savedBeforeError: index }, { status: response.status });
+    }
+  }
+
+  return NextResponse.json({ ok: true, updated: rows.length, matched, created });
+}
+
 export async function DELETE(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return unauthorized();
   const { url, key, table } = supabaseConfig();
