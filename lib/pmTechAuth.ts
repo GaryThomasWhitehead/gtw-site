@@ -6,7 +6,7 @@ const COOKIE_NAME = "frontline_report_tech";
 type TechSession = { id: string; name: string; exp: number };
 
 function secret() {
-  return process.env.PM_TECH_SESSION_SECRET || process.env.FEDEX_TRACKER_PASSWORD || "";
+  return process.env.PM_TECH_SESSION_SECRET || "";
 }
 
 function signature(value: string) {
