@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { expectedFedExTrackerPassword, fedExTrackerCookieName, fedExTrackerCookieValue } from "@/lib/fedexTrackerAuth";
+import { fedExTrackerCookieName, isFedExTrackerSessionValid } from "@/lib/fedexTrackerAuth";
 
 export const metadata = {
   title: "Housecall Pro Export Instructions | Frontline Pro Services",
@@ -30,7 +30,7 @@ const requiredColumns = [
 
 export default async function HcpInstructionsPage() {
   const cookieStore = await cookies();
-  const hasAccess = Boolean(expectedFedExTrackerPassword()) && cookieStore.get(fedExTrackerCookieName())?.value === fedExTrackerCookieValue();
+  const hasAccess = isFedExTrackerSessionValid(cookieStore.get(fedExTrackerCookieName())?.value || "");
   if (!hasAccess) redirect("/fedex-tracker");
 
   return <><link rel="stylesheet" href="/fedex-instructions.css" /><main className="instructionsShell">
