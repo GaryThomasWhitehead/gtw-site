@@ -29,9 +29,8 @@ export function expectedFedExTrackerPassword() {
   return process.env.FEDEX_TRACKER_PASSWORD || "";
 }
 
-export function hasFedExTrackerAccess(request: NextRequest) {
+export function isFedExTrackerSessionValid(raw: string) {
   if (!sessionSecret()) return false;
-  const raw = request.cookies.get(COOKIE_NAME)?.value || "";
   const [encoded, supplied] = raw.split(".");
   if (!encoded || !supplied) return false;
   const expected = signature(encoded);
@@ -44,4 +43,8 @@ export function hasFedExTrackerAccess(request: NextRequest) {
   } catch {
     return false;
   }
+}
+
+export function hasFedExTrackerAccess(request: NextRequest) {
+  return isFedExTrackerSessionValid(request.cookies.get(COOKIE_NAME)?.value || "");
 }
