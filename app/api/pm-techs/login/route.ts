@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPmTechSession, hashTechPin, pmTechCookieName, validatePmTechSession } from "@/lib/pmTechAuth";
+import { createPmTechSession, hashLegacyTechPin, hashTechPin, pmTechCookieName, validatePmTechSession } from "@/lib/pmTechAuth";
 import { checkLoginRateLimit, clearLoginFailures, recordLoginFailure } from "@/lib/loginRateLimit";
 
 function config() {
@@ -44,12 +44,23 @@ export async function POST(request: NextRequest) {
   if (!response.ok) return NextResponse.json({ error: "Could not check technician access" }, { status: 502 });
   const rows = await response.json() as Array<{ data?: { id?: string; name?: string; pinHash?: string; active?: boolean } }>;
   const pinHash = hashTechPin(pin);
-  const tech = rows.map((row) => row.data).find((item) => item?.active !== false && item?.pinHash === pinHash);
+  const legacyPinHash = hashLegacyTechPin(pin);
+  const tech = rows.map((row) => row.data).find((item) =>
+    item?.active !== false && (item?.pinHash === pinHash || Boolean(legacyPinHash && item?.pinHash === legacyPinHash))
+  );
   if (!tech?.id || !tech.name) {
     await recordLoginFailure(request, "pm-tech");
     return wantsJson
       ? NextResponse.json({ error: "That technician code is not active" }, { status: 401 })
       : NextResponse.redirect(new URL(`/pm-tech-login?error=1&return=${encodeURIComponent(returnTo)}`, request.url), { status: 303 });
+  }
+  if (tech.pinHash !== pinHash) {
+    const migratedData = { ...tech, pinHash };
+    await fetch(`${url}/rest/v1/${table}?tracking_number=eq.${encodeURIComponent(`PMTECH:${tech.id}`)}`, {
+      method: "PATCH",
+      headers: { ...headers(key), "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ data: migratedData, updated_at: new Date().toISOString() }),
+    });
   }
   await clearLoginFailures(request, "pm-tech");
   const result = wantsJson

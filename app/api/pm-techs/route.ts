@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
-import { hashTechPin } from "@/lib/pmTechAuth";
+import { hashLegacyTechPin, hashTechPin } from "@/lib/pmTechAuth";
 
 function config() {
   return {
@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
   const existingResponse = await fetch(`${url}/rest/v1/${table}?${existingParams}`, { headers: apiHeaders(key), cache: "no-store" });
   const existing = existingResponse.ok ? await existingResponse.json() as Array<{ data?: { pinHash?: string } }> : [];
   const pinHash = hashTechPin(pin);
-  if (existing.some((row) => row.data?.pinHash === pinHash)) return NextResponse.json({ error: "That four-digit code is already assigned" }, { status: 409 });
+  const legacyPinHash = hashLegacyTechPin(pin);
+  if (existing.some((row) => row.data?.pinHash === pinHash || Boolean(legacyPinHash && row.data?.pinHash === legacyPinHash))) {
+    return NextResponse.json({ error: "That four-digit code is already assigned" }, { status: 409 });
+  }
   const id = randomUUID();
   const data = { id, name, pinHash, active: true, recordType: "pm-tech", createdAt: new Date().toISOString() };
   const response = await fetch(`${url}/rest/v1/${table}`, {

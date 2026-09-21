@@ -9,12 +9,23 @@ function secret() {
   return process.env.PM_TECH_SESSION_SECRET || "";
 }
 
+function pinSecret() {
+  return process.env.PM_TECH_PIN_SECRET || process.env.FEDEX_TRACKER_PASSWORD || "";
+}
+
 function signature(value: string) {
   return createHmac("sha256", secret()).update(value).digest("base64url");
 }
 
 export function hashTechPin(pin: string) {
-  return createHmac("sha256", secret()).update(`pm-tech-pin:${pin}`).digest("hex");
+  return createHmac("sha256", pinSecret()).update(`pm-tech-pin:${pin}`).digest("hex");
+}
+
+export function hashLegacyTechPin(pin: string) {
+  const legacySecret = process.env.FEDEX_TRACKER_PASSWORD || "";
+  return legacySecret
+    ? createHmac("sha256", legacySecret).update(`pm-tech-pin:${pin}`).digest("hex")
+    : "";
 }
 
 export function pmTechCookieName() {
