@@ -1,4 +1,4 @@
-﻿# FedEx Tracker Vercel + Supabase Setup
+# FedEx Tracker Vercel + Supabase Setup
 
 Hidden route after deploy:
 
@@ -11,6 +11,8 @@ This route is not linked from the public navigation.
 Add these in Vercel Project Settings > Environment Variables:
 
 - `FEDEX_TRACKER_PASSWORD` = the password users enter to open the tracker
+- `FEDEX_TRACKER_SESSION_SECRET` = a unique random value of at least 32 bytes used to sign management sessions
+- `PM_TECH_SESSION_SECRET` = a different unique random value of at least 32 bytes used to sign technician sessions
 - `SUPABASE_URL` = your Supabase project URL
 - `SUPABASE_SERVICE_ROLE_KEY` = Supabase service role key, server-side only
 - `FEDEX_TRACKER_TABLE` = `fedex_work_orders` unless you rename the table
@@ -32,7 +34,8 @@ create table if not exists fedex_work_orders (
 ## How it works
 
 - `/fedex-tracker` asks for the tracker password.
-- After login, it serves the existing HTML tracker interface.
+- After login, it issues a signed, HTTP-only session cookie valid for 12 hours and serves the existing HTML tracker interface.
+- Failed management and technician logins are limited to five attempts per IP address in a 15-minute window.
 - The tracker loads/saves through `/api/fedex-work-orders`.
 - The API uses Supabase server-side, so the private Supabase service key is not exposed in the browser.
 - Daily imports still merge by tracking number using the existing tracker behavior.
@@ -47,3 +50,13 @@ vercel --prod
 ```
 
 Or push/deploy using the Vercel workflow already connected to this project.
+
+## Generate session secrets
+
+Generate two different secrets and store them only in Vercel Environment Variables. For example:
+
+```bash
+openssl rand -base64 48
+```
+
+Run the command twice. Do not commit either result to Git.
