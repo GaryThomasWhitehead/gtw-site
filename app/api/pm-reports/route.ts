@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { expectedFedExTrackerPassword, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { validatePmTechSession } from "@/lib/pmTechAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,10 @@ async function fetchWithRetry(input: string, init: RequestInit, attempts = 3) {
 
 export async function POST(request: NextRequest) {
   try {
+    const technician = await validatePmTechSession(request);
+    if (!hasFedExTrackerAccess(request) && !technician) {
+      return NextResponse.json({ error: "Technician or management sign-in required" }, { status: 401 });
+    }
     const { url, key, table } = config();
     if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
     const body = await request.json();
