@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { expectedFedExTrackerPassword, fedExTrackerCookieName, fedExTrackerCookieValue } from "@/lib/fedexTrackerAuth";
+import { fedExTrackerCookieName, isFedExTrackerSessionValid } from "@/lib/fedexTrackerAuth";
 import InvoiceReviewClient from "./InvoiceReviewClient";
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function InvoiceReviewPage() {
   const cookieStore = await cookies();
-  const hasAccess = Boolean(expectedFedExTrackerPassword()) && cookieStore.get(fedExTrackerCookieName())?.value === fedExTrackerCookieValue();
+  const hasAccess = isFedExTrackerSessionValid(cookieStore.get(fedExTrackerCookieName())?.value || "");
   if (!hasAccess) redirect("/fedex-tracker");
   return <InvoiceReviewClient />;
 }
