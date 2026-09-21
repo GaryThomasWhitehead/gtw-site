@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPmTechSession, hashTechPin, pmTechCookieName, validatePmTechSession } from "@/lib/pmTechAuth";
+import { checkLoginRateLimit, clearLoginFailures, recordLoginFailure } from "@/lib/loginRateLimit";
 
 function config() {
   return {
@@ -19,8 +20,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limit = await checkLoginRateLimit(request, "pm-tech");
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
   const { url, key, table } = config();
-  if (!url || !key) return NextResponse.json({ error: "Technician access is not configured" }, { status: 503 });
+  if (!url || !key || !process.env.PM_TECH_SESSION_SECRET) return NextResponse.json({ error: "Technician access is not configured" }, { status: 503 });
   const contentType = request.headers.get("content-type") || "";
   const input = contentType.includes("application/json") ? await request.json() : Object.fromEntries(await request.formData());
   const pin = String(input.pin || "").trim();
@@ -38,10 +46,12 @@ export async function POST(request: NextRequest) {
   const pinHash = hashTechPin(pin);
   const tech = rows.map((row) => row.data).find((item) => item?.active !== false && item?.pinHash === pinHash);
   if (!tech?.id || !tech.name) {
+    await recordLoginFailure(request, "pm-tech");
     return wantsJson
       ? NextResponse.json({ error: "That technician code is not active" }, { status: 401 })
       : NextResponse.redirect(new URL(`/pm-tech-login?error=1&return=${encodeURIComponent(returnTo)}`, request.url), { status: 303 });
   }
+  await clearLoginFailures(request, "pm-tech");
   const result = wantsJson
     ? NextResponse.json({ ok: true, id: tech.id, name: tech.name })
     : NextResponse.redirect(new URL(returnTo.startsWith("/") ? returnTo : "/pm-report", request.url), { status: 303 });
