@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { track } from "@vercel/analytics";
 import MoreMenu from "@/components/MoreMenu";
+import PayPalDonation from "@/components/PayPalDonation";
 
 export default function Home() {
   const [visits, setVisits] = useState<number | null>(null);
@@ -371,6 +372,7 @@ export default function Home() {
           >
             Donate (Square)
           </a>
+          <PayPalDonation />
         </div>
       </section>
 
