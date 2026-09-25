@@ -19,6 +19,16 @@ type TuggerWorkRecord = {
   serialNumber?: string;
   legacy?: boolean;
 };
+type GasCalibrationSheet = {
+  manufacturer?: string;
+  model?: string;
+  serial?: string;
+  gas?: string;
+  tag?: string;
+  range?: string;
+  gasStandard?: string;
+  notes?: string;
+};
 type Report = {
   id: string;
   category?: string;
@@ -36,6 +46,12 @@ type Report = {
   partsNotes?: string;
   workArrangement?: "alone" | "team";
   teamMembers?: string;
+  calibrationSheets?: GasCalibrationSheet[];
+  manufacturer?: string;
+  model?: string;
+  serialNumber?: string;
+  sensorType?: string;
+  sensorTag?: string;
   savedAt?: string;
 };
 type JobHistory = { key: string; latest: Report; reports: Report[]; status: WorkflowStatus };
@@ -123,6 +139,7 @@ export default function ReportsClient() {
   const [tab, setTab] = useState<Category>("all");
   const [statusTab, setStatusTab] = useState<WorkflowStatus>("complete");
   const [tuggerView, setTuggerView] = useState<TuggerView>("reports");
+  const [gasView, setGasView] = useState<TuggerView>("reports");
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
   const [editingPdfId, setEditingPdfId] = useState("");
@@ -215,6 +232,12 @@ export default function ReportsClient() {
   }, []);
 
   useEffect(() => { void loadReports(); }, [loadReports]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("category") === "gas") setTab("gas");
+    if (params.get("category") === "gas" && params.get("view") === "history") setGasView("history");
+  }, []);
 
   useEffect(() => {
     fetch("/api/pm-report-attachments", { cache: "no-store" })
@@ -344,7 +367,33 @@ export default function ReportsClient() {
         }),
     [jobHistories, query, statusTab],
   );
-  const historyMode = tab === "tugger" && tuggerView === "history";
+  const gasHistory = useMemo(
+    () =>
+      jobHistories
+        .filter((history) => categoryOf(history.latest) === "gas" && history.status === statusTab)
+        .flatMap((history) => history.reports)
+        .flatMap((report) => {
+          const sheets = report.calibrationSheets?.length
+            ? report.calibrationSheets
+            : [{ manufacturer: "", model: "", serial: "", gas: "", tag: "", gasStandard: "", notes: "" }];
+          return sheets.map((sheet, index) => ({ sheet, report, index }));
+        })
+        .filter(({ sheet, report }) => {
+          if (reportMatches(report, query)) return true;
+          const plainQuery = query.trim().toLowerCase();
+          const compactQuery = normalizedSearch(query);
+          return [sheet.tag, sheet.manufacturer, sheet.model, sheet.serial, sheet.gas, sheet.gasStandard, sheet.notes]
+            .some((term) => {
+              const value = String(term || "");
+              return value.toLowerCase().includes(plainQuery) ||
+                (compactQuery && normalizedSearch(value).includes(compactQuery));
+            });
+        })
+        .sort((left, right) => newestFirst(left.report, right.report)),
+    [jobHistories, query, statusTab],
+  );
+  const tuggerHistoryMode = tab === "tugger" && tuggerView === "history";
+  const gasHistoryMode = tab === "gas" && gasView === "history";
 
   async function deleteReport(report: Report) {
     const label = report.trackingNumber || report.facilityId || "this report";
@@ -665,13 +714,25 @@ export default function ReportsClient() {
             </button>
           </div>
         )}
+        {tab === "gas" && (
+          <div className={styles.subtabs}>
+            <button className={gasView === "reports" ? styles.activeSubtab : ""} onClick={() => setGasView("reports")}>
+              Completed Gas Sensor Reports
+            </button>
+            <button className={gasView === "history" ? styles.activeSubtab : ""} onClick={() => setGasView("history")}>
+              Gas Sensor Work History
+            </button>
+          </div>
+        )}
 
         <div className={styles.summary}>
           <div>
-            <strong>{historyMode ? tuggerHistory.length : shown.length}</strong>
+            <strong>{tuggerHistoryMode ? tuggerHistory.length : gasHistoryMode ? gasHistory.length : shown.length}</strong>
             <span>
-              {historyMode
+              {tuggerHistoryMode
                 ? "tuggers worked on"
+                : gasHistoryMode
+                  ? "sensor service records"
                 : tab === "all"
                   ? "completed jobs"
                   : TABS.find((item) => item.key === tab)?.label}
@@ -680,8 +741,10 @@ export default function ReportsClient() {
           <input
             aria-label="Search reports"
             placeholder={
-              historyMode
+              tuggerHistoryMode
                 ? "Search technician, tracking, tugger, serial…"
+                : gasHistoryMode
+                  ? "Search location ID, sensor tag, serial…"
                 : "Search technician or tracking number…"
             }
             value={query}
@@ -703,7 +766,32 @@ export default function ReportsClient() {
           </p>
         )}
 
-        {historyMode ? (
+        {gasHistoryMode ? (
+          <div className={styles.gasHistoryWrap}>
+            <table className={styles.gasHistoryTable}>
+              <thead><tr><th>Date</th><th>Location ID</th><th>Address</th><th>Sensor Location / Tag</th><th>Manufacturer</th><th>Model</th><th>Serial #</th><th>Target Gas</th><th>Gas Standard</th><th>Technician</th><th>Tracking #</th><th>Notes</th><th>Report</th></tr></thead>
+              <tbody>
+                {gasHistory.map(({ sheet, report, index }) => (
+                  <tr key={`${report.id}-sensor-${index}`}>
+                    <td>{report.reportDate || "—"}</td>
+                    <td><strong>{report.facilityId || report.customerName || "—"}</strong></td>
+                    <td>{report.facilityAddress || "—"}</td>
+                    <td>{sheet.tag || report.sensorTag || "See PDF"}</td>
+                    <td>{sheet.manufacturer || report.manufacturer || "See PDF"}</td>
+                    <td>{sheet.model || report.model || "See PDF"}</td>
+                    <td>{sheet.serial || report.serialNumber || "See PDF"}</td>
+                    <td>{sheet.gas || report.sensorType || "See PDF"}</td>
+                    <td>{sheet.gasStandard || "See PDF"}</td>
+                    <td>{report.technician || "—"}</td>
+                    <td>{report.trackingNumber || "—"}</td>
+                    <td className={styles.description}>{sheet.notes || "—"}</td>
+                    <td><a target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}>View PDF</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : tuggerHistoryMode ? (
           <div className={styles.historyWrap}>
             <table className={styles.historyTable}>
               <thead>
@@ -865,10 +953,12 @@ export default function ReportsClient() {
           </div>
         )}
 
-        {!loadingReports && !error && (historyMode ? tuggerHistory.length === 0 : shown.length === 0) && (
+        {!loadingReports && !error && (tuggerHistoryMode ? tuggerHistory.length === 0 : gasHistoryMode ? gasHistory.length === 0 : shown.length === 0) && (
           <p className={styles.empty}>
-            {historyMode
+            {tuggerHistoryMode
               ? "No Tugger work-history records yet. New completed Tugger reports will be added automatically."
+              : gasHistoryMode
+                ? "No Gas Sensor work-history records found for this location or search."
               : "No completed reports found in this category."}
           </p>
         )}

@@ -188,6 +188,7 @@ export async function GET(request: NextRequest) {
     "serialNumber:data->>serialNumber",
     "sensorType:data->>sensorType",
     "sensorTag:data->>sensorTag",
+    "calibrationSheets:data->calibrationSheets",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {
