@@ -125,6 +125,7 @@ export default function ReportsClient() {
   const [tuggerView, setTuggerView] = useState<TuggerView>("reports");
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
+  const [editingPdfId, setEditingPdfId] = useState("");
   const [updatingId, setUpdatingId] = useState("");
   const [savingNoteId, setSavingNoteId] = useState("");
   const [partsNoteDrafts, setPartsNoteDrafts] = useState<Record<string, string>>({});
@@ -365,6 +366,50 @@ export default function ReportsClient() {
       );
     } finally {
       setDeletingId("");
+    }
+  }
+
+  async function deletePdfPages(report: Report) {
+    const entered = prompt("Enter the PDF page number(s) to delete. Use commas or a range, for example: 2,4 or 2-4");
+    if (!entered) return;
+    const pages = new Set<number>();
+    for (const token of entered.split(/[\s,]+/).filter(Boolean)) {
+      const range = token.match(/^(\d+)-(\d+)$/);
+      if (range) {
+        const start = Number(range[1]);
+        const end = Number(range[2]);
+        if (start < 1 || end < start || end - start > 100) {
+          setError("Enter valid page numbers, such as 2,4 or 2-4.");
+          return;
+        }
+        for (let page = start; page <= end; page += 1) pages.add(page);
+      } else if (/^\d+$/.test(token) && Number(token) > 0) {
+        pages.add(Number(token));
+      } else {
+        setError("Enter valid page numbers, such as 2,4 or 2-4.");
+        return;
+      }
+    }
+    const selectedPages = Array.from(pages).sort((a, b) => a - b);
+    if (!selectedPages.length) return;
+    if (!confirm(`Delete PDF page${selectedPages.length === 1 ? "" : "s"} ${selectedPages.join(", ")} from ${report.trackingNumber || "this report"}? This cannot be undone.`)) return;
+    const password = prompt("Enter the management password to edit this completed PDF:");
+    if (!password) return;
+    setEditingPdfId(report.id);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-management-password": password },
+        body: JSON.stringify({ id: report.id, deletePdfPages: selectedPages }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result?.error || "Could not edit PDF");
+      alert(`PDF updated. ${result.pdfPageCount} page${result.pdfPageCount === 1 ? " remains" : "s remain"}.`);
+    } catch (cause) {
+      setError(`Could not delete PDF page: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setEditingPdfId("");
     }
   }
 
@@ -792,6 +837,9 @@ export default function ReportsClient() {
                         >
                           View PDF
                         </a>
+                        <button type="button" className={styles.editPdfButton} disabled={editingPdfId === report.id} onClick={() => void deletePdfPages(report)}>
+                          {editingPdfId === report.id ? "Updating PDF…" : "Delete PDF Page"}
+                        </button>
                         {report.fedexJob !== false && (
                           <button type="button" className={styles.editCustomerButton} disabled={updatingId === report.id} onClick={() => void editFedExTrackingNumber(report)}>
                             Edit Tracking #

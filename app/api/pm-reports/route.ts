@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
+import { PDFDocument } from "pdf-lib";
 import { expectedFedExTrackerPassword, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
 
@@ -231,8 +232,12 @@ export async function PATCH(request: NextRequest) {
   const partsNotesUpdate = body?.partsNotes === undefined ? undefined : String(body.partsNotes).trim();
   const fedexJobUpdate = body?.fedexJob === undefined ? undefined : Boolean(body.fedexJob);
   const customerNameUpdate = body?.customerName === undefined ? undefined : String(body.customerName).trim();
+  const rawDeletePdfPages: unknown[] = Array.isArray(body?.deletePdfPages) ? body.deletePdfPages : [];
+  const deletePdfPages: number[] = Array.from(new Set<number>(
+    rawDeletePdfPages.map((page) => Number(page)).filter((page) => Number.isInteger(page) && page > 0),
+  )).sort((a, b) => a - b);
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
-  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && !["complete", "parts", "return"].includes(workflowStatus)) {
+  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
   }
   if (trackingNumberUpdate !== undefined && !trackingNumberUpdate) {
@@ -247,6 +252,12 @@ export async function PATCH(request: NextRequest) {
   if (customerNameUpdate !== undefined && customerNameUpdate.length > 250) {
     return NextResponse.json({ error: "Customer name must be 250 characters or fewer" }, { status: 400 });
   }
+  if (deletePdfPages.length) {
+    const password = request.headers.get("x-management-password") || "";
+    if (!expectedFedExTrackerPassword() || password !== expectedFedExTrackerPassword()) {
+      return NextResponse.json({ error: "Incorrect management password" }, { status: 403 });
+    }
+  }
   const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
   const currentResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
     headers: apiHeaders(key),
@@ -255,6 +266,31 @@ export async function PATCH(request: NextRequest) {
   if (!currentResponse.ok) return NextResponse.json({ error: await currentResponse.text() }, { status: currentResponse.status });
   const rows = await currentResponse.json();
   if (!rows.length) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  let pdfUpdate: Record<string, unknown> = {};
+  if (deletePdfPages.length) {
+    const originalBase64 = String(rows[0].data?.pdfBase64 || "");
+    if (!originalBase64) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 400 });
+    try {
+      const pdf = await PDFDocument.load(Buffer.from(originalBase64, "base64"));
+      const pageCount = pdf.getPageCount();
+      const unavailable = deletePdfPages.filter((page) => page > pageCount);
+      if (unavailable.length) {
+        return NextResponse.json({ error: `This PDF has ${pageCount} page${pageCount === 1 ? "" : "s"}. Page ${unavailable.join(", ")} cannot be deleted.` }, { status: 400 });
+      }
+      if (deletePdfPages.length >= pageCount) {
+        return NextResponse.json({ error: "A report must keep at least one PDF page" }, { status: 400 });
+      }
+      [...deletePdfPages].sort((a, b) => b - a).forEach((page) => pdf.removePage(page - 1));
+      const updatedPdf = await pdf.save();
+      pdfUpdate = {
+        pdfBase64: Buffer.from(updatedPdf).toString("base64"),
+        pdfPageCount: pdf.getPageCount(),
+        pdfEditedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      return NextResponse.json({ error: `Could not edit this PDF: ${error instanceof Error ? error.message : String(error)}` }, { status: 400 });
+    }
+  }
   const updatedData = {
     ...rows[0].data,
     ...(workflowStatus ? { workflowStatus } : {}),
@@ -262,6 +298,7 @@ export async function PATCH(request: NextRequest) {
     ...(partsNotesUpdate !== undefined ? { partsNotes: partsNotesUpdate } : {}),
     ...(fedexJobUpdate !== undefined ? { fedexJob: fedexJobUpdate } : {}),
     ...(customerNameUpdate !== undefined ? { customerName: customerNameUpdate } : {}),
+    ...pdfUpdate,
   };
   const updateResponse = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
     method: "PATCH",
@@ -269,7 +306,7 @@ export async function PATCH(request: NextRequest) {
     body: JSON.stringify({ data: updatedData, updated_at: new Date().toISOString() }),
   });
   if (!updateResponse.ok) return NextResponse.json({ error: await updateResponse.text() }, { status: updateResponse.status });
-  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName });
+  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, pdfPageCount: updatedData.pdfPageCount });
 }
 
 export async function DELETE(request: NextRequest) {
