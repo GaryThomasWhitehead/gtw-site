@@ -196,6 +196,11 @@
                         </label>
                     </div>
                 </fieldset>
+                <div class="md:col-span-2 no-print rounded-xl border border-field-border bg-field-bg p-4">
+                    <label for="report-supporting-files" class="block text-sm font-semibold text-navy-700 mb-2">Supporting Documents, Spreadsheets, or Pictures <span class="text-navy-300 font-normal">(optional)</span></label>
+                    <input id="report-supporting-files" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain" class="block w-full text-sm" />
+                    <p id="report-supporting-file-list" class="mt-2 text-xs text-navy-400">Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.</p>
+                </div>
                 <div id="team-members-group" class="md:col-span-2 hidden">
                     <label for="team-members-input" class="block text-sm font-medium text-navy-700 mb-1.5">Other Technician Names <span class="text-danger-500">*</span></label>
                     <input id="team-members-input" type="text" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300" placeholder="Enter everyone who worked with you" />
@@ -424,6 +429,29 @@
         const savedBadge = document.getElementById('saved-badge-r2t5');
         const toastContainer = document.getElementById('toast-container-q8w3');
         const itemTemplate = document.getElementById('item-template-a3b4');
+        const reportSupportingFilesInput = document.getElementById('report-supporting-files');
+        const reportSupportingFileList = document.getElementById('report-supporting-file-list');
+        let reportSupportingFiles = [];
+
+        reportSupportingFilesInput.addEventListener('change', () => {
+            reportSupportingFiles = Array.from(reportSupportingFilesInput.files || []).slice(0, 5);
+            reportSupportingFileList.textContent = reportSupportingFiles.length
+                ? reportSupportingFiles.map(file => file.name).join(' • ')
+                : 'Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.';
+            if ((reportSupportingFilesInput.files || []).length > 5) showToast('Only the first 5 supporting files will be uploaded.', 'info');
+        });
+
+        async function uploadSupportingFiles(savedReportId, trackingNumber) {
+            for (const file of reportSupportingFiles) {
+                if (file.size > 3750000) throw new Error('ATTACH_FAILED:' + file.name + ' is larger than 3.5 MB.');
+                const form = new FormData();
+                form.set('reportId', savedReportId);
+                form.set('trackingNumber', trackingNumber);
+                form.set('file', file);
+                const response = await fetch('/api/pm-report-attachments', { method: 'POST', body: form });
+                if (!response.ok) throw new Error('ATTACH_FAILED:' + file.name + ' — ' + await response.text());
+            }
+        }
 
         function selectedWorkflowStatus() {
             return workflowStatusInputs.find(input => input.checked)?.value || 'complete';
@@ -1211,8 +1239,9 @@
                         const details = await response.text();
                         throw new Error('SAVE_FAILED:' + details);
                     }
+                    await uploadSupportingFiles(reportId, trackingNum);
                     removeToast(loadingToast);
-                    showToast('Completed report saved. It is now available under Completed Reports.', 'success');
+                    showToast('Completed report and supporting files saved. It is now available under Completed Reports.', 'success');
                 } else if (mode === 'share') {
                     const pdfBase64 = await blobToBase64(doc.output('blob'));
                     const archiveResponse = await fetch('/api/pm-reports', {
@@ -1242,6 +1271,7 @@
                         const details = await archiveResponse.text();
                         throw new Error('SAVE_FAILED:' + details);
                     }
+                    await uploadSupportingFiles(reportId, trackingNum);
                     const response = await fetch('/api/pm-reports/email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1294,6 +1324,7 @@
                         const details = await response.text();
                         throw new Error('SAVE_FAILED:' + details);
                     }
+                    await uploadSupportingFiles(reportId, trackingNum);
                     doc.save(filename);
                     removeToast(loadingToast);
                     showToast('Report saved and PDF downloaded successfully!', 'success');
@@ -1309,6 +1340,8 @@
                 removeToast(loadingToast);
                 if (String(err && err.message || '').startsWith('EMAIL_FAILED:')) {
                     showToast('The report email could not be sent. Please try again.', 'error');
+                } else if (String(err && err.message || '').startsWith('ATTACH_FAILED:')) {
+                    showToast('The report was saved, but a supporting file could not be uploaded. ' + String(err.message).replace('ATTACH_FAILED:', '').slice(0, 180), 'error');
                 } else if (mode === 'complete' || String(err && err.message || '').startsWith('SAVE_FAILED:')) {
                     const detail = String(err && err.message || '').replace('SAVE_FAILED:', '');
                     showToast('The PDF was created, but the completed report could not be saved.' + (detail ? ' ' + detail.slice(0, 180) : ''), 'error');
@@ -1339,6 +1372,9 @@
             updateTeamFields();
             updateJobTypeFields();
             setWorkflowStatus('complete');
+            reportSupportingFiles = [];
+            reportSupportingFilesInput.value = '';
+            reportSupportingFileList.textContent = 'Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.';
 
             [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput].forEach(clearFieldError);
 

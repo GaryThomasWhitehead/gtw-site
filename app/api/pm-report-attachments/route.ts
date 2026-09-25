@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { validatePmTechSession } from "@/lib/pmTechAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ function safeFilename(value: string) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!hasFedExTrackerAccess(request) && !(await validatePmTechSession(request))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
   const id = String(request.nextUrl.searchParams.get("id") || "").trim();
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!hasFedExTrackerAccess(request) && !(await validatePmTechSession(request))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
   const form = await request.formData();

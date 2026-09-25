@@ -202,6 +202,11 @@
                         </label>
                     </div>
                 </fieldset>
+                <div class="md:col-span-2 no-print rounded-xl border border-slate_alt-200 bg-slate_alt-50 p-4">
+                    <label for="tugger-supporting-files" class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-2">Supporting Documents, Spreadsheets, or Pictures (optional)</label>
+                    <input id="tugger-supporting-files" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain" class="block w-full text-sm" />
+                    <p id="tugger-supporting-file-list" class="mt-2 text-xs text-slate_alt-500">Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.</p>
+                </div>
                 <div id="tugger-team-members-group" class="md:col-span-2 hidden">
                     <label class="block text-xs font-semibold text-slate_alt-600 uppercase tracking-wide mb-1.5" for="tugger-team-members">Other Technician Names <span class="text-danger-500">*</span></label>
                     <input id="tugger-team-members" type="text" class="input-field" placeholder="Enter everyone who worked with you" />
@@ -370,6 +375,29 @@
         const saveIndicator = document.getElementById('save-indicator-s9qx');
         const emptyState = document.getElementById('empty-state-es1');
         const toastContainer = document.getElementById('toast-container-tc1');
+        const supportingFilesInput = document.getElementById('tugger-supporting-files');
+        const supportingFileList = document.getElementById('tugger-supporting-file-list');
+        let supportingFiles = [];
+
+        supportingFilesInput.addEventListener('change', () => {
+            supportingFiles = Array.from(supportingFilesInput.files || []).slice(0, 5);
+            supportingFileList.textContent = supportingFiles.length
+                ? supportingFiles.map(file => file.name).join(' • ')
+                : 'Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.';
+            if ((supportingFilesInput.files || []).length > 5) showToast('Only the first 5 supporting files will be uploaded.', 'info');
+        });
+
+        async function uploadSupportingFiles(savedReportId, trackingNumber) {
+            for (const file of supportingFiles) {
+                if (file.size > 3750000) throw new Error('ATTACH_FAILED:' + file.name + ' is larger than 3.5 MB.');
+                const form = new FormData();
+                form.set('reportId', savedReportId);
+                form.set('trackingNumber', trackingNumber);
+                form.set('file', file);
+                const response = await fetch('/api/pm-report-attachments', { method: 'POST', body: form });
+                if (!response.ok) throw new Error('ATTACH_FAILED:' + file.name + ' — ' + await response.text());
+            }
+        }
 
         // ─── Helpers ───
         function today() {
@@ -1190,9 +1218,10 @@
             };
             const archiveResponse = await fetch('/api/pm-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
             if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
+            await uploadSupportingFiles(reportUniqueId, hdr.trackingNum);
             if (mode === 'download') {
                 doc.save(filename);
-                showToast('Report saved and PDF downloaded successfully', 'success');
+                showToast('Report and supporting files saved; PDF downloaded successfully', 'success');
                 return;
             }
             if (mode === 'share') {

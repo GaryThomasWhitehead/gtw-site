@@ -636,7 +636,7 @@ export default function ReportsClient() {
                 {uploading ? "Uploading…" : "Choose Photo or File"}
                 <input
                   type="file"
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
                   disabled={uploading}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
