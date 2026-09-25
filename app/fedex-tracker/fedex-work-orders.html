@@ -1491,20 +1491,44 @@
         }
       }
 
+      function orderUploadBatches(sourceOrders, maxBytes = 1500000) {
+        const encoder = new TextEncoder();
+        const batches = [];
+        let batch = [];
+        let batchBytes = 20;
+        for (const order of sourceOrders) {
+          const orderBytes = encoder.encode(JSON.stringify(order)).length + 1;
+          if (batch.length && batchBytes + orderBytes > maxBytes) {
+            batches.push(batch);
+            batch = [];
+            batchBytes = 20;
+          }
+          batch.push(order);
+          batchBytes += orderBytes;
+        }
+        if (batch.length) batches.push(batch);
+        return batches;
+      }
+
       async function saveOrders() {
         orders = orders.filter(order => !isEmptyUnclassifiedOrder(order));
         localStorage.setItem(storageKey, JSON.stringify(orders));
         try {
-          const response = await fetch("/api/fedex-work-orders", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "same-origin",
-            body: JSON.stringify({ orders })
-          });
-          const result = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(result.error || `Server returned ${response.status}`);
+          const batches = orderUploadBatches(orders);
+          let saved = 0;
+          for (let index = 0; index < batches.length; index += 1) {
+            const response = await fetch("/api/fedex-work-orders", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({ orders: batches[index] })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(`${result.error || `Server returned ${response.status}`} (upload batch ${index + 1} of ${batches.length})`);
+            saved += Number(result.saved || batches[index].length);
+          }
           remoteSyncEnabled = true;
-          return { shared: true, saved: result.saved || orders.length };
+          return { shared: true, saved };
         } catch (error) {
           console.warn("Unable to save work orders to shared storage:", error);
           return { shared: false, error: error.message || "Shared save failed." };
