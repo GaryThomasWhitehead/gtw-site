@@ -769,7 +769,7 @@ export default function ReportsClient() {
         {gasHistoryMode ? (
           <div className={styles.gasHistoryWrap}>
             <table className={styles.gasHistoryTable}>
-              <thead><tr><th>Date</th><th>Location ID</th><th>Address</th><th>Sensor Location / Tag</th><th>Manufacturer</th><th>Model</th><th>Serial #</th><th>Target Gas</th><th>Gas Standard</th><th>Technician</th><th>Tracking #</th><th>Notes</th><th>Report</th></tr></thead>
+              <thead><tr><th>Date</th><th>Location ID</th><th>Address</th><th>Sensor Location / Tag</th><th>Manufacturer</th><th>Model</th><th>Serial #</th><th>Target Gas</th><th>Gas Standard</th><th>Technician</th><th>Tracking #</th><th>Notes</th><th>Report</th><th>New Report</th></tr></thead>
               <tbody>
                 {gasHistory.map(({ sheet, report, index }) => (
                   <tr key={`${report.id}-sensor-${index}`}>
@@ -786,6 +786,7 @@ export default function ReportsClient() {
                     <td>{report.trackingNumber || "—"}</td>
                     <td className={styles.description}>{sheet.notes || "—"}</td>
                     <td><a target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}>View PDF</a></td>
+                    <td><a href={`/gas-sensor-report?copy=${encodeURIComponent(report.id)}`}>Use for New Report</a></td>
                   </tr>
                 ))}
               </tbody>
