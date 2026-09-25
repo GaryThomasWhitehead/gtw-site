@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Frontline Labor Price Sheet</title>
+  <style>
+    :root{--purple:#4a148c;--purple-dark:#32105f;--navy:#153f68;--blue:#e7f1fa;--line:#cbd8e4;--pale:#f5f8fb;--text:#152638;--muted:#607284}
+    *{box-sizing:border-box}body{margin:0;background:#eef4f8;color:var(--text);font:16px Arial,sans-serif}header{background:linear-gradient(110deg,var(--purple-dark),var(--purple));color:#fff;padding:22px max(20px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px}header p{margin:0 0 5px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{margin:0;font-size:31px}header a{background:#fff;color:var(--purple);padding:12px 18px;border-radius:9px;text-decoration:none;font-weight:800}.wrap{max-width:1120px;margin:auto;padding:28px 18px 60px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 4px 16px #1734530d}.lookup-head{display:grid;grid-template-columns:minmax(240px,1fr) 220px;gap:20px;align-items:end}.label{display:block;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin:0 0 7px;color:var(--muted)}select{width:100%;border:2px solid var(--purple);border-radius:9px;padding:12px;background:#fff;font:700 17px Arial;color:var(--text)}.minimum{background:var(--blue);border-radius:10px;padding:12px 15px}.minimum span{display:block;color:var(--muted);font-size:13px;font-weight:700}.minimum strong{display:block;font-size:24px;color:var(--navy);margin-top:3px}h2{margin:0 0 16px;font-size:21px;color:var(--navy)}table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid var(--line);border-radius:10px}th{background:var(--navy);color:#fff;text-align:center;padding:13px 10px;font-size:14px}td{padding:12px 10px;border-top:1px solid var(--line)}tbody tr:nth-child(even){background:var(--pale)}td:first-child{font-weight:800}.money{text-align:right;font-variant-numeric:tabular-nums}.blank{color:#9aa7b2}.all-grid{display:grid;gap:20px}.all-grid section h3{margin:0;padding:12px 14px;background:var(--blue);color:var(--navy);border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0}.all-grid section table{border-radius:0 0 10px 10px}.note{color:var(--muted);font-size:14px;margin:15px 0 0}.mobile-label{display:none}@media(max-width:700px){header{align-items:flex-start}h1{font-size:24px}.lookup-head{grid-template-columns:1fr}.card{padding:15px}.table-scroll{overflow-x:auto}table{min-width:650px}th,td{padding:10px 8px;font-size:14px}}
+  </style>
+</head>
+<body>
+  <header><div><p>Frontline Pro Services</p><h1>Labor Price Sheet</h1></div><a href="/fedex-tracker">Back to Tracker</a></header>
+  <main class="wrap">
+    <section class="card">
+      <div class="lookup-head">
+        <div><label class="label" for="category">Select work category</label><select id="category"></select></div>
+        <div class="minimum"><span>Minimum labor charge</span><strong id="minimum">1.00 hour</strong></div>
+      </div>
+    </section>
+    <section class="card"><h2>Selected Category Rates</h2><div class="table-scroll"><table><thead><tr><th>Role</th><th>Travel Charge</th><th>Regular Time</th><th>Overtime</th><th>Double Time / Holiday</th></tr></thead><tbody id="selectedRates"></tbody></table></div></section>
+    <section class="card"><h2>All Category Rates</h2><div id="allRates" class="all-grid"></div><p class="note">All amounts are in US dollars. Blank amounts were not provided in the supplied rate sheets. Material markup levels were also blank.</p></section>
+  </main>
+  <script>
+    const rates=[
+      {category:'Automation',minimum:1,supervisor:[185,185,277.5,370],technician:[170,170,255,340],helper:[150,150,225,300]},
+      {category:'Doors and Gates',minimum:1,supervisor:[170,170,255,340],technician:[152,152,228,304],helper:[135,135,202.5,270]},
+      {category:'Electrical',minimum:1,supervisor:[175,175,262.5,350],technician:[150,150,225,300],helper:[125,125,187.5,250]},
+      {category:'Engineering',minimum:1,supervisor:[235,235,352.5,470],technician:[null,null,null,null],helper:[null,null,null,null]},
+      {category:'General Repairs and Maintenance',minimum:1,supervisor:[160,160,240,320],technician:[135,135,202.5,270],helper:[90,90,135,180]},
+      {category:'HVAC',minimum:1,supervisor:[235,235,352.5,470],technician:[190,190,285,380],helper:[177,177,265.5,354]},
+      {category:'Material Handling',minimum:1,supervisor:[160,160,240,320],technician:[135,135,202.5,270],helper:[90,90,135,180]},
+      {category:'Mechanical',minimum:1,supervisor:[170,170,255,340],technician:[152,152,228,304],helper:[135,135,202.5,270]},
+      {category:'Plumbing',minimum:2,supervisor:[null,175,262.5,350],technician:[null,162,243,324],helper:[null,145,217.5,290]},
+      {category:'Welding',minimum:1,supervisor:[172,172,258,344],technician:[155,155,232.5,310],helper:[127,127,190.5,254]}
+    ];
+    const roles=[['Supervisor','supervisor'],['Technician','technician'],['Helper','helper']],money=value=>value==null?'<span class="blank">Not provided</span>':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
+    const row=(label,values)=>`<tr><td>${label}</td>${values.map(v=>`<td class="money">${money(v)}</td>`).join('')}</tr>`;
+    const select=document.getElementById('category'),selected=document.getElementById('selectedRates'),minimum=document.getElementById('minimum'),all=document.getElementById('allRates');
+    rates.forEach((rate,index)=>select.insertAdjacentHTML('beforeend',`<option value="${index}">${rate.category}</option>`));
+    function showSelected(){const rate=rates[Number(select.value)||0];minimum.textContent=rate.minimum.toFixed(2)+' '+(rate.minimum===1?'hour':'hours');selected.innerHTML=roles.map(([label,key])=>row(label,rate[key])).join('')}
+    select.addEventListener('change',showSelected);showSelected();
+    for(const [label,key] of roles){all.insertAdjacentHTML('beforeend',`<section><h3>${label} Rates</h3><div class="table-scroll"><table><thead><tr><th>Category</th><th>Travel Charge</th><th>Regular Time</th><th>Overtime</th><th>Double Time / Holiday</th></tr></thead><tbody>${rates.map(rate=>row(rate.category,rate[key])).join('')}</tbody></table></div></section>`)}
+  </script>
+</body>
+</html>
