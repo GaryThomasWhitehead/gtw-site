@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       const [id, raw] = token.split("."); const record = id && raw ? await row(id) : null;
       const reviewer = record?.reviewers?.find((r: any) => r.tokenHash === hash(raw || ""));
       if (!record || !reviewer) return NextResponse.json({ error: "This review link is invalid or expired" }, { status: 404 });
-      return NextResponse.json({ ...publicRecord(record), reviewer: reviewer.name, alreadyDecided: Boolean(reviewer.decision) });
+      return NextResponse.json({ ...publicRecord(record), reviewer: reviewer.name, alreadyDecided: record.status !== "pending" || Boolean(reviewer.decision) });
     }
     if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { url, key, table } = cfg();
@@ -84,12 +84,12 @@ export async function PUT(request: NextRequest) {
     const record = id && raw ? await row(id) : null;
     const reviewer = record?.reviewers?.find((r: any) => r.tokenHash === hash(raw || ""));
     if (!record || !reviewer) return NextResponse.json({ error: "This review link is invalid or expired" }, { status: 404 });
-    if (reviewer.decision) return NextResponse.json({ error: "You already responded to this revision" }, { status: 409 });
+    if (record.status !== "pending" || reviewer.decision) return NextResponse.json({ error: "This invoice revision has already been decided" }, { status: 409 });
     const decision = body.decision === "approved" ? "approved" : body.decision === "denied" ? "denied" : "";
     const reason = String(body.reason || "").trim().slice(0, 3000);
     if (!decision || (decision === "denied" && !reason)) return NextResponse.json({ error: "A reason is required when denying an invoice" }, { status: 400 });
     reviewer.decision = decision; reviewer.reason = reason; reviewer.decidedAt = new Date().toISOString();
-    record.status = decision === "denied" ? "denied" : record.reviewers.every((r: any) => r.decision === "approved") ? "approved" : "pending";
+    record.status = decision;
     record.updatedAt = new Date().toISOString(); await save(record);
     const ownerLink = `${request.nextUrl.protocol}//${request.nextUrl.host}/invoice-creator?invoice=${encodeURIComponent(record.id)}`;
     await email(OWNER, `Invoice ${decision} by ${reviewer.name} - ${record.invoice.location} - ${record.invoice.tracking}`, `<p>${esc(reviewer.name)} <strong>${esc(decision)}</strong> the proposed invoice.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p>${reason ? `<p><strong>Requested changes:</strong><br>${esc(reason)}</p>` : ""}<p><a href="${esc(ownerLink)}">View the invoice</a></p>`);
