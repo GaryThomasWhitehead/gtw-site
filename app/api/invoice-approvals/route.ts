@@ -43,7 +43,7 @@ async function sendForReview(request: NextRequest, record: any, rawTokens: strin
   const root = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
   await Promise.all(REVIEWERS.map((reviewer, index) => {
     const link = `${root}/invoice-approval?token=${encodeURIComponent(`${record.id}.${rawTokens[index]}`)}`;
-    return email(reviewer.email, `Invoice approval requested - ${record.invoice.location || "FedEx"} - ${record.invoice.tracking || "No WO"}`, `<p>Hi ${reviewer.name},</p><p>A proposed FedEx invoice is ready for your approval.</p><p><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p><p><a href="${esc(link)}" style="background:#1670ad;color:white;padding:12px 18px;text-decoration:none;border-radius:8px">View and approve or deny invoice</a></p>`);
+    return email(reviewer.email, `Invoice approval requested - ${record.invoice.location || "FedEx"} - ${record.invoice.tracking || "No WO"}`, `<p>Hi ${reviewer.name},</p><p>A proposed FedEx invoice is ready for your approval.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p><p><a href="${esc(link)}" style="background:#1670ad;color:white;padding:12px 18px;text-decoration:none;border-radius:8px">View and approve or deny invoice</a></p>`);
   }));
 }
 
@@ -92,7 +92,7 @@ export async function PUT(request: NextRequest) {
     record.status = decision === "denied" ? "denied" : record.reviewers.every((r: any) => r.decision === "approved") ? "approved" : "pending";
     record.updatedAt = new Date().toISOString(); await save(record);
     const ownerLink = `${request.nextUrl.protocol}//${request.nextUrl.host}/invoice-creator?invoice=${encodeURIComponent(record.id)}`;
-    await email(OWNER, `Invoice ${decision} by ${reviewer.name} - ${record.invoice.location} - ${record.invoice.tracking}`, `<p>${esc(reviewer.name)} <strong>${esc(decision)}</strong> the proposed invoice.</p><p><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p>${reason ? `<p><strong>Requested changes:</strong><br>${esc(reason)}</p>` : ""}<p><a href="${esc(ownerLink)}">View the invoice</a></p>`);
+    await email(OWNER, `Invoice ${decision} by ${reviewer.name} - ${record.invoice.location} - ${record.invoice.tracking}`, `<p>${esc(reviewer.name)} <strong>${esc(decision)}</strong> the proposed invoice.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p>${reason ? `<p><strong>Requested changes:</strong><br>${esc(reason)}</p>` : ""}<p><a href="${esc(ownerLink)}">View the invoice</a></p>`);
     return NextResponse.json({ ok: true, status: record.status });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Decision could not be saved" }, { status: 500 }); }
 }
