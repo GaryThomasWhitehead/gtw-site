@@ -18,10 +18,10 @@ function cleanInvoice(value: unknown) {
   const source = value && typeof value === "object" ? value as Record<string, unknown> : {};
   return JSON.parse(JSON.stringify(source).slice(0, 100000));
 }
-async function email(to: string | string[], subject: string, html: string) {
+async function email(to: string | string[], subject: string, html: string, cc?: string | string[]) {
   const apiKey = process.env.RESEND_API_KEY || "", from = process.env.RESEND_FROM_EMAIL || "";
   if (!apiKey || !from) throw new Error("Email service is not configured");
-  const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], subject, html }) });
+  const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], ...(cc ? { cc: Array.isArray(cc) ? cc : [cc] } : {}), subject, html }) });
   if (!response.ok) throw new Error((await response.json().catch(() => ({})))?.message || "Email could not be sent");
 }
 async function row(id: string) {
@@ -43,7 +43,7 @@ async function sendForReview(request: NextRequest, record: any, rawTokens: strin
   const root = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
   await Promise.all(REVIEWERS.map((reviewer, index) => {
     const link = `${root}/invoice-approval?token=${encodeURIComponent(`${record.id}.${rawTokens[index]}`)}`;
-    return email(reviewer.email, `Invoice approval requested - ${record.invoice.location || "FedEx"} - ${record.invoice.tracking || "No WO"}`, `<p>Hi ${reviewer.name},</p><p>A proposed FedEx invoice is ready for your approval.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p><p><a href="${esc(link)}" style="background:#1670ad;color:white;padding:12px 18px;text-decoration:none;border-radius:8px">View and approve or deny invoice</a></p>`);
+    return email(reviewer.email, `Invoice approval requested - ${record.invoice.location || "FedEx"} - ${record.invoice.tracking || "No WO"}`, `<p>Hi ${reviewer.name},</p><p>A proposed FedEx invoice is ready for your approval.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p><p><a href="${esc(link)}" style="background:#1670ad;color:white;padding:12px 18px;text-decoration:none;border-radius:8px">View and approve or deny invoice</a></p>`, OWNER);
   }));
 }
 
