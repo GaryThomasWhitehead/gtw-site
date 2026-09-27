@@ -1445,17 +1445,28 @@
         return !hasRealTrackingNumber || !hasLocation || !hasJobDetails;
       }
 
+      function cacheOrders(sourceOrders) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(sourceOrders));
+          return true;
+        } catch (error) {
+          console.warn("The tracker is too large for browser storage; shared server storage will be used instead.", error);
+          try { localStorage.removeItem(storageKey); } catch {}
+          return false;
+        }
+      }
+
       function loadOrders() {
         const saved = localStorage.getItem(storageKey);
         if (!saved) {
-          localStorage.setItem(storageKey, JSON.stringify(defaultOrders));
+          cacheOrders(defaultOrders);
           return defaultOrders;
         }
         try {
           const parsed = JSON.parse(saved);
           if (!Array.isArray(parsed) || !parsed.length) return defaultOrders;
           const merged = mergeDefaultOrders(parsed.filter(order => !isEmptyUnclassifiedOrder(order)));
-          localStorage.setItem(storageKey, JSON.stringify(merged));
+          cacheOrders(merged);
           return merged;
         } catch {
           return defaultOrders;
@@ -1481,7 +1492,7 @@
             if (invalidOrders.length) {
               await deleteRemoteOrders(invalidOrders.map(order => order.trackingNumber || order.id));
             }
-            localStorage.setItem(storageKey, JSON.stringify(orders));
+            cacheOrders(orders);
             selectedId = orders[0]?.id || null;
           }
           remoteSyncEnabled = true;
@@ -1513,7 +1524,7 @@
 
       async function saveOrders() {
         orders = orders.filter(order => !isEmptyUnclassifiedOrder(order));
-        localStorage.setItem(storageKey, JSON.stringify(orders));
+        cacheOrders(orders);
         try {
           const batches = orderUploadBatches(orders);
           let saved = 0;
