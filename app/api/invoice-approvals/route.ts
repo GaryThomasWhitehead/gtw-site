@@ -67,7 +67,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const body = await request.json(), invoice = cleanInvoice(body.invoice) as any;
+    const body = await request.json();
+    if (body.copyId) {
+      const record = await row(String(body.copyId));
+      if (!record?.invoice) return NextResponse.json({ error: "Saved invoice was not found" }, { status: 404 });
+      const invoice = record.invoice;
+      const ownerLink = `${request.nextUrl.protocol}//${request.nextUrl.host}/invoice-creator?invoice=${encodeURIComponent(record.id)}`;
+      await email(OWNER, `Copy: Invoice approval requested - ${invoice.location || "FedEx"} - ${invoice.tracking || "No WO"}`, `<p>Gary,</p><p>This is your copy of the approval request sent to Jacob and Daniel.</p><p><strong>Invoice Number:</strong> ${esc(invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(invoice.location)}<br><strong>Tracking:</strong> ${esc(invoice.tracking)}<br><strong>Total:</strong> ${esc(invoice.totals?.grand)}</p><p><a href="${esc(ownerLink)}">View saved invoice</a></p>`);
+      return NextResponse.json({ sent: true });
+    }
+    const invoice = cleanInvoice(body.invoice) as any;
     if (!invoice.tracking || !invoice.location) return NextResponse.json({ error: "Location and tracking number are required" }, { status: 400 });
     const existing = body.id ? await row(String(body.id)) : null;
     const id = existing?.id || randomUUID(), rawTokens = REVIEWERS.map(() => randomUUID());
