@@ -1399,7 +1399,20 @@
       let selectedId = orders[0]?.id || null;
       let activeLocation = "all";
       let locationCompletedView = false;
-      const facilityLabels = new Map();
+      const knownFacilityLabels = new Map([
+        ["MSOA", "MSOA - Missoula,MT"],
+        ["0584", "0584 - Havre,MT"],
+        ["0589", "0589 - Livingston,MT"],
+        ["0591", "0591 - Billings,MT"],
+        ["0593", "0593 - Helena,MT"],
+        ["0594", "0594 - Great Falls,MT"],
+        ["0596", "0596 - Bozeman,MT"],
+        ["0598", "0598 - Missoula,MT"],
+        ["0599", "0599 - Kalispell,MT"],
+        ["0824", "0824 - Cody,WY"],
+        ["0828", "0828 - Sheridan,WY"]
+      ]);
+      const facilityLabels = new Map(knownFacilityLabels);
 
       const els = {
         locationPages: document.querySelector("#locationPages"),
@@ -1494,7 +1507,8 @@
             const directory = await facilitiesResponse.json();
             (directory.facilities || []).forEach(facility => {
               const label = locationLabelFromAddress(facility.id, facility.address);
-              if (label) facilityLabels.set(String(facility.id || "").toUpperCase(), label);
+              const id = String(facility.id || "").toUpperCase();
+              if (label && !knownFacilityLabels.has(id)) facilityLabels.set(id, label);
             });
           }
           if (Array.isArray(remoteOrders) && remoteOrders.length) {
@@ -1604,7 +1618,7 @@
           if (!id) return;
           const fromLocation = locationLabelFromAddress(id, String(order.location || "").replace(/^(?:FEDEX\s+)?[A-Z0-9]{2,16}\s*(?:-|\/\/|\|)\s*/i, ""));
           const fromAddress = locationLabelFromAddress(id, order.address);
-          if (fromLocation || fromAddress) facilityLabels.set(id, fromLocation || fromAddress);
+          if ((fromLocation || fromAddress) && !knownFacilityLabels.has(id)) facilityLabels.set(id, fromLocation || fromAddress);
         });
       }
 
