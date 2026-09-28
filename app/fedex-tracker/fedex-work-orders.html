@@ -1399,6 +1399,7 @@
       let selectedId = orders[0]?.id || null;
       let activeLocation = "all";
       let locationCompletedView = false;
+      const facilityLabels = new Map();
 
       const els = {
         locationPages: document.querySelector("#locationPages"),
@@ -1483,12 +1484,24 @@
 
       async function loadRemoteOrders() {
         try {
-          const response = await fetch("/api/fedex-work-orders", { credentials: "same-origin" });
+          const [response, facilitiesResponse] = await Promise.all([
+            fetch("/api/fedex-work-orders", { credentials: "same-origin" }),
+            fetch("/api/fedex-facilities", { credentials: "same-origin", cache: "no-store" })
+          ]);
           if (!response.ok) throw new Error(`Server returned ${response.status}`);
           const remoteOrders = await response.json();
+          if (facilitiesResponse.ok) {
+            const directory = await facilitiesResponse.json();
+            (directory.facilities || []).forEach(facility => {
+              const label = locationLabelFromAddress(facility.id, facility.address);
+              if (label) facilityLabels.set(String(facility.id || "").toUpperCase(), label);
+            });
+          }
           if (Array.isArray(remoteOrders) && remoteOrders.length) {
             const invalidOrders = remoteOrders.filter(order => isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order));
             orders = remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order) && !isInvalidNtsOrder(order));
+            refreshFacilityLabels();
+            orders = orders.map(order => ({ ...order, location: normalizeLocation(order.location) }));
             if (invalidOrders.length) {
               await deleteRemoteOrders(invalidOrders.map(order => order.trackingNumber || order.id));
             }
@@ -1572,8 +1585,33 @@
         return orders.find(order => order.id === selectedId) || orders[0] || null;
       }
 
+      function locationId(location) {
+        return String(location || "").trim().toUpperCase().match(/^(?:FEDEX\s+)?([A-Z0-9]{2,16})(?=\s*(?:-|\/\/|\||,|$))/)?.[1] || "";
+      }
+
+      function locationLabelFromAddress(idValue, addressValue) {
+        const id = locationId(idValue) || String(idValue || "").trim().toUpperCase();
+        const address = String(addressValue || "").trim();
+        const match = address.match(/(?:^|,)\s*([^,]+),\s*([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?\s*$/i);
+        if (!id || !match) return "";
+        const city = match[1].trim().toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase());
+        return `${id} - ${city},${match[2].toUpperCase()}`;
+      }
+
+      function refreshFacilityLabels() {
+        orders.forEach(order => {
+          const id = locationId(order.location);
+          if (!id) return;
+          const fromLocation = locationLabelFromAddress(id, String(order.location || "").replace(/^(?:FEDEX\s+)?[A-Z0-9]{2,16}\s*(?:-|\/\/|\|)\s*/i, ""));
+          const fromAddress = locationLabelFromAddress(id, order.address);
+          if (fromLocation || fromAddress) facilityLabels.set(id, fromLocation || fromAddress);
+        });
+      }
+
       function normalizeLocation(location) {
-        return (location || "Unassigned Location").trim() || "Unassigned Location";
+        const value = (location || "Unassigned Location").trim() || "Unassigned Location";
+        const id = locationId(value);
+        return (id && facilityLabels.get(id)) || value;
       }
 
       function locationState(location) {
@@ -1607,6 +1645,7 @@
       }
 
       function locations() {
+        refreshFacilityLabels();
         return [...new Set(orders.filter(order => !isOutOfState(order)).map(order => normalizeLocation(order.location)))].sort((a, b) => a.localeCompare(b));
       }
 
@@ -2083,7 +2122,8 @@
         const location = String(value || "").trim();
         if (!location) return "Unassigned Location";
         if (/^0912\s*-\s*South San Francisco/i.test(location)) return "0912 // South SF";
-        return location;
+        const id = locationId(location);
+        return (id && facilityLabels.get(id)) || location;
       }
 
       function toTitleCase(value) {
