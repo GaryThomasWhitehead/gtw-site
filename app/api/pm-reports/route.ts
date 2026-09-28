@@ -127,15 +127,17 @@ export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
   if (id) {
     const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
-    const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
+    const select = "pdfBase64:data->>pdfBase64,filename:data->>filename";
+    const response = await fetch(`${url}/rest/v1/${table}?select=${encodeURIComponent(select)}&tracking_number=eq.${trackingNumber}&limit=1`, {
       headers: apiHeaders(key),
       cache: "no-store",
     });
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const [row] = await response.json();
     if (!row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
-    const pdf = Buffer.from(row.data.pdfBase64, "base64");
-    return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${String(row.data.filename || "pm-report.pdf").replace(/\"/g, "")}"` } });
+    if (!row.pdfBase64) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 404 });
+    const pdf = Buffer.from(row.pdfBase64, "base64");
+    return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`, "Cache-Control": "private, max-age=300" } });
   }
 
   const mode = request.nextUrl.searchParams.get("mode");
