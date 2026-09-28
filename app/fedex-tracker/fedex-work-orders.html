@@ -461,6 +461,21 @@
 
       .hidden { display: none !important; }
 
+      .file-progress {
+        display: grid;
+        gap: 7px;
+        margin: 12px 0 18px;
+        padding: 12px;
+        border: 1px solid #9fc4df;
+        border-radius: 9px;
+        background: #eef7fd;
+        color: #125b8f;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .file-progress progress { width: 100%; height: 14px; accent-color: #1468a5; }
+
       @media (max-width: 980px) {
         .app { grid-template-columns: 1fr; }
         .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
@@ -505,6 +520,10 @@
           <a class="toolbar-link" href="/pm-reports">Completed Reports / Tech Access</a>
           <a class="toolbar-link" href="/price-sheet">Price Sheet</a>
           <a class="toolbar-link" href="/invoice-creator">Invoice Creator</a>
+        </div>
+        <div id="importProgress" class="file-progress hidden" role="status" aria-live="polite">
+          <span id="importProgressText">Preparing import…</span>
+          <progress id="importProgressBar" max="100" value="0"></progress>
         </div>
 
         <div id="locationPages" class="location-pages" aria-label="Location pages"></div>
@@ -1430,8 +1449,24 @@
         openCount: document.querySelector("#openCount"),
         quoteCount: document.querySelector("#quoteCount"),
         doneCount: document.querySelector("#doneCount"),
-        importFile: document.querySelector("#importFile")
+        importFile: document.querySelector("#importFile"),
+        importProgress: document.querySelector("#importProgress"),
+        importProgressText: document.querySelector("#importProgressText"),
+        importProgressBar: document.querySelector("#importProgressBar")
       };
+
+      function setImportProgress(percent, text) {
+        els.importProgress.classList.remove("hidden");
+        els.importProgressBar.value = Math.max(0, Math.min(100, percent));
+        els.importProgressText.textContent = `${text} — ${Math.round(percent)}%`;
+        document.querySelector("#importButton").disabled = percent < 100;
+      }
+
+      function finishImportProgress(text = "Import complete") {
+        setImportProgress(100, text);
+        document.querySelector("#importButton").disabled = false;
+        window.setTimeout(() => els.importProgress.classList.add("hidden"), 1800);
+      }
 
       const readyToBillPage = "__ready_to_bill";
       const canceledPage = "__canceled";
@@ -1931,56 +1966,76 @@
 
       function importOrders(file) {
         const extension = file.name.split(".").pop().toLowerCase();
+        setImportProgress(2, "Preparing file");
         if (extension === "xlsx") {
           importExcelReport(file);
           return;
         }
         const reader = new FileReader();
+        reader.onprogress = event => {
+          if (event.lengthComputable) setImportProgress(Math.max(3, Math.round((event.loaded / event.total) * 35)), "Reading file");
+        };
         reader.onload = async () => {
           try {
+            setImportProgress(45, "Processing work orders");
             if (extension === "csv") {
               const imported = parseCsv(reader.result).map(mapImportedRow).filter(Boolean);
               const result = upsertImportedOrders(imported);
+              setImportProgress(70, "Saving to shared tracker");
               const sync = await saveOrders();
               if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
+              finishImportProgress();
               alert(`Import complete. ${result.created} new jobs and ${result.updated} existing jobs were saved to the shared tracker.`);
             } else {
               const imported = JSON.parse(reader.result);
               if (!Array.isArray(imported)) throw new Error("Imported JSON must contain a work order array.");
               orders = imported.map(order => ({ ...mapImportedRow(order), id: order.id || crypto.randomUUID() })).filter(Boolean);
               selectedId = orders[0]?.id || null;
+              setImportProgress(70, "Saving to shared tracker");
               const sync = await saveOrders();
               if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
+              finishImportProgress();
             }
             render();
           } catch (error) {
+            finishImportProgress("Import failed");
             alert(`Import failed: ${error.message}`);
           }
         };
+        reader.onerror = () => { finishImportProgress("Import failed"); alert("Import failed: The selected file could not be read."); };
         reader.readAsText(file);
       }
 
       function importExcelReport(file) {
         if (!window.XLSX) {
+          finishImportProgress("Import unavailable");
           alert("Excel import needs the XLSX parser library. If this computer is offline or blocks cdn.jsdelivr.net, save the FedEx report as CSV and import the CSV instead.");
           return;
         }
         const reader = new FileReader();
+        reader.onprogress = event => {
+          if (event.lengthComputable) setImportProgress(Math.max(3, Math.round((event.loaded / event.total) * 35)), "Reading spreadsheet");
+        };
         reader.onload = async () => {
           try {
+            setImportProgress(45, "Processing spreadsheet");
             const workbook = XLSX.read(reader.result, { type: "array", cellDates: true });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
             const imported = rows.map(mapImportedRow).filter(Boolean);
             const result = upsertImportedOrders(imported);
+            setImportProgress(70, "Saving to shared tracker");
             const sync = await saveOrders();
             if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
             render();
+            finishImportProgress();
             alert(`Import complete. ${result.created} new jobs and ${result.updated} existing jobs were saved to the shared tracker.`);
           } catch (error) {
+            finishImportProgress("Import failed");
             alert(`Excel import failed: ${error.message}`);
           }
         };
+        reader.onerror = () => { finishImportProgress("Import failed"); alert("Excel import failed: The selected file could not be read."); };
         reader.readAsArrayBuffer(file);
       }
 

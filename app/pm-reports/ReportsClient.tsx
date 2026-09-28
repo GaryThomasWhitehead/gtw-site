@@ -154,6 +154,8 @@ export default function ReportsClient() {
   const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0 });
+  const [pdfLoadingId, setPdfLoadingId] = useState("");
+  const [pdfProgress, setPdfProgress] = useState(0);
   const [showTechAccess, setShowTechAccess] = useState(false);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [techName, setTechName] = useState("");
@@ -394,6 +396,46 @@ export default function ReportsClient() {
   );
   const tuggerHistoryMode = tab === "tugger" && tuggerView === "history";
   const gasHistoryMode = tab === "gas" && gasView === "history";
+
+  async function openReportPdf(report: Report) {
+    const pdfWindow = window.open("", "_blank");
+    if (pdfWindow) {
+      pdfWindow.document.title = "Loading job report…";
+      pdfWindow.document.body.innerHTML = '<p style="font:700 18px Arial;padding:28px;color:#0c4f83">Loading job report PDF…</p>';
+    }
+    setPdfLoadingId(report.id);
+    setPdfProgress(1);
+    setError("");
+    try {
+      const response = await fetch(`/api/pm-reports?id=${encodeURIComponent(report.id)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(await response.text());
+      const total = Number(response.headers.get("content-length")) || 0;
+      if (!response.body) throw new Error("The PDF download did not start.");
+      const reader = response.body.getReader();
+      const chunks: ArrayBuffer[] = [];
+      let loaded = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = new Uint8Array(value.byteLength);
+        chunk.set(value);
+        chunks.push(chunk.buffer);
+        loaded += value.byteLength;
+        setPdfProgress(total ? Math.min(99, Math.round((loaded / total) * 100)) : Math.min(90, 10 + chunks.length * 8));
+      }
+      setPdfProgress(100);
+      const url = URL.createObjectURL(new Blob(chunks, { type: "application/pdf" }));
+      if (pdfWindow) pdfWindow.location.href = url;
+      else window.open(url, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (cause) {
+      pdfWindow?.close();
+      setError(`Could not open PDF: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setPdfLoadingId("");
+      setPdfProgress(0);
+    }
+  }
 
   async function deleteReport(report: Report) {
     const label = report.trackingNumber || report.facilityId || "this report";
@@ -760,6 +802,12 @@ export default function ReportsClient() {
             Loading completed reports{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : "…"}
           </p>
         )}
+        {pdfLoadingId && (
+          <div className={styles.fileProgress} role="status" aria-live="polite">
+            <strong>Loading job report PDF — {pdfProgress}%</strong>
+            <progress max="100" value={pdfProgress} />
+          </div>
+        )}
         {error && (
           <p className={styles.error}>
             Could not load all reports. <button type="button" onClick={() => void loadReports()}>Try again</button>
@@ -785,7 +833,7 @@ export default function ReportsClient() {
                     <td>{report.technician || "—"}</td>
                     <td>{report.trackingNumber || "—"}</td>
                     <td className={styles.description}>{sheet.notes || "—"}</td>
-                    <td><a target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}>View PDF</a></td>
+                    <td><button type="button" className={styles.pdfLinkButton} disabled={pdfLoadingId === report.id} onClick={() => void openReportPdf(report)}>{pdfLoadingId === report.id ? "Loading…" : "View PDF"}</button></td>
                     <td><a href={`/gas-sensor-report?copy=${encodeURIComponent(report.id)}`}>Use for New Report</a></td>
                   </tr>
                 ))}
@@ -823,13 +871,9 @@ export default function ReportsClient() {
                     <td>{item.serialNumber || (item.legacy ? "See PDF" : "—")}</td>
                     <td className={styles.description}>{item.description || "—"}</td>
                     <td>
-                      <a
-                        target="_blank"
-                        rel="noreferrer"
-                        href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}
-                      >
-                        View PDF
-                      </a>
+                      <button type="button" className={styles.pdfLinkButton} disabled={pdfLoadingId === report.id} onClick={() => void openReportPdf(report)}>
+                        {pdfLoadingId === report.id ? "Loading…" : "View PDF"}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -919,13 +963,9 @@ export default function ReportsClient() {
                             </label>
                           ))}
                         </div>
-                        <a
-                          target="_blank"
-                          rel="noreferrer"
-                          href={`/api/pm-reports?id=${encodeURIComponent(report.id)}`}
-                        >
-                          View PDF
-                        </a>
+                        <button type="button" className={styles.pdfLinkButton} disabled={pdfLoadingId === report.id} onClick={() => void openReportPdf(report)}>
+                          {pdfLoadingId === report.id ? "Loading…" : "View PDF"}
+                        </button>
                         <button type="button" className={styles.editPdfButton} disabled={editingPdfId === report.id} onClick={() => void deletePdfPages(report)}>
                           {editingPdfId === report.id ? "Updating PDF…" : "Delete PDF Page"}
                         </button>
