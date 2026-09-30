@@ -1584,6 +1584,23 @@
         return batches;
       }
 
+      async function renewTrackerSession() {
+        const password = prompt("Your tracker session expired. Enter the management password to continue this import:");
+        if (!password) throw new Error("Sign-in is required to save the import to the shared tracker.");
+        setImportProgress(70, "Renewing tracker session");
+        const form = new FormData();
+        form.set("password", password);
+        form.set("return", "json");
+        const response = await fetch("/api/fedex-work-orders/login", {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+          body: form
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "The tracker sign-in could not be renewed.");
+      }
+
       async function saveOrders() {
         orders = orders.filter(order => !isEmptyUnclassifiedOrder(order));
         cacheOrders(orders);
@@ -1591,12 +1608,21 @@
           const batches = orderUploadBatches(orders);
           let saved = 0;
           for (let index = 0; index < batches.length; index += 1) {
-            const response = await fetch("/api/fedex-work-orders", {
+            if (!els.importProgress.classList.contains("hidden")) {
+              setImportProgress(70 + Math.round((index / batches.length) * 25), `Saving upload batch ${index + 1} of ${batches.length}`);
+            }
+            const uploadBatch = () => fetch("/api/fedex-work-orders", {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               credentials: "same-origin",
               body: JSON.stringify({ orders: batches[index] })
             });
+            let response = await uploadBatch();
+            if (response.status === 401) {
+              await renewTrackerSession();
+              setImportProgress(70 + Math.round((index / batches.length) * 25), `Saving upload batch ${index + 1} of ${batches.length}`);
+              response = await uploadBatch();
+            }
             const result = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(`${result.error || `Server returned ${response.status}`} (upload batch ${index + 1} of ${batches.length})`);
             saved += Number(result.saved || batches[index].length);
