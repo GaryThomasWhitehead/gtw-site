@@ -809,7 +809,7 @@ export default function ReportsClient() {
             <progress max="100" value={pdfProgress} />
           </div>
         )}
-        {error && (
+        {!loadingReports && error && (
           <p className={styles.error}>
             Could not load all reports. <button type="button" onClick={() => void loadReports()}>Try again</button>
           </p>
