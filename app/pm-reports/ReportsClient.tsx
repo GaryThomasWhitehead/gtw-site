@@ -655,6 +655,7 @@ export default function ReportsClient() {
           <h1>Completed Reports</h1>
         </div>
         <div className={styles.actions}>
+          <a href="/pm-reports/import">Import Completed PDF</a>
           <button type="button" onClick={() => void openTechAccess()}>Manage Tech Access</button>
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload to Report"}
