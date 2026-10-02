@@ -89,6 +89,23 @@ export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await request.json();
+    if (body.resendId) {
+      const record = await row(String(body.resendId));
+      if (!record?.invoice) return NextResponse.json({ error: "Saved invoice was not found" }, { status: 404 });
+      if (record.status !== "pending") return NextResponse.json({ error: "Only pending invoices can be resent" }, { status: 409 });
+      const rawTokens = REVIEWERS.map(() => randomUUID());
+      record.reviewers = REVIEWERS.map((reviewer, index) => ({
+        ...reviewer,
+        tokenHash: hash(rawTokens[index]),
+        decision: "",
+        reason: "",
+        decidedAt: "",
+      }));
+      record.updatedAt = new Date().toISOString();
+      await save(record);
+      await sendForReview(request, record, rawTokens);
+      return NextResponse.json(publicRecord(record));
+    }
     if (body.copyId) {
       const record = await row(String(body.copyId));
       if (!record?.invoice) return NextResponse.json({ error: "Saved invoice was not found" }, { status: 404 });
