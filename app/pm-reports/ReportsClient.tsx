@@ -177,6 +177,7 @@ export default function ReportsClient() {
         chunks.push(index.slice(offset, offset + 3).map((item) => item.id));
       }
       const failedIds: string[] = [];
+      const loadedIds = new Set<string>();
       const fetchChunk = async (ids: string[], attempts = 3): Promise<Report[] | null> => {
         for (let attempt = 0; attempt < attempts; attempt += 1) {
           try {
@@ -190,11 +191,14 @@ export default function ReportsClient() {
         return null;
       };
       const addRows = (rows: Report[]) => {
-        setReports((current) => {
-          const existing = new Set(current.map((report) => report.id));
-          return [...current, ...rows.filter((report) => !existing.has(report.id))];
+        const freshRows = rows.filter((report) => {
+          if (!report.id || loadedIds.has(report.id)) return false;
+          loadedIds.add(report.id);
+          return true;
         });
-        setLoadProgress((current) => ({ ...current, loaded: current.loaded + rows.length }));
+        if (!freshRows.length) return;
+        setReports((current) => [...current, ...freshRows]);
+        setLoadProgress((current) => ({ ...current, loaded: current.loaded + freshRows.length }));
       };
       let nextChunk = 0;
       const workers = Array.from({ length: Math.min(2, chunks.length) }, async () => {
@@ -223,8 +227,17 @@ export default function ReportsClient() {
         }
       });
       await Promise.all(workers);
-      if (failedIds.length) {
-        setError(`${failedIds.length} report${failedIds.length === 1 ? " is" : "s are"} temporarily unavailable.`);
+      // Once the normal concurrent pass is finished, retry the remaining
+      // reports one at a time. Large PDF-backed rows are much more reliable
+      // when they are not competing with another metadata query.
+      const stillUnavailable: string[] = [];
+      for (const reportId of [...new Set(failedIds)]) {
+        const recovered = await fetchChunk([reportId], 6);
+        if (recovered?.length) addRows(recovered);
+        else stillUnavailable.push(reportId);
+      }
+      if (stillUnavailable.length) {
+        setError(`${stillUnavailable.length} of ${index.length} reports could not be loaded after automatic retries.`);
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -811,7 +824,7 @@ export default function ReportsClient() {
         )}
         {!loadingReports && error && (
           <p className={styles.error}>
-            Could not load all reports. <button type="button" onClick={() => void loadReports()}>Try again</button>
+            {error} <button type="button" onClick={() => void loadReports()}>Try again</button>
           </p>
         )}
 
