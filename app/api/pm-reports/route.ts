@@ -54,8 +54,7 @@ export async function POST(request: NextRequest) {
         "tuggerWorkRecords:data->tuggerWorkRecords",
       ].join(",");
       const params = new URLSearchParams({ select });
-      params.append("tracking_number", "gte.PMREPORT:");
-      params.append("tracking_number", "lt.PMREPORT;");
+      params.append("tracking_number", "like.PMREPORT:*");
       const existingResponse = await fetch(`${url}/rest/v1/${table}?${params}`, {
         headers: apiHeaders(key),
         cache: "no-store",
@@ -200,8 +199,8 @@ export async function GET(request: NextRequest) {
     const pageSize = 25;
     const cursor = request.nextUrl.searchParams.get("cursor") || "";
     const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: String(pageSize) });
-    params.append("tracking_number", cursor ? `gt.${cursor}` : "gte.PMREPORT:");
-    params.append("tracking_number", "lt.PMREPORT;");
+    params.append("tracking_number", "like.PMREPORT:*");
+    if (cursor) params.append("tracking_number", `gt.${cursor}`);
     const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
     if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });
     const rows: { tracking_number?: string }[] = await response.json();
@@ -233,8 +232,7 @@ export async function GET(request: NextRequest) {
       "correctiveScanAt:data->>correctiveScanAt",
     ].join(",");
     const params = new URLSearchParams({ select: correctiveSelect, order: "updated_at.desc" });
-    params.append("tracking_number", "gte.PMREPORT:");
-    params.append("tracking_number", "lt.PMREPORT;");
+    params.append("tracking_number", "like.PMREPORT:*");
     const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const rows = await response.json();
@@ -297,8 +295,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(metadata, { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } });
   }
   const params = new URLSearchParams({ select, order: "updated_at.desc" });
-  params.append("tracking_number", "gte.PMREPORT:");
-  params.append("tracking_number", "lt.PMREPORT;");
+  params.append("tracking_number", "like.PMREPORT:*");
   const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
   const rows = (await response.json()).filter((row: { id?: string }) =>
