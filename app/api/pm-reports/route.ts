@@ -191,6 +191,7 @@ export async function GET(request: NextRequest) {
     "sensorType:data->>sensorType",
     "sensorTag:data->>sensorTag",
     "calibrationSheets:data->calibrationSheets",
+    "correctiveActions:data->correctiveActions",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {
@@ -235,12 +236,13 @@ export async function PATCH(request: NextRequest) {
   const partsNotesUpdate = body?.partsNotes === undefined ? undefined : String(body.partsNotes).trim();
   const fedexJobUpdate = body?.fedexJob === undefined ? undefined : Boolean(body.fedexJob);
   const customerNameUpdate = body?.customerName === undefined ? undefined : String(body.customerName).trim();
+  const correctiveActionsUpdate = body?.correctiveActions === undefined ? undefined : body.correctiveActions;
   const rawDeletePdfPages: unknown[] = Array.isArray(body?.deletePdfPages) ? body.deletePdfPages : [];
   const deletePdfPages: number[] = Array.from(new Set<number>(
     rawDeletePdfPages.map((page) => Number(page)).filter((page) => Number.isInteger(page) && page > 0),
   )).sort((a, b) => a - b);
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
-  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
+  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
   }
   if (trackingNumberUpdate !== undefined && !trackingNumberUpdate) {
@@ -254,6 +256,21 @@ export async function PATCH(request: NextRequest) {
   }
   if (customerNameUpdate !== undefined && customerNameUpdate.length > 250) {
     return NextResponse.json({ error: "Customer name must be 250 characters or fewer" }, { status: 400 });
+  }
+  if (correctiveActionsUpdate !== undefined) {
+    if (!Array.isArray(correctiveActionsUpdate) || correctiveActionsUpdate.length > 100) {
+      return NextResponse.json({ error: "Corrective actions must be a list of no more than 100 items" }, { status: 400 });
+    }
+    const invalidAction = correctiveActionsUpdate.some((action: unknown) => {
+      if (!action || typeof action !== "object") return true;
+      const item = action as Record<string, unknown>;
+      return String(item.id || "").length > 100
+        || String(item.assetTag || "").length > 250
+        || String(item.repairNeeded || "").length > 5000
+        || String(item.urgency || "").length > 100
+        || String(item.serviceChannelWo || "").length > 250;
+    });
+    if (invalidAction) return NextResponse.json({ error: "A corrective-action field is too long" }, { status: 400 });
   }
   if (deletePdfPages.length) {
     const password = request.headers.get("x-management-password") || "";
@@ -301,6 +318,7 @@ export async function PATCH(request: NextRequest) {
     ...(partsNotesUpdate !== undefined ? { partsNotes: partsNotesUpdate } : {}),
     ...(fedexJobUpdate !== undefined ? { fedexJob: fedexJobUpdate } : {}),
     ...(customerNameUpdate !== undefined ? { customerName: customerNameUpdate } : {}),
+    ...(correctiveActionsUpdate !== undefined ? { correctiveActions: correctiveActionsUpdate } : {}),
     ...pdfUpdate,
   };
   const updateResponse = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
@@ -309,7 +327,7 @@ export async function PATCH(request: NextRequest) {
     body: JSON.stringify({ data: updatedData, updated_at: new Date().toISOString() }),
   });
   if (!updateResponse.ok) return NextResponse.json({ error: await updateResponse.text() }, { status: updateResponse.status });
-  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, pdfPageCount: updatedData.pdfPageCount });
+  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, correctiveActions: updatedData.correctiveActions, pdfPageCount: updatedData.pdfPageCount });
 }
 
 export async function DELETE(request: NextRequest) {

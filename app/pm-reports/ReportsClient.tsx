@@ -29,6 +29,13 @@ type GasCalibrationSheet = {
   gasStandard?: string;
   notes?: string;
 };
+type CorrectiveAction = {
+  id: string;
+  assetTag: string;
+  repairNeeded: string;
+  urgency: string;
+  serviceChannelWo: string;
+};
 type Report = {
   id: string;
   category?: string;
@@ -52,6 +59,7 @@ type Report = {
   serialNumber?: string;
   sensorType?: string;
   sensorTag?: string;
+  correctiveActions?: CorrectiveAction[];
   savedAt?: string;
 };
 type JobHistory = { key: string; latest: Report; reports: Report[]; status: WorkflowStatus };
@@ -146,6 +154,8 @@ export default function ReportsClient() {
   const [updatingId, setUpdatingId] = useState("");
   const [savingNoteId, setSavingNoteId] = useState("");
   const [partsNoteDrafts, setPartsNoteDrafts] = useState<Record<string, string>>({});
+  const [savingActionsId, setSavingActionsId] = useState("");
+  const [correctiveActionDrafts, setCorrectiveActionDrafts] = useState<Record<string, CorrectiveAction[]>>({});
   const [editingCustomerId, setEditingCustomerId] = useState("");
   const [savingCustomerId, setSavingCustomerId] = useState("");
   const [customerDrafts, setCustomerDrafts] = useState<Record<string, { fedexJob: boolean; customerName: string }>>({});
@@ -606,6 +616,67 @@ export default function ReportsClient() {
     }
   }
 
+  const correctiveActionsFor = (report: Report) =>
+    correctiveActionDrafts[report.id] ?? report.correctiveActions ?? [];
+  const correctiveActionReportFor = (history: JobHistory) =>
+    history.reports.find((report) => report.correctiveActions !== undefined) ?? history.latest;
+
+  function addCorrectiveAction(report: Report) {
+    const next: CorrectiveAction = {
+      id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+      assetTag: "",
+      repairNeeded: "",
+      urgency: "This week",
+      serviceChannelWo: "",
+    };
+    setCorrectiveActionDrafts((current) => ({
+      ...current,
+      [report.id]: [...(current[report.id] ?? report.correctiveActions ?? []), next],
+    }));
+  }
+
+  function updateCorrectiveAction(report: Report, actionId: string, field: keyof Omit<CorrectiveAction, "id">, value: string) {
+    setCorrectiveActionDrafts((current) => ({
+      ...current,
+      [report.id]: (current[report.id] ?? report.correctiveActions ?? []).map((action) =>
+        action.id === actionId ? { ...action, [field]: value } : action
+      ),
+    }));
+  }
+
+  function removeCorrectiveAction(report: Report, actionId: string) {
+    setCorrectiveActionDrafts((current) => ({
+      ...current,
+      [report.id]: (current[report.id] ?? report.correctiveActions ?? []).filter((action) => action.id !== actionId),
+    }));
+  }
+
+  async function saveCorrectiveActions(report: Report) {
+    const correctiveActions = correctiveActionsFor(report).map((action) => ({
+      ...action,
+      assetTag: action.assetTag.trim(),
+      repairNeeded: action.repairNeeded.trim(),
+      urgency: action.urgency.trim(),
+      serviceChannelWo: action.serviceChannelWo.trim(),
+    }));
+    setSavingActionsId(report.id);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: report.id, correctiveActions }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setReports((current) => current.map((item) => item.id === report.id ? { ...item, correctiveActions } : item));
+      setCorrectiveActionDrafts((current) => ({ ...current, [report.id]: correctiveActions }));
+    } catch (cause) {
+      setError(`Could not save corrective actions: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setSavingActionsId("");
+    }
+  }
+
   async function editFedExTrackingNumber(report: Report) {
     if (report.fedexJob === false) return;
     const trackingNumber = prompt("Enter the correct FedEx tracking number:", report.trackingNumber || "")?.trim();
@@ -928,6 +999,41 @@ export default function ReportsClient() {
                           </button>
                         </section>
                       )}
+                      <details className={styles.correctiveActions}>
+                        <summary>
+                          <span>Corrective Actions Needed</span>
+                          <strong>{correctiveActionsFor(correctiveActionReportFor(history)).length}</strong>
+                        </summary>
+                        <div className={styles.correctiveActionsBody}>
+                          <div className={styles.correctiveActionsTableWrap}>
+                            <table>
+                              <thead>
+                                <tr><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th><span className={styles.srOnly}>Delete</span></th></tr>
+                              </thead>
+                              <tbody>
+                                {correctiveActionsFor(correctiveActionReportFor(history)).map((action) => (
+                                  <tr key={action.id}>
+                                    <td><input aria-label="Asset or tag number" value={action.assetTag} onChange={(event) => updateCorrectiveAction(correctiveActionReportFor(history), action.id, "assetTag", event.target.value)} /></td>
+                                    <td><textarea aria-label="Repair needed" value={action.repairNeeded} onChange={(event) => updateCorrectiveAction(correctiveActionReportFor(history), action.id, "repairNeeded", event.target.value)} /></td>
+                                    <td>
+                                      <select aria-label="Urgency" value={action.urgency} onChange={(event) => updateCorrectiveAction(correctiveActionReportFor(history), action.id, "urgency", event.target.value)}>
+                                        <option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option>
+                                      </select>
+                                    </td>
+                                    <td><input aria-label="ServiceChannel work order number" value={action.serviceChannelWo} onChange={(event) => updateCorrectiveAction(correctiveActionReportFor(history), action.id, "serviceChannelWo", event.target.value)} /></td>
+                                    <td><button type="button" className={styles.deleteActionButton} onClick={() => removeCorrectiveAction(correctiveActionReportFor(history), action.id)}>Delete</button></td>
+                                  </tr>
+                                ))}
+                                {!correctiveActionsFor(correctiveActionReportFor(history)).length && <tr><td colSpan={5} className={styles.noCorrectiveActions}>No corrective actions entered for this job.</td></tr>}
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className={styles.correctiveActionsButtons}>
+                            <button type="button" onClick={() => addCorrectiveAction(correctiveActionReportFor(history))}>+ Add Line</button>
+                            <button type="button" className={styles.saveActionsButton} disabled={savingActionsId === correctiveActionReportFor(history).id} onClick={() => void saveCorrectiveActions(correctiveActionReportFor(history))}>{savingActionsId === correctiveActionReportFor(history).id ? "Saving…" : "Save Corrective Actions"}</button>
+                          </div>
+                        </div>
+                      </details>
                       <div className={styles.jobHistoryReports}>
                   {history.reports.map((report, reportIndex) => (
                     <article key={report.id}>
