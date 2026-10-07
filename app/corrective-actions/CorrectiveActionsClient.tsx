@@ -82,8 +82,9 @@ export default function CorrectiveActionsClient() {
       for (let index = 0; index < unscanned.length; index += 1) {
         const report = unscanned[index];
         const response = await fetch("/api/corrective-actions/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: report.id }) });
-        if (!response.ok) throw new Error(await response.text());
-        const result = await response.json();
+        const responseText = await response.text();
+        if (!response.ok) throw new Error(responseText || `The scanner returned error ${response.status} for ${report.facilityId || report.trackingNumber || "a PM report"}.`);
+        const result = JSON.parse(responseText);
         found += Number(result.found || 0);
         setReports((current) => current.map((item) => item.id === report.id ? { ...item, correctiveActions: result.report.correctiveActions || [], correctiveScanAt: result.report.correctiveScanAt } : item));
         setDrafts((current) => ({ ...current, [report.id]: result.report.correctiveActions || [] }));

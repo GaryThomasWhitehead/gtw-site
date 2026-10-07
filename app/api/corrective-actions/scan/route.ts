@@ -79,16 +79,9 @@ export async function POST(request: NextRequest) {
   if (row.data.correctiveScanAt) return NextResponse.json({ ok: true, skipped: true, report: row.data });
   if (!row.data.pdfBase64) return NextResponse.json({ error: "This report has no saved PDF" }, { status: 400 });
 
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const pdf = await pdfjs.getDocument({ data: new Uint8Array(Buffer.from(row.data.pdfBase64, "base64")) }).promise;
-  let text = "";
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const content = await (await pdf.getPage(pageNumber)).getTextContent();
-    text += content.items.map((item) => {
-      const entry = item as { str?: string; hasEOL?: boolean };
-      return `${entry.str || ""}${entry.hasEOL ? "\n" : " "}`;
-    }).join("") + "\n";
-  }
+  const { extractTextItems } = await import("unpdf");
+  const extracted = await extractTextItems(new Uint8Array(Buffer.from(row.data.pdfBase64, "base64")));
+  const text = extracted.items.flatMap((page) => page).map((item) => `${item.str}${item.hasEOL ? "\n" : " "}`).join("");
   const existing: Action[] = Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : [];
   const found = findingsFromText(text, id).filter((candidate) => !existing.some((action) => action.id === candidate.id));
   const updated = { ...row.data, correctiveActions: [...existing, ...found], correctiveScanAt: new Date().toISOString(), correctiveScanVersion: 1 };
