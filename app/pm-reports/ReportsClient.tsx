@@ -266,13 +266,24 @@ export default function ReportsClient() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/pm-report-attachments", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(await response.text());
-        return response.json();
-      })
-      .then(setAttachments)
-      .catch((cause) => setError(String(cause)));
+    let cancelled = false;
+    const loadAttachments = async () => {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        try {
+          const response = await fetch("/api/pm-report-attachments", { cache: "no-store" });
+          if (response.ok) {
+            const rows = await response.json();
+            if (!cancelled) setAttachments(rows);
+            return;
+          }
+        } catch (_) {}
+        if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+      }
+      // Attachments are supplemental. A temporary attachment-list timeout must
+      // not make a fully loaded completed-reports archive look like it failed.
+    };
+    void loadAttachments();
+    return () => { cancelled = true; };
   }, []);
 
   const loadTechnicians = useCallback(async () => {
