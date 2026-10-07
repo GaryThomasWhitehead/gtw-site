@@ -83,6 +83,13 @@ const TABS: { key: Category; label: string }[] = [
 ];
 const categoryOf = (report: Report) => report.category || "pm";
 const statusOf = (report: Report): WorkflowStatus => report.workflowStatus || "complete";
+const friendlyLoadError = (cause: unknown) => {
+  const message = cause instanceof Error ? cause.message : String(cause);
+  if (/<!doctype|cloudflare|error code 522|connection timed out|57014|statement timeout/i.test(message)) {
+    return "The completed-report service is temporarily busy. Please use Try again.";
+  }
+  return message;
+};
 const STATUS_TABS: { key: WorkflowStatus; label: string }[] = [
   { key: "complete", label: "Job Complete" },
   { key: "parts", label: "Need Parts" },
@@ -256,7 +263,7 @@ export default function ReportsClient() {
         setError(`${stillUnavailable.length} of ${index.length} reports could not be loaded after automatic retries.`);
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(friendlyLoadError(cause));
     } finally {
       setLoadingReports(false);
     }

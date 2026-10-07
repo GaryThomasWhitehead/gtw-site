@@ -194,9 +194,10 @@ export async function GET(request: NextRequest) {
 
   const mode = request.nextUrl.searchParams.get("mode");
   if (mode === "list") {
-    // This query stays on the small indexed columns and never opens the large
-    // JSON/PDF payloads. The browser requests metadata in bounded batches next.
-    const params = new URLSearchParams({ select: "tracking_number,updated_at", order: "updated_at.desc" });
+    // Keep the initial index lookup entirely on the primary-key index. Selecting
+    // updated_at and sorting by it made Postgres visit/sort every large legacy
+    // report row, which could exceed the gateway's ten-second timeout.
+    const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: "1000" });
     params.append("tracking_number", "gte.PMREPORT:");
     params.append("tracking_number", "lt.PMREPORT;");
     let response: Response | null = null;
@@ -208,9 +209,8 @@ export async function GET(request: NextRequest) {
     if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });
     const rows = await response.json();
     return NextResponse.json(rows
-      .map((row: { tracking_number?: string; updated_at?: string }) => ({
+      .map((row: { tracking_number?: string }) => ({
         id: String(row.tracking_number || "").replace(/^PMREPORT:/, ""),
-        savedAt: row.updated_at,
       }))
       .filter((row: { id: string }) => row.id && !row.id.startsWith("connection-test-")), {
         headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" },
