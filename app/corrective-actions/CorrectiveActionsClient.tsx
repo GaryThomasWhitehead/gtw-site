@@ -11,6 +11,7 @@ export default function CorrectiveActionsClient() {
   const [drafts, setDrafts] = useState<Record<string, Action[]>>({});
   const [dirtyReportIds, setDirtyReportIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0, stage: "Loading PM report list…" });
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState({ done: 0, total: 0, found: 0 });
   const [saving, setSaving] = useState(false);
@@ -21,16 +22,19 @@ export default function CorrectiveActionsClient() {
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
+    setLoadProgress({ loaded: 0, total: 0, stage: "Loading PM report list…" });
     try {
       const indexResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
       if (!indexResponse.ok) throw new Error(await indexResponse.text());
       const index: { id: string }[] = await indexResponse.json();
+      setLoadProgress({ loaded: 0, total: index.length, stage: "Loading report details" });
       const loaded: Report[] = [];
       for (let offset = 0; offset < index.length; offset += 3) {
         const ids = index.slice(offset, offset + 3).map((item) => item.id).join(",");
         const response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(ids)}`, { cache: "no-store" });
         if (!response.ok) throw new Error(await response.text());
         loaded.push(...await response.json());
+        setLoadProgress({ loaded: Math.min(offset + 3, index.length), total: index.length, stage: "Loading report details" });
       }
       const pm = loaded.filter((report) => (report.category || "pm") === "pm");
       setReports(pm);
@@ -111,9 +115,10 @@ export default function CorrectiveActionsClient() {
     <section className={styles.content}>
       <div className={styles.toolbar}>
         <div><strong>{totalActions}</strong><span>open action lines</span><small>{unscanned.length} PM reports not yet scanned</small></div>
-        <button disabled={scanning || loading} onClick={() => void scanReports()}>{scanning ? "Scanning…" : "Scan New PM Reports"}</button>
+        <button disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>
         <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>
       </div>
+      {loading && <div className={styles.progress} role="status" aria-live="polite"><strong>{loadProgress.stage}{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : ""}</strong><progress max={loadProgress.total || 1} value={loadProgress.loaded} /><span>The Scan button will be available when the report list is ready.</span></div>}
       {scanning && <div className={styles.progress}><strong>Scanning PM reports — {scanProgress.done} of {scanProgress.total}</strong><progress max={scanProgress.total || 1} value={scanProgress.done} /><span>{scanProgress.found} new action lines found</span></div>}
       <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>
       {message && <p className={styles.success}>{message}</p>}{error && <p className={styles.error}>{error}</p>}
