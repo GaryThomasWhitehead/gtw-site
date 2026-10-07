@@ -444,8 +444,13 @@ export default function ReportsClient() {
     setPdfProgress(1);
     setError("");
     try {
-      const response = await fetch(`/api/pm-reports?id=${encodeURIComponent(report.id)}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(await response.text());
+      let response: Response | null = null;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        response = await fetch(`/api/pm-reports?id=${encodeURIComponent(report.id)}`, { cache: "no-store" }).catch(() => null);
+        if (response?.ok) break;
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 700 * (attempt + 1)));
+      }
+      if (!response?.ok) throw new Error("The saved PDF service is temporarily unavailable. Please try again.");
       const total = Number(response.headers.get("content-length")) || 0;
       if (!response.body) throw new Error("The PDF download did not start.");
       const reader = response.body.getReader();

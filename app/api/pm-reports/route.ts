@@ -130,11 +130,25 @@ export async function GET(request: NextRequest) {
   if (id) {
     const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
     const select = "pdfBase64:data->>pdfBase64,filename:data->>filename,category:data->>category,correctiveActions:data->correctiveActions";
-    const response = await fetch(`${url}/rest/v1/${table}?select=${encodeURIComponent(select)}&tracking_number=eq.${trackingNumber}&limit=1`, {
-      headers: apiHeaders(key),
-      cache: "no-store",
-    });
-    if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
+    let response: Response | null = null;
+    let storageError = "";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        response = await fetch(`${url}/rest/v1/${table}?select=${encodeURIComponent(select)}&tracking_number=eq.${trackingNumber}&limit=1`, {
+          headers: apiHeaders(key),
+          cache: "no-store",
+        });
+        if (response.ok) break;
+        storageError = await response.text();
+      } catch (cause) {
+        storageError = cause instanceof Error ? cause.message : String(cause);
+      }
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+    }
+    if (!response?.ok) {
+      console.warn("Saved report PDF retrieval failed after retries", storageError.slice(0, 500));
+      return NextResponse.json({ error: "The saved PDF storage service is temporarily unavailable. Please try again." }, { status: 503 });
+    }
     const [row] = await response.json();
     if (!row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     const viewerActions = Array.isArray(row.correctiveActions) ? row.correctiveActions : [];
