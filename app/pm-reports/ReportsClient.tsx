@@ -69,6 +69,7 @@ type ReportAttachment = {
   reportId: string;
   trackingNumber?: string;
   filename?: string;
+  description?: string;
 };
 type Technician = { id: string; name: string; active: boolean };
 
@@ -163,6 +164,7 @@ export default function ReportsClient() {
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ report: Report; trackingNumber: string } | null>(null);
+  const [attachmentDescription, setAttachmentDescription] = useState("");
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0 });
   const [pdfLoadingId, setPdfLoadingId] = useState("");
@@ -549,6 +551,7 @@ export default function ReportsClient() {
       return;
     }
     setError("");
+    setAttachmentDescription("");
     setPendingUpload({ report, trackingNumber: entered });
   }
 
@@ -567,6 +570,10 @@ export default function ReportsClient() {
 
   async function uploadAttachment(file: File) {
     if (!pendingUpload) return;
+    if (file.type.startsWith("image/") && categoryOf(pendingUpload.report) === "pm" && !attachmentDescription.trim()) {
+      setError("Describe or identify the picture before uploading it to a Preventive Maintenance report.");
+      return;
+    }
     setUploading(true);
     setError("");
     try {
@@ -575,6 +582,7 @@ export default function ReportsClient() {
       form.set("reportId", pendingUpload.report.id);
       form.set("trackingNumber", pendingUpload.trackingNumber);
       form.set("file", prepared);
+      form.set("description", attachmentDescription.trim());
       const response = await fetch("/api/pm-report-attachments", { method: "POST", body: form });
       if (!response.ok) throw new Error(await response.text());
       const attachment = await response.json();
@@ -584,6 +592,7 @@ export default function ReportsClient() {
     } finally {
       setUploading(false);
       setPendingUpload(null);
+      setAttachmentDescription("");
     }
   }
 
@@ -773,6 +782,7 @@ export default function ReportsClient() {
               </p>
             </div>
             <div className={styles.uploadPanelActions}>
+              <input value={attachmentDescription} onChange={(event) => setAttachmentDescription(event.target.value)} placeholder={`Describe or identify picture${categoryOf(pendingUpload.report) === "pm" ? " (required for PM)" : " (optional)"}`} />
               <label className={styles.chooseFileButton}>
                 {uploading ? "Uploading…" : "Choose Photo or File"}
                 <input
@@ -786,7 +796,7 @@ export default function ReportsClient() {
                   }}
                 />
               </label>
-              <button type="button" disabled={uploading} onClick={() => setPendingUpload(null)}>Cancel</button>
+              <button type="button" disabled={uploading} onClick={() => { setPendingUpload(null); setAttachmentDescription(""); }}>Cancel</button>
             </div>
           </section>
         )}
@@ -1078,7 +1088,7 @@ export default function ReportsClient() {
                             <strong>Attachments</strong>
                             {attachments.filter((attachment) => attachment.reportId === report.id).map((attachment) => (
                               <a key={attachment.id} target="_blank" rel="noreferrer" href={`/api/pm-report-attachments?id=${encodeURIComponent(attachment.id)}`}>
-                                {attachment.filename || "Open attachment"}
+                                {attachment.description || attachment.filename || "Open attachment"}
                               </a>
                             ))}
                           </div>

@@ -392,8 +392,10 @@
         // Track photo filenames and data per item
         const photoFilenames = {};
         const photoDataStore = {};
+        const photoDescriptionStore = {};
         const photoTypeStore = {};
         const facilityAddresses = new Map();
+        const escapeAttr = value => String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         // ===================== DOM REFS =====================
         const techNameInput = document.getElementById('tech-name-a1b2');
@@ -741,6 +743,22 @@
             return false;
         }
 
+        function validatePhotoDescriptions() {
+            if (reportCategory !== 'pm') return true;
+            for (const card of itemsContainer.querySelectorAll('.item-card')) {
+                const id = card.dataset.itemId;
+                const photos = photoDataStore[id] || [];
+                const descriptions = photoDescriptionStore[id] || [];
+                const missing = photos.findIndex((photo, index) => photo && !String(descriptions[index] || '').trim());
+                if (missing >= 0) {
+                    const message = `Describe or identify Photo ${missing + 1} before saving this Preventive Maintenance report.`;
+                    alert(message); showToast(message, 'error'); card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // ===================== START INSPECTION =====================
         function handleStartInspection() {
             if (!validateHeaderFields()) return;
@@ -781,17 +799,22 @@
 
             function renderPhotoPreviews() {
                 const photos = photoDataStore[id] || [];
-                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" class="remove-photo-btn absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button></div>`).join('');
+                const descriptions = photoDescriptionStore[id] || [];
+                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" class="remove-photo-btn absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button><input class="photo-description mt-1 w-full px-2 py-2 border border-field-border rounded-lg text-xs" data-photo-index="${index}" value="${escapeAttr(descriptions[index] || '')}" placeholder="Describe or identify this picture${reportCategory === 'pm' ? ' (required)' : ' (optional)'}" /></div>`).join('');
                 photoPreview.querySelectorAll('.remove-photo-btn').forEach(button => button.addEventListener('click', () => {
-                    photos.splice(Number(button.dataset.photoIndex), 1);
+                    const index = Number(button.dataset.photoIndex); photos.splice(index, 1); descriptions.splice(index, 1);
                     renderPhotoPreviews(); saveState();
                 }));
+                photoPreview.querySelectorAll('.photo-description').forEach(input => input.addEventListener('input', debounce(() => {
+                    descriptions[Number(input.dataset.photoIndex)] = input.value; photoDescriptionStore[id] = descriptions; saveState();
+                }, 300)));
             }
 
             if (data) {
                 unitInput.value = data.unitId || '';
                 descTextarea.value = data.description || '';
                 const restoredPhotos = Array.isArray(data.photos) ? data.photos : (data.photoData ? [data.photoData] : []);
+                photoDescriptionStore[id] = Array.isArray(data.photoDescriptions) ? data.photoDescriptions.slice() : [];
                 if (restoredPhotos.length) { photoDataStore[id] = restoredPhotos; renderPhotoPreviews(); }
                 if (data.photoFilename) {
                     photoFilenames[id] = data.photoFilename;
@@ -806,6 +829,7 @@
                 if (!selected.length) { showToast('This item already has 8 photos.', 'warning'); return; }
                 Promise.all(selected.map(file => optimizeUploadedPhoto(file))).then(photos => {
                     photoDataStore[id] = current.concat(photos);
+                    photoDescriptionStore[id] = (photoDescriptionStore[id] || []).concat(photos.map(() => ''));
                     renderPhotoPreviews(); saveState();
                     if ((input.files || []).length > available) showToast('Only the first ' + available + ' photos were added. Maximum is 8.', 'warning');
                     input.value = '';
@@ -824,6 +848,7 @@
                     items = items.filter(i => i !== id);
                     delete photoFilenames[id];
                     delete photoDataStore[id];
+                    delete photoDescriptionStore[id];
                     delete photoTypeStore[id];
                     renumberItems();
                     updateCounts();
@@ -899,6 +924,7 @@
         function handleExportPDF(mode = 'download') {
             if (!validateHeaderFields()) return;
             if (!validateMinimumPhotos()) return;
+            if (!validatePhotoDescriptions()) return;
 
             const loadingToast = showToast('Generating PDF…', 'info');
 
@@ -1017,7 +1043,7 @@
                     const cardId = card.dataset.itemId;
                     const storedPhotos = photoDataStore[cardId] || [];
                     const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
-                    itemDataList.push({ index: index + 1, unitId, description, photos });
+                    itemDataList.push({ index: index + 1, unitId, description, photos, photoDescriptions: photoDescriptionStore[cardId] || [] });
                 });
 
                 let currentPage = 1;
@@ -1174,6 +1200,12 @@
                                 doc.setFontSize(7); doc.setTextColor(...GRAY_TEXT); doc.text('Image Error',pageW/2,cursorY+thumbH/2,{align:'center'});
                             }
                             cursorY += thumbH + 5;
+                            const photoDescription = String(item.photoDescriptions?.[photoIndex] || '').trim();
+                            if (photoDescription) {
+                                doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...GRAY_TEXT);
+                                const caption = doc.splitTextToSize('Photo description: ' + photoDescription, contentW);
+                                doc.text(caption, marginL, cursorY); cursorY += caption.length * 3.8 + 3;
+                            }
                         }
                     } else {
                         doc.setFillColor(242, 244, 247);
@@ -1383,6 +1415,7 @@
             itemCounter = 0;
             Object.keys(photoFilenames).forEach(k => delete photoFilenames[k]);
             Object.keys(photoDataStore).forEach(k => delete photoDataStore[k]);
+            Object.keys(photoDescriptionStore).forEach(k => delete photoDescriptionStore[k]);
             Object.keys(photoTypeStore).forEach(k => delete photoTypeStore[k]);
             inspectionSection.classList.add('hidden');
             actionsBar.classList.add('hidden');
@@ -1408,6 +1441,7 @@
                     unitId,
                     description,
                     photos,
+                    photoDescriptions: (photoDescriptionStore[cardId] || []).slice(0, photos.length),
                     photoFilename: photoFilenames[cardId] || '',
                     photoType: photoTypeStore[cardId] || ''
                 });

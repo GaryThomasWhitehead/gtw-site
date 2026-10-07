@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const select = ["id:data->>id", "reportId:data->>reportId", "trackingNumber:data->>trackingNumber", "filename:data->>filename", "contentType:data->>contentType", "size:data->size", "uploadedAt:data->>uploadedAt"].join(",");
+  const select = ["id:data->>id", "reportId:data->>reportId", "trackingNumber:data->>trackingNumber", "filename:data->>filename", "description:data->>description", "contentType:data->>contentType", "size:data->size", "uploadedAt:data->>uploadedAt"].join(",");
   const params = new URLSearchParams({ select, tracking_number: "like.PMATTACH:*", order: "updated_at.desc" });
   let lastError = "";
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
   const reportId = String(form.get("reportId") || "").trim();
   const trackingNumber = String(form.get("trackingNumber") || "").trim();
   const file = form.get("file");
+  const description = String(form.get("description") || "").trim().slice(0, 500);
   if (!reportId || !trackingNumber || !(file instanceof File)) return NextResponse.json({ error: "Report, tracking number, and file are required" }, { status: 400 });
   if (file.size > 3_750_000) return NextResponse.json({ error: "File is too large. Maximum size is 3.5 MB." }, { status: 413 });
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
   if (normalize(reportRow.data.trackingNumber) !== normalize(trackingNumber)) return NextResponse.json({ error: "Tracking number does not match that completed report" }, { status: 400 });
 
   const id = crypto.randomUUID();
-  const data = { id, recordType: "pm-report-attachment", reportId, trackingNumber, filename: safeFilename(file.name), contentType: file.type || "application/octet-stream", size: file.size, uploadedAt: new Date().toISOString(), base64: Buffer.from(await file.arrayBuffer()).toString("base64") };
+  const data = { id, recordType: "pm-report-attachment", reportId, trackingNumber, filename: safeFilename(file.name), description, contentType: file.type || "application/octet-stream", size: file.size, uploadedAt: new Date().toISOString(), base64: Buffer.from(await file.arrayBuffer()).toString("base64") };
   const response = await fetch(`${url}/rest/v1/${table}`, { method: "POST", headers: { ...headers(key), Prefer: "return=minimal" }, body: JSON.stringify([{ tracking_number: `PMATTACH:${id}`, data, updated_at: data.uploadedAt }]) });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
   const { base64: _base64, ...metadata } = data;
