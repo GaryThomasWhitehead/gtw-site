@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 
@@ -77,10 +78,13 @@ export async function POST(request: NextRequest) {
   if (!row?.data) return NextResponse.json({ error: "Report not found" }, { status: 404 });
   if (row.data.category !== "pm") return NextResponse.json({ error: "Only PM reports can be scanned" }, { status: 400 });
   if (row.data.correctiveScanAt) return NextResponse.json({ ok: true, skipped: true, report: row.data });
-  if (!row.data.pdfBase64) return NextResponse.json({ error: "This report has no saved PDF" }, { status: 400 });
+  const pdfBytes = row.data.pdfStoragePath
+    ? await downloadReportPdf(url, key, String(row.data.pdfStoragePath))
+    : row.data.pdfBase64 ? Buffer.from(row.data.pdfBase64, "base64") : null;
+  if (!pdfBytes) return NextResponse.json({ error: "This report has no saved PDF" }, { status: 400 });
 
   const { extractTextItems } = await import("unpdf");
-  const extracted = await extractTextItems(new Uint8Array(Buffer.from(row.data.pdfBase64, "base64")));
+  const extracted = await extractTextItems(new Uint8Array(pdfBytes));
   const text = extracted.items.flatMap((page) => page).map((item) => `${item.str}${item.hasEOL ? "\n" : " "}`).join("");
   const existing: Action[] = Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : [];
   const found = findingsFromText(text, id).filter((candidate) => !existing.some((action) => action.id === candidate.id));

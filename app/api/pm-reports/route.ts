@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { PDFDocument } from "pdf-lib";
 import { expectedFedExTrackerPassword, hasCorrectiveActionViewerAccess, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
+import { deleteReportPdf, downloadReportPdf, reportPdfPath, uploadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 
@@ -104,7 +105,13 @@ export async function POST(request: NextRequest) {
       }
     }
     const { recoveryImport: _recoveryImport, ...storedReport } = report;
-    const data = { ...storedReport, recordType: "pm-report" };
+    const pdfBytes = Buffer.from(String(storedReport.pdfBase64), "base64");
+    const pdfStoragePath = reportPdfPath(String(report.id));
+    const storedInObjectStorage = await uploadReportPdf(url, key, pdfStoragePath, pdfBytes);
+    const { pdfBase64: _pdfBase64, ...reportMetadata } = storedReport;
+    const data = storedInObjectStorage
+      ? { ...reportMetadata, pdfStoragePath, recordType: "pm-report" }
+      : { ...storedReport, recordType: "pm-report" };
     const response = await fetchWithRetry(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
       method: "POST",
       headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
@@ -129,7 +136,7 @@ export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
   if (id) {
     const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
-    const select = "pdfBase64:data->>pdfBase64,filename:data->>filename,category:data->>category,correctiveActions:data->correctiveActions";
+    const select = "filename:data->>filename,category:data->>category,correctiveActions:data->correctiveActions,pdfStoragePath:data->>pdfStoragePath";
     let response: Response | null = null;
     let storageError = "";
     for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -156,8 +163,30 @@ export async function GET(request: NextRequest) {
     if (!managementAccess && ((row.category || "pm") !== "pm" || !isReferencedCorrectivePdf)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (!row.pdfBase64) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 404 });
-    const pdf = Buffer.from(row.pdfBase64, "base64");
+    let pdf = row.pdfStoragePath ? await downloadReportPdf(url, key, String(row.pdfStoragePath)) : null;
+    if (!pdf) {
+      const legacySelect = "data";
+      let legacyResponse: Response | null = null;
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        legacyResponse = await fetch(`${url}/rest/v1/${table}?select=${legacySelect}&tracking_number=eq.${trackingNumber}&limit=1`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
+        if (legacyResponse?.ok) break;
+        if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      }
+      if (!legacyResponse?.ok) return NextResponse.json({ error: "The saved PDF storage service is temporarily unavailable. Please try again." }, { status: 503 });
+      const [legacyRow] = await legacyResponse.json();
+      const legacyBase64 = String(legacyRow?.data?.pdfBase64 || "");
+      if (!legacyBase64) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 404 });
+      pdf = Buffer.from(legacyBase64, "base64");
+      const path = reportPdfPath(id);
+      if (await uploadReportPdf(url, key, path, pdf)) {
+        const { pdfBase64: _removed, ...migratedData } = legacyRow.data;
+        await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
+          method: "PATCH",
+          headers: { ...apiHeaders(key), Prefer: "return=minimal" },
+          body: JSON.stringify({ data: { ...migratedData, pdfStoragePath: path }, updated_at: new Date().toISOString() }),
+        }).catch(() => null);
+      }
+    }
     return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`, "Cache-Control": "private, max-age=300" } });
   }
 
@@ -337,9 +366,12 @@ export async function PATCH(request: NextRequest) {
   let pdfUpdate: Record<string, unknown> = {};
   if (deletePdfPages.length) {
     const originalBase64 = String(rows[0].data?.pdfBase64 || "");
-    if (!originalBase64) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 400 });
+    const originalPdf = rows[0].data?.pdfStoragePath
+      ? await downloadReportPdf(url, key, String(rows[0].data.pdfStoragePath))
+      : originalBase64 ? Buffer.from(originalBase64, "base64") : null;
+    if (!originalPdf) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 400 });
     try {
-      const pdf = await PDFDocument.load(Buffer.from(originalBase64, "base64"));
+      const pdf = await PDFDocument.load(originalPdf);
       const pageCount = pdf.getPageCount();
       const unavailable = deletePdfPages.filter((page) => page > pageCount);
       if (unavailable.length) {
@@ -350,11 +382,11 @@ export async function PATCH(request: NextRequest) {
       }
       [...deletePdfPages].sort((a, b) => b - a).forEach((page) => pdf.removePage(page - 1));
       const updatedPdf = await pdf.save();
-      pdfUpdate = {
-        pdfBase64: Buffer.from(updatedPdf).toString("base64"),
-        pdfPageCount: pdf.getPageCount(),
-        pdfEditedAt: new Date().toISOString(),
-      };
+      const path = String(rows[0].data?.pdfStoragePath || reportPdfPath(id));
+      const objectSaved = await uploadReportPdf(url, key, path, updatedPdf);
+      pdfUpdate = objectSaved
+        ? { pdfBase64: undefined, pdfStoragePath: path, pdfPageCount: pdf.getPageCount(), pdfEditedAt: new Date().toISOString() }
+        : { pdfBase64: Buffer.from(updatedPdf).toString("base64"), pdfPageCount: pdf.getPageCount(), pdfEditedAt: new Date().toISOString() };
     } catch (error) {
       return NextResponse.json({ error: `Could not edit this PDF: ${error instanceof Error ? error.message : String(error)}` }, { status: 400 });
     }
