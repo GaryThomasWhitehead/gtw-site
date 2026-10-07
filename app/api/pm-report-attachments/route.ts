@@ -41,9 +41,18 @@ export async function GET(request: NextRequest) {
 
   const select = ["id:data->>id", "reportId:data->>reportId", "trackingNumber:data->>trackingNumber", "filename:data->>filename", "contentType:data->>contentType", "size:data->size", "uploadedAt:data->>uploadedAt"].join(",");
   const params = new URLSearchParams({ select, tracking_number: "like.PMATTACH:*", order: "updated_at.desc" });
-  const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: headers(key), cache: "no-store" });
-  if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
-  return NextResponse.json(await response.json(), { headers: { "Cache-Control": "no-store" } });
+  let lastError = "";
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: headers(key), cache: "no-store" });
+    if (response.ok) return NextResponse.json(await response.json(), { headers: { "Cache-Control": "no-store" } });
+    lastError = await response.text();
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+  }
+  // Attachments are supplemental to the completed-report archive. If their
+  // metadata query is temporarily slow, return an empty list so an older
+  // cached browser bundle cannot replace the archive status with a raw 57014.
+  console.warn("PM attachment metadata was temporarily unavailable", lastError);
+  return NextResponse.json([], { headers: { "Cache-Control": "no-store", "X-Attachments-Partial": "true" } });
 }
 
 export async function POST(request: NextRequest) {
