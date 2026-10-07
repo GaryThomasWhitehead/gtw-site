@@ -92,12 +92,17 @@ export default function CorrectiveActionsClient() {
   }
 
   async function emailForm() {
-    const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({ ...action, facilityId: report.facilityId || report.customerName || "", trackingNumber: report.trackingNumber || "" })));
     setEmailing(true); setError(""); setMessage("");
     try {
+      for (const report of reports.filter((item) => dirtyReportIds.has(item.id))) {
+        const response = await fetch("/api/pm-reports", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: report.id, correctiveActions: drafts[report.id] || [] }) });
+        if (!response.ok) throw new Error(`Could not save changes before emailing: ${(await response.text()) || response.status}`);
+      }
+      setDirtyReportIds(new Set());
+      const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({ ...action, facilityId: report.facilityId || report.customerName || "", trackingNumber: report.trackingNumber || "" })));
       const response = await fetch("/api/corrective-actions/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipients, actions }) });
       if (!response.ok) throw new Error(await response.text());
-      setMessage("Corrective-actions form emailed successfully.");
+      setMessage("Corrective-actions PDF and live form link emailed successfully.");
     } catch (cause) { setError(`Could not email form: ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setEmailing(false); }
   }
