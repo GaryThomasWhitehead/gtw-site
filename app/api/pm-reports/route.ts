@@ -192,6 +192,7 @@ export async function GET(request: NextRequest) {
     "sensorTag:data->>sensorTag",
     "calibrationSheets:data->calibrationSheets",
     "correctiveActions:data->correctiveActions",
+    "correctiveScanAt:data->>correctiveScanAt",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {

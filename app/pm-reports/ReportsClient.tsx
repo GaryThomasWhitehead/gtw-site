@@ -35,6 +35,7 @@ type CorrectiveAction = {
   repairNeeded: string;
   urgency: string;
   serviceChannelWo: string;
+  sourceReportId?: string;
 };
 type Report = {
   id: string;
@@ -628,6 +629,7 @@ export default function ReportsClient() {
       repairNeeded: "",
       urgency: "This week",
       serviceChannelWo: "",
+      sourceReportId: report.id,
     };
     setCorrectiveActionDrafts((current) => ({
       ...current,
@@ -740,6 +742,7 @@ export default function ReportsClient() {
         </div>
         <div className={styles.actions}>
           <a href="/pm-reports/import">Import Completed PDF</a>
+          <a href="/corrective-actions">Corrective Actions</a>
           <button type="button" onClick={() => void openTechAccess()}>Manage Tech Access</button>
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload to Report"}
@@ -1008,7 +1011,7 @@ export default function ReportsClient() {
                           <div className={styles.correctiveActionsTableWrap}>
                             <table>
                               <thead>
-                                <tr><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th><span className={styles.srOnly}>Delete</span></th></tr>
+                                <tr><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Report</th><th><span className={styles.srOnly}>Delete</span></th></tr>
                               </thead>
                               <tbody>
                                 {correctiveActionsFor(correctiveActionReportFor(history)).map((action) => (
@@ -1021,10 +1024,11 @@ export default function ReportsClient() {
                                       </select>
                                     </td>
                                     <td><input aria-label="ServiceChannel work order number" value={action.serviceChannelWo} onChange={(event) => updateCorrectiveAction(correctiveActionReportFor(history), action.id, "serviceChannelWo", event.target.value)} /></td>
+                                    <td><button type="button" className={styles.viewActionReportButton} onClick={() => void openReportPdf(history.reports.find((item) => item.id === action.sourceReportId) || correctiveActionReportFor(history))}>View PDF</button></td>
                                     <td><button type="button" className={styles.deleteActionButton} onClick={() => removeCorrectiveAction(correctiveActionReportFor(history), action.id)}>Delete</button></td>
                                   </tr>
                                 ))}
-                                {!correctiveActionsFor(correctiveActionReportFor(history)).length && <tr><td colSpan={5} className={styles.noCorrectiveActions}>No corrective actions entered for this job.</td></tr>}
+                                {!correctiveActionsFor(correctiveActionReportFor(history)).length && <tr><td colSpan={6} className={styles.noCorrectiveActions}>No corrective actions entered for this job.</td></tr>}
                               </tbody>
                             </table>
                           </div>
