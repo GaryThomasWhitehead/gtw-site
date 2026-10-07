@@ -6,7 +6,7 @@ import styles from "./corrective-actions.module.css";
 type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
 type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string };
 
-export default function CorrectiveActionsClient() {
+export default function CorrectiveActionsClient({ readOnly = false }: { readOnly?: boolean }) {
   const [reports, setReports] = useState<Report[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Action[]>>({});
   const [dirtyReportIds, setDirtyReportIds] = useState<Set<string>>(new Set());
@@ -126,28 +126,28 @@ export default function CorrectiveActionsClient() {
   }
 
   return <main className={styles.page}>
-    <header><div><p>FRONTLINE PRO SERVICES</p><h1>Corrective Actions Needed</h1></div><nav><a href="/pm-reports">Completed Reports</a><a href="/fedex-tracker">Back to Tracker</a></nav></header>
+    <header><div><p>FRONTLINE PRO SERVICES</p><h1>Corrective Actions Needed</h1></div>{readOnly ? <span>Read-only access</span> : <nav><a href="/pm-reports">Completed Reports</a><a href="/fedex-tracker">Back to Tracker</a></nav>}</header>
     <section className={styles.content}>
       <div className={styles.toolbar}>
-        <div><strong>{totalActions}</strong><span>open action lines</span><small>{unscanned.length} PM reports not yet scanned</small></div>
-        <button style={scanning || loading ? { cursor: "not-allowed" } : undefined} disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>
-        <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>
+        <div><strong>{totalActions}</strong><span>open action lines</span>{!readOnly && <small>{unscanned.length} PM reports not yet scanned</small>}</div>
+        {!readOnly && <button style={scanning || loading ? { cursor: "not-allowed" } : undefined} disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>}
+        {!readOnly && <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>}
       </div>
       {loading && <div className={styles.progress} role="status" aria-live="polite"><strong>{loadProgress.stage}{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : ""}</strong><progress max={loadProgress.total || 1} value={loadProgress.loaded} /><span>The Scan button will be available when the report list is ready.</span></div>}
       {scanning && <div className={styles.progress}><strong>Scanning PM reports — {scanProgress.done} of {scanProgress.total}</strong><progress max={scanProgress.total || 1} value={scanProgress.done} /><span>{scanProgress.found} new action lines found</span></div>}
-      <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>
+      {!readOnly && <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>}
       {message && <p className={styles.success}>{message}</p>}{error && <p className={styles.error}>{error}</p>}
       {loading ? <p className={styles.empty}>Loading corrective actions…</p> : groups.length ? groups.map((report) => <section className={styles.group} key={report.id}>
-        <div className={styles.groupHeader}><div><h2>{report.facilityId || report.customerName || "Facility"}</h2><p>Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}</p></div><button onClick={() => add(report)}>+ Add Line</button></div>
-        <div className={styles.tableWrap}><table><thead><tr><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Job Report</th><th>Delete</th></tr></thead><tbody>{(drafts[report.id] || []).map((action) => <tr key={action.id}>
-          <td><input value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
-          <td><textarea value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
-          <td><select value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
-          <td><input value={action.serviceChannelWo} onChange={(event) => update(report.id, action.id, "serviceChannelWo", event.target.value)} /></td>
+        <div className={styles.groupHeader}><div><h2>{report.facilityId || report.customerName || "Facility"}</h2><p>Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}</p></div>{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</div>
+        <div className={styles.tableWrap}><table><thead><tr><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{(drafts[report.id] || []).map((action) => <tr key={action.id}>
+          <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
+          <td><textarea disabled={readOnly} value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
+          <td><select disabled={readOnly} value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
+          <td><input disabled={readOnly} value={action.serviceChannelWo} onChange={(event) => update(report.id, action.id, "serviceChannelWo", event.target.value)} /></td>
           <td><a target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(action.sourceReportId || report.id)}`}>View PDF</a></td>
-          <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>
+          {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
         </tr>)}</tbody></table></div>
-      </section>) : <p className={styles.empty}>No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports.</p>}
+      </section>) : <p className={styles.empty}>{readOnly ? "No corrective actions are currently listed." : "No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports."}</p>}
     </section>
   </main>;
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { PDFDocument } from "pdf-lib";
-import { expectedFedExTrackerPassword, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { expectedFedExTrackerPassword, hasCorrectiveActionViewerAccess, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
 
 export const dynamic = "force-dynamic";
@@ -121,13 +121,15 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const managementAccess = hasFedExTrackerAccess(request);
+  const correctiveViewerAccess = hasCorrectiveActionViewerAccess(request);
+  if (!managementAccess && !correctiveViewerAccess) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
   const id = request.nextUrl.searchParams.get("id");
   if (id) {
     const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
-    const select = "pdfBase64:data->>pdfBase64,filename:data->>filename";
+    const select = "pdfBase64:data->>pdfBase64,filename:data->>filename,category:data->>category,correctiveActions:data->correctiveActions";
     const response = await fetch(`${url}/rest/v1/${table}?select=${encodeURIComponent(select)}&tracking_number=eq.${trackingNumber}&limit=1`, {
       headers: apiHeaders(key),
       cache: "no-store",
@@ -135,6 +137,11 @@ export async function GET(request: NextRequest) {
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const [row] = await response.json();
     if (!row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+    const viewerActions = Array.isArray(row.correctiveActions) ? row.correctiveActions : [];
+    const isReferencedCorrectivePdf = viewerActions.some((action: { sourceReportId?: string }) => String(action?.sourceReportId || id) === id);
+    if (!managementAccess && ((row.category || "pm") !== "pm" || !isReferencedCorrectivePdf)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (!row.pdfBase64) return NextResponse.json({ error: "This report does not contain a saved PDF" }, { status: 404 });
     const pdf = Buffer.from(row.pdfBase64, "base64");
     return new NextResponse(pdf, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`, "Cache-Control": "private, max-age=300" } });
@@ -234,10 +241,11 @@ export async function GET(request: NextRequest) {
     });
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const rows = await response.json();
-    return NextResponse.json(rows.map((row: Record<string, unknown>) => {
+    const metadata = rows.map((row: Record<string, unknown>) => {
       const { updated_at: savedAt, ...metadata } = row;
       return { ...metadata, savedAt };
-    }), { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } });
+    }).filter((report: { category?: string }) => managementAccess || (report.category || "pm") === "pm");
+    return NextResponse.json(metadata, { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } });
   }
   const params = new URLSearchParams({ select, tracking_number: "like.PMREPORT:*", order: "updated_at.desc" });
   const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
