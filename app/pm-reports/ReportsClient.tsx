@@ -182,7 +182,10 @@ export default function ReportsClient() {
     setLoadProgress({ loaded: 0, total: 0 });
     try {
       const listResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
-      if (!listResponse.ok) throw new Error(await listResponse.text());
+      if (!listResponse.ok) {
+        const result = await listResponse.json().catch(() => ({}));
+        throw new Error(result?.error || "Completed reports could not be loaded. Please try again.");
+      }
       const index: { id: string }[] = await listResponse.json();
       setLoadProgress({ loaded: 0, total: index.length });
       const chunks: string[][] = [];

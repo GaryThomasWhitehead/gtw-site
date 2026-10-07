@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
   }
 
   const select = ["id:data->>id", "reportId:data->>reportId", "trackingNumber:data->>trackingNumber", "filename:data->>filename", "description:data->>description", "contentType:data->>contentType", "size:data->size", "uploadedAt:data->>uploadedAt"].join(",");
-  const params = new URLSearchParams({ select, tracking_number: "like.PMATTACH:*", order: "updated_at.desc" });
+  const params = new URLSearchParams({ select, order: "updated_at.desc" });
+  params.append("tracking_number", "gte.PMATTACH:");
+  params.append("tracking_number", "lt.PMATTACH;");
   let lastError = "";
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: headers(key), cache: "no-store" });

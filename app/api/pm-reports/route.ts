@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
         "recoveryFingerprint:data->>recoveryFingerprint",
         "tuggerWorkRecords:data->tuggerWorkRecords",
       ].join(",");
-      const params = new URLSearchParams({ select, tracking_number: "like.PMREPORT:*" });
+      const params = new URLSearchParams({ select });
+      params.append("tracking_number", "gte.PMREPORT:");
+      params.append("tracking_number", "lt.PMREPORT;");
       const existingResponse = await fetch(`${url}/rest/v1/${table}?${params}`, {
         headers: apiHeaders(key),
         cache: "no-store",
@@ -194,16 +196,16 @@ export async function GET(request: NextRequest) {
   if (mode === "list") {
     // This query stays on the small indexed columns and never opens the large
     // JSON/PDF payloads. The browser requests metadata in bounded batches next.
-    const params = new URLSearchParams({
-      select: "tracking_number,updated_at",
-      tracking_number: "like.PMREPORT:*",
-      order: "updated_at.desc",
-    });
-    const response = await fetch(`${url}/rest/v1/${table}?${params}`, {
-      headers: apiHeaders(key),
-      cache: "no-store",
-    });
-    if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
+    const params = new URLSearchParams({ select: "tracking_number,updated_at", order: "updated_at.desc" });
+    params.append("tracking_number", "gte.PMREPORT:");
+    params.append("tracking_number", "lt.PMREPORT;");
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
+      if (response?.ok) break;
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+    }
+    if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });
     const rows = await response.json();
     return NextResponse.json(rows
       .map((row: { tracking_number?: string; updated_at?: string }) => ({
@@ -228,7 +230,9 @@ export async function GET(request: NextRequest) {
       "correctiveActions:data->correctiveActions",
       "correctiveScanAt:data->>correctiveScanAt",
     ].join(",");
-    const params = new URLSearchParams({ select: correctiveSelect, tracking_number: "like.PMREPORT:*", order: "updated_at.desc" });
+    const params = new URLSearchParams({ select: correctiveSelect, order: "updated_at.desc" });
+    params.append("tracking_number", "gte.PMREPORT:");
+    params.append("tracking_number", "lt.PMREPORT;");
     const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const rows = await response.json();
@@ -290,7 +294,9 @@ export async function GET(request: NextRequest) {
     }).filter((report: { category?: string }) => managementAccess || (report.category || "pm") === "pm");
     return NextResponse.json(metadata, { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" } });
   }
-  const params = new URLSearchParams({ select, tracking_number: "like.PMREPORT:*", order: "updated_at.desc" });
+  const params = new URLSearchParams({ select, order: "updated_at.desc" });
+  params.append("tracking_number", "gte.PMREPORT:");
+  params.append("tracking_number", "lt.PMREPORT;");
   const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
   const rows = (await response.json()).filter((row: { id?: string }) =>
