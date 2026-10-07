@@ -188,12 +188,25 @@ export default function ReportsClient() {
     setReports([]);
     setLoadProgress({ loaded: 0, total: 0 });
     try {
-      const listResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
-      if (!listResponse.ok) {
-        const result = await listResponse.json().catch(() => ({}));
-        throw new Error(result?.error || "Completed reports could not be loaded. Please try again.");
+      const index: { id: string }[] = [];
+      let cursor = "";
+      for (let page = 0; page < 50; page += 1) {
+        const listUrl = `/api/pm-reports?mode=list${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+        const listResponse = await fetch(listUrl, { cache: "no-store" });
+        if (!listResponse.ok) {
+          const result = await listResponse.json().catch(() => ({}));
+          throw new Error(result?.error || "Completed reports could not be loaded. Please try again.");
+        }
+        const result: { items?: { id: string }[]; hasMore?: boolean; nextCursor?: string } | { id: string }[] = await listResponse.json();
+        if (Array.isArray(result)) {
+          index.push(...result);
+          break;
+        }
+        index.push(...(result.items || []));
+        setLoadProgress({ loaded: 0, total: index.length });
+        if (!result.hasMore || !result.nextCursor || result.nextCursor === cursor) break;
+        cursor = result.nextCursor;
       }
-      const index: { id: string }[] = await listResponse.json();
       setLoadProgress({ loaded: 0, total: index.length });
       const chunks: string[][] = [];
       for (let offset = 0; offset < index.length; offset += 3) {
@@ -922,9 +935,16 @@ export default function ReportsClient() {
         )}
 
         {loadingReports && (
-          <p className={styles.empty}>
-            Loading completed reports{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : "…"}
-          </p>
+          <div className={styles.fileProgress} role="status" aria-live="polite">
+            <strong>
+              {loadProgress.total
+                ? `Loading completed reports — ${loadProgress.loaded} of ${loadProgress.total}`
+                : "Finding saved completed reports…"}
+            </strong>
+            {loadProgress.total
+              ? <progress max={loadProgress.total} value={loadProgress.loaded} />
+              : <progress />}
+          </div>
         )}
         {pdfLoadingId && (
           <div className={styles.fileProgress} role="status" aria-live="polite">

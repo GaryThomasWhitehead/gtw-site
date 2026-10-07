@@ -194,25 +194,27 @@ export async function GET(request: NextRequest) {
 
   const mode = request.nextUrl.searchParams.get("mode");
   if (mode === "list") {
-    // Keep the initial index lookup entirely on the primary-key index. Selecting
-    // updated_at and sorting by it made Postgres visit/sort every large legacy
-    // report row, which could exceed the gateway's ten-second timeout.
-    const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: "1000" });
-    params.append("tracking_number", "gte.PMREPORT:");
+    // Read a small page at a time from the primary-key index. Asking PostgREST
+    // to materialize every legacy report key in one response can still time out
+    // while this table contains old inline PDFs.
+    const pageSize = 25;
+    const cursor = request.nextUrl.searchParams.get("cursor") || "";
+    const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: String(pageSize) });
+    params.append("tracking_number", cursor ? `gt.${cursor}` : "gte.PMREPORT:");
     params.append("tracking_number", "lt.PMREPORT;");
-    let response: Response | null = null;
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
-      if (response?.ok) break;
-      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
-    }
+    const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
     if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });
-    const rows = await response.json();
-    return NextResponse.json(rows
+    const rows: { tracking_number?: string }[] = await response.json();
+    const items = rows
       .map((row: { tracking_number?: string }) => ({
         id: String(row.tracking_number || "").replace(/^PMREPORT:/, ""),
       }))
-      .filter((row: { id: string }) => row.id && !row.id.startsWith("connection-test-")), {
+      .filter((row: { id: string }) => row.id && !row.id.startsWith("connection-test-"));
+    return NextResponse.json({
+      items,
+      hasMore: rows.length === pageSize,
+      nextCursor: rows.length ? String(rows.at(-1)?.tracking_number || "") : "",
+    }, {
         headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" },
       });
   }
