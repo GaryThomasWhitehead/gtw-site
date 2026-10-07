@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
   if (!actions.length) return NextResponse.json({ error: "There are no corrective actions to email" }, { status: 400 });
   const liveUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/corrective-actions`;
   const pdfBase64 = await correctiveActionsPdf(actions);
-  const rows = actions.map((action: Record<string, unknown>) => `<tr><td>${escapeHtml(action.facilityId)}</td><td>${escapeHtml(action.trackingNumber)}</td><td>${escapeHtml(action.assetTag)}</td><td>${escapeHtml(action.repairNeeded)}</td><td>${escapeHtml(action.urgency)}</td><td>${escapeHtml(action.serviceChannelWo)}</td></tr>`).join("");
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
       from,
       to: recipients,
       subject: `Frontline Corrective Actions Needed (${actions.length})`,
-      html: `<h2>Corrective Actions Needed</h2><p>A PDF copy is attached. Use the button below to view the current editable form and open the source job-report PDFs.</p><p><a href="${escapeHtml(liveUrl)}" style="display:inline-block;background:#1670ad;color:white;padding:12px 18px;text-decoration:none;border-radius:8px;font-weight:bold">View live corrective-actions form</a></p><table style="border-collapse:collapse;width:100%"><thead><tr><th>Location</th><th>Tracking #</th><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th></tr></thead><tbody>${rows}</tbody></table>`,
+      html: `<h2>Corrective Actions Needed</h2><p>See the attached PDF to view the report and/or use the link below to view it live and edit.</p><p><a href="${escapeHtml(liveUrl)}" style="display:inline-block;background:#1670ad;color:white;padding:12px 18px;text-decoration:none;border-radius:8px;font-weight:bold">View live report and edit</a></p>`,
       attachments: [{ filename: "Frontline-Corrective-Actions.pdf", content: pdfBase64 }],
     }),
   });
