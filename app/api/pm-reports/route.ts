@@ -165,6 +165,31 @@ export async function GET(request: NextRequest) {
       });
   }
 
+  if (mode === "corrective") {
+    const correctiveSelect = [
+      "updated_at",
+      "id:data->>id",
+      "category:data->>category",
+      "technician:data->>technician",
+      "reportDate:data->>reportDate",
+      "trackingNumber:data->>trackingNumber",
+      "facilityId:data->>facilityId",
+      "customerName:data->>customerName",
+      "correctiveActions:data->correctiveActions",
+      "correctiveScanAt:data->>correctiveScanAt",
+    ].join(",");
+    const params = new URLSearchParams({ select: correctiveSelect, tracking_number: "like.PMREPORT:*", order: "updated_at.desc" });
+    const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
+    if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
+    const rows = await response.json();
+    return NextResponse.json(rows.map((row: Record<string, unknown>) => {
+      const { updated_at: savedAt, ...metadata } = row;
+      return { ...metadata, savedAt };
+    }).filter((report: { id?: string; category?: string }) => report.id && !report.id.startsWith("connection-test-") && (report.category || "pm") === "pm"), {
+      headers: { "Cache-Control": "private, no-store" },
+    });
+  }
+
   // Project only report-list metadata. Pulling every base64 PDF from the JSONB
   // column makes the database scan and response large enough to time out.
   const select = [

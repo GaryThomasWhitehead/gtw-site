@@ -24,19 +24,11 @@ export default function CorrectiveActionsClient() {
     setLoading(true); setError("");
     setLoadProgress({ loaded: 0, total: 0, stage: "Loading PM report list…" });
     try {
-      const indexResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
-      if (!indexResponse.ok) throw new Error(await indexResponse.text());
-      const index: { id: string }[] = await indexResponse.json();
-      setLoadProgress({ loaded: 0, total: index.length, stage: "Loading report details" });
-      const loaded: Report[] = [];
-      for (let offset = 0; offset < index.length; offset += 3) {
-        const ids = index.slice(offset, offset + 3).map((item) => item.id).join(",");
-        const response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(ids)}`, { cache: "no-store" });
-        if (!response.ok) throw new Error(await response.text());
-        loaded.push(...await response.json());
-        setLoadProgress({ loaded: Math.min(offset + 3, index.length), total: index.length, stage: "Loading report details" });
-      }
-      const pm = loaded.filter((report) => (report.category || "pm") === "pm");
+      setLoadProgress({ loaded: 0, total: 1, stage: "Loading corrective-action records" });
+      const response = await fetch("/api/pm-reports?mode=corrective", { cache: "no-store" });
+      if (!response.ok) throw new Error((await response.text()) || `Could not load reports (${response.status})`);
+      const pm: Report[] = await response.json();
+      setLoadProgress({ loaded: 1, total: 1, stage: "Corrective-action records ready" });
       setReports(pm);
       setDrafts(Object.fromEntries(pm.map((report) => [report.id, report.correctiveActions || []])));
     } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
@@ -115,7 +107,7 @@ export default function CorrectiveActionsClient() {
     <section className={styles.content}>
       <div className={styles.toolbar}>
         <div><strong>{totalActions}</strong><span>open action lines</span><small>{unscanned.length} PM reports not yet scanned</small></div>
-        <button disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>
+        <button style={scanning || loading ? { cursor: "not-allowed" } : undefined} disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>
         <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>
       </div>
       {loading && <div className={styles.progress} role="status" aria-live="polite"><strong>{loadProgress.stage}{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : ""}</strong><progress max={loadProgress.total || 1} value={loadProgress.loaded} /><span>The Scan button will be available when the report list is ready.</span></div>}
