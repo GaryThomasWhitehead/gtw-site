@@ -24,14 +24,32 @@ export default function CorrectiveActionsClient() {
     setLoading(true); setError("");
     setLoadProgress({ loaded: 0, total: 0, stage: "Loading PM report list…" });
     try {
-      setLoadProgress({ loaded: 0, total: 1, stage: "Loading corrective-action records" });
-      const response = await fetch("/api/pm-reports?mode=corrective", { cache: "no-store" });
-      if (!response.ok) throw new Error((await response.text()) || `Could not load reports (${response.status})`);
-      const pm: Report[] = await response.json();
-      setLoadProgress({ loaded: 1, total: 1, stage: "Corrective-action records ready" });
+      const indexResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
+      if (!indexResponse.ok) throw new Error("Could not load the saved report list.");
+      const index: { id: string }[] = await indexResponse.json();
+      setLoadProgress({ loaded: 0, total: index.length, stage: "Loading saved corrective actions" });
+      const loaded: Report[] = [];
+      let completed = 0;
+      for (let offset = 0; offset < index.length; offset += 3) {
+        const batch = index.slice(offset, offset + 3);
+        const ids = batch.map((item) => item.id).join(",");
+        let rows: Report[] = [];
+        const response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(ids)}`, { cache: "no-store" });
+        if (response.ok) rows = await response.json();
+        else {
+          for (const item of batch) {
+            const retry = await fetch(`/api/pm-reports?ids=${encodeURIComponent(item.id)}`, { cache: "no-store" });
+            if (retry.ok) rows.push(...await retry.json());
+          }
+        }
+        loaded.push(...rows);
+        completed += batch.length;
+        setLoadProgress({ loaded: Math.min(completed, index.length), total: index.length, stage: "Loading saved corrective actions" });
+      }
+      const pm = loaded.filter((report) => (report.category || "pm") === "pm");
       setReports(pm);
       setDrafts(Object.fromEntries(pm.map((report) => [report.id, report.correctiveActions || []])));
-    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    } catch (cause) { setError(`Could not load saved corrective actions. Please try refreshing the page. ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setLoading(false); }
   }, []);
 
