@@ -2,13 +2,34 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./corrective-actions.module.css";
+import fedexStyles from "./fedex-form.module.css";
 
 type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
 type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string };
+type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
+
+function searchableWords(value: string) {
+  const ignored = new Set(["about", "after", "also", "been", "from", "have", "into", "item", "needs", "photo", "report", "that", "the", "this", "with", "work"]);
+  return new Set(value.toLowerCase().match(/[a-z0-9-]{3,}/g)?.filter((word) => !ignored.has(word)) || []);
+}
+
+function relatedPictures(action: Action, attachments: ReportAttachment[]) {
+  const candidates = attachments.filter((attachment) => attachment.reportId === (action.sourceReportId || "") && String(attachment.contentType || "").startsWith("image/"));
+  const target = searchableWords(`${action.assetTag} ${action.repairNeeded}`);
+  const scored = candidates.map((attachment) => {
+    let score = 0;
+    for (const word of searchableWords(`${attachment.description || ""} ${attachment.filename || ""}`)) if (target.has(word)) score += word.length > 6 ? 2 : 1;
+    if (action.assetTag && String(attachment.description || "").toLowerCase().includes(action.assetTag.toLowerCase())) score += 6;
+    return { attachment, score };
+  }).sort((a, b) => b.score - a.score);
+  const matched = scored.filter((item) => item.score > 0).map((item) => item.attachment);
+  return (matched.length ? matched : candidates).slice(0, 4);
+}
 
 export default function CorrectiveActionsClient({ readOnly = false }: { readOnly?: boolean }) {
   const [reports, setReports] = useState<Report[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Action[]>>({});
+  const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
   const [dirtyReportIds, setDirtyReportIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0, stage: "Loading PM report list…" });
@@ -16,6 +37,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const [scanProgress, setScanProgress] = useState({ done: 0, total: 0, found: 0 });
   const [saving, setSaving] = useState(false);
   const [emailing, setEmailing] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [recipients, setRecipients] = useState("gary@frontlineworldwide.com");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -49,6 +71,8 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       const pm = loaded.filter((report) => (report.category || "pm") === "pm");
       setReports(pm);
       setDrafts(Object.fromEntries(pm.map((report) => [report.id, report.correctiveActions || []])));
+      const attachmentResponse = await fetch("/api/pm-report-attachments", { cache: "no-store" });
+      if (attachmentResponse.ok) setAttachments(await attachmentResponse.json());
     } catch (cause) { setError(`Could not load saved corrective actions. Please try refreshing the page. ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setLoading(false); }
   }, []);
@@ -58,6 +82,8 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const groups = useMemo(() => reports.filter((report) => (drafts[report.id] || []).length > 0), [reports, drafts]);
   const totalActions = groups.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
   const unscanned = reports.filter((report) => !report.correctiveScanAt);
+  const reportDates = reports.map((report) => report.reportDate || "").filter(Boolean).sort();
+  const serviceChannelNumbers = [...new Set(groups.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
 
   function update(reportId: string, actionId: string, field: keyof Omit<Action, "id" | "sourceReportId">, value: string) {
     setDrafts((current) => ({ ...current, [reportId]: (current[reportId] || []).map((action) => action.id === actionId ? { ...action, [field]: value } : action) }));
@@ -125,29 +151,69 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
     finally { setEmailing(false); }
   }
 
+  async function downloadFedexForm() {
+    setExporting(true); setError(""); setMessage("");
+    try {
+      for (const report of reports.filter((item) => dirtyReportIds.has(item.id))) {
+        const response = await fetch("/api/pm-reports", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: report.id, correctiveActions: drafts[report.id] || [] }) });
+        if (!response.ok) throw new Error(`Could not save changes before exporting: ${(await response.text()) || response.status}`);
+      }
+      setDirtyReportIds(new Set());
+      const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({
+        ...action,
+        reportId: action.sourceReportId || report.id,
+        facilityId: report.facilityId || report.customerName || "",
+        trackingNumber: report.trackingNumber || "",
+        reportDate: report.reportDate || "",
+      })));
+      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions }) });
+      if (!response.ok) throw new Error(await response.text());
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const filename = disposition.match(/filename="([^"]+)"/)?.[1] || "FXG-Correctives-and-Parts.xlsx";
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+      setMessage("FedEx Correctives & Parts workbook downloaded with linked report pictures.");
+    } catch (cause) { setError(`Could not create FedEx workbook: ${cause instanceof Error ? cause.message : String(cause)}`); }
+    finally { setExporting(false); }
+  }
+
   return <main className={styles.page}>
     <header><div><p>FRONTLINE PRO SERVICES</p><h1>Corrective Actions Needed</h1></div>{readOnly ? <span>Read-only access</span> : <nav><a href="/pm-reports">Completed Reports</a><a href="/fedex-tracker">Back to Tracker</a></nav>}</header>
     <section className={styles.content}>
       <div className={styles.toolbar}>
         <div><strong>{totalActions}</strong><span>open action lines</span>{!readOnly && <small>{unscanned.length} PM reports not yet scanned</small>}</div>
         {!readOnly && <button style={scanning || loading ? { cursor: "not-allowed" } : undefined} disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>}
+        {!readOnly && <button disabled={exporting || loading || !totalActions} onClick={() => void downloadFedexForm()}>{exporting ? "Building FedEx File…" : "Download FedEx Form"}</button>}
         {!readOnly && <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>}
       </div>
       {loading && <div className={styles.progress} role="status" aria-live="polite"><strong>{loadProgress.stage}{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : ""}</strong><progress max={loadProgress.total || 1} value={loadProgress.loaded} /><span>The Scan button will be available when the report list is ready.</span></div>}
       {scanning && <div className={styles.progress}><strong>Scanning PM reports — {scanProgress.done} of {scanProgress.total}</strong><progress max={scanProgress.total || 1} value={scanProgress.done} /><span>{scanProgress.found} new action lines found</span></div>}
       {!readOnly && <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>}
       {message && <p className={styles.success}>{message}</p>}{error && <p className={styles.error}>{error}</p>}
-      {loading ? <p className={styles.empty}>Loading corrective actions…</p> : groups.length ? groups.map((report) => <section className={styles.group} key={report.id}>
-        <div className={styles.groupHeader}><div><h2>{report.facilityId || report.customerName || "Facility"}</h2><p>Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}</p></div>{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</div>
-        <div className={styles.tableWrap}><table><thead><tr><th>Asset / Tag</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{(drafts[report.id] || []).map((action) => <tr key={action.id}>
-          <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
-          <td><textarea disabled={readOnly} value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
-          <td><select disabled={readOnly} value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
-          <td><input disabled={readOnly} value={action.serviceChannelWo} onChange={(event) => update(report.id, action.id, "serviceChannelWo", event.target.value)} /></td>
-          <td><a target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(action.sourceReportId || report.id)}`}>View PDF</a></td>
-          {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
-        </tr>)}</tbody></table></div>
-      </section>) : <p className={styles.empty}>{readOnly ? "No corrective actions are currently listed." : "No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports."}</p>}
+      {loading ? <p className={styles.empty}>Loading corrective actions…</p> : groups.length ? <section className={fedexStyles.fedexForm}>
+        <div className={fedexStyles.formMeta}>
+          <div><strong>PM Start Date:</strong><span>{reportDates[0] || "—"}</span></div>
+          <div><strong>PM End Date:</strong><span>{reportDates.at(-1) || "—"}</span></div>
+          <div><strong>ServiceChannel WO#:</strong><span>{serviceChannelNumbers.join(", ") || "—"}</span></div>
+        </div>
+        <div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
+        <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{groups.flatMap((report) => [
+          <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
+          ...(drafts[report.id] || []).map((action) => {
+            const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
+            return <tr key={action.id}>
+              <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
+              <td><textarea disabled={readOnly} value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
+              <td><select disabled={readOnly} value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
+              <td><input disabled={readOnly} value={action.serviceChannelWo} onChange={(event) => update(report.id, action.id, "serviceChannelWo", event.target.value)} /></td>
+              <td><div className={fedexStyles.photoCell}>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(action.sourceReportId || report.id)}`}>View PDF</a></div></td>
+              {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
+            </tr>;
+          }),
+        ])}</tbody></table></div>
+      </section> : <p className={styles.empty}>{readOnly ? "No corrective actions are currently listed." : "No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports."}</p>}
     </section>
   </main>;
 }
