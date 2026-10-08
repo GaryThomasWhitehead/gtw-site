@@ -332,6 +332,51 @@ export async function POST(request: NextRequest) {
   sheet.views = [{ state: "frozen", ySplit: 5 }];
   sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9, printArea: `A1:L${lastFormRow}` };
   photosSheet.views = [{ state: "frozen", ySplit: 1 }];
+
+  // Add a true blank margin column to the left of the complete form. ExcelJS
+  // does not move merged ranges or drawing anchors when columns are spliced,
+  // so preserve and shift both explicitly.
+  const mergedRanges = [...(sheet.model.merges || [])];
+  for (const range of mergedRanges) sheet.unMergeCells(range);
+  sheet.spliceColumns(1, 0, []);
+  sheet.getColumn("A").width = 3.5;
+  const shiftAddressRight = (address: string) => address.replace(/^([A-Z]+)(\d+)$/, (_, letters: string, row: string) => {
+    let column = 0;
+    for (const letter of letters) column = column * 26 + letter.charCodeAt(0) - 64;
+    column += 1;
+    let shifted = "";
+    while (column > 0) {
+      const remainder = (column - 1) % 26;
+      shifted = String.fromCharCode(65 + remainder) + shifted;
+      column = Math.floor((column - 1) / 26);
+    }
+    return `${shifted}${row}`;
+  });
+  for (const range of mergedRanges) {
+    const [start, end = start] = range.split(":");
+    sheet.mergeCells(`${shiftAddressRight(start)}:${shiftAddressRight(end)}`);
+  }
+  for (const image of sheet.getImages()) image.range.tl.nativeCol += 1;
+
+  const frameBorder: Partial<ExcelJS.Border> = { style: "medium", color: { argb: "FF000000" } };
+  const frameSection = (leftColumn: number, rightColumn: number, topRow: number, bottomRow: number) => {
+    for (let rowNumber = topRow; rowNumber <= bottomRow; rowNumber += 1) {
+      const leftCell = sheet.getCell(rowNumber, leftColumn);
+      leftCell.border = { ...leftCell.border, left: frameBorder };
+      const rightCell = sheet.getCell(rowNumber, rightColumn);
+      rightCell.border = { ...rightCell.border, right: frameBorder };
+    }
+    for (let column = leftColumn; column <= rightColumn; column += 1) {
+      const topCell = sheet.getCell(topRow, column);
+      topCell.border = { ...topCell.border, top: frameBorder };
+      const bottomCell = sheet.getCell(bottomRow, column);
+      bottomCell.border = { ...bottomCell.border, bottom: frameBorder };
+    }
+  };
+  frameSection(2, 7, 2, lastFormRow);
+  frameSection(9, 13, 2, lastFormRow);
+  sheet.pageSetup.printArea = `A1:M${lastFormRow}`;
+
   const rawOutput = Buffer.from(await workbook.xlsx.writeBuffer());
   const archive = await JSZip.loadAsync(rawOutput);
   for (const [filename, entry] of Object.entries(archive.files)) {
