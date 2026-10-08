@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     assetTag: compactAssetTag(String(item.assetTag || "")),
     repairNeeded: safe(item.repairNeeded, 1500),
     urgency: safe(item.urgency, 80),
-    serviceChannelWo: safe(item.serviceChannelWo, 120),
+    serviceChannelWo: safe(item.trackingNumber || item.serviceChannelWo, 120),
   })).filter((item: ExportAction) => item.reportId && (item.assetTag || item.repairNeeded));
   if (!actions.length) return NextResponse.json({ error: "There are no corrective-action lines to export." }, { status: 400 });
   const parts = (Array.isArray(body?.parts) ? body.parts : []).slice(0, actions.length);
