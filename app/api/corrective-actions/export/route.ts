@@ -253,6 +253,12 @@ export async function POST(request: NextRequest) {
     sheet.getCell(`I${rowNumber}`).value = action.repairNeeded;
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
     sheet.getCell(`K${rowNumber}`).value = action.serviceChannelWo;
+    // FedEx assigns this value after receiving the workbook. Keep the cell
+    // explicitly unlocked and use the template's input-yellow convention so
+    // it is obvious that the downloaded form is meant to be completed here.
+    sheet.getCell(`K${rowNumber}`).protection = { locked: false };
+    sheet.getCell(`K${rowNumber}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" } };
+    sheet.getCell(`K${rowNumber}`).font = { ...sheet.getCell(`K${rowNumber}`).font, color: { argb: "FF000000" } };
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
