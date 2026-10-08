@@ -389,9 +389,10 @@ export default function ReportsClient() {
         reportCount: (current?.reportCount || 0) + history.reports.length,
       });
     });
-    return Array.from(groups.entries()).sort(([, left], [, right]) =>
-      left.label.localeCompare(right.label, undefined, { sensitivity: "base" }),
-    );
+    return Array.from(groups.entries()).sort(([, left], [, right]) => {
+      const newestComparison = newestFirst(left.histories[0].latest, right.histories[0].latest);
+      return newestComparison || left.label.localeCompare(right.label, undefined, { sensitivity: "base" });
+    });
   }, [shown]);
 
   const tuggerHistory = useMemo(
@@ -1026,15 +1027,15 @@ export default function ReportsClient() {
           </div>
         ) : (
           <div className={styles.list}>
-            {technicianGroups.map(([technicianKey, group]) => (
-              <details className={styles.technicianGroup} key={technicianKey} open={query.trim() ? true : undefined}>
+            {technicianGroups.map(([technicianKey, group], groupIndex) => (
+              <details className={styles.technicianGroup} key={technicianKey} open={query.trim() ? true : groupIndex === 0}>
                 <summary>
                   <span>{group.label}</span>
                   <strong>{group.histories.length} {group.histories.length === 1 ? "job" : "jobs"} · {group.reportCount} {group.reportCount === 1 ? "report" : "reports"}</strong>
                 </summary>
                 <div className={styles.technicianReports}>
-                  {group.histories.map((history) => (
-                    <details className={styles.jobHistory} key={history.key} open={query.trim() ? true : undefined}>
+                  {group.histories.map((history, historyIndex) => (
+                    <details className={styles.jobHistory} key={history.key} open={query.trim() ? true : groupIndex === 0 && historyIndex === 0}>
                       <summary>
                         <span>
                           <strong>{history.latest.customerName || history.latest.facilityId || "Customer"}</strong>
