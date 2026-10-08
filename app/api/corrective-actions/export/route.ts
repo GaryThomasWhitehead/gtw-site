@@ -164,21 +164,22 @@ export async function POST(request: NextRequest) {
   sheet.unMergeCells("H4:K4");
   sheet.mergeCells("H4:L4");
   sheet.getColumn("L").width = 25;
-  // Keep Photo inside the FedEx corrective-actions table so Excel applies the
-  // exact same header and alternating row colors as the other columns.
-  const correctiveTable = sheet.getTable("Table2") as unknown as { table: {
-    tableRef: string;
-    autoFilterRef: string;
-    columns: Array<{ name: string; filterButton?: boolean }>;
-  } };
-  const correctiveTableModel = correctiveTable.table;
-  if (!correctiveTableModel.columns.some((column) => column.name === "Photo")) {
-    correctiveTableModel.tableRef = "H5:L201";
-    correctiveTableModel.autoFilterRef = "H5:L201";
-    correctiveTableModel.columns.push({ name: "Photo", filterButton: false });
-  }
+  // Excel's automatic table striping overrides the FedEx form colors after a
+  // download. Use fixed cell fills so the form looks the same in every viewer.
+  sheet.removeTable("Table1");
+  sheet.removeTable("Table2");
   sheet.getCell("L5").value = "Photo";
   sheet.getCell("L5").alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  const partsHeaderFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FFEBC9E2" } };
+  const correctiveHeaderFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FFE2C6F4" } };
+  for (const column of ["A", "B", "C", "D", "E", "F"]) sheet.getCell(`${column}5`).fill = partsHeaderFill;
+  for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}5`).fill = correctiveHeaderFill;
+  for (let rowNumber = 6; rowNumber <= 201; rowNumber += 1) {
+    const partsFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFF1CFE8" } };
+    const correctiveFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
+    for (const column of ["A", "B", "C", "D", "E", "F"]) sheet.getCell(`${column}${rowNumber}`).fill = partsFill;
+    for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).fill = correctiveFill;
+  }
   parts.forEach((part: Record<string, unknown>, index: number) => {
     const rowNumber = index + 6;
     const values = [part.partNumber, part.description, part.manufacturer, part.qtyNeeded, part.qtyOnHand, part.asset];
