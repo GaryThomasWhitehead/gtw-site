@@ -46,9 +46,18 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
     setLoading(true); setError("");
     setLoadProgress({ loaded: 0, total: 0, stage: "Loading PM report list…" });
     try {
-      const indexResponse = await fetch("/api/pm-reports?mode=list", { cache: "no-store" });
-      if (!indexResponse.ok) throw new Error("Could not load the saved report list.");
-      const index: { id: string }[] = await indexResponse.json();
+      const index: { id: string }[] = [];
+      let cursor = "";
+      let hasMore = true;
+      while (hasMore) {
+        const indexResponse = await fetch(`/api/pm-reports?mode=list${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, { cache: "no-store" });
+        if (!indexResponse.ok) throw new Error("Could not load the saved report list.");
+        const page = await indexResponse.json();
+        const items: { id: string }[] = Array.isArray(page) ? page : Array.isArray(page?.items) ? page.items : [];
+        index.push(...items);
+        hasMore = !Array.isArray(page) && Boolean(page?.hasMore && page?.nextCursor);
+        cursor = hasMore ? String(page.nextCursor) : "";
+      }
       setLoadProgress({ loaded: 0, total: index.length, stage: "Loading saved corrective actions" });
       const loaded: Report[] = [];
       let completed = 0;
