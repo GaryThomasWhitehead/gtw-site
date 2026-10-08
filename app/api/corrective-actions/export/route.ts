@@ -168,13 +168,13 @@ export async function POST(request: NextRequest) {
   const correctiveTable = sheet.getTable("Table2") as unknown as { table: {
     tableRef: string;
     autoFilterRef: string;
-    columns: Array<{ name: string; totalsRowFunction?: string; filterButton?: boolean }>;
+    columns: Array<{ name: string; filterButton?: boolean }>;
   } };
   const correctiveTableModel = correctiveTable.table;
   if (!correctiveTableModel.columns.some((column) => column.name === "Photo")) {
     correctiveTableModel.tableRef = "H5:L201";
     correctiveTableModel.autoFilterRef = "H5:L201";
-    correctiveTableModel.columns.push({ name: "Photo", totalsRowFunction: "none", filterButton: true });
+    correctiveTableModel.columns.push({ name: "Photo", filterButton: false });
   }
   sheet.getCell("L5").value = "Photo";
   sheet.getCell("L5").alignment = { horizontal: "center", vertical: "middle", wrapText: true };
