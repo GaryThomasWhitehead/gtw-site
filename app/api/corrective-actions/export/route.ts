@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 import { getDocumentProxy, renderPageAsImage } from "unpdf";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
@@ -290,7 +291,22 @@ export async function POST(request: NextRequest) {
   sheet.views = [{ state: "frozen", ySplit: 5 }];
   sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 };
   photosSheet.views = [{ state: "frozen", ySplit: 1 }];
-  const output = await workbook.xlsx.writeBuffer();
+  const rawOutput = Buffer.from(await workbook.xlsx.writeBuffer());
+  const archive = await JSZip.loadAsync(rawOutput);
+  for (const [filename, entry] of Object.entries(archive.files)) {
+    if (entry.dir) continue;
+    if (/^xl\/tables\/table\d+\.xml$/.test(filename)) {
+      const xml = await entry.async("string");
+      archive.file(filename, xml.replace(/<autoFilter\b[^>]*>[\s\S]*?<\/autoFilter>/g, ""));
+    }
+    if (/^xl\/drawings\/drawing\d+\.xml$/.test(filename)) {
+      const xml = await entry.async("string");
+      // ExcelJS copies the template picture's creationId to every generated
+      // image. Duplicate drawing IDs make desktop Excel repair the workbook.
+      archive.file(filename, xml.replace(/<a:extLst>[\s\S]*?<a16:creationId\b[^>]*\/>[\s\S]*?<\/a:extLst>/g, ""));
+    }
+  }
+  const output = await archive.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
   const filename = `FXG-Correctives-and-Parts-${new Date().toISOString().slice(0, 10)}.xlsx`;
   return new NextResponse(Buffer.from(output), {
     headers: {
