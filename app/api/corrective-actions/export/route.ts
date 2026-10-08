@@ -48,6 +48,10 @@ function safe(value: unknown, max = 1500) {
   return String(value || "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, " ").trim().slice(0, max);
 }
 
+function wrappedLineCount(value: string, charactersPerLine: number) {
+  return Math.max(1, value.split(/\r?\n/).reduce((total, paragraph) => total + Math.max(1, Math.ceil(paragraph.length / charactersPerLine)), 0));
+}
+
 function compactAssetTag(value: string) {
   let tag = safe(value, 250).replace(/^asset(?:\s*\/\s*tag)?(?:\s*id)?\s*[:#-]?\s*/i, "");
   const codeList = tag.match(/(?:[A-Z]{1,4}\d{0,2}-\d{1,3}(?:\s*,\s*)?){2,}/i)?.[0];
@@ -261,7 +265,9 @@ export async function POST(request: NextRequest) {
   actions.forEach((action, index) => {
     const rowNumber = index + 6;
     const row = sheet.getRow(rowNumber);
-    row.height = Math.max(58, Math.min(150, Math.ceil(action.repairNeeded.length / 48) * 15, Math.ceil(action.assetTag.length / 15) * 15));
+    const repairHeight = wrappedLineCount(action.repairNeeded, 40) * 17 + 12;
+    const assetHeight = wrappedLineCount(action.assetTag, 13) * 17 + 12;
+    row.height = Math.max(58, Math.min(390, Math.max(repairHeight, assetHeight)));
     sheet.getCell(`H${rowNumber}`).value = action.assetTag;
     sheet.getCell(`I${rowNumber}`).value = action.repairNeeded;
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
