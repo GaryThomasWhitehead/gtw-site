@@ -209,6 +209,10 @@ export async function POST(request: NextRequest) {
   };
 
   const usedReportSheetNames = new Set<string>();
+  const internalSheetLink = (sheetName: string, address: string, label: string) => ({
+    formula: `HYPERLINK("#'${sheetName.replace(/'/g, "''")}'!${address}","${label.replace(/"/g, '""')}")`,
+    result: label,
+  });
   for (const [reportIndex, reportId] of reportIds.filter((id) => !(attachmentsByReport.get(id) || []).length).entries()) {
     const action = actions.find((item) => item.reportId === reportId);
     const pdf = await pdfForReport(reportId);
@@ -264,12 +268,12 @@ export async function POST(request: NextRequest) {
     if (!matched.length) {
       const reportSheetName = reportLocations.get(action.reportId);
       sheet.getCell(`L${rowNumber}`).value = reportSheetName
-        ? { text: "View Embedded Job Report", hyperlink: `'${reportSheetName.replace(/'/g, "''")}'!A1`, tooltip: "Open the embedded source job report" }
+        ? internalSheetLink(reportSheetName, "A1", "View Embedded Job Report")
         : "Job report unavailable";
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
     }
-    sheet.getCell(`L${rowNumber}`).value = { text: `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`, hyperlink: `'Photos'!${ensureFullPhoto(matched[0], action)}` };
+    sheet.getCell(`L${rowNumber}`).value = internalSheetLink("Photos", ensureFullPhoto(matched[0], action), `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
     sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
     matched.slice(0, 2).forEach((attachment, photoIndex) => {
       const extension = imageExtension(attachment.contentType, attachment.filename);
@@ -279,7 +283,6 @@ export async function POST(request: NextRequest) {
       sheet.addImage(imageId, {
         tl: { col: 11 + photoIndex * 0.5, row: rowNumber - 1 + 0.08 },
         ext: { width: 75, height: 52 },
-        hyperlinks: { hyperlink: `#'Photos'!${fullAddress}`, tooltip: "Open full-size photo" },
       });
     });
   });
