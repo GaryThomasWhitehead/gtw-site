@@ -79,6 +79,10 @@ function imageExtension(contentType: string, filename: string): "png" | "jpeg" |
   return null;
 }
 
+function copyCellStyle(source: ExcelJS.Cell, target: ExcelJS.Cell) {
+  target.style = JSON.parse(JSON.stringify(source.style));
+}
+
 async function attachmentsForReport(reportId: string) {
   const { url, key, table } = config();
   const params = new URLSearchParams({ select: "data" });
@@ -142,7 +146,7 @@ export async function POST(request: NextRequest) {
   const workOrders = [...new Set(actions.map((action) => action.serviceChannelWo).filter(Boolean))];
   sheet.getCell("J2").value = workOrders.join(", ");
   sheet.getColumn("L").width = 25;
-  sheet.getCell("L5").style = { ...sheet.getCell("K5").style };
+  copyCellStyle(sheet.getCell("K5"), sheet.getCell("L5"));
   sheet.getCell("L5").value = "Photo";
   parts.forEach((part: Record<string, unknown>, index: number) => {
     const rowNumber = index + 6;
@@ -177,7 +181,7 @@ export async function POST(request: NextRequest) {
     const rowNumber = index + 6;
     const row = sheet.getRow(rowNumber);
     row.height = Math.max(58, Math.min(150, Math.ceil(action.repairNeeded.length / 48) * 15, Math.ceil(action.assetTag.length / 15) * 15));
-    sheet.getCell(`L${rowNumber}`).style = { ...sheet.getCell(`K${rowNumber}`).style };
+    copyCellStyle(sheet.getCell(`K${rowNumber}`), sheet.getCell(`L${rowNumber}`));
     sheet.getCell(`H${rowNumber}`).value = action.assetTag;
     sheet.getCell(`I${rowNumber}`).value = action.repairNeeded;
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
@@ -185,8 +189,8 @@ export async function POST(request: NextRequest) {
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
-      sheet.getCell(`L${rowNumber}`).value = { text: "Open source job report", hyperlink: `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(action.reportId)}` };
-      sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
+      sheet.getCell(`L${rowNumber}`).value = { text: "Open Job Report PDF", hyperlink: `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(action.reportId)}`, tooltip: "Open the source job report PDF" };
+      sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
     }
     sheet.getCell(`L${rowNumber}`).value = { text: `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`, hyperlink: `#'Photos'!${ensureFullPhoto(matched[0], action)}` };
