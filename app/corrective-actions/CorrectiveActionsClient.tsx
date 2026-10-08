@@ -6,7 +6,7 @@ import fedexStyles from "./fedex-form.module.css";
 
 type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
 type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
-const CORRECTIVE_SCAN_VERSION = 2;
+const CORRECTIVE_SCAN_VERSION = 3;
 const JOB_PLANS = ["SLIDER BED CONVEYOR", "SLIDER BED CONVEYOR W/ MOTORIZED PULLEY", "WASP 1-STAGE EXTENDO", "WASP 1-STAGE W/ MOTORIZED PULLEY", "SRS/MHS 1-STAGE EXTENDO", "NORTECH 1-STAGE EXTENDO", "SHB 1-STAGE EXTENDO", "SHB 1-STAGE W/ MOTORIZED PULLEY", "LEWCO ROLLERS", "SRS/MHS 3-STAGE EXTENDO", "NORTECH 3-STAGE EXTENDO", "WASP 5-STAGE EXTENDO", "WASP 5-STAGE W/ SWAK", "SRS 5-STAGE EXTENDO", "CALJAN 5-STAGE EXTENDO", "MAXX 5-STAGE EXTENDO", "PLAK STATION", "E-STOP", "INTERROLL POWER CURVE", "PORTEC POWER CURVE", "PSC/FLOTURN POWER CURVE", "TRANSNORM POWER CURVE", "INTRALOX", "POWERED ROLLER CONVEYOR", "RTU/RTI", "GRAVITY CONVEYOR, CHUTES & GATES", "MCP"];
 type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
 

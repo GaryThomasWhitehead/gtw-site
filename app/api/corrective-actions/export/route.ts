@@ -44,6 +44,15 @@ function safe(value: unknown, max = 1500) {
   return String(value || "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, " ").trim().slice(0, max);
 }
 
+function compactAssetTag(value: string) {
+  let tag = safe(value, 250).replace(/^asset(?:\s*\/\s*tag)?(?:\s*id)?\s*[:#-]?\s*/i, "");
+  const codeList = tag.match(/(?:[A-Z]{1,4}\d{0,2}-\d{1,3}(?:\s*,\s*)?){2,}/i)?.[0];
+  if (codeList) return codeList.replace(/\s+/g, " ").replace(/,\s*$/, "").slice(0, 80);
+  if (/^missing\b/i.test(tag) && /\bon\s+/i.test(tag)) tag = tag.replace(/^missing\s+.+?\bon\s+/i, "");
+  tag = tag.split(/\b(?:replaced|broke|broken|failed|damaged|needs?|missing clips?|was on|visual damage|probably due|performed)\b/i)[0].trim();
+  return tag.split(/\s+/).filter(Boolean).slice(0, 7).join(" ").replace(/[.,;:-]+$/, "").slice(0, 80) || "Asset not entered";
+}
+
 function words(value: string) {
   const ignored = new Set(["about", "after", "also", "been", "from", "have", "into", "item", "needs", "photo", "report", "that", "the", "this", "with", "work"]);
   return new Set(value.toLowerCase().match(/[a-z0-9-]{3,}/g)?.filter((word) => !ignored.has(word)) || []);
@@ -95,7 +104,7 @@ export async function POST(request: NextRequest) {
     facilityId: safe(item.facilityId, 120),
     trackingNumber: safe(item.trackingNumber, 120),
     reportDate: safe(item.reportDate, 80),
-    assetTag: safe(item.assetTag, 250),
+    assetTag: compactAssetTag(String(item.assetTag || "")),
     repairNeeded: safe(item.repairNeeded, 1500),
     urgency: safe(item.urgency, 80),
     serviceChannelWo: safe(item.serviceChannelWo, 120),
@@ -158,7 +167,7 @@ export async function POST(request: NextRequest) {
   actions.forEach((action, index) => {
     const rowNumber = index + 6;
     const row = sheet.getRow(rowNumber);
-    row.height = 58;
+    row.height = Math.max(58, Math.min(150, Math.ceil(action.repairNeeded.length / 48) * 15, Math.ceil(action.assetTag.length / 15) * 15));
     sheet.getCell(`L${rowNumber}`).style = { ...sheet.getCell(`K${rowNumber}`).style };
     sheet.getCell(`H${rowNumber}`).value = action.assetTag;
     sheet.getCell(`I${rowNumber}`).value = action.repairNeeded;

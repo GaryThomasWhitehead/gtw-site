@@ -3,7 +3,7 @@ import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
-const CORRECTIVE_SCAN_VERSION = 2;
+const CORRECTIVE_SCAN_VERSION = 3;
 
 type Action = {
   id: string;
@@ -30,6 +30,16 @@ function cleanText(value: string) {
   return value.replace(/Frontline Reports[^\n]*/gi, " ").replace(/FRONTLINE FACILITY SERVICES/gi, " ").replace(/Preventive Maintenance Report/gi, " ").replace(/Page \d+ of[^\n]*/gi, " ").replace(/\s+/g, " ").trim();
 }
 
+function compactAssetTag(value: string) {
+  let tag = cleanText(value).replace(/^asset(?:\s*\/\s*tag)?(?:\s*id)?\s*[:#-]?\s*/i, "");
+  const codeList = tag.match(/(?:[A-Z]{1,4}\d{0,2}-\d{1,3}(?:\s*,\s*)?){2,}/i)?.[0];
+  if (codeList) return codeList.replace(/\s+/g, " ").replace(/,\s*$/, "").slice(0, 80);
+  if (/^missing\b/i.test(tag) && /\bon\s+/i.test(tag)) tag = tag.replace(/^missing\s+.+?\bon\s+/i, "");
+  tag = tag.split(/\b(?:replaced|broke|broken|failed|damaged|needs?|missing clips?|was on|visual damage|probably due|performed)\b/i)[0].trim();
+  const words = tag.split(/\s+/).filter(Boolean);
+  return words.slice(0, 7).join(" ").replace(/[.,;:-]+$/, "").slice(0, 80) || "Asset not entered";
+}
+
 function urgencyFor(text: string) {
   if (/e\s*-?\s*stop|emergency|hanging on|go bad very soon|couple days|severely damaged/i.test(text)) return "Immediate";
   if (/leak|jumping|bearing|guard|cage cover|stuck|not working|broken|failed/i.test(text)) return "24–72 hours";
@@ -47,7 +57,7 @@ function findingsFromText(text: string, reportId: string): Action[] {
     const end = starts[index + 1]?.index ?? text.length;
     const block = text.slice(start, end).trim();
     const newline = block.indexOf("\n");
-    const assetTag = cleanText(newline >= 0 ? block.slice(0, newline) : block.slice(0, 180)).slice(0, 250) || "Asset not entered";
+    const assetTag = compactAssetTag(newline >= 0 ? block.slice(0, newline) : block.slice(0, 180));
     const description = cleanText(newline >= 0 ? block.slice(newline + 1) : block);
     if (!actionable.test(description)) continue;
     const explicitFutureNeed = /will need|would need|needs?\s+(?:to\s+be\s+)?|need a work order|should\s+(?:be\s+)?|going to go bad|could not|unable to/i.test(description);
@@ -87,7 +97,7 @@ export async function POST(request: NextRequest) {
   const { extractTextItems } = await import("unpdf");
   const extracted = await extractTextItems(new Uint8Array(pdfBytes));
   const text = extracted.items.flatMap((page) => page).map((item) => `${item.str}${item.hasEOL ? "\n" : " "}`).join("");
-  const existing: Action[] = Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : [];
+  const existing: Action[] = (Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : []).map((action: Action) => ({ ...action, assetTag: compactAssetTag(action.assetTag) }));
   const found = findingsFromText(text, id).filter((candidate) => !existing.some((action) => action.id === candidate.id));
   const updated = { ...row.data, correctiveActions: [...existing, ...found], correctiveScanAt: new Date().toISOString(), correctiveScanVersion: CORRECTIVE_SCAN_VERSION };
   const updateResponse = await fetch(`${url}/rest/v1/${table}?tracking_number=eq.${recordKey}`, {
