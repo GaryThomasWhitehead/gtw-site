@@ -301,6 +301,15 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         const locationServiceChannelNumbers = [...new Set(location.reports.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
         const locationActionCount = location.reports.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
         const locationParts = partsForLocation(location.key, Math.max(1, locationActionCount));
+        let locationPartIndex = 0;
+        const locationPartRows = location.reports.flatMap((report) => [
+          <tr className={fedexStyles.sourceRow} key={`${report.id}-parts-source`}><td colSpan={6}>Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button aria-hidden="true" tabIndex={-1} style={{ visibility: "hidden" }}>+ Add Line</button>}</td></tr>,
+          ...(drafts[report.id] || []).map((action) => {
+            const index = locationPartIndex++;
+            const part = locationParts[index] || blankPart();
+            return <tr key={`${action.id}-part`}>{(Object.keys(part) as (keyof Part)[]).map((field) => <td key={field}><input className={controlStyles.partsInput} disabled={readOnly} value={part[field]} onChange={(event) => updatePart(location.key, index, field, event.target.value)} aria-label={`${location.name} ${field} row ${index + 1}`} /></td>)}</tr>;
+          }),
+        ]);
         return <section className={fedexStyles.fedexForm} key={location.key}>
         <div className={styles.locationHeader}><div><h2>{location.name}</h2><span>{locationActionCount} open action line{locationActionCount === 1 ? "" : "s"}</span></div>{!readOnly && <div><button disabled={exporting} onClick={() => void downloadFedexForm(location)}>{exporting ? "Building…" : `Download ${location.name} Form`}</button><button className={styles.archiveButton} disabled={archiving} onClick={() => void archiveAndClear(location)}>{archiving ? "Archiving…" : "Uploaded / Archive / Clear"}</button></div>}</div>
         <div className={fedexStyles.jobPlans}>{JOB_PLANS.map((plan) => <div key={plan}>{plan}<span>JOB PLAN</span></div>)}<div className={fedexStyles.instructions}>INSTRUCTIONS</div></div>
@@ -309,7 +318,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
           <div><strong>PM End Date:</strong><span>{locationDates.at(-1) || "—"}</span></div>
           <div><strong>ServiceChannel WO#:</strong><span>{locationServiceChannelNumbers.join(", ") || "—"}</span></div>
         </div>
-        <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{locationParts.map((part, index) => <tr key={index}>{(Object.keys(part) as (keyof Part)[]).map((field) => <td key={field}><input className={controlStyles.partsInput} disabled={readOnly} value={part[field]} onChange={(event) => updatePart(location.key, index, field, event.target.value)} aria-label={`${location.name} ${field} row ${index + 1}`} /></td>)}</tr>)}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
+        <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{locationPartRows}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
         <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{location.reports.flatMap((report) => [
           <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
           ...(drafts[report.id] || []).map((action) => {
