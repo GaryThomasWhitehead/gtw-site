@@ -96,15 +96,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const unscanned = reports.filter((report) => !report.correctiveScanAt || Number(report.correctiveScanVersion || 0) < CORRECTIVE_SCAN_VERSION);
   const reportDates = reports.map((report) => report.reportDate || "").filter(Boolean).sort();
   const serviceChannelNumbers = [...new Set(groups.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
-  const testPhotoActionId = useMemo(() => {
-    for (const report of groups) {
-      for (const action of drafts[report.id] || []) {
-        const normalized = { ...action, sourceReportId: action.sourceReportId || report.id };
-        if (!relatedPictures(normalized, attachments).length) return action.id;
-      }
-    }
-    return "";
-  }, [groups, drafts, attachments]);
+  const testPhotoActionId = groups.length ? (drafts[groups[0].id] || [])[0]?.id || "" : "";
 
   function update(reportId: string, actionId: string, field: keyof Omit<Action, "id" | "sourceReportId">, value: string) {
     setDrafts((current) => ({ ...current, [reportId]: (current[reportId] || []).map((action) => action.id === actionId ? { ...action, [field]: value } : action) }));
@@ -225,7 +217,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
           <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
           ...(drafts[report.id] || []).map((action) => {
             const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
-            const isTestPhoto = action.id === testPhotoActionId && pictures.length === 0;
+            const isTestPhoto = action.id === testPhotoActionId;
             const reportId = action.sourceReportId || report.id;
             return <tr className={isTestPhoto ? testStyles.testPhotoRow : undefined} key={action.id}>
               <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>

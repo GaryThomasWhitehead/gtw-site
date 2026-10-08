@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const results = await Promise.all(batch.map(async (reportId) => [reportId, await attachmentsForReport(reportId)] as const));
     for (const [reportId, attachments] of results) attachmentsByReport.set(reportId, attachments);
   }
-  const testAction = actions.find((action) => matchPhotos(action, attachmentsByReport.get(action.reportId) || []).length === 0);
+  const testAction = actions[0];
   const testPhoto = testAction ? await testPhotoForReport(testAction.reportId) : null;
 
   const templatePath = path.join(process.cwd(), "public", "templates", "FXG Correctives and Parts Runtime.xlsx");
