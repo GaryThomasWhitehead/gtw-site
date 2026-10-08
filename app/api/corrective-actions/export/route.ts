@@ -79,10 +79,6 @@ function imageExtension(contentType: string, filename: string): "png" | "jpeg" |
   return null;
 }
 
-function copyCellStyle(source: ExcelJS.Cell, target: ExcelJS.Cell) {
-  target.style = JSON.parse(JSON.stringify(source.style));
-}
-
 async function attachmentsForReport(reportId: string) {
   const { url, key, table } = config();
   const params = new URLSearchParams({ select: "data" });
@@ -146,10 +142,20 @@ export async function POST(request: NextRequest) {
   const workOrders = [...new Set(actions.map((action) => action.serviceChannelWo).filter(Boolean))];
   sheet.getCell("J2").value = workOrders.join(", ");
   sheet.getColumn("L").width = 25;
-  copyCellStyle(sheet.getCell("K5"), sheet.getCell("L5"));
+  // Keep Photo inside the FedEx corrective-actions table so Excel applies the
+  // exact same header and alternating row colors as the other columns.
+  const correctiveTable = sheet.getTable("Table2") as unknown as { table: {
+    tableRef: string;
+    autoFilterRef: string;
+    columns: Array<{ name: string; totalsRowFunction?: string; filterButton?: boolean }>;
+  } };
+  const correctiveTableModel = correctiveTable.table;
+  if (!correctiveTableModel.columns.some((column) => column.name === "Photo")) {
+    correctiveTableModel.tableRef = "H5:L201";
+    correctiveTableModel.autoFilterRef = "H5:L201";
+    correctiveTableModel.columns.push({ name: "Photo", totalsRowFunction: "none", filterButton: true });
+  }
   sheet.getCell("L5").value = "Photo";
-  sheet.getCell("L5").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE6CCF5" } };
-  sheet.getCell("L5").font = { ...sheet.getCell("K5").font, bold: true, color: { argb: "FF000000" } };
   sheet.getCell("L5").alignment = { horizontal: "center", vertical: "middle", wrapText: true };
   parts.forEach((part: Record<string, unknown>, index: number) => {
     const rowNumber = index + 6;
@@ -184,8 +190,6 @@ export async function POST(request: NextRequest) {
     const rowNumber = index + 6;
     const row = sheet.getRow(rowNumber);
     row.height = Math.max(58, Math.min(150, Math.ceil(action.repairNeeded.length / 48) * 15, Math.ceil(action.assetTag.length / 15) * 15));
-    copyCellStyle(sheet.getCell(`K${rowNumber}`), sheet.getCell(`L${rowNumber}`));
-    sheet.getCell(`L${rowNumber}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
     sheet.getCell(`H${rowNumber}`).value = action.assetTag;
     sheet.getCell(`I${rowNumber}`).value = action.repairNeeded;
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
