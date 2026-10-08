@@ -264,12 +264,12 @@ export async function POST(request: NextRequest) {
     if (!matched.length) {
       const reportSheetName = reportLocations.get(action.reportId);
       sheet.getCell(`L${rowNumber}`).value = reportSheetName
-        ? { text: "View Embedded Job Report", hyperlink: `#'${reportSheetName.replace(/'/g, "''")}'!A1`, tooltip: "Open the embedded source job report" }
+        ? { text: "View Embedded Job Report", hyperlink: `'${reportSheetName.replace(/'/g, "''")}'!A1`, tooltip: "Open the embedded source job report" }
         : "Job report unavailable";
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
     }
-    sheet.getCell(`L${rowNumber}`).value = { text: `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`, hyperlink: `#'Photos'!${ensureFullPhoto(matched[0], action)}` };
+    sheet.getCell(`L${rowNumber}`).value = { text: `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`, hyperlink: `'Photos'!${ensureFullPhoto(matched[0], action)}` };
     sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
     matched.slice(0, 2).forEach((attachment, photoIndex) => {
       const extension = imageExtension(attachment.contentType, attachment.filename);
