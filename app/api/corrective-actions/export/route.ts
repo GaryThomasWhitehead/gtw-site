@@ -148,6 +148,9 @@ export async function POST(request: NextRequest) {
   sheet.getColumn("L").width = 25;
   copyCellStyle(sheet.getCell("K5"), sheet.getCell("L5"));
   sheet.getCell("L5").value = "Photo";
+  sheet.getCell("L5").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE6CCF5" } };
+  sheet.getCell("L5").font = { ...sheet.getCell("K5").font, bold: true, color: { argb: "FF000000" } };
+  sheet.getCell("L5").alignment = { horizontal: "center", vertical: "middle", wrapText: true };
   parts.forEach((part: Record<string, unknown>, index: number) => {
     const rowNumber = index + 6;
     const values = [part.partNumber, part.description, part.manufacturer, part.qtyNeeded, part.qtyOnHand, part.asset];
@@ -182,6 +185,7 @@ export async function POST(request: NextRequest) {
     const row = sheet.getRow(rowNumber);
     row.height = Math.max(58, Math.min(150, Math.ceil(action.repairNeeded.length / 48) * 15, Math.ceil(action.assetTag.length / 15) * 15));
     copyCellStyle(sheet.getCell(`K${rowNumber}`), sheet.getCell(`L${rowNumber}`));
+    sheet.getCell(`L${rowNumber}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
     sheet.getCell(`H${rowNumber}`).value = action.assetTag;
     sheet.getCell(`I${rowNumber}`).value = action.repairNeeded;
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
