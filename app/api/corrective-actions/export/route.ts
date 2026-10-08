@@ -3,6 +3,8 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
+import { extractRepresentativeReportPhoto } from "@/lib/reportPhoto";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -91,6 +93,20 @@ async function attachmentsForReport(reportId: string) {
   return rows.map((row) => row.data).filter((item): item is Attachment => Boolean(item?.base64 && imageExtension(item.contentType, item.filename)));
 }
 
+async function testPhotoForReport(reportId: string): Promise<Attachment | null> {
+  const { url, key, table } = config();
+  const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${encodeURIComponent(`PMREPORT:${reportId}`)}&limit=1`, { headers: headers(key), cache: "no-store" });
+  if (!response.ok) return null;
+  const [row] = await response.json();
+  const pdf = row?.data?.pdfStoragePath
+    ? await downloadReportPdf(url, key, String(row.data.pdfStoragePath))
+    : row?.data?.pdfBase64 ? Buffer.from(String(row.data.pdfBase64), "base64") : null;
+  if (!pdf) return null;
+  const image = await extractRepresentativeReportPhoto(pdf);
+  if (!image) return null;
+  return { id: `test-${reportId}`, reportId, filename: "temporary-test-photo.png", description: "TEMPORARY TEST — representative picture extracted from source job report", contentType: "image/png", base64: image.toString("base64") };
+}
+
 export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key } = config();
@@ -118,6 +134,8 @@ export async function POST(request: NextRequest) {
     const results = await Promise.all(batch.map(async (reportId) => [reportId, await attachmentsForReport(reportId)] as const));
     for (const [reportId, attachments] of results) attachmentsByReport.set(reportId, attachments);
   }
+  const testAction = actions.find((action) => matchPhotos(action, attachmentsByReport.get(action.reportId) || []).length === 0);
+  const testPhoto = testAction ? await testPhotoForReport(testAction.reportId) : null;
 
   const templatePath = path.join(process.cwd(), "public", "templates", "FXG Correctives and Parts Runtime.xlsx");
   const workbook = new ExcelJS.Workbook();
@@ -174,7 +192,15 @@ export async function POST(request: NextRequest) {
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
     sheet.getCell(`K${rowNumber}`).value = action.serviceChannelWo;
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
-    const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
+    const isTestRow = Boolean(testPhoto && testAction?.id === action.id);
+    const matched = isTestRow && testPhoto ? [testPhoto] : matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
+    if (isTestRow) {
+      for (const column of ["H", "I", "J", "K", "L"]) {
+        const cell = sheet.getCell(`${column}${rowNumber}`);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2A8" } };
+        cell.border = { ...cell.border, top: { style: "medium", color: { argb: "FFDC8B00" } }, bottom: { style: "medium", color: { argb: "FFDC8B00" } } };
+      }
+    }
     if (!matched.length) {
       sheet.getCell(`L${rowNumber}`).value = "No uploaded picture matched";
       return;

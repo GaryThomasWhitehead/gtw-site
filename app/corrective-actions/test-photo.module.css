@@ -1,0 +1,21 @@
+.testPhotoRow td {
+  background: #fff2a8 !important;
+  border-top: 2px solid #dc8b00;
+  border-bottom: 2px solid #dc8b00;
+}
+
+.testPhoto {
+  position: relative;
+}
+
+.testPhoto span {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  padding: 1px 3px;
+  background: #b54708;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1.2;
+}

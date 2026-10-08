@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./corrective-actions.module.css";
 import fedexStyles from "./fedex-form.module.css";
+import testStyles from "./test-photo.module.css";
 
 type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
 type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
@@ -95,6 +96,15 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const unscanned = reports.filter((report) => !report.correctiveScanAt || Number(report.correctiveScanVersion || 0) < CORRECTIVE_SCAN_VERSION);
   const reportDates = reports.map((report) => report.reportDate || "").filter(Boolean).sort();
   const serviceChannelNumbers = [...new Set(groups.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
+  const testPhotoActionId = useMemo(() => {
+    for (const report of groups) {
+      for (const action of drafts[report.id] || []) {
+        const normalized = { ...action, sourceReportId: action.sourceReportId || report.id };
+        if (!relatedPictures(normalized, attachments).length) return action.id;
+      }
+    }
+    return "";
+  }, [groups, drafts, attachments]);
 
   function update(reportId: string, actionId: string, field: keyof Omit<Action, "id" | "sourceReportId">, value: string) {
     setDrafts((current) => ({ ...current, [reportId]: (current[reportId] || []).map((action) => action.id === actionId ? { ...action, [field]: value } : action) }));
@@ -215,12 +225,14 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
           <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
           ...(drafts[report.id] || []).map((action) => {
             const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
-            return <tr key={action.id}>
+            const isTestPhoto = action.id === testPhotoActionId && pictures.length === 0;
+            const reportId = action.sourceReportId || report.id;
+            return <tr className={isTestPhoto ? testStyles.testPhotoRow : undefined} key={action.id}>
               <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
               <td><textarea disabled={readOnly} value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
               <td><select disabled={readOnly} value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
               <td><input disabled={readOnly} value={action.serviceChannelWo} onChange={(event) => update(report.id, action.id, "serviceChannelWo", event.target.value)} /></td>
-              <td><div className={fedexStyles.photoCell}>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(action.sourceReportId || report.id)}`}>View PDF</a></div></td>
+              <td><div className={fedexStyles.photoCell}>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}{isTestPhoto && <a className={testStyles.testPhoto} target="_blank" rel="noreferrer" title="Temporary test picture extracted from this job report" href={`/api/corrective-actions/report-photo?reportId=${encodeURIComponent(reportId)}`}><img src={`/api/corrective-actions/report-photo?reportId=${encodeURIComponent(reportId)}`} alt="Temporary test picture from source job report" /><span>TEST</span></a>}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}>View PDF</a></div></td>
               {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
             </tr>;
           }),
