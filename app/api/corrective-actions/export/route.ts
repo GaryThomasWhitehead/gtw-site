@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
     formula: `HYPERLINK("#'${sheetName.replace(/'/g, "''")}'!${address}","${label.replace(/"/g, '""')}")`,
     result: label,
   });
-  for (const [reportIndex, reportId] of reportIds.filter((id) => !(attachmentsByReport.get(id) || []).length).entries()) {
+  for (const [reportIndex, reportId] of reportIds.entries()) {
     const action = actions.find((item) => item.reportId === reportId);
     const pdf = await pdfForReport(reportId);
     if (!action || !pdf) continue;
@@ -262,6 +262,29 @@ export async function POST(request: NextRequest) {
       reportRow += occupiedRows + 3;
     }
     await document.cleanup();
+
+    // Keep the original uploaded pictures with the embedded report as well as
+    // the rendered PDF pages. This avoids losing a picture when a PDF renderer
+    // cannot reproduce one of the PDF's image streams.
+    const reportAttachments = attachmentsByReport.get(reportId) || [];
+    if (reportAttachments.length) {
+      reportSheet.getCell(`A${reportRow}`).value = "ORIGINAL JOB-REPORT PHOTOS";
+      reportSheet.getCell(`A${reportRow}`).font = { bold: true, size: 13, color: { argb: "FFFFFFFF" } };
+      reportSheet.getCell(`A${reportRow}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
+      reportSheet.getRow(reportRow).height = 24;
+      reportRow += 2;
+      for (const attachment of reportAttachments) {
+        const extension = imageExtension(attachment.contentType, attachment.filename);
+        if (!extension) continue;
+        reportSheet.getCell(`A${reportRow}`).value = attachment.description || attachment.filename || "Job-report photo";
+        reportSheet.getCell(`A${reportRow}`).font = { bold: true, color: { argb: "FF1468A5" } };
+        reportSheet.getCell(`A${reportRow}`).alignment = { wrapText: true };
+        const imageId = workbook.addImage({ base64: attachment.base64, extension });
+        reportSheet.addImage(imageId, { tl: { col: 0, row: reportRow }, ext: { width: 760, height: 520 } });
+        for (let row = reportRow + 1; row <= reportRow + 30; row += 1) reportSheet.getRow(row).height = 14;
+        reportRow += 32;
+      }
+    }
   }
 
   actions.forEach((action, index) => {
@@ -289,7 +312,10 @@ export async function POST(request: NextRequest) {
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
     }
-    sheet.getCell(`L${rowNumber}`).value = internalSheetLink("Photos", ensureFullPhoto(matched[0], action), `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
+    const reportSheetName = reportLocations.get(action.reportId);
+    sheet.getCell(`L${rowNumber}`).value = reportSheetName
+      ? internalSheetLink(reportSheetName, "A1", "View Embedded Job Report")
+      : internalSheetLink("Photos", ensureFullPhoto(matched[0], action), `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
     sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
     matched.slice(0, 2).forEach((attachment, photoIndex) => {
       const extension = imageExtension(attachment.contentType, attachment.filename);
