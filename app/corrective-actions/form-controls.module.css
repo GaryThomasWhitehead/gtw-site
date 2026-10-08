@@ -1,0 +1,39 @@
+.partsInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 70px;
+  min-height: 34px;
+  padding: 5px;
+  border: 1px solid #ad8fba;
+  border-radius: 3px;
+  background: #fff;
+  color: #142b43;
+  font: inherit;
+}
+
+.partsInput:disabled {
+  background: transparent;
+  border-color: transparent;
+}
+
+.reportThumb {
+  display: grid !important;
+  width: 58px !important;
+  height: 58px !important;
+  place-content: center;
+  border: 2px solid #1468a5 !important;
+  border-radius: 6px;
+  background: #fff !important;
+  color: #0d4f7d;
+  text-align: center;
+  text-decoration: none;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.reportThumb strong {
+  display: block;
+  color: #c0262d;
+  font-size: 15px;
+}

@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./corrective-actions.module.css";
 import fedexStyles from "./fedex-form.module.css";
-import testStyles from "./test-photo.module.css";
+import controlStyles from "./form-controls.module.css";
 
 type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
 type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
 const CORRECTIVE_SCAN_VERSION = 3;
 const JOB_PLANS = ["SLIDER BED CONVEYOR", "SLIDER BED CONVEYOR W/ MOTORIZED PULLEY", "WASP 1-STAGE EXTENDO", "WASP 1-STAGE W/ MOTORIZED PULLEY", "SRS/MHS 1-STAGE EXTENDO", "NORTECH 1-STAGE EXTENDO", "SHB 1-STAGE EXTENDO", "SHB 1-STAGE W/ MOTORIZED PULLEY", "LEWCO ROLLERS", "SRS/MHS 3-STAGE EXTENDO", "NORTECH 3-STAGE EXTENDO", "WASP 5-STAGE EXTENDO", "WASP 5-STAGE W/ SWAK", "SRS 5-STAGE EXTENDO", "CALJAN 5-STAGE EXTENDO", "MAXX 5-STAGE EXTENDO", "PLAK STATION", "E-STOP", "INTERROLL POWER CURVE", "PORTEC POWER CURVE", "PSC/FLOTURN POWER CURVE", "TRANSNORM POWER CURVE", "INTRALOX", "POWERED ROLLER CONVEYOR", "RTU/RTI", "GRAVITY CONVEYOR, CHUTES & GATES", "MCP"];
 type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
+type Part = { partNumber: string; description: string; manufacturer: string; qtyNeeded: string; qtyOnHand: string; asset: string };
+const blankPart = (): Part => ({ partNumber: "", description: "", manufacturer: "", qtyNeeded: "", qtyOnHand: "", asset: "" });
 
 function searchableWords(value: string) {
   const ignored = new Set(["about", "after", "also", "been", "from", "have", "into", "item", "needs", "photo", "report", "that", "the", "this", "with", "work"]);
@@ -33,6 +35,8 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const [reports, setReports] = useState<Report[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Action[]>>({});
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
+  const [parts, setParts] = useState<Part[]>(Array.from({ length: 18 }, blankPart));
+  const [partsDirty, setPartsDirty] = useState(false);
   const [dirtyReportIds, setDirtyReportIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState({ loaded: 0, total: 0, stage: "Loading PM report list…" });
@@ -85,6 +89,13 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       setDrafts(Object.fromEntries(pm.map((report) => [report.id, report.correctiveActions || []])));
       const attachmentResponse = await fetch("/api/pm-report-attachments", { cache: "no-store" });
       if (attachmentResponse.ok) setAttachments(await attachmentResponse.json());
+      const formResponse = await fetch("/api/corrective-actions/form", { cache: "no-store" });
+      if (formResponse.ok) {
+        const saved = await formResponse.json();
+        const loadedParts = Array.isArray(saved?.parts) ? saved.parts.slice(0, 18) : [];
+        setParts([...loadedParts, ...Array.from({ length: Math.max(0, 18 - loadedParts.length) }, blankPart)]);
+        setPartsDirty(false);
+      }
     } catch (cause) { setError(`Could not load saved corrective actions. Please try refreshing the page. ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setLoading(false); }
   }, []);
@@ -96,7 +107,18 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const unscanned = reports.filter((report) => !report.correctiveScanAt || Number(report.correctiveScanVersion || 0) < CORRECTIVE_SCAN_VERSION);
   const reportDates = reports.map((report) => report.reportDate || "").filter(Boolean).sort();
   const serviceChannelNumbers = [...new Set(groups.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
-  const testPhotoActionId = groups.length ? (drafts[groups[0].id] || [])[0]?.id || "" : "";
+
+  function updatePart(index: number, field: keyof Part, value: string) {
+    setParts((current) => current.map((part, partIndex) => partIndex === index ? { ...part, [field]: value } : part));
+    setPartsDirty(true);
+  }
+
+  async function savePartsIfNeeded() {
+    if (!partsDirty) return;
+    const response = await fetch("/api/corrective-actions/form", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ parts }) });
+    if (!response.ok) throw new Error(await response.text());
+    setPartsDirty(false);
+  }
 
   function update(reportId: string, actionId: string, field: keyof Omit<Action, "id" | "sourceReportId">, value: string) {
     setDrafts((current) => ({ ...current, [reportId]: (current[reportId] || []).map((action) => action.id === actionId ? { ...action, [field]: value } : action) }));
@@ -115,14 +137,15 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   async function saveAll() {
     setSaving(true); setError(""); setMessage("");
     try {
-      if (!dirtyReportIds.size) { setMessage("No unsaved changes."); return; }
+      if (!dirtyReportIds.size && !partsDirty) { setMessage("No unsaved changes."); return; }
       for (const report of reports.filter((item) => dirtyReportIds.has(item.id))) {
         const correctiveActions = drafts[report.id] || [];
         const response = await fetch("/api/pm-reports", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: report.id, correctiveActions }) });
         if (!response.ok) throw new Error(await response.text());
       }
+      await savePartsIfNeeded();
       setDirtyReportIds(new Set());
-      setMessage("Corrective actions saved.");
+      setMessage("Corrective actions and parts saved.");
     } catch (cause) { setError(`Could not save: ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setSaving(false); }
   }
@@ -155,9 +178,10 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         const response = await fetch("/api/pm-reports", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: report.id, correctiveActions: drafts[report.id] || [] }) });
         if (!response.ok) throw new Error(`Could not save changes before emailing: ${(await response.text()) || response.status}`);
       }
+      await savePartsIfNeeded();
       setDirtyReportIds(new Set());
       const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({ ...action, facilityId: report.facilityId || report.customerName || "", trackingNumber: report.trackingNumber || "" })));
-      const response = await fetch("/api/corrective-actions/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipients, actions }) });
+      const response = await fetch("/api/corrective-actions/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipients, actions, parts }) });
       if (!response.ok) throw new Error(await response.text());
       setMessage("Corrective-actions PDF and live form link emailed successfully.");
     } catch (cause) { setError(`Could not email form: ${cause instanceof Error ? cause.message : String(cause)}`); }
@@ -171,6 +195,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         const response = await fetch("/api/pm-reports", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: report.id, correctiveActions: drafts[report.id] || [] }) });
         if (!response.ok) throw new Error(`Could not save changes before exporting: ${(await response.text()) || response.status}`);
       }
+      await savePartsIfNeeded();
       setDirtyReportIds(new Set());
       const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({
         ...action,
@@ -179,7 +204,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         trackingNumber: report.trackingNumber || "",
         reportDate: report.reportDate || "",
       })));
-      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions }) });
+      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts }) });
       if (!response.ok) throw new Error(await response.text());
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";
@@ -212,19 +237,18 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
           <div><strong>PM End Date:</strong><span>{reportDates.at(-1) || "—"}</span></div>
           <div><strong>ServiceChannel WO#:</strong><span>{serviceChannelNumbers.join(", ") || "—"}</span></div>
         </div>
-        <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{Array.from({ length: 18 }, (_, index) => <tr key={index}>{Array.from({ length: 6 }, (_, cell) => <td key={cell}></td>)}</tr>)}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
+        <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{parts.map((part, index) => <tr key={index}>{(Object.keys(part) as (keyof Part)[]).map((field) => <td key={field}><input className={controlStyles.partsInput} disabled={readOnly} value={part[field]} onChange={(event) => updatePart(index, field, event.target.value)} aria-label={`${field} row ${index + 1}`} /></td>)}</tr>)}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
         <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{groups.flatMap((report) => [
           <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
           ...(drafts[report.id] || []).map((action) => {
             const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
-            const isTestPhoto = action.id === testPhotoActionId;
             const reportId = action.sourceReportId || report.id;
-            return <tr className={isTestPhoto ? testStyles.testPhotoRow : undefined} key={action.id}>
+            return <tr key={action.id}>
               <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
               <td><textarea disabled={readOnly} value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
               <td><select disabled={readOnly} value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
               <td><input disabled={readOnly} value={action.serviceChannelWo} onChange={(event) => update(report.id, action.id, "serviceChannelWo", event.target.value)} /></td>
-              <td><div className={fedexStyles.photoCell}>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}{isTestPhoto && <a className={testStyles.testPhoto} target="_blank" rel="noreferrer" title="Temporary test picture extracted from this job report" href={`/api/corrective-actions/report-photo?reportId=${encodeURIComponent(reportId)}`}><img src={`/api/corrective-actions/report-photo?reportId=${encodeURIComponent(reportId)}`} alt="Temporary test picture from source job report" /><span>TEST</span></a>}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}>View PDF</a></div></td>
+              <td><div className={fedexStyles.photoCell}>{pictures.length ? <>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}>View PDF</a></> : <a className={controlStyles.reportThumb} target="_blank" rel="noreferrer" title="Open source job report" href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}><strong>PDF</strong>JOB REPORT</a>}</div></td>
               {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
             </tr>;
           }),

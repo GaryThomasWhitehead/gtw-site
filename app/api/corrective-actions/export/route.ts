@@ -3,8 +3,6 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
-import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
-import { extractRepresentativeReportPhoto } from "@/lib/reportPhoto";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -93,26 +91,13 @@ async function attachmentsForReport(reportId: string) {
   return rows.map((row) => row.data).filter((item): item is Attachment => Boolean(item?.base64 && imageExtension(item.contentType, item.filename)));
 }
 
-async function testPhotoForReport(reportId: string): Promise<Attachment | null> {
-  const { url, key, table } = config();
-  const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${encodeURIComponent(`PMREPORT:${reportId}`)}&limit=1`, { headers: headers(key), cache: "no-store" });
-  if (!response.ok) return null;
-  const [row] = await response.json();
-  const pdf = row?.data?.pdfStoragePath
-    ? await downloadReportPdf(url, key, String(row.data.pdfStoragePath))
-    : row?.data?.pdfBase64 ? Buffer.from(String(row.data.pdfBase64), "base64") : null;
-  if (!pdf) return null;
-  const image = await extractRepresentativeReportPhoto(pdf);
-  if (!image) return null;
-  return { id: `test-${reportId}`, reportId, filename: "temporary-test-photo.png", description: "TEMPORARY TEST — representative picture extracted from source job report", contentType: "image/png", base64: image.toString("base64") };
-}
-
 export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
 
   const body = await request.json();
+  const parts = (Array.isArray(body?.parts) ? body.parts : []).slice(0, 18);
   const incoming = Array.isArray(body?.actions) ? body.actions.slice(0, 196) : [];
   const actions: ExportAction[] = incoming.map((item: Record<string, unknown>) => ({
     id: safe(item.id, 120),
@@ -134,8 +119,6 @@ export async function POST(request: NextRequest) {
     const results = await Promise.all(batch.map(async (reportId) => [reportId, await attachmentsForReport(reportId)] as const));
     for (const [reportId, attachments] of results) attachmentsByReport.set(reportId, attachments);
   }
-  const testAction = actions[0];
-  const testPhoto = testAction ? await testPhotoForReport(testAction.reportId) : null;
 
   const templatePath = path.join(process.cwd(), "public", "templates", "FXG Correctives and Parts Runtime.xlsx");
   const workbook = new ExcelJS.Workbook();
@@ -161,6 +144,14 @@ export async function POST(request: NextRequest) {
   sheet.getColumn("L").width = 25;
   sheet.getCell("L5").style = { ...sheet.getCell("K5").style };
   sheet.getCell("L5").value = "Photo";
+  parts.forEach((part: Record<string, unknown>, index: number) => {
+    const rowNumber = index + 6;
+    const values = [part.partNumber, part.description, part.manufacturer, part.qtyNeeded, part.qtyOnHand, part.asset];
+    ["A", "B", "C", "D", "E", "F"].forEach((column, valueIndex) => {
+      sheet.getCell(`${column}${rowNumber}`).value = safe(values[valueIndex], valueIndex === 1 ? 500 : 120);
+      sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
+    });
+  });
 
   const photoLocations = new Map<string, string>();
   let photoRow = 3;
@@ -192,17 +183,10 @@ export async function POST(request: NextRequest) {
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
     sheet.getCell(`K${rowNumber}`).value = action.serviceChannelWo;
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
-    const isTestRow = Boolean(testPhoto && testAction?.id === action.id);
-    const matched = isTestRow && testPhoto ? [testPhoto] : matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
-    if (isTestRow) {
-      for (const column of ["H", "I", "J", "K", "L"]) {
-        const cell = sheet.getCell(`${column}${rowNumber}`);
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2A8" } };
-        cell.border = { ...cell.border, top: { style: "medium", color: { argb: "FFDC8B00" } }, bottom: { style: "medium", color: { argb: "FFDC8B00" } } };
-      }
-    }
+    const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
-      sheet.getCell(`L${rowNumber}`).value = "No uploaded picture matched";
+      sheet.getCell(`L${rowNumber}`).value = { text: "Open source job report", hyperlink: `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(action.reportId)}` };
+      sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
       return;
     }
     sheet.getCell(`L${rowNumber}`).value = { text: `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`, hyperlink: `#'Photos'!${ensureFullPhoto(matched[0], action)}` };
