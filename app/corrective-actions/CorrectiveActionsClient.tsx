@@ -45,6 +45,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const [saving, setSaving] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [recipients, setRecipients] = useState("gary@frontlineworldwide.com");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -217,6 +218,36 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
     finally { setExporting(false); }
   }
 
+  async function archiveAndClear() {
+    if (!totalActions) return;
+    const confirmed = window.confirm(`Archive ${totalActions} corrective-action line${totalActions === 1 ? "" : "s"} and clear the live form?\n\nOnly continue after the workbook has been uploaded to ServiceChannel. This keeps an archive copy and prevents these PM reports from being scanned again.`);
+    if (!confirmed) return;
+    setArchiving(true); setError(""); setMessage("");
+    try {
+      const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({
+        ...action,
+        reportId: action.sourceReportId || report.id,
+        facilityId: report.facilityId || report.customerName || "",
+        trackingNumber: report.trackingNumber || "",
+        reportDate: report.reportDate || "",
+      })));
+      const response = await fetch("/api/corrective-actions/form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operation: "archive-and-clear", reportIds: groups.map((report) => report.id), actions, parts }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result?.error || "Could not archive and clear the form.");
+      setReports((current) => current.map((report) => groups.some((group) => group.id === report.id) ? { ...report, correctiveActions: [] } : report));
+      setDrafts((current) => ({ ...current, ...Object.fromEntries(groups.map((report) => [report.id, []])) }));
+      setParts(Array.from({ length: 18 }, blankPart));
+      setPartsDirty(false);
+      setDirtyReportIds(new Set());
+      setMessage(`${result.actionCount || totalActions} corrective-action line${Number(result.actionCount || totalActions) === 1 ? "" : "s"} archived. The live form is clear.`);
+    } catch (cause) { setError(`Could not archive and clear: ${cause instanceof Error ? cause.message : String(cause)}`); }
+    finally { setArchiving(false); }
+  }
+
   return <main className={styles.page}>
     <header><div><p>FRONTLINE PRO SERVICES</p><h1>Corrective Actions Needed</h1></div>{readOnly ? <span>Read-only access</span> : <nav><a href="/pm-reports">Completed Reports</a><a href="/fedex-tracker">Back to Tracker</a></nav>}</header>
     <section className={styles.content}>
@@ -225,6 +256,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         {!readOnly && <button style={scanning || loading ? { cursor: "not-allowed" } : undefined} disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>}
         {!readOnly && <button disabled={exporting || loading || !totalActions} onClick={() => void downloadFedexForm()}>{exporting ? "Building FedEx File…" : "Download FedEx Form"}</button>}
         {!readOnly && <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>}
+        {!readOnly && <button className={styles.archiveButton} disabled={archiving || loading || !totalActions} onClick={() => void archiveAndClear()}>{archiving ? "Archiving…" : "Uploaded / Archive / Clear"}</button>}
       </div>
       {loading && <div className={styles.progress} role="status" aria-live="polite"><strong>{loadProgress.stage}{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : ""}</strong><progress max={loadProgress.total || 1} value={loadProgress.loaded} /><span>The Scan button will be available when the report list is ready.</span></div>}
       {scanning && <div className={styles.progress}><strong>Scanning PM reports — {scanProgress.done} of {scanProgress.total}</strong><progress max={scanProgress.total || 1} value={scanProgress.done} /><span>{scanProgress.found} new action lines found</span></div>}
