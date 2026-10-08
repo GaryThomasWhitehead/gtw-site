@@ -14,7 +14,7 @@ function headers(key: string) {
 }
 
 function cleanParts(value: unknown) {
-  return (Array.isArray(value) ? value : []).slice(0, 18).map((part: Record<string, unknown>) => ({
+  return (Array.isArray(value) ? value : []).slice(0, 196).map((part: Record<string, unknown>) => ({
     partNumber: String(part?.partNumber || "").trim().slice(0, 120),
     description: String(part?.description || "").trim().slice(0, 500),
     manufacturer: String(part?.manufacturer || "").trim().slice(0, 120),

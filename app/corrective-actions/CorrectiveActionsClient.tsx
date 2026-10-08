@@ -12,7 +12,7 @@ const JOB_PLANS = ["SLIDER BED CONVEYOR", "SLIDER BED CONVEYOR W/ MOTORIZED PULL
 type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
 type Part = { partNumber: string; description: string; manufacturer: string; qtyNeeded: string; qtyOnHand: string; asset: string };
 const blankPart = (): Part => ({ partNumber: "", description: "", manufacturer: "", qtyNeeded: "", qtyOnHand: "", asset: "" });
-const blankParts = () => Array.from({ length: 18 }, blankPart);
+const blankParts = (count = 18) => Array.from({ length: count }, blankPart);
 
 function locationName(report: Report) {
   return (report.facilityId || report.customerName || "Facility").trim() || "Facility";
@@ -104,13 +104,12 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         const saved = await formResponse.json();
         const savedByLocation = saved?.partsByLocation && typeof saved.partsByLocation === "object" ? saved.partsByLocation as Record<string, Part[]> : {};
         const nextParts = Object.fromEntries(Object.entries(savedByLocation).map(([key, value]) => {
-          const loadedParts = Array.isArray(value) ? value.slice(0, 18) : [];
-          return [key, [...loadedParts, ...Array.from({ length: Math.max(0, 18 - loadedParts.length) }, blankPart)]];
+          return [key, Array.isArray(value) ? value.slice(0, 196) : []];
         }));
-        const legacyParts = Array.isArray(saved?.parts) ? saved.parts.slice(0, 18) : [];
+        const legacyParts = Array.isArray(saved?.parts) ? saved.parts.slice(0, 196) : [];
         if (legacyParts.some((part: Part) => Object.values(part).some(Boolean))) {
           const firstReport = pm.find((report) => (report.correctiveActions || []).length);
-          if (firstReport && !nextParts[locationKey(firstReport)]) nextParts[locationKey(firstReport)] = [...legacyParts, ...Array.from({ length: Math.max(0, 18 - legacyParts.length) }, blankPart)];
+          if (firstReport && !nextParts[locationKey(firstReport)]) nextParts[locationKey(firstReport)] = legacyParts;
         }
         setPartsByLocation(nextParts);
         setPartsDirty(false);
@@ -135,12 +134,17 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const totalActions = groups.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
   const unscanned = reports.filter((report) => !report.correctiveScanAt || Number(report.correctiveScanVersion || 0) < CORRECTIVE_SCAN_VERSION);
 
-  function partsForLocation(key: string) {
-    return partsByLocation[key] || blankParts();
+  function partsForLocation(key: string, count = 18) {
+    const current = (partsByLocation[key] || []).slice(0, count);
+    return [...current, ...blankParts(Math.max(0, count - current.length))];
   }
 
   function updatePart(key: string, index: number, field: keyof Part, value: string) {
-    setPartsByLocation((current) => ({ ...current, [key]: (current[key] || blankParts()).map((part, partIndex) => partIndex === index ? { ...part, [field]: value } : part) }));
+    setPartsByLocation((current) => {
+      const existing = current[key] || [];
+      const rows = [...existing, ...blankParts(Math.max(0, index + 1 - existing.length))];
+      return { ...current, [key]: rows.map((part, partIndex) => partIndex === index ? { ...part, [field]: value } : part) };
+    });
     setPartsDirty(true);
   }
 
@@ -235,7 +239,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         trackingNumber: report.trackingNumber || "",
         reportDate: report.reportDate || "",
       })));
-      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts: partsForLocation(location.key), locationName: location.name }) });
+      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts: partsForLocation(location.key, actions.length), locationName: location.name }) });
       if (!response.ok) throw new Error(await response.text());
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";
@@ -266,7 +270,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       const response = await fetch("/api/corrective-actions/form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ operation: "archive-and-clear", locationKey: location.key, reportIds: location.reports.map((report) => report.id), actions, parts: partsForLocation(location.key) }),
+        body: JSON.stringify({ operation: "archive-and-clear", locationKey: location.key, reportIds: location.reports.map((report) => report.id), actions, parts: partsForLocation(location.key, locationActionCount) }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error || "Could not archive and clear the form.");
@@ -293,10 +297,10 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       {!readOnly && <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>}
       {message && <p className={styles.success}>{message}</p>}{error && <p className={styles.error}>{error}</p>}
       {loading ? <p className={styles.empty}>Loading corrective actions…</p> : locationGroups.length ? <div className={styles.locationForms}>{locationGroups.map((location) => {
-        const locationParts = partsForLocation(location.key);
         const locationDates = location.reports.map((report) => report.reportDate || "").filter(Boolean).sort();
         const locationServiceChannelNumbers = [...new Set(location.reports.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
         const locationActionCount = location.reports.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
+        const locationParts = partsForLocation(location.key, Math.max(1, locationActionCount));
         return <section className={fedexStyles.fedexForm} key={location.key}>
         <div className={styles.locationHeader}><div><h2>{location.name}</h2><span>{locationActionCount} open action line{locationActionCount === 1 ? "" : "s"}</span></div>{!readOnly && <div><button disabled={exporting} onClick={() => void downloadFedexForm(location)}>{exporting ? "Building…" : `Download ${location.name} Form`}</button><button className={styles.archiveButton} disabled={archiving} onClick={() => void archiveAndClear(location)}>{archiving ? "Archiving…" : "Uploaded / Archive / Clear"}</button></div>}</div>
         <div className={fedexStyles.jobPlans}>{JOB_PLANS.map((plan) => <div key={plan}>{plan}<span>JOB PLAN</span></div>)}<div className={fedexStyles.instructions}>INSTRUCTIONS</div></div>

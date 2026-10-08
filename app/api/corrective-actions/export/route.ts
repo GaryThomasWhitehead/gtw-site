@@ -116,7 +116,6 @@ export async function POST(request: NextRequest) {
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
 
   const body = await request.json();
-  const parts = (Array.isArray(body?.parts) ? body.parts : []).slice(0, 18);
   const incoming = Array.isArray(body?.actions) ? body.actions.slice(0, 196) : [];
   const actions: ExportAction[] = incoming.map((item: Record<string, unknown>) => ({
     id: safe(item.id, 120),
@@ -130,6 +129,7 @@ export async function POST(request: NextRequest) {
     serviceChannelWo: safe(item.serviceChannelWo, 120),
   })).filter((item: ExportAction) => item.reportId && (item.assetTag || item.repairNeeded));
   if (!actions.length) return NextResponse.json({ error: "There are no corrective-action lines to export." }, { status: 400 });
+  const parts = (Array.isArray(body?.parts) ? body.parts : []).slice(0, actions.length);
 
   const reportIds = [...new Set(actions.map((action) => action.reportId))];
   const attachmentsByReport = new Map<string, Attachment[]>();
@@ -190,6 +190,8 @@ export async function POST(request: NextRequest) {
     for (const column of ["A", "B", "C", "D", "E", "F"]) setCellFill(`${column}${rowNumber}`, partsFill);
     for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, correctiveFill);
   }
+  const lastFormRow = 5 + Math.max(1, actions.length);
+  for (let rowNumber = lastFormRow + 1; rowNumber <= 201; rowNumber += 1) sheet.getRow(rowNumber).hidden = true;
   parts.forEach((part: Record<string, unknown>, index: number) => {
     const rowNumber = index + 6;
     const values = [part.partNumber, part.description, part.manufacturer, part.qtyNeeded, part.qtyOnHand, part.asset];
@@ -302,7 +304,7 @@ export async function POST(request: NextRequest) {
   });
 
   sheet.views = [{ state: "frozen", ySplit: 5 }];
-  sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 };
+  sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9, printArea: `A1:L${lastFormRow}` };
   photosSheet.views = [{ state: "frozen", ySplit: 1 }];
   const rawOutput = Buffer.from(await workbook.xlsx.writeBuffer());
   const archive = await JSZip.loadAsync(rawOutput);
