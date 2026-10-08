@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
   }
   const sheet = workbook.getWorksheet("Correctives & Parts");
   if (!sheet) return NextResponse.json({ error: "FedEx worksheet template is missing." }, { status: 500 });
+  sheet.unprotect();
   const photosSheet = workbook.addWorksheet("Photos", { properties: { tabColor: { argb: "FF7B219F" } } });
   photosSheet.getColumn("A").width = 105;
   photosSheet.getColumn("B").width = 24;
@@ -254,11 +255,10 @@ export async function POST(request: NextRequest) {
     sheet.getCell(`J${rowNumber}`).value = action.urgency;
     sheet.getCell(`K${rowNumber}`).value = action.serviceChannelWo;
     // FedEx assigns this value after receiving the workbook. Keep the cell
-    // explicitly unlocked and use the template's input-yellow convention so
-    // it is obvious that the downloaded form is meant to be completed here.
+    // explicitly unlocked without changing the form's normal row banding.
     sheet.getCell(`K${rowNumber}`).protection = { locked: false };
-    sheet.getCell(`K${rowNumber}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" } };
-    sheet.getCell(`K${rowNumber}`).font = { ...sheet.getCell(`K${rowNumber}`).font, color: { argb: "FF000000" } };
+    const rowFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
+    for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).fill = rowFill;
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
