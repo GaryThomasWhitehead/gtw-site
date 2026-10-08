@@ -170,15 +170,21 @@ export async function POST(request: NextRequest) {
   sheet.removeTable("Table2");
   sheet.getCell("L5").value = "Photo";
   sheet.getCell("L5").alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  const setCellFill = (address: string, fill: ExcelJS.Fill) => {
+    const cell = sheet.getCell(address);
+    // Cells inherited from the FedEx template can share one style object.
+    // Clone it before setting the fill so a later row cannot recolor this one.
+    cell.style = { ...cell.style, fill };
+  };
   const partsHeaderFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FFEBC9E2" } };
   const correctiveHeaderFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FFE2C6F4" } };
-  for (const column of ["A", "B", "C", "D", "E", "F"]) sheet.getCell(`${column}5`).fill = partsHeaderFill;
-  for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}5`).fill = correctiveHeaderFill;
+  for (const column of ["A", "B", "C", "D", "E", "F"]) setCellFill(`${column}5`, partsHeaderFill);
+  for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}5`, correctiveHeaderFill);
   for (let rowNumber = 6; rowNumber <= 201; rowNumber += 1) {
     const partsFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFF1CFE8" } };
     const correctiveFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
-    for (const column of ["A", "B", "C", "D", "E", "F"]) sheet.getCell(`${column}${rowNumber}`).fill = partsFill;
-    for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).fill = correctiveFill;
+    for (const column of ["A", "B", "C", "D", "E", "F"]) setCellFill(`${column}${rowNumber}`, partsFill);
+    for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, correctiveFill);
   }
   parts.forEach((part: Record<string, unknown>, index: number) => {
     const rowNumber = index + 6;
@@ -264,7 +270,7 @@ export async function POST(request: NextRequest) {
     // explicitly unlocked without changing the form's normal row banding.
     sheet.getCell(`K${rowNumber}`).protection = { locked: false };
     const rowFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
-    for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).fill = rowFill;
+    for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, rowFill);
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
