@@ -12,6 +12,15 @@ const JOB_PLANS = ["SLIDER BED CONVEYOR", "SLIDER BED CONVEYOR W/ MOTORIZED PULL
 type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
 type Part = { partNumber: string; description: string; manufacturer: string; qtyNeeded: string; qtyOnHand: string; asset: string };
 const blankPart = (): Part => ({ partNumber: "", description: "", manufacturer: "", qtyNeeded: "", qtyOnHand: "", asset: "" });
+const blankParts = () => Array.from({ length: 18 }, blankPart);
+
+function locationName(report: Report) {
+  return (report.facilityId || report.customerName || "Facility").trim() || "Facility";
+}
+
+function locationKey(report: Report) {
+  return locationName(report).toLowerCase().replace(/\s+/g, " ");
+}
 
 function searchableWords(value: string) {
   const ignored = new Set(["about", "after", "also", "been", "from", "have", "into", "item", "needs", "photo", "report", "that", "the", "this", "with", "work"]);
@@ -35,7 +44,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   const [reports, setReports] = useState<Report[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Action[]>>({});
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
-  const [parts, setParts] = useState<Part[]>(Array.from({ length: 18 }, blankPart));
+  const [partsByLocation, setPartsByLocation] = useState<Record<string, Part[]>>({});
   const [partsDirty, setPartsDirty] = useState(false);
   const [dirtyReportIds, setDirtyReportIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -93,8 +102,17 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       const formResponse = await fetch("/api/corrective-actions/form", { cache: "no-store" });
       if (formResponse.ok) {
         const saved = await formResponse.json();
-        const loadedParts = Array.isArray(saved?.parts) ? saved.parts.slice(0, 18) : [];
-        setParts([...loadedParts, ...Array.from({ length: Math.max(0, 18 - loadedParts.length) }, blankPart)]);
+        const savedByLocation = saved?.partsByLocation && typeof saved.partsByLocation === "object" ? saved.partsByLocation as Record<string, Part[]> : {};
+        const nextParts = Object.fromEntries(Object.entries(savedByLocation).map(([key, value]) => {
+          const loadedParts = Array.isArray(value) ? value.slice(0, 18) : [];
+          return [key, [...loadedParts, ...Array.from({ length: Math.max(0, 18 - loadedParts.length) }, blankPart)]];
+        }));
+        const legacyParts = Array.isArray(saved?.parts) ? saved.parts.slice(0, 18) : [];
+        if (legacyParts.some((part: Part) => Object.values(part).some(Boolean))) {
+          const firstReport = pm.find((report) => (report.correctiveActions || []).length);
+          if (firstReport && !nextParts[locationKey(firstReport)]) nextParts[locationKey(firstReport)] = [...legacyParts, ...Array.from({ length: Math.max(0, 18 - legacyParts.length) }, blankPart)];
+        }
+        setPartsByLocation(nextParts);
         setPartsDirty(false);
       }
     } catch (cause) { setError(`Could not load saved corrective actions. Please try refreshing the page. ${cause instanceof Error ? cause.message : String(cause)}`); }
@@ -104,19 +122,31 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
   useEffect(() => { void load(); }, [load]);
 
   const groups = useMemo(() => reports.filter((report) => (drafts[report.id] || []).length > 0), [reports, drafts]);
+  const locationGroups = useMemo(() => {
+    const grouped = new Map<string, { key: string; name: string; reports: Report[] }>();
+    for (const report of groups) {
+      const key = locationKey(report);
+      const current = grouped.get(key) || { key, name: locationName(report), reports: [] };
+      current.reports.push(report);
+      grouped.set(key, current);
+    }
+    return [...grouped.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [groups]);
   const totalActions = groups.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
   const unscanned = reports.filter((report) => !report.correctiveScanAt || Number(report.correctiveScanVersion || 0) < CORRECTIVE_SCAN_VERSION);
-  const reportDates = reports.map((report) => report.reportDate || "").filter(Boolean).sort();
-  const serviceChannelNumbers = [...new Set(groups.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
 
-  function updatePart(index: number, field: keyof Part, value: string) {
-    setParts((current) => current.map((part, partIndex) => partIndex === index ? { ...part, [field]: value } : part));
+  function partsForLocation(key: string) {
+    return partsByLocation[key] || blankParts();
+  }
+
+  function updatePart(key: string, index: number, field: keyof Part, value: string) {
+    setPartsByLocation((current) => ({ ...current, [key]: (current[key] || blankParts()).map((part, partIndex) => partIndex === index ? { ...part, [field]: value } : part) }));
     setPartsDirty(true);
   }
 
   async function savePartsIfNeeded() {
     if (!partsDirty) return;
-    const response = await fetch("/api/corrective-actions/form", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ parts }) });
+    const response = await fetch("/api/corrective-actions/form", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ partsByLocation }) });
     if (!response.ok) throw new Error(await response.text());
     setPartsDirty(false);
   }
@@ -182,14 +212,14 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       await savePartsIfNeeded();
       setDirtyReportIds(new Set());
       const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({ ...action, facilityId: report.facilityId || report.customerName || "", trackingNumber: report.trackingNumber || "" })));
-      const response = await fetch("/api/corrective-actions/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipients, actions, parts }) });
+      const response = await fetch("/api/corrective-actions/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipients, actions, parts: Object.values(partsByLocation).flat() }) });
       if (!response.ok) throw new Error(await response.text());
       setMessage("Corrective-actions PDF and live form link emailed successfully.");
     } catch (cause) { setError(`Could not email form: ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setEmailing(false); }
   }
 
-  async function downloadFedexForm() {
+  async function downloadFedexForm(location: { key: string; name: string; reports: Report[] }) {
     setExporting(true); setError(""); setMessage("");
     try {
       for (const report of reports.filter((item) => dirtyReportIds.has(item.id))) {
@@ -198,14 +228,14 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       }
       await savePartsIfNeeded();
       setDirtyReportIds(new Set());
-      const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({
+      const actions = location.reports.flatMap((report) => (drafts[report.id] || []).map((action) => ({
         ...action,
         reportId: action.sourceReportId || report.id,
         facilityId: report.facilityId || report.customerName || "",
         trackingNumber: report.trackingNumber || "",
         reportDate: report.reportDate || "",
       })));
-      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts }) });
+      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts: partsForLocation(location.key), locationName: location.name }) });
       if (!response.ok) throw new Error(await response.text());
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";
@@ -213,18 +243,20 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
-      setMessage("FedEx Correctives & Parts workbook downloaded with linked report pictures.");
+      setMessage(`${location.name} FedEx Correctives & Parts workbook downloaded with linked report pictures.`);
     } catch (cause) { setError(`Could not create FedEx workbook: ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setExporting(false); }
   }
 
-  async function archiveAndClear() {
-    if (!totalActions) return;
-    const confirmed = window.confirm(`Archive ${totalActions} corrective-action line${totalActions === 1 ? "" : "s"} and clear the live form?\n\nOnly continue after the workbook has been uploaded to ServiceChannel. This keeps an archive copy and prevents these PM reports from being scanned again.`);
+  async function archiveAndClear(location: { key: string; name: string; reports: Report[] }) {
+    const locationActionCount = location.reports.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
+    if (!locationActionCount) return;
+    const confirmed = window.confirm(`Archive ${locationActionCount} corrective-action line${locationActionCount === 1 ? "" : "s"} for ${location.name} and clear only this location?\n\nOnly continue after this workbook has been uploaded to ServiceChannel. Other locations will remain on the live form.`);
     if (!confirmed) return;
     setArchiving(true); setError(""); setMessage("");
     try {
-      const actions = groups.flatMap((report) => (drafts[report.id] || []).map((action) => ({
+      await savePartsIfNeeded();
+      const actions = location.reports.flatMap((report) => (drafts[report.id] || []).map((action) => ({
         ...action,
         reportId: action.sourceReportId || report.id,
         facilityId: report.facilityId || report.customerName || "",
@@ -234,16 +266,16 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       const response = await fetch("/api/corrective-actions/form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ operation: "archive-and-clear", reportIds: groups.map((report) => report.id), actions, parts }),
+        body: JSON.stringify({ operation: "archive-and-clear", locationKey: location.key, reportIds: location.reports.map((report) => report.id), actions, parts: partsForLocation(location.key) }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error || "Could not archive and clear the form.");
-      setReports((current) => current.map((report) => groups.some((group) => group.id === report.id) ? { ...report, correctiveActions: [] } : report));
-      setDrafts((current) => ({ ...current, ...Object.fromEntries(groups.map((report) => [report.id, []])) }));
-      setParts(Array.from({ length: 18 }, blankPart));
+      setReports((current) => current.map((report) => location.reports.some((group) => group.id === report.id) ? { ...report, correctiveActions: [] } : report));
+      setDrafts((current) => ({ ...current, ...Object.fromEntries(location.reports.map((report) => [report.id, []])) }));
+      setPartsByLocation((current) => ({ ...current, [location.key]: blankParts() }));
       setPartsDirty(false);
-      setDirtyReportIds(new Set());
-      setMessage(`${result.actionCount || totalActions} corrective-action line${Number(result.actionCount || totalActions) === 1 ? "" : "s"} archived. The live form is clear.`);
+      setDirtyReportIds((current) => new Set([...current].filter((id) => !location.reports.some((report) => report.id === id))));
+      setMessage(`${result.actionCount || locationActionCount} ${location.name} corrective-action line${Number(result.actionCount || locationActionCount) === 1 ? "" : "s"} archived. Other locations remain available.`);
     } catch (cause) { setError(`Could not archive and clear: ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setArchiving(false); }
   }
@@ -254,23 +286,27 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       <div className={styles.toolbar}>
         <div><strong>{totalActions}</strong><span>open action lines</span>{!readOnly && <small>{unscanned.length} PM reports not yet scanned</small>}</div>
         {!readOnly && <button style={scanning || loading ? { cursor: "not-allowed" } : undefined} disabled={scanning || loading} onClick={() => void scanReports()}>{loading ? "Preparing Reports…" : scanning ? "Scanning…" : "Scan New PM Reports"}</button>}
-        {!readOnly && <button disabled={exporting || loading || !totalActions} onClick={() => void downloadFedexForm()}>{exporting ? "Building FedEx File…" : "Download FedEx Form"}</button>}
         {!readOnly && <button disabled={saving || loading} onClick={() => void saveAll()}>{saving ? "Saving…" : "Save All Changes"}</button>}
-        {!readOnly && <button className={styles.archiveButton} disabled={archiving || loading || !totalActions} onClick={() => void archiveAndClear()}>{archiving ? "Archiving…" : "Uploaded / Archive / Clear"}</button>}
       </div>
       {loading && <div className={styles.progress} role="status" aria-live="polite"><strong>{loadProgress.stage}{loadProgress.total ? ` — ${loadProgress.loaded} of ${loadProgress.total}` : ""}</strong><progress max={loadProgress.total || 1} value={loadProgress.loaded} /><span>The Scan button will be available when the report list is ready.</span></div>}
       {scanning && <div className={styles.progress}><strong>Scanning PM reports — {scanProgress.done} of {scanProgress.total}</strong><progress max={scanProgress.total || 1} value={scanProgress.done} /><span>{scanProgress.found} new action lines found</span></div>}
       {!readOnly && <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>}
       {message && <p className={styles.success}>{message}</p>}{error && <p className={styles.error}>{error}</p>}
-      {loading ? <p className={styles.empty}>Loading corrective actions…</p> : groups.length ? <section className={fedexStyles.fedexForm}>
+      {loading ? <p className={styles.empty}>Loading corrective actions…</p> : locationGroups.length ? <div className={styles.locationForms}>{locationGroups.map((location) => {
+        const locationParts = partsForLocation(location.key);
+        const locationDates = location.reports.map((report) => report.reportDate || "").filter(Boolean).sort();
+        const locationServiceChannelNumbers = [...new Set(location.reports.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
+        const locationActionCount = location.reports.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
+        return <section className={fedexStyles.fedexForm} key={location.key}>
+        <div className={styles.locationHeader}><div><h2>{location.name}</h2><span>{locationActionCount} open action line{locationActionCount === 1 ? "" : "s"}</span></div>{!readOnly && <div><button disabled={exporting} onClick={() => void downloadFedexForm(location)}>{exporting ? "Building…" : `Download ${location.name} Form`}</button><button className={styles.archiveButton} disabled={archiving} onClick={() => void archiveAndClear(location)}>{archiving ? "Archiving…" : "Uploaded / Archive / Clear"}</button></div>}</div>
         <div className={fedexStyles.jobPlans}>{JOB_PLANS.map((plan) => <div key={plan}>{plan}<span>JOB PLAN</span></div>)}<div className={fedexStyles.instructions}>INSTRUCTIONS</div></div>
         <div className={fedexStyles.formMeta}>
-          <div><strong>PM Start Date:</strong><span>{reportDates[0] || "—"}</span></div>
-          <div><strong>PM End Date:</strong><span>{reportDates.at(-1) || "—"}</span></div>
-          <div><strong>ServiceChannel WO#:</strong><span>{serviceChannelNumbers.join(", ") || "—"}</span></div>
+          <div><strong>PM Start Date:</strong><span>{locationDates[0] || "—"}</span></div>
+          <div><strong>PM End Date:</strong><span>{locationDates.at(-1) || "—"}</span></div>
+          <div><strong>ServiceChannel WO#:</strong><span>{locationServiceChannelNumbers.join(", ") || "—"}</span></div>
         </div>
-        <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{parts.map((part, index) => <tr key={index}>{(Object.keys(part) as (keyof Part)[]).map((field) => <td key={field}><input className={controlStyles.partsInput} disabled={readOnly} value={part[field]} onChange={(event) => updatePart(index, field, event.target.value)} aria-label={`${field} row ${index + 1}`} /></td>)}</tr>)}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
-        <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{groups.flatMap((report) => [
+        <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{locationParts.map((part, index) => <tr key={index}>{(Object.keys(part) as (keyof Part)[]).map((field) => <td key={field}><input className={controlStyles.partsInput} disabled={readOnly} value={part[field]} onChange={(event) => updatePart(location.key, index, field, event.target.value)} aria-label={`${location.name} ${field} row ${index + 1}`} /></td>)}</tr>)}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
+        <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{location.reports.flatMap((report) => [
           <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
           ...(drafts[report.id] || []).map((action) => {
             const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
@@ -285,7 +321,8 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
             </tr>;
           }),
         ])}</tbody></table></div></section></div>
-      </section> : <p className={styles.empty}>{readOnly ? "No corrective actions are currently listed." : "No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports."}</p>}
+      </section>;
+      })}</div> : <p className={styles.empty}>{readOnly ? "No corrective actions are currently listed." : "No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports."}</p>}
     </section>
   </main>;
 }

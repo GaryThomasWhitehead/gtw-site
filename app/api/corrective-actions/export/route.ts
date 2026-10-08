@@ -320,7 +320,9 @@ export async function POST(request: NextRequest) {
     }
   }
   const output = await archive.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
-  const filename = `FXG-Correctives-and-Parts-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  const locationLabel = safe(body?.locationName || actions[0]?.facilityId || "Location", 80);
+  const locationSlug = locationLabel.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "Location";
+  const filename = `FXG-${locationSlug}-Correctives-and-Parts-${new Date().toISOString().slice(0, 10)}.xlsx`;
   return new NextResponse(Buffer.from(output), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

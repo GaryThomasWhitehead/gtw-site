@@ -24,6 +24,11 @@ function cleanParts(value: unknown) {
   }));
 }
 
+function cleanPartsByLocation(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).slice(0, 100).map(([key, parts]) => [key.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 250), cleanParts(parts)]).filter(([key]) => Boolean(key)));
+}
+
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request) && !hasCorrectiveActionViewerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
@@ -31,7 +36,7 @@ export async function GET(request: NextRequest) {
   const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${encodeURIComponent(RECORD_KEY)}&limit=1`, { headers: headers(key), cache: "no-store" });
   if (!response.ok) return NextResponse.json({ error: "Could not load parts" }, { status: response.status });
   const [row] = await response.json();
-  return NextResponse.json({ parts: cleanParts(row?.data?.parts) });
+  return NextResponse.json({ parts: cleanParts(row?.data?.parts), partsByLocation: cleanPartsByLocation(row?.data?.partsByLocation) });
 }
 
 export async function POST(request: NextRequest) {
@@ -40,6 +45,7 @@ export async function POST(request: NextRequest) {
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
   const body = await request.json();
   const parts = cleanParts(body?.parts);
+  const partsByLocation = cleanPartsByLocation(body?.partsByLocation);
   if (body?.operation === "archive-and-clear") {
     const reportIds = [...new Set((Array.isArray(body?.reportIds) ? body.reportIds : []).map((value: unknown) => String(value || "").trim()).filter(Boolean))].slice(0, 250);
     const actions = (Array.isArray(body?.actions) ? body.actions : []).slice(0, 1000).map((action: Record<string, unknown>) => ({
@@ -74,16 +80,21 @@ export async function POST(request: NextRequest) {
       });
       if (!updateResponse.ok) return NextResponse.json({ error: `The archive was saved, but report ${id} could not be cleared` }, { status: updateResponse.status });
     }
+    const locationKey = String(body?.locationKey || "").trim().toLowerCase().replace(/\s+/g, " ").slice(0, 250);
+    const savedPartsResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${encodeURIComponent(RECORD_KEY)}&limit=1`, { headers: headers(key), cache: "no-store" });
+    const [savedPartsRow] = savedPartsResponse.ok ? await savedPartsResponse.json() : [];
+    const remainingPartsByLocation = cleanPartsByLocation(savedPartsRow?.data?.partsByLocation);
+    if (locationKey) delete remainingPartsByLocation[locationKey];
     const clearPartsResponse = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
       method: "POST", headers: { ...headers(key), Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify([{ tracking_number: RECORD_KEY, data: { recordType: "corrective-form", parts: [] }, updated_at: archivedAt }]),
+      body: JSON.stringify([{ tracking_number: RECORD_KEY, data: { recordType: "corrective-form", parts: [], partsByLocation: remainingPartsByLocation }, updated_at: archivedAt }]),
     });
     if (!clearPartsResponse.ok) return NextResponse.json({ error: "Actions were archived, but the parts section could not be cleared" }, { status: clearPartsResponse.status });
     return NextResponse.json({ ok: true, archiveId, archivedAt, actionCount: actions.length });
   }
   const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
     method: "POST", headers: { ...headers(key), Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify([{ tracking_number: RECORD_KEY, data: { recordType: "corrective-form", parts }, updated_at: new Date().toISOString() }]),
+    body: JSON.stringify([{ tracking_number: RECORD_KEY, data: { recordType: "corrective-form", parts: [], partsByLocation: Object.keys(partsByLocation).length ? partsByLocation : { legacy: parts } }, updated_at: new Date().toISOString() }]),
   });
   if (!response.ok) return NextResponse.json({ error: "Could not save parts" }, { status: response.status });
   return NextResponse.json({ ok: true, parts });
