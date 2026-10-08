@@ -2,10 +2,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import { getDocumentProxy, renderPageAsImage } from "unpdf";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 type ExportAction = {
   id: string;
@@ -91,6 +94,17 @@ async function attachmentsForReport(reportId: string) {
   return rows.map((row) => row.data).filter((item): item is Attachment => Boolean(item?.base64 && imageExtension(item.contentType, item.filename)));
 }
 
+async function pdfForReport(reportId: string) {
+  const { url, key, table } = config();
+  const trackingNumber = encodeURIComponent(`PMREPORT:${reportId}`);
+  const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, { headers: headers(key), cache: "no-store" });
+  if (!response.ok) throw new Error(`Could not load job report ${reportId} (${response.status}).`);
+  const [row] = await response.json();
+  if (!row?.data) return null;
+  if (row.data.pdfStoragePath) return downloadReportPdf(url, key, String(row.data.pdfStoragePath));
+  return row.data.pdfBase64 ? Buffer.from(String(row.data.pdfBase64), "base64") : null;
+}
+
 export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key } = config();
@@ -129,18 +143,30 @@ export async function POST(request: NextRequest) {
   const sheet = workbook.getWorksheet("Correctives & Parts");
   if (!sheet) return NextResponse.json({ error: "FedEx worksheet template is missing." }, { status: 500 });
   const photosSheet = workbook.addWorksheet("Photos", { properties: { tabColor: { argb: "FF7B219F" } } });
+  const reportsSheet = workbook.addWorksheet("Job Reports", { properties: { tabColor: { argb: "FF1468A5" } } });
   photosSheet.getColumn("A").width = 105;
   photosSheet.getColumn("B").width = 24;
   photosSheet.getCell("A1").value = "FULL-SIZE CORRECTIVE-ACTION PHOTOS";
   photosSheet.getCell("A1").font = { bold: true, size: 18, color: { argb: "FFFFFFFF" } };
   photosSheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4B148C" } };
   photosSheet.getRow(1).height = 26;
+  reportsSheet.getColumn("A").width = 120;
+  reportsSheet.getCell("A1").value = "EMBEDDED SOURCE JOB REPORTS";
+  reportsSheet.getCell("A1").font = { bold: true, size: 18, color: { argb: "FFFFFFFF" } };
+  reportsSheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
+  reportsSheet.getRow(1).height = 26;
 
   const dates = actions.map((action) => action.reportDate).filter(Boolean).sort();
   sheet.getCell("B2").value = dates[0] || "";
   sheet.getCell("D2").value = dates.at(-1) || "";
   const workOrders = [...new Set(actions.map((action) => action.serviceChannelWo).filter(Boolean))];
   sheet.getCell("J2").value = workOrders.join(", ");
+  sheet.unMergeCells("J2:K2");
+  sheet.mergeCells("J2:L2");
+  sheet.unMergeCells("H3:K3");
+  sheet.mergeCells("H3:L3");
+  sheet.unMergeCells("H4:K4");
+  sheet.mergeCells("H4:L4");
   sheet.getColumn("L").width = 25;
   // Keep Photo inside the FedEx corrective-actions table so Excel applies the
   // exact same header and alternating row colors as the other columns.
@@ -167,7 +193,9 @@ export async function POST(request: NextRequest) {
   });
 
   const photoLocations = new Map<string, string>();
+  const reportLocations = new Map<string, string>();
   let photoRow = 3;
+  let reportRow = 3;
   const ensureFullPhoto = (attachment: Attachment, action: ExportAction) => {
     const existing = photoLocations.get(attachment.id);
     if (existing) return existing;
@@ -186,6 +214,32 @@ export async function POST(request: NextRequest) {
     return address;
   };
 
+  for (const reportId of reportIds.filter((id) => !(attachmentsByReport.get(id) || []).length)) {
+    const action = actions.find((item) => item.reportId === reportId);
+    const pdf = await pdfForReport(reportId);
+    if (!action || !pdf) continue;
+    const address = `A${reportRow}`;
+    reportLocations.set(reportId, address);
+    reportsSheet.getCell(address).value = `${action.facilityId || "Facility"} · Tracking #${action.trackingNumber || "not entered"} · ${action.reportDate || "No date"}`;
+    reportsSheet.getCell(address).font = { bold: true, size: 14, color: { argb: "FF0C3B62" } };
+    reportsSheet.getRow(reportRow).height = 24;
+    const document = await getDocumentProxy(new Uint8Array(pdf));
+    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+      const rendered = Buffer.from(await renderPageAsImage(document, pageNumber, { width: 850, canvasImport: () => import("@napi-rs/canvas") }));
+      const width = 850;
+      const height = 1100;
+      const imageId = workbook.addImage({ base64: rendered.toString("base64"), extension: "png" });
+      reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageNumber} of ${document.numPages}`;
+      reportsSheet.getCell(`A${reportRow + 1}`).font = { bold: true, color: { argb: "FF1468A5" } };
+      reportsSheet.addImage(imageId, { tl: { col: 0, row: reportRow + 1 }, ext: { width, height } });
+      const occupiedRows = Math.max(8, Math.ceil(height / 18));
+      for (let row = reportRow + 2; row < reportRow + 2 + occupiedRows; row += 1) reportsSheet.getRow(row).height = 13.5;
+      reportRow += occupiedRows + 3;
+    }
+    await document.cleanup();
+    reportRow += 2;
+  }
+
   actions.forEach((action, index) => {
     const rowNumber = index + 6;
     const row = sheet.getRow(rowNumber);
@@ -197,7 +251,10 @@ export async function POST(request: NextRequest) {
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
-      sheet.getCell(`L${rowNumber}`).value = { text: "Open Job Report PDF", hyperlink: `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(action.reportId)}`, tooltip: "Open the source job report PDF" };
+      const reportAddress = reportLocations.get(action.reportId);
+      sheet.getCell(`L${rowNumber}`).value = reportAddress
+        ? { text: "View Embedded Job Report", hyperlink: `#'Job Reports'!${reportAddress}`, tooltip: "Open the embedded source job report" }
+        : "Job report unavailable";
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
     }
@@ -219,6 +276,7 @@ export async function POST(request: NextRequest) {
   sheet.views = [{ state: "frozen", ySplit: 5 }];
   sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 };
   photosSheet.views = [{ state: "frozen", ySplit: 1 }];
+  reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
   const output = await workbook.xlsx.writeBuffer();
   const filename = `FXG-Correctives-and-Parts-${new Date().toISOString().slice(0, 10)}.xlsx`;
   return new NextResponse(Buffer.from(output), {
