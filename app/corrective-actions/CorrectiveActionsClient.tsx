@@ -5,7 +5,8 @@ import styles from "./corrective-actions.module.css";
 import fedexStyles from "./fedex-form.module.css";
 
 type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
-type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string };
+type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
+const CORRECTIVE_SCAN_VERSION = 2;
 type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
 
 function searchableWords(value: string) {
@@ -90,7 +91,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
 
   const groups = useMemo(() => reports.filter((report) => (drafts[report.id] || []).length > 0), [reports, drafts]);
   const totalActions = groups.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
-  const unscanned = reports.filter((report) => !report.correctiveScanAt);
+  const unscanned = reports.filter((report) => !report.correctiveScanAt || Number(report.correctiveScanVersion || 0) < CORRECTIVE_SCAN_VERSION);
   const reportDates = reports.map((report) => report.reportDate || "").filter(Boolean).sort();
   const serviceChannelNumbers = [...new Set(groups.flatMap((report) => (drafts[report.id] || []).map((action) => action.serviceChannelWo).filter(Boolean)))];
 
@@ -135,7 +136,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         if (!response.ok) throw new Error(responseText || `The scanner returned error ${response.status} for ${report.facilityId || report.trackingNumber || "a PM report"}.`);
         const result = JSON.parse(responseText);
         found += Number(result.found || 0);
-        setReports((current) => current.map((item) => item.id === report.id ? { ...item, correctiveActions: result.report.correctiveActions || [], correctiveScanAt: result.report.correctiveScanAt } : item));
+        setReports((current) => current.map((item) => item.id === report.id ? { ...item, correctiveActions: result.report.correctiveActions || [], correctiveScanAt: result.report.correctiveScanAt, correctiveScanVersion: result.report.correctiveScanVersion } : item));
         setDrafts((current) => ({ ...current, [report.id]: result.report.correctiveActions || [] }));
         setScanProgress({ done: index + 1, total: unscanned.length, found });
       }

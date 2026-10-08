@@ -230,6 +230,7 @@ export async function GET(request: NextRequest) {
       "customerName:data->>customerName",
       "correctiveActions:data->correctiveActions",
       "correctiveScanAt:data->>correctiveScanAt",
+      "correctiveScanVersion:data->correctiveScanVersion",
     ].join(",");
     const params = new URLSearchParams({ select: correctiveSelect, order: "updated_at.desc" });
     params.append("tracking_number", "like.PMREPORT:*");
@@ -272,6 +273,7 @@ export async function GET(request: NextRequest) {
     "calibrationSheets:data->calibrationSheets",
     "correctiveActions:data->correctiveActions",
     "correctiveScanAt:data->>correctiveScanAt",
+    "correctiveScanVersion:data->correctiveScanVersion",
   ].join(",");
   const requestedIds = request.nextUrl.searchParams.get("ids");
   if (requestedIds) {

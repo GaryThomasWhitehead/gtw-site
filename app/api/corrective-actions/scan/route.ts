@@ -3,6 +3,7 @@ import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
+const CORRECTIVE_SCAN_VERSION = 2;
 
 type Action = {
   id: string;
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
   const [row] = await currentResponse.json();
   if (!row?.data) return NextResponse.json({ error: "Report not found" }, { status: 404 });
   if (row.data.category !== "pm") return NextResponse.json({ error: "Only PM reports can be scanned" }, { status: 400 });
-  if (row.data.correctiveScanAt) return NextResponse.json({ ok: true, skipped: true, report: row.data });
+  if (row.data.correctiveScanAt && Number(row.data.correctiveScanVersion || 0) >= CORRECTIVE_SCAN_VERSION) return NextResponse.json({ ok: true, skipped: true, report: row.data });
   const pdfBytes = row.data.pdfStoragePath
     ? await downloadReportPdf(url, key, String(row.data.pdfStoragePath))
     : row.data.pdfBase64 ? Buffer.from(row.data.pdfBase64, "base64") : null;
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
   const text = extracted.items.flatMap((page) => page).map((item) => `${item.str}${item.hasEOL ? "\n" : " "}`).join("");
   const existing: Action[] = Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : [];
   const found = findingsFromText(text, id).filter((candidate) => !existing.some((action) => action.id === candidate.id));
-  const updated = { ...row.data, correctiveActions: [...existing, ...found], correctiveScanAt: new Date().toISOString(), correctiveScanVersion: 1 };
+  const updated = { ...row.data, correctiveActions: [...existing, ...found], correctiveScanAt: new Date().toISOString(), correctiveScanVersion: CORRECTIVE_SCAN_VERSION };
   const updateResponse = await fetch(`${url}/rest/v1/${table}?tracking_number=eq.${recordKey}`, {
     method: "PATCH",
     headers: { ...headers(key), Prefer: "return=minimal" },
