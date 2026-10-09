@@ -369,7 +369,7 @@
 
     <script>
         const LOGGED_IN_TECH = __TECH_SESSION__;
-        const JACOB_PHOTO_EXEMPT = /^jacob(?:\b|\s)/i.test(String(LOGGED_IN_TECH.name || '').trim());
+        const JACOB_PHOTO_EXEMPT = LOGGED_IN_TECH.photoOptional === true;
         // Guard Lucide
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
             lucide.createIcons();

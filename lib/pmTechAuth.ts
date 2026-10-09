@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 const COOKIE_NAME = "frontline_report_tech";
 
-type TechSession = { id: string; name: string; exp: number };
+type TechSession = { id: string; name: string; exp: number; photoOptional?: boolean };
 
 function secret() {
   return process.env.PM_TECH_SESSION_SECRET || "";
@@ -32,8 +32,8 @@ export function pmTechCookieName() {
   return COOKIE_NAME;
 }
 
-export function createPmTechSession(id: string, name: string) {
-  const payload: TechSession = { id, name, exp: Date.now() + 12 * 60 * 60 * 1000 };
+export function createPmTechSession(id: string, name: string, photoOptional = false) {
+  const payload: TechSession = { id, name, exp: Date.now() + 12 * 60 * 60 * 1000, photoOptional };
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
   return `${encoded}.${signature(encoded)}`;
 }

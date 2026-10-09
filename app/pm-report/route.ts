@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const tech = await validatePmTechSession(request);
   if (!tech) return NextResponse.redirect(new URL("/pm-tech-login?return=/pm-report", request.url));
   const filePath = path.join(process.cwd(), "app", "pm-report", "pm-form.html");
-  const html = (await readFile(filePath, "utf8")).replace("__TECH_SESSION__", JSON.stringify({ id: tech.id, name: tech.name }).replace(/</g, "\\u003c"));
+  const html = (await readFile(filePath, "utf8")).replace("__TECH_SESSION__", JSON.stringify({ id: tech.id, name: tech.name, photoOptional: tech.photoOptional === true }).replace(/</g, "\\u003c"));
   return new NextResponse(html, {
     headers: {
       "content-type": "text/html; charset=utf-8",

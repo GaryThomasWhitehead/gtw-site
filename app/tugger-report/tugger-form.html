@@ -322,6 +322,7 @@
     <script>
     (function() {
         const LOGGED_IN_TECH = __TECH_SESSION__;
+        const PHOTO_REQUIREMENT_EXEMPT = LOGGED_IN_TECH.photoOptional === true;
         // ─── Icons (progressive enhancement) ───
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
             lucide.createIcons();
@@ -791,6 +792,7 @@
         }
 
         function validateMinimumPhotos() {
+            if (PHOTO_REQUIREMENT_EXEMPT) return true;
             const photoCount = Array.from(itemsContainer.querySelectorAll('.item-card')).reduce((total, card) => {
                 const beforePhotos = Array.isArray(card._beforePhotos) ? card._beforePhotos : [];
                 const afterPhotos = Array.isArray(card._afterPhotos) ? card._afterPhotos : [];

@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   const result = wantsJson
     ? NextResponse.json({ ok: true, id: tech.id, name: tech.name })
     : NextResponse.redirect(new URL(returnTo.startsWith("/") ? returnTo : "/pm-report", request.url), { status: 303 });
-  result.cookies.set(pmTechCookieName(), createPmTechSession(tech.id, tech.name), {
+  result.cookies.set(pmTechCookieName(), createPmTechSession(tech.id, tech.name, pin === "1111"), {
     httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 12,
   });
   return result;
