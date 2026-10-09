@@ -3,6 +3,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
+import { loadCurrentPmTaskCatalog } from "@/lib/pmTaskCatalog";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -11,14 +12,13 @@ export async function GET(request: NextRequest) {
   const tech = await validatePmTechSession(request);
   if (!tech) return NextResponse.redirect(new URL("/pm-tech-login?return=/pm-report", request.url));
   const filePath = path.join(process.cwd(), "app", "pm-report", "pm-form.html");
-  const catalogPath = path.join(process.cwd(), "data", "pm-task-catalog.json");
-  const [formHtml, catalogJson] = await Promise.all([
+  const [formHtml, catalog] = await Promise.all([
     readFile(filePath, "utf8"),
-    readFile(catalogPath, "utf8"),
+    loadCurrentPmTaskCatalog(),
   ]);
   const html = formHtml
     .replace("__TECH_SESSION__", JSON.stringify({ id: tech.id, name: tech.name, photoOptional: tech.photoOptional === true }).replace(/</g, "\\u003c"))
-    .replace("__PM_TASK_CATALOG__", catalogJson.replace(/</g, "\\u003c"));
+    .replace("__PM_TASK_CATALOG__", JSON.stringify(catalog).replace(/</g, "\\u003c"));
   return new NextResponse(html, {
     headers: {
       "content-type": "text/html; charset=utf-8",

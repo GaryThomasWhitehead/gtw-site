@@ -72,6 +72,7 @@ type ReportAttachment = {
   description?: string;
 };
 type Technician = { id: string; name: string; active: boolean };
+type PmCatalogStatus = { filename: string; uploadedAt: string; groupCount: number; taskCount: number };
 
 const TABS: { key: Category; label: string }[] = [
   { key: "all", label: "All Reports" },
@@ -181,6 +182,39 @@ export default function ReportsClient() {
   const [techName, setTechName] = useState("");
   const [techPin, setTechPin] = useState("");
   const [savingTech, setSavingTech] = useState(false);
+  const [showPmTaskManager, setShowPmTaskManager] = useState(false);
+  const [pmCatalogStatus, setPmCatalogStatus] = useState<PmCatalogStatus | null>(null);
+  const [uploadingPmCatalog, setUploadingPmCatalog] = useState(false);
+
+  async function openPmTaskManager() {
+    setShowPmTaskManager(true);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-task-catalog", { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "PM task information could not be loaded.");
+      setPmCatalogStatus(result);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  async function uploadPmCatalog(file: File) {
+    setUploadingPmCatalog(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      const response = await fetch("/api/pm-task-catalog", { method: "POST", body: form });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The PM workbook could not be uploaded.");
+      setPmCatalogStatus(result);
+    } catch (cause) {
+      setError(`PM tasks were not changed. ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setUploadingPmCatalog(false);
+    }
+  }
 
   const loadReports = useCallback(async () => {
     setLoadingReports(true);
@@ -793,6 +827,7 @@ export default function ReportsClient() {
           <a href="/pm-reports/import">Import Completed PDF</a>
           <a href="/corrective-actions">Corrective Actions</a>
           <button type="button" onClick={() => void openTechAccess()}>Manage Tech Access</button>
+          <button type="button" onClick={() => void openPmTaskManager()}>Update PM Tasks</button>
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload to Report"}
           </button>
@@ -801,6 +836,35 @@ export default function ReportsClient() {
         </div>
       </header>
       <section className={styles.content}>
+        {showPmTaskManager && (
+          <section className={styles.pmTaskManager}>
+            <div className={styles.techManagerHeader}>
+              <div>
+                <h2>PM Task Workbook</h2>
+                <p>Upload the newest Excel PM inspection workbook. Tabs from SLIDER BED through GDU BYPASS will replace the task buttons technicians see.</p>
+              </div>
+              <button type="button" onClick={() => setShowPmTaskManager(false)}>Close</button>
+            </div>
+            <div className={styles.pmTaskStatus}>
+              <strong>{pmCatalogStatus?.filename || "Loading current task workbook…"}</strong>
+              {pmCatalogStatus && <span>{pmCatalogStatus.groupCount} PM sections · {pmCatalogStatus.taskCount} checklist items{pmCatalogStatus.uploadedAt ? ` · Updated ${new Date(pmCatalogStatus.uploadedAt).toLocaleString()}` : ""}</span>}
+            </div>
+            <label className={styles.pmWorkbookButton}>
+              {uploadingPmCatalog ? "Checking and updating tasks…" : "Choose New PM Workbook"}
+              <input
+                type="file"
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                disabled={uploadingPmCatalog}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void uploadPmCatalog(file);
+                  event.currentTarget.value = "";
+                }}
+              />
+            </label>
+            <p className={styles.pmTaskNote}>The existing technician tasks stay active unless the new workbook is successfully validated and saved. Technicians receive the updated task list the next time they open a PM report.</p>
+          </section>
+        )}
         {pendingUpload && (
           <section className={styles.uploadPanel}>
             <div>
