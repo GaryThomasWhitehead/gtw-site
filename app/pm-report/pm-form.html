@@ -259,11 +259,17 @@
                     </div>
                 </fieldset>
             </div>
-            <!-- Start Inspection Button -->
-            <button data-id="52" id="start-inspection-btn-s9t0" class="no-print w-full mt-6 h-12 bg-navy-500 hover:bg-navy-600 active:bg-navy-700 text-white font-semibold rounded-xl text-base transition-colors flex items-center justify-center gap-2">
-                <i data-id="53" data-lucide="clipboard-check" class="w-5 h-5"></i>
-                Start Inspection
-            </button>
+            <!-- Start Inspection Buttons -->
+            <div class="no-print mt-6 grid gap-3 sm:grid-cols-2">
+                <button data-id="52" id="start-inspection-btn-s9t0" class="h-12 bg-navy-500 hover:bg-navy-600 active:bg-navy-700 text-white font-semibold rounded-xl text-base transition-colors flex items-center justify-center gap-2">
+                    <i data-id="53" data-lucide="clipboard-check" class="w-5 h-5"></i>
+                    Start Inspection
+                </button>
+                <button type="button" id="create-pm-task-btn" class="h-12 bg-[#7e22ce] hover:bg-[#6b21a8] active:bg-[#581c87] text-white font-semibold rounded-xl text-base transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="list-checks" class="w-5 h-5"></i>
+                    Create PM Task
+                </button>
+            </div>
         </section>
 
         <!-- SECTION 2: Inspection Items -->
@@ -329,6 +335,42 @@
         <p data-id="82" id="report-footer-label" class="text-xs text-navy-300">Frontline Pro Services · Preventive Maintenance</p>
     </footer>
 
+    <!-- PM Task Library -->
+    <div id="pm-task-view" class="hidden fixed inset-0 z-[100] bg-[#f4f7fb] overflow-y-auto no-print" role="dialog" aria-modal="true" aria-labelledby="pm-task-view-title">
+        <div class="sticky top-0 z-10 bg-[#12375b] text-white shadow-lg">
+            <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-blue-200">Preventive Maintenance</p>
+                    <h2 id="pm-task-view-title" class="text-xl font-bold">Choose a PM Task</h2>
+                </div>
+                <button type="button" id="close-pm-task-view" class="min-h-11 px-4 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 font-semibold">Close</button>
+            </div>
+        </div>
+        <div class="max-w-5xl mx-auto p-4 sm:p-6">
+            <section id="pm-task-groups-section">
+                <p class="mb-4 text-navy-600">Select the equipment PM you are performing.</p>
+                <div id="pm-task-group-buttons" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+            </section>
+            <section id="pm-task-checklist-section" class="hidden">
+                <button type="button" id="back-to-pm-task-groups" class="mb-4 min-h-11 px-4 rounded-xl border border-field-border bg-white text-navy-600 font-semibold">← All PM Tasks</button>
+                <div class="rounded-2xl border border-field-border bg-white shadow-sm overflow-hidden">
+                    <div class="bg-[#7e22ce] text-white px-4 py-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h3 id="pm-task-checklist-title" class="text-xl font-bold"></h3>
+                            <p id="pm-task-checklist-count" class="text-sm text-purple-100"></p>
+                        </div>
+                        <button type="button" id="toggle-all-pm-tasks" class="min-h-10 px-3 rounded-lg bg-white/15 hover:bg-white/25 font-semibold text-sm">Check All</button>
+                    </div>
+                    <div id="pm-task-checklist" class="divide-y divide-field-border"></div>
+                    <div class="sticky bottom-0 border-t border-field-border bg-white p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-[0_-6px_16px_rgba(0,0,0,0.08)]">
+                        <p id="pm-task-selected-count" class="font-semibold text-navy-600">0 completed tasks selected</p>
+                        <button type="button" id="add-pm-tasks-to-report" class="min-h-12 px-5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white font-bold">Add Completed Tasks to Report</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
     <!-- Item Card Template -->
     <template data-id="83" id="item-template-a3b4">
         <div data-id="84" class="item-card bg-white rounded-2xl shadow-sm border border-field-border/40 p-4 md:p-5 relative" data-item-id="">
@@ -369,6 +411,7 @@
 
     <script>
         const LOGGED_IN_TECH = __TECH_SESSION__;
+        const PM_TASK_CATALOG = __PM_TASK_CATALOG__;
         const JACOB_PHOTO_EXEMPT = LOGGED_IN_TECH.photoOptional === true;
         // Guard Lucide
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
@@ -376,7 +419,7 @@
         }
 
         // ===================== STATE =====================
-        const MAX_ITEMS = 80;
+        const MAX_ITEMS = 1000;
         const MAX_PHOTOS_PER_ITEM = 8;
         const STORAGE_KEY = 'frontline_field_report';
         const PHOTO_DB_NAME = 'frontline_field_report_photos';
@@ -419,6 +462,16 @@
         const teamMembersInput = document.getElementById('team-members-input');
         const teamMembersGroup = document.getElementById('team-members-group');
         const startBtn = document.getElementById('start-inspection-btn-s9t0');
+        const createPmTaskBtn = document.getElementById('create-pm-task-btn');
+        const pmTaskView = document.getElementById('pm-task-view');
+        const pmTaskGroupsSection = document.getElementById('pm-task-groups-section');
+        const pmTaskGroupButtons = document.getElementById('pm-task-group-buttons');
+        const pmTaskChecklistSection = document.getElementById('pm-task-checklist-section');
+        const pmTaskChecklistTitle = document.getElementById('pm-task-checklist-title');
+        const pmTaskChecklistCount = document.getElementById('pm-task-checklist-count');
+        const pmTaskChecklist = document.getElementById('pm-task-checklist');
+        const pmTaskSelectedCount = document.getElementById('pm-task-selected-count');
+        let activePmTaskGroup = null;
         const inspectionSection = document.getElementById('inspection-section-u1v2');
         const addItemBtn = document.getElementById('add-item-btn-y5z6');
         const itemsContainer = document.getElementById('items-container-a7b8');
@@ -617,6 +670,12 @@
             setReportCategory(reportCategory, false);
 
             startBtn.addEventListener('click', handleStartInspection);
+            createPmTaskBtn.addEventListener('click', openPmTaskView);
+            document.getElementById('close-pm-task-view').addEventListener('click', closePmTaskView);
+            document.getElementById('back-to-pm-task-groups').addEventListener('click', showPmTaskGroups);
+            document.getElementById('toggle-all-pm-tasks').addEventListener('click', toggleAllPmTasks);
+            document.getElementById('add-pm-tasks-to-report').addEventListener('click', addCompletedPmTasksToReport);
+            renderPmTaskGroups();
             addItemBtn.addEventListener('click', () => addItem());
             printBtn.addEventListener('click', () => handleExportPDF('download'));
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
@@ -675,7 +734,129 @@
             document.getElementById('selected-report-title').textContent = REPORT_TYPES[category].label;
             document.getElementById('report-footer-label').textContent = 'Frontline Pro Services · ' + REPORT_TYPES[category].short;
             document.title = 'Frontline ' + REPORT_TYPES[category].label;
+            createPmTaskBtn.classList.toggle('hidden', category !== 'pm');
             if (persist) saveState();
+        }
+
+        // ===================== PM TASK LIBRARY =====================
+        function renderPmTaskGroups() {
+            pmTaskGroupButtons.innerHTML = PM_TASK_CATALOG.map((group, index) => `
+                <button type="button" data-pm-group-index="${index}" class="min-h-20 rounded-2xl border-2 border-[#7e22ce] bg-white px-4 py-4 text-left shadow-sm hover:bg-purple-50 active:bg-purple-100 transition-colors">
+                    <span class="block font-bold text-[#581c87]">${escapeAttr(group.name)}</span>
+                    <span class="block mt-1 text-sm text-navy-400">${group.tasks.length} checklist item${group.tasks.length === 1 ? '' : 's'}</span>
+                </button>`).join('');
+            pmTaskGroupButtons.querySelectorAll('[data-pm-group-index]').forEach(button => {
+                button.addEventListener('click', () => showPmTaskChecklist(Number(button.dataset.pmGroupIndex)));
+            });
+        }
+
+        function openPmTaskView() {
+            if (reportCategory !== 'pm') {
+                setReportCategory('pm');
+                showToast('Report type changed to Preventive Maintenance.', 'info');
+            }
+            showPmTaskGroups();
+            pmTaskView.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            pmTaskView.scrollTop = 0;
+        }
+
+        function closePmTaskView() {
+            pmTaskView.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function showPmTaskGroups() {
+            activePmTaskGroup = null;
+            pmTaskGroupsSection.classList.remove('hidden');
+            pmTaskChecklistSection.classList.add('hidden');
+            pmTaskView.scrollTop = 0;
+        }
+
+        function showPmTaskChecklist(groupIndex) {
+            const group = PM_TASK_CATALOG[groupIndex];
+            if (!group) return;
+            activePmTaskGroup = { ...group, index: groupIndex };
+            pmTaskChecklistTitle.textContent = group.name;
+            pmTaskChecklistCount.textContent = group.tasks.length + ' checklist item' + (group.tasks.length === 1 ? '' : 's');
+            pmTaskChecklist.innerHTML = group.tasks.map((task, index) => {
+                const stableId = `pm-${groupIndex}-${index}`;
+                const alreadyAdded = items.includes(stableId);
+                return `<label class="flex items-start gap-3 px-4 py-4 sm:px-6 cursor-pointer ${alreadyAdded ? 'bg-green-50' : 'hover:bg-purple-50'}">
+                    <input type="checkbox" data-pm-task-index="${index}" class="mt-1 h-6 w-6 shrink-0 accent-[#16a34a]" ${alreadyAdded ? 'checked disabled' : ''}>
+                    <span class="min-w-0">
+                        <span class="block text-xs font-bold uppercase tracking-wide text-[#7e22ce]">Task ${escapeAttr(task.task)}</span>
+                        <span class="block mt-1 text-base leading-relaxed text-navy-800">${escapeAttr(task.description)}</span>
+                        ${alreadyAdded ? '<span class="block mt-1 text-xs font-bold text-green-700">Already on this report</span>' : ''}
+                    </span>
+                </label>`;
+            }).join('');
+            pmTaskChecklist.querySelectorAll('input[type="checkbox"]').forEach(input => input.addEventListener('change', updatePmTaskSelectedCount));
+            pmTaskGroupsSection.classList.add('hidden');
+            pmTaskChecklistSection.classList.remove('hidden');
+            updatePmTaskSelectedCount();
+            pmTaskView.scrollTop = 0;
+        }
+
+        function updatePmTaskSelectedCount() {
+            const selected = pmTaskChecklist.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)').length;
+            pmTaskSelectedCount.textContent = selected + ' completed task' + (selected === 1 ? '' : 's') + ' selected';
+            const selectable = Array.from(pmTaskChecklist.querySelectorAll('input[type="checkbox"]:not(:disabled)'));
+            document.getElementById('toggle-all-pm-tasks').textContent = selectable.length && selectable.every(input => input.checked) ? 'Clear All' : 'Check All';
+        }
+
+        function toggleAllPmTasks() {
+            const selectable = Array.from(pmTaskChecklist.querySelectorAll('input[type="checkbox"]:not(:disabled)'));
+            const shouldCheck = !selectable.length || !selectable.every(input => input.checked);
+            selectable.forEach(input => { input.checked = shouldCheck; });
+            updatePmTaskSelectedCount();
+        }
+
+        function removeBlankStarterItem() {
+            if (items.length !== 1) return;
+            const card = itemsContainer.querySelector('.item-card');
+            if (!card) return;
+            const id = card.dataset.itemId;
+            const isBlank = !card.querySelector('.unit-id-input').value.trim()
+                && !card.querySelector('.desc-textarea').value.trim()
+                && !(photoDataStore[id] || []).filter(Boolean).length;
+            if (!isBlank) return;
+            card.remove();
+            items = [];
+            delete photoFilenames[id];
+            delete photoDataStore[id];
+            delete photoDescriptionStore[id];
+            delete photoTypeStore[id];
+        }
+
+        function addCompletedPmTasksToReport() {
+            if (!activePmTaskGroup) return;
+            const selectedInputs = Array.from(pmTaskChecklist.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)'));
+            if (!selectedInputs.length) {
+                showToast('Check each PM item you completed, then add it to the report.', 'warning');
+                return;
+            }
+            removeBlankStarterItem();
+            let added = 0;
+            selectedInputs.forEach(input => {
+                const taskIndex = Number(input.dataset.pmTaskIndex);
+                const task = activePmTaskGroup.tasks[taskIndex];
+                const id = `pm-${activePmTaskGroup.index}-${taskIndex}`;
+                if (!task || items.includes(id)) return;
+                addItem({
+                    id,
+                    unitId: `${activePmTaskGroup.name} · Task ${task.task}`,
+                    description: task.description
+                });
+                added++;
+            });
+            inspectionSection.classList.remove('hidden');
+            actionsBar.classList.remove('hidden');
+            emptyState.classList.toggle('hidden', items.length > 0);
+            saveState();
+            closePmTaskView();
+            inspectionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showToast(`${added} completed PM task${added === 1 ? '' : 's'} added. Attach pictures to each item below.`, 'success');
         }
 
         // ===================== TOAST =====================

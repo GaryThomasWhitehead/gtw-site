@@ -1,0 +1,3604 @@
+[
+  {
+    "name": "SLIDER BED",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Open all guards and dump debris"
+      },
+      {
+        "task": "30",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "40",
+        "description": "Check T-plate for condition and 1/8\" maximum gap"
+      },
+      {
+        "task": "50",
+        "description": "Inspect drive belt/chain and verify alignment and tension per manufacturers recommendations"
+      },
+      {
+        "task": "60",
+        "description": "If applicable lubricate drive chain. Do NOT use degreaser on drive chains."
+      },
+      {
+        "task": "70",
+        "description": "Tighten all setscrews and hardware on all components"
+      },
+      {
+        "task": "80",
+        "description": "If applicable check oil level in reducer; top off if necessary"
+      },
+      {
+        "task": "90",
+        "description": "Inspect all junctions, conduits, and motor terminal box"
+      },
+      {
+        "task": "100",
+        "description": "Inspect all pulleys and rollers, remove debris"
+      },
+      {
+        "task": "110",
+        "description": "Grease all bearings, clean fittings before and after"
+      },
+      {
+        "task": "120",
+        "description": "Inspect for cracked welds"
+      },
+      {
+        "task": "130",
+        "description": "Secure all guards with appropriate hardware"
+      },
+      {
+        "task": "140",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "150",
+        "description": "Inspect top and bottom of laces and belt condition, repair or make note"
+      },
+      {
+        "task": "160",
+        "description": "Check photoeye cable and alignment if applicable"
+      },
+      {
+        "task": "170",
+        "description": "Clean and inspect encoder/PPI if applicable"
+      },
+      {
+        "task": "175",
+        "description": "Inspect E-stop device wiring, annunciation, and operation"
+      },
+      {
+        "task": "180",
+        "description": "Remove lock out/tag out and run conveyor"
+      },
+      {
+        "task": "190",
+        "description": "Listen for unusual noises, vibration, and check belt tracking, repair/adjust as necessary"
+      },
+      {
+        "task": "200",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "210",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "SLIDER BED MP",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Open all guards and dump debris"
+      },
+      {
+        "task": "30",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "40",
+        "description": "Check T-plate for condition and 1/8\" maximum gap"
+      },
+      {
+        "task": "50",
+        "description": "Inspect the lagging on the drum for debris, damage and wear"
+      },
+      {
+        "task": "60",
+        "description": "If pulley has optional regreasable guards, grease if needed"
+      },
+      {
+        "task": "70",
+        "description": "Check for oil seeping from seals, Check oil level in pulley"
+      },
+      {
+        "task": "80",
+        "description": "Check mounting bolts for tightness"
+      },
+      {
+        "task": "90",
+        "description": "Inspect all junctions, conduits, and motor terminal box"
+      },
+      {
+        "task": "100",
+        "description": "Inspect all pulleys and rollers, remove debris, ensure arrow on end of motorized pulley shaft is facing upward"
+      },
+      {
+        "task": "110",
+        "description": "Grease all bearings, clean fittings before and after"
+      },
+      {
+        "task": "120",
+        "description": "Inspect for cracked welds"
+      },
+      {
+        "task": "130",
+        "description": "Secure all guards with appropriate hardware"
+      },
+      {
+        "task": "140",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "150",
+        "description": "Inspect top and bottom of laces and belt condition, repair or make note"
+      },
+      {
+        "task": "160",
+        "description": "Check photoeye cable and alignment"
+      },
+      {
+        "task": "170",
+        "description": "Inspect E-stop device wiring, annunciation, and operation"
+      },
+      {
+        "task": "180",
+        "description": "Remove lock out/tag out and run conveyor"
+      },
+      {
+        "task": "190",
+        "description": "Listen for unusual noises, vibration, and check belt tracking, repair/adjust as necessary"
+      },
+      {
+        "task": "200",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "210",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "1-ST - WASP",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Check reducer for oil leaks, replace if leaking"
+      },
+      {
+        "task": "40",
+        "description": "Tighten reducer/motor and bearing mounting bolts"
+      },
+      {
+        "task": "50",
+        "description": "Tighten all setscrews on bearings and sprockets"
+      },
+      {
+        "task": "60",
+        "description": "Check conduit connections and conduit condition to motor, repair as necessary"
+      },
+      {
+        "task": "70",
+        "description": "Inspect and clean all pulleys and lagging, replace if worn or damaged"
+      },
+      {
+        "task": "80",
+        "description": "Inspect electrical control station/conduit for loose/missing hardware and tighten/replace"
+      },
+      {
+        "task": "90",
+        "description": "Clean all return rollers, remove all debris, check/tighten all setscrews, replace any hardware showing signs of failure."
+      },
+      {
+        "task": "100",
+        "description": "Inspect beds for cracked welds or missing/loose bolts"
+      },
+      {
+        "task": "110",
+        "description": "Inspect cam followers, track and brackets damage, wear and/or misalignment. Replace/repair as necessary"
+      },
+      {
+        "task": "120",
+        "description": "Apply grease to track on both sides"
+      },
+      {
+        "task": "130",
+        "description": "Remove all side guards and check chains for proper tension/lubrication"
+      },
+      {
+        "task": "140",
+        "description": "Check that extension mounts are properly secured. Replace/tighten hardware."
+      },
+      {
+        "task": "150",
+        "description": "Remove bottom cover on jackscrew lift. Clean and lubricate"
+      },
+      {
+        "task": "160",
+        "description": "Tighten all setscrew on sprockets for jackscrew"
+      },
+      {
+        "task": "170",
+        "description": "Clean and lubricate jackscrews and nut on each side"
+      },
+      {
+        "task": "180",
+        "description": "Clean out debris in jackscrew and re-attach cover over chain"
+      },
+      {
+        "task": "190",
+        "description": "Check hydraulic lift reservoir level. Fill if necessary. Use Mobile DTE-13 hyd fluid or equivalent"
+      },
+      {
+        "task": "200",
+        "description": "Verify no leaks in hydraulic system, repair if found"
+      },
+      {
+        "task": "210",
+        "description": "Inspect hydraulic hoses for wear, replace if necessary"
+      },
+      {
+        "task": "220",
+        "description": "Check condition of hydraulic lift cylinder, verify no leaks are present, repair if necessary"
+      },
+      {
+        "task": "230",
+        "description": "Inspect belt for tear, rips, and rough edges. Replace if necessary"
+      },
+      {
+        "task": "240",
+        "description": "If belt has minor damage, cut out damage and note on \"CORRECTIVES & PARTS\" tab"
+      },
+      {
+        "task": "250",
+        "description": "Look for belt grindings at drives, tail rollers."
+      },
+      {
+        "task": "260",
+        "description": "Inspect lacings for missing hooks, pins, and rough edges. Replace if bad"
+      },
+      {
+        "task": "270",
+        "description": "Remove cover and clean crank mechanism, inspect and lubricate chain"
+      },
+      {
+        "task": "280",
+        "description": "Inspect and repair crank assembly for wear/loose/missing bolts"
+      },
+      {
+        "task": "290",
+        "description": "Inspect ratchet dog assembly for excess wear and replace as necessary"
+      },
+      {
+        "task": "300",
+        "description": "Inspect/repair handles and all guards"
+      },
+      {
+        "task": "310",
+        "description": "Grease all bearings. Note take care not to damage seals on bearings with grease, clean fittings"
+      },
+      {
+        "task": "320",
+        "description": "Ensure all guards are replaced and fastened correctly"
+      },
+      {
+        "task": "330",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "340",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "350",
+        "description": "Run belt and inspect for unusual noises and vibrations"
+      },
+      {
+        "task": "360",
+        "description": "Inspect complete rotation of belt for tracking problem. If tracking issues are found make corrections"
+      },
+      {
+        "task": "370",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "380",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "1-ST MP - WASP",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Inspect motorized pulley lagging for damage/wear, Mounting bolts are tight, Oil seeping from seals"
+      },
+      {
+        "task": "40",
+        "description": "Check oil level in motorized pulley"
+      },
+      {
+        "task": "50",
+        "description": "If Motorized pulley has optional regreasable guards, grease if needed."
+      },
+      {
+        "task": "60",
+        "description": "Check conduit connections and conduit condition to motor, repair findings"
+      },
+      {
+        "task": "70",
+        "description": "Inspect and clean all pulleys, Lagging in good condition, replace if damaged"
+      },
+      {
+        "task": "80",
+        "description": "Inspect electrical control station/conduit for Loose/missing hardware and tighten/replace"
+      },
+      {
+        "task": "90",
+        "description": "Clean all return rollers, remove all debris, check/tighten all setscrews, replace any hardware showing signs of failure."
+      },
+      {
+        "task": "100",
+        "description": "Inspect beds for cracked welds or missing/loose bolts"
+      },
+      {
+        "task": "110",
+        "description": "Inspect cam followers in good condition,track is in good shape,brackets aren't bent.Replace/repair"
+      },
+      {
+        "task": "120",
+        "description": "Apply grease to track on both sides"
+      },
+      {
+        "task": "130",
+        "description": "Remove all side guards and check chains for proper tension/lubrication"
+      },
+      {
+        "task": "140",
+        "description": "Check that extension Mounts are properly secured. Replace/tighten hardware."
+      },
+      {
+        "task": "150",
+        "description": "Remove bottom cover on Jackscrew Lift and lubricate"
+      },
+      {
+        "task": "160",
+        "description": "Tighten all setscrew on sprockets for jackscrew"
+      },
+      {
+        "task": "170",
+        "description": "Apply grease to jackscrews and nut in each side."
+      },
+      {
+        "task": "180",
+        "description": "Clean out debris in jackscrew and reattach cover over chain"
+      },
+      {
+        "task": "190",
+        "description": "Check hydraulic lift reservoir level. Fill if necessary. Use Mobile DTE-13 hyd fluid or equivalent"
+      },
+      {
+        "task": "200",
+        "description": "Verify no leaks in hydraulic system, repair"
+      },
+      {
+        "task": "210",
+        "description": "Inspect hydraulic hoses for wear, replace"
+      },
+      {
+        "task": "220",
+        "description": "Check condition of hydraulic lift cylinder, Verify no leaks are present, repair"
+      },
+      {
+        "task": "230",
+        "description": "Inspect belt for tear, rips, and rough edges. Replace if necessary"
+      },
+      {
+        "task": "240",
+        "description": "If Belt has minor tear, cut out bad, note on report"
+      },
+      {
+        "task": "250",
+        "description": "Look for belt grindings at drives, tail rollers"
+      },
+      {
+        "task": "260",
+        "description": "Inspect lacings for missing hooks, pins, and rough edges. Replace if bad"
+      },
+      {
+        "task": "270",
+        "description": "Remove cover and clean crank mechanism, inspect and lubricate chain"
+      },
+      {
+        "task": "280",
+        "description": "Inspect and repair crank assembly for wear/loose/missing bolts"
+      },
+      {
+        "task": "290",
+        "description": "Inspect ratchet dog assembly for excess wear and replace as necessary"
+      },
+      {
+        "task": "300",
+        "description": "Inspect/repair handles and all guards"
+      },
+      {
+        "task": "310",
+        "description": "Grease all bearings. Note take care not to damage seals on bearings with grease. Clean all grease fittings."
+      },
+      {
+        "task": "320",
+        "description": "Ensure all guards are replaced and fastened correctly"
+      },
+      {
+        "task": "330",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "340",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "350",
+        "description": "Run belt and inspect for unusual noises and vibrations"
+      },
+      {
+        "task": "360",
+        "description": "Inspect complete rotation of belt for tracking problem. If tracking issues are found make corrections"
+      },
+      {
+        "task": "370",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "380",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "1-ST - SRS",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Inspect conveyor belt for cuts, frayed edges, wear, damaged lacing"
+      },
+      {
+        "task": "40",
+        "description": "Check drive for oil seal leakage"
+      },
+      {
+        "task": "50",
+        "description": "Tighten all set screws on bearings and sprockets"
+      },
+      {
+        "task": "60",
+        "description": "Check for excessive sprocket or sheave wear, check poly drive belt."
+      },
+      {
+        "task": "70",
+        "description": "Tighten all mounting bolts, motors and bearings."
+      },
+      {
+        "task": "80",
+        "description": "Inspect Control Stations, seal-tite and motor terminal box for damage or loose fasteners. Repair findings."
+      },
+      {
+        "task": "90",
+        "description": "Check extension and lift crank handles, repair or replace if damaged or broken."
+      },
+      {
+        "task": "95",
+        "description": "Clean all return rollers and check setscrews for any movement"
+      },
+      {
+        "task": "100",
+        "description": "Inspect for cracked welds, missing/loose bolts."
+      },
+      {
+        "task": "110",
+        "description": "Verify transfer plate is tight, has no significant damage and maintains a gap of 1/8\" maximum"
+      },
+      {
+        "task": "120",
+        "description": "Extendo boom: Check underneath conveyor for debris on rollers, remove."
+      },
+      {
+        "task": "130",
+        "description": "Inspect cam followers in track, are brackets bent?"
+      },
+      {
+        "task": "140",
+        "description": "Apply grease to track on both sides."
+      },
+      {
+        "task": "150",
+        "description": "Boom drive chain: While unit is extended, clean all drive chains and lube."
+      },
+      {
+        "task": "160",
+        "description": "Tighten all chain anchors, setscrews on sprockets."
+      },
+      {
+        "task": "170",
+        "description": "Inspect chain and wear in links replace if needed, including master link clip"
+      },
+      {
+        "task": "180",
+        "description": "If needed grease all bearings not to damage seals on bearings. Wipe down all grease fittings"
+      },
+      {
+        "task": "190",
+        "description": "Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "200",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "210",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "220",
+        "description": "Run belt and test unit: Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "230",
+        "description": "Inspect complete rotation of belt for tracking problems and proper belt tension, correct as necessary"
+      },
+      {
+        "task": "240",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "250",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "1-ST - NORTECH",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Wipe down gear motors, bearings and motorized pulley output shaft area."
+      },
+      {
+        "task": "40",
+        "description": "If motorized pulley output shaft seals are leaking create CM for followup."
+      },
+      {
+        "task": "50",
+        "description": "Inspect conduits, junction boxes for damage. Repair as necessary."
+      },
+      {
+        "task": "60",
+        "description": "Tighten all setscrews on bearings and sprockets."
+      },
+      {
+        "task": "70",
+        "description": "Tighten all mounting bolts, motors and bearings."
+      },
+      {
+        "task": "80",
+        "description": "Make sure all junction boxes on motors are turned down."
+      },
+      {
+        "task": "90",
+        "description": "Inspect electrical control station for proper function and loose nuts, secure if loose."
+      },
+      {
+        "task": "100",
+        "description": "Check/tighten all return roller setscrews. Check roller bearings for wear. Replace if worn."
+      },
+      {
+        "task": "110",
+        "description": "Inspect for cracked welds, missing/loose bolts."
+      },
+      {
+        "task": "120",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum"
+      },
+      {
+        "task": "130",
+        "description": "Check for debris on pulleys/rollers, clean off caked debris, tape, stickers, etc."
+      },
+      {
+        "task": "140",
+        "description": "Inspect cam followers in track, inspect brackets for deformity, repair/replace as necessary."
+      },
+      {
+        "task": "150",
+        "description": "Apply grease to track on both sides."
+      },
+      {
+        "task": "160",
+        "description": "Inspect hydraulic lift components for function/leaks-repair/replace as necessary."
+      },
+      {
+        "task": "170",
+        "description": "Check hydraulic fluid level, add per mfg. recommendations."
+      },
+      {
+        "task": "180",
+        "description": "Inspect crank assembly for wear and loose and missing bolts"
+      },
+      {
+        "task": "190",
+        "description": "Inspect boom extend/retract clutch for proper function."
+      },
+      {
+        "task": "200",
+        "description": "Check/tighten all boom extend/retract clutch hardware."
+      },
+      {
+        "task": "210",
+        "description": "Inspect belt for tears, rips and rough edges. If minor, trim and note in comments."
+      },
+      {
+        "task": "220",
+        "description": "Look for belt grindings at drives, tails. Inspect lace for missing hooks, pins, or other damage."
+      },
+      {
+        "task": "230",
+        "description": "Clean/lubricate/tension boom extend/retract chain, tighten sprocket set screws."
+      },
+      {
+        "task": "240",
+        "description": "Ensure guards and hardware are replaced, motor switches on."
+      },
+      {
+        "task": "250",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "260",
+        "description": "Remove lock out/tag out from panel or motor switch and run belt"
+      },
+      {
+        "task": "270",
+        "description": "Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "280",
+        "description": "Grease bearings while conveyor running/only if done safely. If not, grease after applying LOTO."
+      },
+      {
+        "task": "290",
+        "description": "Inspect complete rotation of belt for tracking problems, correct as necessary"
+      },
+      {
+        "task": "300",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "310",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "1-ST - SHB",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Inspect conveyor belt for cuts, frayed edges, wear, damaged lacing"
+      },
+      {
+        "task": "40",
+        "description": "Check drive components for oil seal leakage"
+      },
+      {
+        "task": "50",
+        "description": "Tighten all set screws on bearings and sprockets"
+      },
+      {
+        "task": "60",
+        "description": "Check for excessive sprocket or sheave wear, check poly drive belt."
+      },
+      {
+        "task": "70",
+        "description": "Tighten all mounting bolts, motors and bearings."
+      },
+      {
+        "task": "80",
+        "description": "Inspect Control Stations, conduits, motor terminal boxes, boxes for damage or loose fasteners. Repair findings"
+      },
+      {
+        "task": "90",
+        "description": "Clean all return rollers and check setscrews for any movement"
+      },
+      {
+        "task": "100",
+        "description": "Inspect for cracked welds, missing/loose bolts."
+      },
+      {
+        "task": "110",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust/repair as necessary"
+      },
+      {
+        "task": "120",
+        "description": "Extendo boom: Check underneath conveyor for debris on rollers, remove."
+      },
+      {
+        "task": "130",
+        "description": "Inspect cam followers in good condition,track is in good shape,brackets aren't bent.Replace/repair"
+      },
+      {
+        "task": "140",
+        "description": "Apply grease to track on both sides."
+      },
+      {
+        "task": "150",
+        "description": "Boom drive chain: While unit is extened, clean all drive chains lube."
+      },
+      {
+        "task": "160",
+        "description": "Tighten all chain anchors, setscrews on sprockets."
+      },
+      {
+        "task": "170",
+        "description": "Inspect chain and wear in links replace if needed"
+      },
+      {
+        "task": "180",
+        "description": "If needed grease all bearings not to damage seals on bearings. Wipe down before/after all zerk"
+      },
+      {
+        "task": "190",
+        "description": "General: Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "200",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "210",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "220",
+        "description": "Run belt and test unit: Inspect for unusal noises and vibrations."
+      },
+      {
+        "task": "230",
+        "description": "Inspect complete rotation of belt for tracking problems and proper belt tension, repair/adjust as necessary"
+      },
+      {
+        "task": "240",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "250",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "1-ST MP - SHB",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Inspect conveyor belt for cuts, frayed edges, wear, damaged lacing"
+      },
+      {
+        "task": "40",
+        "description": "Inspect the lagging on the motorized pulley for debris, damage and wear"
+      },
+      {
+        "task": "50",
+        "description": "If pulley has optional regreasable guards, grease if needed"
+      },
+      {
+        "task": "60",
+        "description": "Check motorized pulley for oil seeping from seals, Check oil level in pulley"
+      },
+      {
+        "task": "70",
+        "description": "Tighten all mounting bolts and bearings."
+      },
+      {
+        "task": "80",
+        "description": "Inspect Control Stations, conduits, motor terminal boxes, boxes for damage or loose fasteners. Repair findings"
+      },
+      {
+        "task": "90",
+        "description": "Clean all return rollers and check setscrews for any movement"
+      },
+      {
+        "task": "100",
+        "description": "Inspect for cracked welds, missing/loose bolts."
+      },
+      {
+        "task": "110",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust as necessary"
+      },
+      {
+        "task": "120",
+        "description": "Check underneath conveyor booms for debris on rollers, remove."
+      },
+      {
+        "task": "130",
+        "description": "Inspect cam followers in good condition,track is in good shape,brackets aren't bent.Replace/repair"
+      },
+      {
+        "task": "140",
+        "description": "Apply grease to track on both sides."
+      },
+      {
+        "task": "150",
+        "description": "While unit is extended, clean all drive chains lube. If applicable."
+      },
+      {
+        "task": "160",
+        "description": "Tighten all chain anchors, setscrews on sprockets. If applicable."
+      },
+      {
+        "task": "170",
+        "description": "Inspect chain and wear in links replace if needed. If applicable."
+      },
+      {
+        "task": "180",
+        "description": "Inspect Pneumatics, Air lines/fittings not leaking, pivot points on Air Cylinder. If applicable."
+      },
+      {
+        "task": "190",
+        "description": "Inspect Pneumatics,Oiler Level(add if needed), Air filter gage for water level-Drain. If applicable."
+      },
+      {
+        "task": "200",
+        "description": "Inspect Pneumatics,Drain compressed air reciever tank water, cylinder mounting bolts. If applicable."
+      },
+      {
+        "task": "210",
+        "description": "If needed grease all bearings not to damage seals on bearings. Clean all grease fittings"
+      },
+      {
+        "task": "220",
+        "description": "General: Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "230",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "240",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "250",
+        "description": "Run belt and test unit: Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "260",
+        "description": "Inspect complete rotation of belt for tracking problems and proper belt tension, repair/adjust as necessary"
+      },
+      {
+        "task": "270",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "280",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "3-ST - SRS",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "30",
+        "description": "Verify physical alignment and proper function of all limit switches and crash bar per manufacturer specs"
+      },
+      {
+        "task": "40",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "50",
+        "description": "Inspect conveyor belt for cuts, frayed edges, wear, damaged lacing"
+      },
+      {
+        "task": "60",
+        "description": "Check drive components for oil seal leakage"
+      },
+      {
+        "task": "70",
+        "description": "Tighten all set screws on bearings and sprockets"
+      },
+      {
+        "task": "80",
+        "description": "Check for excessive sprocket or sheave wear, check poly drive belt."
+      },
+      {
+        "task": "90",
+        "description": "Tighten all mounting bolts, motors and bearings."
+      },
+      {
+        "task": "100",
+        "description": "Check and tighten terminations in local Junction box at side of unit"
+      },
+      {
+        "task": "110",
+        "description": "Inspect Control Stations, seal-tite and j-boxes for damage or loose fasteners. Repair findings."
+      },
+      {
+        "task": "120",
+        "description": "Beds: Clean all return rollers and check setscrews for any movement"
+      },
+      {
+        "task": "130",
+        "description": "Inspect for cracked welds, missing/loose bolts."
+      },
+      {
+        "task": "140",
+        "description": "Verify transfer plate is tight, has no significant damage and maintains a gap of 1/8\" maximum"
+      },
+      {
+        "task": "150",
+        "description": "Extendo boom: Check underneath conveyor for debris on rollers, remove."
+      },
+      {
+        "task": "160",
+        "description": "Inspect cam followers, hardware and brackets for proper functionality. Check tightness, alignment, etc."
+      },
+      {
+        "task": "170",
+        "description": "Apply lube to track on both sides."
+      },
+      {
+        "task": "180",
+        "description": "Boom drive chain: While unit is extended, clean all drive chains and lube."
+      },
+      {
+        "task": "190",
+        "description": "Tighten all chain anchors, setscrews on sprockets."
+      },
+      {
+        "task": "200",
+        "description": "Inspect chain and wear in links replace if needed"
+      },
+      {
+        "task": "210",
+        "description": "If needed grease all bearings not to damage seals on bearings. Clean all grease fittings"
+      },
+      {
+        "task": "220",
+        "description": "Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "230",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "240",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "250",
+        "description": "Run belt and test unit: Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "260",
+        "description": "Inspect complete rotation of belt for tracking problems and proper belt tension, repair/adjust as necessary."
+      },
+      {
+        "task": "270",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "280",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "3-ST - NORTECH",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "30",
+        "description": "Verify physical alignment and proper function of all limit switches per manufacturer specs"
+      },
+      {
+        "task": "40",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "50",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum"
+      },
+      {
+        "task": "60",
+        "description": "Inspect the lagging on motorized pulley for debris, damage and wear."
+      },
+      {
+        "task": "70",
+        "description": "Check for oil seeping from seals"
+      },
+      {
+        "task": "80",
+        "description": "Inspect the power cord for damage, ensure it is secure."
+      },
+      {
+        "task": "90",
+        "description": "Tighten mounting blocks"
+      },
+      {
+        "task": "100",
+        "description": "Check belting for dirty or caked debris, severely frayed belt edges and proper tracking"
+      },
+      {
+        "task": "110",
+        "description": "Check belt lacing and belt tension"
+      },
+      {
+        "task": "120",
+        "description": "Check for pulley shift, broke welds, dirt build up or debris, loose hardware."
+      },
+      {
+        "task": "130",
+        "description": "Check if bed is damaged, if welds are broke, and for loose connection bolts"
+      },
+      {
+        "task": "140",
+        "description": "Check for rust or corrosion, walkway grating in good condition, and floor anchors"
+      },
+      {
+        "task": "150",
+        "description": "Check that all side guards are in good condition and all hardware is tight"
+      },
+      {
+        "task": "160",
+        "description": "Ensure all safety guards securely in place and in good condition"
+      },
+      {
+        "task": "170",
+        "description": "Check all side guards for condition and loose hardware"
+      },
+      {
+        "task": "180",
+        "description": "Inspect nose push plate for damage"
+      },
+      {
+        "task": "190",
+        "description": "Check boom underneath conveyor for debris on rollers, remove."
+      },
+      {
+        "task": "200",
+        "description": "Inspect cam followers in track, and tighten if loose."
+      },
+      {
+        "task": "210",
+        "description": "Wipe down all main hydraulic components"
+      },
+      {
+        "task": "220",
+        "description": "Check that unit will extend with no problems"
+      },
+      {
+        "task": "230",
+        "description": "While unit is extended, clean all drive chains and lube."
+      },
+      {
+        "task": "240",
+        "description": "Tighten all chain anchors and setscrews on sprockets"
+      },
+      {
+        "task": "250",
+        "description": "Inspect chain and wear in links.  Replace if needed."
+      },
+      {
+        "task": "260",
+        "description": "Inspect chain for debris and excessive slack"
+      },
+      {
+        "task": "270",
+        "description": "Check level of lube in boom gearbox, and if needed fill."
+      },
+      {
+        "task": "280",
+        "description": "Tighten sprocket set screws"
+      },
+      {
+        "task": "290",
+        "description": "Inspect Torque Tamer for loose hardware"
+      },
+      {
+        "task": "340",
+        "description": "Clean and lube drive chain"
+      },
+      {
+        "task": "350",
+        "description": "Make sure all pull cords connected, if applicable"
+      },
+      {
+        "task": "360",
+        "description": "Press nose push plate to ensure extendo retracts quickly"
+      },
+      {
+        "task": "370",
+        "description": "Inspect the Main Electrical Cord for damage, and proper routing"
+      },
+      {
+        "task": "380",
+        "description": "Inspect the eight Main Cord pulleys for damage-Repair/replace as necessary"
+      },
+      {
+        "task": "390",
+        "description": "Inspect the boom joysticks and pushbuttons for proper operation and tightness"
+      },
+      {
+        "task": "400",
+        "description": "Inspect the ECP pushbuttons for proper operation and tightness"
+      },
+      {
+        "task": "410",
+        "description": "Inspect the wall mounted control station for proper operation and tightness"
+      },
+      {
+        "task": "420",
+        "description": "Inspect the electrical disconnect for damage"
+      },
+      {
+        "task": "430",
+        "description": "Clean the local ECP air filters"
+      },
+      {
+        "task": "440",
+        "description": "Check for damaged conduit-Repair as necessary."
+      },
+      {
+        "task": "450",
+        "description": "Check for open junction boxes, boom 1, and boom 5."
+      },
+      {
+        "task": "460",
+        "description": "Check for exposed wires"
+      },
+      {
+        "task": "470",
+        "description": "Check for open panels-secure."
+      },
+      {
+        "task": "480",
+        "description": "Check for damaged flexible cables or sealtight"
+      },
+      {
+        "task": "490",
+        "description": "Check cat track for damage"
+      },
+      {
+        "task": "500",
+        "description": "Check brackets to make sure they are secure"
+      },
+      {
+        "task": "510",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "520",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "530",
+        "description": "Run belts"
+      },
+      {
+        "task": "540",
+        "description": "Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "550",
+        "description": "Watch cable while fully extending conveyor. Cable reel must maintain proper tension on cable."
+      },
+      {
+        "task": "560",
+        "description": "Adjust cable reel to maintain proper tension on cable at all times."
+      },
+      {
+        "task": "570",
+        "description": "After adjusting cable reel, start to Extend or Retract conveyor. Recheck the cable tension."
+      },
+      {
+        "task": "300",
+        "description": "Check all emergency pushbuttons for condition and operation"
+      },
+      {
+        "task": "310",
+        "description": "Grease all bearing while conveyor running / only if it can be done safely. If not, LOTO"
+      },
+      {
+        "task": "320",
+        "description": "Inspect complete rotation of belt for tracking problems.  Correct any tracking problems"
+      },
+      {
+        "task": "330",
+        "description": "Insure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "580",
+        "description": "Test unit in full range"
+      },
+      {
+        "task": "590",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "600",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "5-ST - WASP",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "30",
+        "description": "Verify physical alignment and proper function of all limit switches per manufacturer specifications"
+      },
+      {
+        "task": "40",
+        "description": "Open all guards and dump debris. Remove Side Guards."
+      },
+      {
+        "task": "50",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "60",
+        "description": "Verify transfer plate is tight, has no significant damage and maintains a gap of 1/8\" maximum"
+      },
+      {
+        "task": "70",
+        "description": "Inspect the lagging on the motorized pulley for debris, damage and wear."
+      },
+      {
+        "task": "80",
+        "description": "Check motorized pulley for oil seeping from seals."
+      },
+      {
+        "task": "90",
+        "description": "Inspect the power cord for damage, ensure it is secure."
+      },
+      {
+        "task": "100",
+        "description": "Verify motorized pulley mounting blocks are tight"
+      },
+      {
+        "task": "110",
+        "description": "Check belt for debris, frayed edges, proper tracking, belt lacing, and proper tension"
+      },
+      {
+        "task": "120",
+        "description": "Check if pulleys shifted on take-up and end rollers"
+      },
+      {
+        "task": "130",
+        "description": "Check all rollers for build up, loose hardware, bad bearings, etc."
+      },
+      {
+        "task": "140",
+        "description": "Inspect bed for damage, bent, broken welds, loose connection bolts, floor anchoring"
+      },
+      {
+        "task": "150",
+        "description": "Inspect all side guards are in good condition and hardware fastened"
+      },
+      {
+        "task": "160",
+        "description": "Check all safety guards are securely in place and in good condition"
+      },
+      {
+        "task": "170",
+        "description": "Inspect nose push plate for damage and proper operation"
+      },
+      {
+        "task": "180",
+        "description": "Inspect boom 1 safety bar for damage"
+      },
+      {
+        "task": "190",
+        "description": "Inspect boom cam followers condition, in track, and tighten if loose"
+      },
+      {
+        "task": "200",
+        "description": "Wipe down all hydraulic components and check for leaks (cylinders, hoses, and pump)"
+      },
+      {
+        "task": "210",
+        "description": "Check hydraulic oil level in pump reservoir, add if needed"
+      },
+      {
+        "task": "220",
+        "description": "Check boom drive chain, verify unit extends with no problem"
+      },
+      {
+        "task": "230",
+        "description": "While unit is extended, clean all drive chains and lube"
+      },
+      {
+        "task": "240",
+        "description": "Tighten all chain anchors and setscrews on sprockets, inspect chain,wear in links, excessive slack, adjust as necessary"
+      },
+      {
+        "task": "250",
+        "description": "Check level of lube in gearbox, and if needed fill."
+      },
+      {
+        "task": "260",
+        "description": "Tighten sprockets set screws, clean and adjust drive tension per manufacturer's specifications."
+      },
+      {
+        "task": "270",
+        "description": "Inspect and adjust Torque-Tamer as necessary, per manufacturer's recommendations"
+      },
+      {
+        "task": "280",
+        "description": "Check all emergency pushbuttons in good condition, pull cords connected if applicable"
+      },
+      {
+        "task": "290",
+        "description": "Inspect the Main Electrical Cord for damage, and proper routing"
+      },
+      {
+        "task": "300",
+        "description": "With conveyor fully extended,  verify spring measurements at the boom 5 cable pulley per manual"
+      },
+      {
+        "task": "310",
+        "description": "Inspect the eight Main Cord pulleys for damage"
+      },
+      {
+        "task": "320",
+        "description": "Inspect the boom joysticks and pushbuttons for proper operation and tightness"
+      },
+      {
+        "task": "330",
+        "description": "Inspect the MCP pushbuttons for proper operation and tightness, Clean local air filter"
+      },
+      {
+        "task": "340",
+        "description": "Inspect the wall mounted control station for proper operation and tightness"
+      },
+      {
+        "task": "350",
+        "description": "Inspect the electrical disconnect for damage"
+      },
+      {
+        "task": "360",
+        "description": "Check for damaged conduit, open junction boxes on booms, exposed wires, open panels, damaged cables"
+      },
+      {
+        "task": "370",
+        "description": "Check cat track for damage and brackets are secured."
+      },
+      {
+        "task": "380",
+        "description": "Grease all bearings. Note take care not to damage seals on bearings with grease, Clean all grease fittings"
+      },
+      {
+        "task": "390",
+        "description": "Ensure all guards are replaced and fastened correctly"
+      },
+      {
+        "task": "400",
+        "description": "Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "410",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "420",
+        "description": "Remove lock out/tag out from panel or motor switch."
+      },
+      {
+        "task": "430",
+        "description": "Run belt and inspect for unusual noises and vibrations, Test unit in full range"
+      },
+      {
+        "task": "440",
+        "description": "Inspect complete rotation of belt for tracking problem,If tracking issues are found make corrections"
+      },
+      {
+        "task": "450",
+        "description": "Ensure that extendo fully raises, and lowers without binding"
+      },
+      {
+        "task": "460",
+        "description": "Press nose push plate to ensure extendo retracts quickly"
+      },
+      {
+        "task": "470",
+        "description": "Check operation of nose boom flood light"
+      },
+      {
+        "task": "480",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "490",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "5-ST SWAK - WASP",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT ALL ANCHORING HARDWARE"
+      },
+      {
+        "task": "30",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "40",
+        "description": "Verify physical alignment and proper function of all limit switches per manufacturer specs"
+      },
+      {
+        "task": "50",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "60",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust as necessary"
+      },
+      {
+        "task": "70",
+        "description": "Inspect the lagging on the main drive drum for debris, damage and wear."
+      },
+      {
+        "task": "80",
+        "description": "Inspect the power cord for damage, ensure it is secure."
+      },
+      {
+        "task": "90",
+        "description": "Tighten mounting blocks"
+      },
+      {
+        "task": "100",
+        "description": "Check belt for debris, frayed edges, damage to belt and lacing and proper tension, adjust as necessary"
+      },
+      {
+        "task": "110",
+        "description": "Check all pulleys to see if it shifted or broken"
+      },
+      {
+        "task": "120",
+        "description": "Remove any dirt and debris from pulley and shaft"
+      },
+      {
+        "task": "130",
+        "description": "Check and tighten all adjustment and mounting hardware"
+      },
+      {
+        "task": "140",
+        "description": "Check bed/booms for damages, broken welds, sharp edges, etc.  Repair as necessary."
+      },
+      {
+        "task": "150",
+        "description": "Inspect nose push plate for damage"
+      },
+      {
+        "task": "160",
+        "description": "Inspect Boom 1 safety bar for damage"
+      },
+      {
+        "task": "170",
+        "description": "Inspect lower rollers on all boom sections.  Remove debris and ensure free movement."
+      },
+      {
+        "task": "180",
+        "description": "Inspect all cam followers for all boom sections.  Tighten if loose."
+      },
+      {
+        "task": "190",
+        "description": "Check each boom section for level."
+      },
+      {
+        "task": "200",
+        "description": "Clean and lubricate all extend/retract chains.  Do NOT use degreaser on chains."
+      },
+      {
+        "task": "210",
+        "description": "Tighten all chain anchor bolts and set screws on sprockets."
+      },
+      {
+        "task": "220",
+        "description": "Inspect chain for stretch, wear and proper tension.  Adjust/replace per manufacturer's specifications."
+      },
+      {
+        "task": "230",
+        "description": "Inspect and adjust Torque Tamer per manufacturar's specifications."
+      },
+      {
+        "task": "240",
+        "description": "Wipe down motors and reducers.  Check for leaks and verify oil level per manufacturer's specifications."
+      },
+      {
+        "task": "250",
+        "description": "Clean and lubricate drive chains."
+      },
+      {
+        "task": "260",
+        "description": "Check all mounting harware for proper tightness, including sprocket setscrews."
+      },
+      {
+        "task": "270",
+        "description": "Wipe down all hydraulic components"
+      },
+      {
+        "task": "280",
+        "description": "Check for oil leaks (cylinders, hoses, and pump)"
+      },
+      {
+        "task": "290",
+        "description": "Check level of oil in pump reservoir, add if needed."
+      },
+      {
+        "task": "300",
+        "description": "Inspect cylinder for damage"
+      },
+      {
+        "task": "310",
+        "description": "Check approach belt drive pullley lagging for wear and/or debris."
+      },
+      {
+        "task": "320",
+        "description": "Check approach belt for damage and wear, including lacing.  Tension as necessary."
+      },
+      {
+        "task": "330",
+        "description": "Check approach belt take-up and end pulleys for proper alignment and verify all hardware is tight."
+      },
+      {
+        "task": "340",
+        "description": "Inspect the Main Electrical Cord for damage, and proper routing"
+      },
+      {
+        "task": "350",
+        "description": "With conveyor fully extended,  verify spring measurements at the boom 5 cable pulley per manual"
+      },
+      {
+        "task": "360",
+        "description": "Inspect the eight Main Cord pulleys for damage"
+      },
+      {
+        "task": "370",
+        "description": "Inspect the boom controls for proper operation and tightness, correct as necessary"
+      },
+      {
+        "task": "380",
+        "description": "Inspect all control panels and devices for proper operation and tightness, correct as necessary"
+      },
+      {
+        "task": "390",
+        "description": "Inspect the wall mounted control station for proper operation and tightness, correct as necessary"
+      },
+      {
+        "task": "400",
+        "description": "Inspect the electrical disconnect for damage"
+      },
+      {
+        "task": "410",
+        "description": "Clean or replace the local extendo Control Panel air filters"
+      },
+      {
+        "task": "420",
+        "description": "Check for damaged conduit"
+      },
+      {
+        "task": "430",
+        "description": "Inspect all boom junction boxes  for exposed wires, loose connections and opened panels. Repair as needed."
+      },
+      {
+        "task": "440",
+        "description": "Check for damaged flexible cables or sealtight. Repair/replace as needed."
+      },
+      {
+        "task": "450",
+        "description": "Verify all electrical mountings are secure.  Tighten or repair as necessary."
+      },
+      {
+        "task": "460",
+        "description": "Inspect all exposed power and control cables for damage.  Repair/replace as needed."
+      },
+      {
+        "task": "470",
+        "description": "Verify all machine guards in good condition.  Repair as necessary."
+      },
+      {
+        "task": "480",
+        "description": "Verify all machine guard bolts are tight."
+      },
+      {
+        "task": "490",
+        "description": "Verify all safety guards securely in place and in good condition"
+      },
+      {
+        "task": "500",
+        "description": "Insure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "510",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "520",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "530",
+        "description": "Check operation of nose boom flood light"
+      },
+      {
+        "task": "540",
+        "description": "Run belt and inspect for unusual noises and vibrations, Test unit in full range"
+      },
+      {
+        "task": "550",
+        "description": "Inspect complete rotation of belt for tracking problem,If tracking issues are found make corrections"
+      },
+      {
+        "task": "560",
+        "description": "Ensure that extendo fully raises, and lowers without binding"
+      },
+      {
+        "task": "570",
+        "description": "Press nose push plate to ensure extendo retracts quickly"
+      },
+      {
+        "task": "580",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "590",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "5-ST - SRS",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "30",
+        "description": "Verify physical alignment and proper function of all limit switches per manufacturer specifications"
+      },
+      {
+        "task": "40",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "50",
+        "description": "Inspect belt for cuts, frayed edges, wear, damaged lacing"
+      },
+      {
+        "task": "60",
+        "description": "Tighten all set screws on bearings and sprockets"
+      },
+      {
+        "task": "70",
+        "description": "Check for excessive sprocket or sheave wear, check poly drive belt."
+      },
+      {
+        "task": "80",
+        "description": "Inspect chain and wear in links, adjust per manufacturer's recommendations, replace if needed"
+      },
+      {
+        "task": "90",
+        "description": "Tighten all mounting bolts, motors and bearings."
+      },
+      {
+        "task": "100",
+        "description": "Inspect control stations, conduits, j-boxes, boxes for damage or loose fasteners. Repair findings"
+      },
+      {
+        "task": "110",
+        "description": "Check and tighten terminations in local Junction box at side of unit"
+      },
+      {
+        "task": "120",
+        "description": "Clean all return rollers and check setscrews for any movement"
+      },
+      {
+        "task": "130",
+        "description": "Inspect for cracked welds, missing/loose bolts."
+      },
+      {
+        "task": "140",
+        "description": "Verify transfer plate is tight, has no significant damage and maintains a gap of 1/8\" maximum, adjust as necessary"
+      },
+      {
+        "task": "150",
+        "description": "Check underneath conveyor booms for debris on rollers, remove."
+      },
+      {
+        "task": "160",
+        "description": "Inspect cam followers, brackets and tracks.  Adjust/tighten/straighten as necessary."
+      },
+      {
+        "task": "170",
+        "description": "Apply grease to track on both sides."
+      },
+      {
+        "task": "180",
+        "description": "Cam followers cutting into weldments. Cam follower shoulder can be no farther than 1/4\" to outside"
+      },
+      {
+        "task": "190",
+        "description": "Check cam follower bracket for proper alignment and bolts are tight"
+      },
+      {
+        "task": "200",
+        "description": "Look for metal shavings and grooves in track(s)"
+      },
+      {
+        "task": "210",
+        "description": "While unit is extended, clean all drive chains and lube."
+      },
+      {
+        "task": "220",
+        "description": "Tighten all chain anchors, setscrews on sprockets."
+      },
+      {
+        "task": "230",
+        "description": "Upper horizontal tab for jackscrew should be checked for cracks"
+      },
+      {
+        "task": "240",
+        "description": "ABS Pivot bed should be checked for cracks and worn bushings"
+      },
+      {
+        "task": "250",
+        "description": "Ensure main proximity switch is externally accessible and not obstructed"
+      },
+      {
+        "task": "260",
+        "description": "Inspect main pivot welds for cracks."
+      },
+      {
+        "task": "270",
+        "description": "If needed grease all bearings not to damage seals on bearings. Wipe down before/after all zerks"
+      },
+      {
+        "task": "280",
+        "description": "Wipe down all hydraulic components and check for leaks (cylinders, hoses, and pump)"
+      },
+      {
+        "task": "290",
+        "description": "Check hydraulic oil level in pump reservoir, add if needed"
+      },
+      {
+        "task": "300",
+        "description": "Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "310",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "320",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "330",
+        "description": "Run belt and test unit: Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "340",
+        "description": "Inspect complete rotation of belt for tracking problems and proper belt tension, adjust as necessary"
+      },
+      {
+        "task": "350",
+        "description": "Ensure that extendo fully raises, and lowers without binding"
+      },
+      {
+        "task": "360",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "370",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "5-ST - CALJAN",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "30",
+        "description": "Verify physical alignment and proper function of all limit switches per manufacturer specifications"
+      },
+      {
+        "task": "40",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "50",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust as necessary"
+      },
+      {
+        "task": "60",
+        "description": "Inspect the lagging on motorized pulley for debris, damage and wear."
+      },
+      {
+        "task": "70",
+        "description": "Check for oil seeping from seals"
+      },
+      {
+        "task": "80",
+        "description": "Inspect the power cord for damage, ensure it is secure."
+      },
+      {
+        "task": "90",
+        "description": "Tighten mounting blocks"
+      },
+      {
+        "task": "100",
+        "description": "Check belting for dirty or caked debris, severely frayed belt edges and proper tracking"
+      },
+      {
+        "task": "110",
+        "description": "Check belt lacing and belt tension"
+      },
+      {
+        "task": "120",
+        "description": "Check for pulley shift, broke welds, dirt build up or debris, loose hardware. Adjust/clean/repair as necessary."
+      },
+      {
+        "task": "130",
+        "description": "Check if bed is damaged, if welds are broke, and for loose connection bolts"
+      },
+      {
+        "task": "140",
+        "description": "Check for rust or corrosion, walkway grating in good condition, and floor anchors"
+      },
+      {
+        "task": "150",
+        "description": "Check that all side guards are in good condition and all hardware is tight, adjust/repair as necessary"
+      },
+      {
+        "task": "160",
+        "description": "All safety guards securely in place and in good condition"
+      },
+      {
+        "task": "170",
+        "description": "Inspect nose push plate for damage"
+      },
+      {
+        "task": "180",
+        "description": "Inspect Boom 1 safety bar for damage"
+      },
+      {
+        "task": "190",
+        "description": "Check boom underneath conveyor for debris on rollers, remove."
+      },
+      {
+        "task": "200",
+        "description": "Inspect cam followers in track, and tighten if loose."
+      },
+      {
+        "task": "210",
+        "description": "Wipe down all main hydraulic components"
+      },
+      {
+        "task": "220",
+        "description": "Check for oil leaks (cylinders, hoses, and pump)"
+      },
+      {
+        "task": "230",
+        "description": "Check level of oil in pump reservoir, add if needed."
+      },
+      {
+        "task": "240",
+        "description": "Wipe down all boom hydraulic components"
+      },
+      {
+        "task": "250",
+        "description": "Check for oil leaks (cylinders, hoses, and pump)"
+      },
+      {
+        "task": "260",
+        "description": "Check level of oil in pump reservoir, add if needed."
+      },
+      {
+        "task": "270",
+        "description": "Inspect cylinders for damage"
+      },
+      {
+        "task": "280",
+        "description": "While unit is extended, clean all drive chains and lube. Do NOT use degreaser on drive chains."
+      },
+      {
+        "task": "290",
+        "description": "Tighten all chain anchors and setscrews on sprockets"
+      },
+      {
+        "task": "300",
+        "description": "Inspect chain and wear in links.  Replace if f needed."
+      },
+      {
+        "task": "310",
+        "description": "Inspect chain for debris and excessive slack"
+      },
+      {
+        "task": "320",
+        "description": "Wipe down boom motor and reducer"
+      },
+      {
+        "task": "330",
+        "description": "Check level of lube in boom gearbox, and if needed fill."
+      },
+      {
+        "task": "340",
+        "description": "Tighten sprocket set screws"
+      },
+      {
+        "task": "350",
+        "description": "Inspect Torque Tamer for loose hardware, adjust per manufacturer's specifications if necessary"
+      },
+      {
+        "task": "360",
+        "description": "Check all emergency pushbuttons for condition and operation"
+      },
+      {
+        "task": "370",
+        "description": "Make sure all pull cords connected, if applicable"
+      },
+      {
+        "task": "380",
+        "description": "Check operation of nose boom flood light"
+      },
+      {
+        "task": "390",
+        "description": "Inspect the main electrical cord for damage, and proper routing"
+      },
+      {
+        "task": "400",
+        "description": "Inspect the eight main cord pulleys for damage"
+      },
+      {
+        "task": "410",
+        "description": "Inspect the boom joysticks and pushbuttons for proper operation and tightness"
+      },
+      {
+        "task": "420",
+        "description": "Inspect the MCP pushbuttons for proper operation and tightness"
+      },
+      {
+        "task": "430",
+        "description": "Inspect the wall mounted control station for proper operation and tightness"
+      },
+      {
+        "task": "440",
+        "description": "Inspect the electrical disconnect for damage"
+      },
+      {
+        "task": "450",
+        "description": "Clean the local MCP air filters"
+      },
+      {
+        "task": "460",
+        "description": "Check for damaged conduit"
+      },
+      {
+        "task": "470",
+        "description": "Check for open junction boxes, boom 1, and boom 5."
+      },
+      {
+        "task": "480",
+        "description": "Check for exposed wires"
+      },
+      {
+        "task": "490",
+        "description": "Check for open panels"
+      },
+      {
+        "task": "500",
+        "description": "Check for damaged flexible cables or sealtight"
+      },
+      {
+        "task": "510",
+        "description": "Check cat track for damage"
+      },
+      {
+        "task": "520",
+        "description": "Check brackets to make sure they are secure"
+      },
+      {
+        "task": "530",
+        "description": "Insure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "540",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "550",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "560",
+        "description": "Ensure that extendo fully raises and lowers without binding"
+      },
+      {
+        "task": "570",
+        "description": "Watch cable while fully extending conveyor. Cable reel must maintain enough tension on cable. Adjust as necessary."
+      },
+      {
+        "task": "580",
+        "description": "Press nose push plate to ensure extendo retracts quickly"
+      },
+      {
+        "task": "590",
+        "description": "Run belts"
+      },
+      {
+        "task": "600",
+        "description": "Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "610",
+        "description": "Grease all bearing while conveyor running / only if it can be done safely. If not, LOTO"
+      },
+      {
+        "task": "620",
+        "description": "Inspect complete rotation of belt for tracking problems.  Correct any tracking problems"
+      },
+      {
+        "task": "630",
+        "description": "Test unit in full range"
+      },
+      {
+        "task": "640",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "650",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "5-ST - MAXX",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "PRIOR TO EXTENDING UNIT, INSPECT WELDMENTS AT ALL TRUCK ASSEMBLIES FROM BACK END OF EXTENDO"
+      },
+      {
+        "task": "20",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "30",
+        "description": "Verify physical alignment and proper function of all limit switches per manufacturer specifications"
+      },
+      {
+        "task": "40",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "50",
+        "description": "Verify transfer plates are tight and maintains a gap of 1/8\" maximum. Adjust as necessary."
+      },
+      {
+        "task": "60",
+        "description": "Check all stages for excessive wear, scraping, or impact marks."
+      },
+      {
+        "task": "70",
+        "description": "Ensure all covers and guards are in good condition and all securing devises are in place."
+      },
+      {
+        "task": "80",
+        "description": "Check belting for dirty or caked debris, severely frayed belt edges and proper tracking"
+      },
+      {
+        "task": "90",
+        "description": "Check belt lacing and belt tension"
+      },
+      {
+        "task": "100",
+        "description": "Check decking on all stages for excessive wear, sharp edges, etc.  Repair as necessary."
+      },
+      {
+        "task": "110",
+        "description": "Wipe down gear motors, bearings and shafts."
+      },
+      {
+        "task": "120",
+        "description": "Check reducer for proper lubricant level and apparent leaks."
+      },
+      {
+        "task": "130",
+        "description": "Tighten all mounting bolts on motors and bearings."
+      },
+      {
+        "task": "140",
+        "description": "Tighten all setscrews on bearings and sprockets."
+      },
+      {
+        "task": "150",
+        "description": "Inspect and adjust clutch as necessary, per manufacturer's specifications."
+      },
+      {
+        "task": "160",
+        "description": "Inspect drive chain tension.  Adjust per manufacturer's specification."
+      },
+      {
+        "task": "170",
+        "description": "Inspect all main boom pulleys for proper adjustment and mounting.  Tighten all hardware."
+      },
+      {
+        "task": "180",
+        "description": "Verify all return rollers are in place and turn freely.  Replace if missing."
+      },
+      {
+        "task": "190",
+        "description": "Clean all debris from rollers, bearings, etc."
+      },
+      {
+        "task": "200",
+        "description": "Inspect FAB for damage, cracked welds, loose hardware, etc."
+      },
+      {
+        "task": "210",
+        "description": "Inspect and lubricate FAB actuator per manufacturer's reccomendations."
+      },
+      {
+        "task": "220",
+        "description": "Inspect approach and scale conveyors for proper mounting, loose hardware, etc."
+      },
+      {
+        "task": "230",
+        "description": "Inspect approach and scale drives for proper alignement and tension.  Adjust as necessary."
+      },
+      {
+        "task": "240",
+        "description": "Inspect approach and scale bearing, shaft and drive hardware.  Tighten if loose."
+      },
+      {
+        "task": "250",
+        "description": "Wipedown all components of hydraulic system, checking for leaks and loose fittings. Tighten as necessary."
+      },
+      {
+        "task": "260",
+        "description": "Verify oil level in hydraulic resevoir. Change filter if present."
+      },
+      {
+        "task": "270",
+        "description": "Clean extend/retract chains thoroughly.  Lubricate with spray moly to reduce dirt/dust buildup."
+      },
+      {
+        "task": "280",
+        "description": "Inspect all extend-retract chains for proper tension per manufacturer's recommendations.  Tighten all hardware."
+      },
+      {
+        "task": "290",
+        "description": "Verify extend/retract chains are not twisted."
+      },
+      {
+        "task": "300",
+        "description": "Verify extend/retract chain master links are in place and secured at each anchor point."
+      },
+      {
+        "task": "310",
+        "description": "Inspect chain for any missing eyelts, if applicable.  Replace chain if missing."
+      },
+      {
+        "task": "320",
+        "description": "Inspect all chassis welds for cracks or failures. Repair or report as necessary."
+      },
+      {
+        "task": "330",
+        "description": "Inspect all pulley mount welds for cracks or failures.  Repair as necessary."
+      },
+      {
+        "task": "340",
+        "description": "Inspect all motor and bearing mount welds.  Repair as necessary."
+      },
+      {
+        "task": "350",
+        "description": "Inspect boom control stations for loose/missing hardware or knobs.  Correct as necessary."
+      },
+      {
+        "task": "360",
+        "description": "Vacuum extendo control panel and clean filters if applicable."
+      },
+      {
+        "task": "370",
+        "description": "Inspect for any signs of arcing or loose terminations."
+      },
+      {
+        "task": "380",
+        "description": "Insure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "390",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "400",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "410",
+        "description": "Ensure that extendo fully raises and lowers without binding"
+      },
+      {
+        "task": "420",
+        "description": "Watch cable while fully extending conveyor. Cable reel must maintain enough tension on cable. Adjust as necessary."
+      },
+      {
+        "task": "430",
+        "description": "Press nose push plate to ensure extendo retracts quickly"
+      },
+      {
+        "task": "440",
+        "description": "Run belts"
+      },
+      {
+        "task": "450",
+        "description": "Inspect for unusual noises and vibrations."
+      },
+      {
+        "task": "460",
+        "description": "Grease all bearing while conveyor running / only if it can be done safely. If not, LOTO"
+      },
+      {
+        "task": "470",
+        "description": "Inspect complete rotation of belt for tracking problems.  Correct any tracking problems"
+      },
+      {
+        "task": "480",
+        "description": "Test unit in full range"
+      },
+      {
+        "task": "490",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "500",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "POWER CURVE - INTEROLL",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings."
+      },
+      {
+        "task": "30",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust as necessary."
+      },
+      {
+        "task": "40",
+        "description": "Visually inspect belt guidance system for defects and cleanliness."
+      },
+      {
+        "task": "50",
+        "description": "Inpect all guides for wear.  Replace as necessary."
+      },
+      {
+        "task": "60",
+        "description": "Lubricate chains per manufacturer's recommendations."
+      },
+      {
+        "task": "70",
+        "description": "Inspect belt for cleanliness/damage & tracking. Clean, replace or adjust belt as needed."
+      },
+      {
+        "task": "80",
+        "description": "Check drive rollers/end rollers for noises & visually inspect for damage. Replace as needed."
+      },
+      {
+        "task": "90",
+        "description": "Check bearings for abnormal noise and damage. Replace as necessary."
+      },
+      {
+        "task": "100",
+        "description": "Check the condition of the driver teeth, alignment with a straight edge, and gear wheels. Replace if necessary."
+      },
+      {
+        "task": "110",
+        "description": "Check reducer/gearmotor oil per manufacturer's recommendations."
+      },
+      {
+        "task": "120",
+        "description": "Check all hardware. Retighten if necessary."
+      },
+      {
+        "task": "130",
+        "description": "Inspect encoder magnetic pulse wheel to assure it is securely bolted to the induct roller shaft, if applicable."
+      },
+      {
+        "task": "140",
+        "description": "Inspect encoder hall effect sensor, not loose, proper distance to wheel and changes states, if applicable."
+      },
+      {
+        "task": "150",
+        "description": "Ensure guards are in place and not rubbing wheel or sensor."
+      },
+      {
+        "task": "160",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "170",
+        "description": "Remove lock out/tag out from panel or motor switch"
+      },
+      {
+        "task": "180",
+        "description": "Run belt, inspect for unusual noises, vibrations."
+      },
+      {
+        "task": "190",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "200",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "POWER CURVE - PORTEC",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Open all guards and dump debris. Remove Side Guards."
+      },
+      {
+        "task": "30",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "40",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust as necessary."
+      },
+      {
+        "task": "50",
+        "description": "Check drive chain or poly belt for wear or damage. (If chain wire brush and lube, do NOT use degreaser on drive chain.)"
+      },
+      {
+        "task": "60",
+        "description": "Tighten all setscrews on bearings and sprockets."
+      },
+      {
+        "task": "70",
+        "description": "Inspect chain/drive belt for mis-alignment, re-align if necessary.  Tension according to manufacturer's recommendations."
+      },
+      {
+        "task": "80",
+        "description": "Check oil level in gearbox/gearmotor.  Refer to manufacturer's manual."
+      },
+      {
+        "task": "90",
+        "description": "Tighten all mounting bolts on motors, reducer and bearings."
+      },
+      {
+        "task": "100",
+        "description": "Check conduit connections and conduit condition to motor, repair findings"
+      },
+      {
+        "task": "110",
+        "description": "Inspect UHMW belt chain guide(top & bottom) for wear,  Replace any worn or damaged guides."
+      },
+      {
+        "task": "120",
+        "description": "Ensure all wear guides are properly secured"
+      },
+      {
+        "task": "130",
+        "description": "Grease upper chain guides"
+      },
+      {
+        "task": "140",
+        "description": "Clean all return rollers, remove all debris. Verify all rollers turn freely and have contact w/belt"
+      },
+      {
+        "task": "150",
+        "description": "Check/tighten all return roller setscrews."
+      },
+      {
+        "task": "160",
+        "description": "Verify all bearing end caps are non-damaged and adjusted properly. Replace if needed."
+      },
+      {
+        "task": "170",
+        "description": "Check chain slack on bottom of discharge sprocket. Slack within 1/8\"-3/8\" is acceptable."
+      },
+      {
+        "task": "180",
+        "description": "Repair any cracked welds and/or missing/loose hardware."
+      },
+      {
+        "task": "190",
+        "description": "Re-secure all under guards, repair hinge pins as needed"
+      },
+      {
+        "task": "200",
+        "description": "Repair tears/rips and rough edges on the conveyor belt. If minor, cut out bad area and note on WO"
+      },
+      {
+        "task": "210",
+        "description": "Repair missing hooks, pins, rough edges in lacing."
+      },
+      {
+        "task": "220",
+        "description": "Ensure belt tension at the inside radius end of the end roll is between 1/16\"-1/8\", Reference manual if necessary."
+      },
+      {
+        "task": "230",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "240",
+        "description": "Remove lock out/tag out from panel or motor switch."
+      },
+      {
+        "task": "250",
+        "description": "Run belt, inspect for unusual noises, vibrations."
+      },
+      {
+        "task": "260",
+        "description": "Grease all bearings while conveyor is running /only if it can be done safely. Lock out-grease if not"
+      },
+      {
+        "task": "270",
+        "description": "Inspect complete rotation of belt for tracking problems. If problems, follow manual for curve"
+      },
+      {
+        "task": "280",
+        "description": "Inspect chain, drive for problems."
+      },
+      {
+        "task": "290",
+        "description": "Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "300",
+        "description": "Only add grease to curve while running to insure complete application to the chain, if applicable"
+      },
+      {
+        "task": "310",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "320",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "POWER CURVE - PSC",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Open all guards and dump debris. Remove Side Guards."
+      },
+      {
+        "task": "30",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "40",
+        "description": "Check T-plate for condition and 1/8\" maximum gap, adjust if necessary."
+      },
+      {
+        "task": "50",
+        "description": "Inspect chain/drive belt for mis-alignment, re-align if necessary.  Tension according to manufacturer's recommendations."
+      },
+      {
+        "task": "60",
+        "description": "If applicable lubricate drive chain"
+      },
+      {
+        "task": "70",
+        "description": "Tighten all setscrews and hardware on all components"
+      },
+      {
+        "task": "80",
+        "description": "Check level of reducer gear oil. Refer to manufacturer's manual."
+      },
+      {
+        "task": "90",
+        "description": "Inspect all junctions, conduits, and motor termination boxes."
+      },
+      {
+        "task": "100",
+        "description": "Inspect all pulleys and rollers, remove debris"
+      },
+      {
+        "task": "110",
+        "description": "Tension belt chain properly, tension by use of end pulleys. Refer to manufactur's manual for specifications."
+      },
+      {
+        "task": "120",
+        "description": "Check chain slack on bottom of discharge sprocket. Slack within 1/8\"-3/8\" is acceptable."
+      },
+      {
+        "task": "130",
+        "description": "Clean all return rollers and ensure they are in contact with the belt and spin freely."
+      },
+      {
+        "task": "140",
+        "description": "Lubricate conveyor belt chain with lube, do not over lubricate. Check/Fill Oilers for operation."
+      },
+      {
+        "task": "150",
+        "description": "Grease all bearings, clean fittings before and after"
+      },
+      {
+        "task": "160",
+        "description": "Inspect for cracked welds"
+      },
+      {
+        "task": "170",
+        "description": "Secure all guards and bearing end caps with appropriate hardware"
+      },
+      {
+        "task": "180",
+        "description": "Inspect top and bottom of laces, belt and grommets for damage and no missing pin or broken tabs"
+      },
+      {
+        "task": "190",
+        "description": "Check photoeye cable and alignment, if applicable.  Adjust as necessary."
+      },
+      {
+        "task": "200",
+        "description": "Inspect Estop device wiring, annunciation, and operation"
+      },
+      {
+        "task": "210",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "220",
+        "description": "Remove lock out/tag out and run conveyor"
+      },
+      {
+        "task": "230",
+        "description": "Listen for unusual noises and vibration.  Listen for ticking noise at sprockets."
+      },
+      {
+        "task": "240",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "250",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "POWER CURVE - TRANSNORM",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Open all guards and dump debris. Remove Side Guards."
+      },
+      {
+        "task": "30",
+        "description": "Blow out with air wand or wipe down all areas, frames, beds, drives and bearings"
+      },
+      {
+        "task": "40",
+        "description": "Verify transfer plate is tight and maintains a gap of 1/8\" maximum, adjust as necessary."
+      },
+      {
+        "task": "50",
+        "description": "Inspect chain/drive belt for mis-alignment, re-align if necessary.  Tension according to manufacturer's recommendations."
+      },
+      {
+        "task": "60",
+        "description": "Tighten all setscrews on bearings and sprockets."
+      },
+      {
+        "task": "70",
+        "description": "Check gear motor for oil leaks."
+      },
+      {
+        "task": "80",
+        "description": "Tighten all mounting bolts on motors, reducer and bearings."
+      },
+      {
+        "task": "90",
+        "description": "Check conduit connections and conduit condition to motor, repair findings"
+      },
+      {
+        "task": "100",
+        "description": "Inspect all pulleys, remove debris, clean. Tighten pulley set screws"
+      },
+      {
+        "task": "110",
+        "description": "Verify all bearing end caps are non-damaged and adjusted properly. Replace if needed."
+      },
+      {
+        "task": "120",
+        "description": "Check lagging material on all pulleys. Material will wear and disintegrate over time."
+      },
+      {
+        "task": "130",
+        "description": "Tension curve belt to proper tension by use of the end pulleys. See manual for proper adjustments."
+      },
+      {
+        "task": "140",
+        "description": "Clean all return rollers, remove all debris. Verify all rollers turn freely and have contact w/belt"
+      },
+      {
+        "task": "150",
+        "description": "Check/tighten all return roller setscrews."
+      },
+      {
+        "task": "160",
+        "description": "Repair any cracked welds and/or missing/loose hardware."
+      },
+      {
+        "task": "170",
+        "description": "Re-secure all under guards, repair hinge pins as needed"
+      },
+      {
+        "task": "180",
+        "description": "Repair tears/rips and rough edges on the belt. If minor, cut out bad area and note on \"CORRECTIVES & PARTS\" tab"
+      },
+      {
+        "task": "190",
+        "description": "Repair missing hooks, pins, rough edges in lacing."
+      },
+      {
+        "task": "200",
+        "description": "Inspect belt beading, Make sure all is intact and not damaged."
+      },
+      {
+        "task": "210",
+        "description": "Inspect all bearing guides are free of debris and turn freely"
+      },
+      {
+        "task": "220",
+        "description": "Ensure all guards are replaced, motor switches on."
+      },
+      {
+        "task": "230",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "240",
+        "description": "Remove lock out/tag out from panel or motor switch."
+      },
+      {
+        "task": "250",
+        "description": "Run belt, inspect for unusual noises, vibrations."
+      },
+      {
+        "task": "260",
+        "description": "Grease all bearings while conveyor is running /only if it can be done safely. LOTO and grease if not"
+      },
+      {
+        "task": "270",
+        "description": "Inspect complete rotation of belt for tracking problems. If problems, follow manual for curve"
+      },
+      {
+        "task": "280",
+        "description": "Inspect chain, drive for problems."
+      },
+      {
+        "task": "290",
+        "description": "Change oil in gearbox/gearmotor/motorized pulley once per year."
+      },
+      {
+        "task": "300",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "INTRALOX",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with compressed air wand, vacuum or wipe down all areas, frames, beds, guides ,drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Adjust any adjacent T-plates to 1/8\" gap"
+      },
+      {
+        "task": "40",
+        "description": "Repair any cracked welds, replace missing/loose bolts."
+      },
+      {
+        "task": "50",
+        "description": "Inspect belts for damage or wear on top and bottom"
+      },
+      {
+        "task": "60",
+        "description": "Measure belt for pitch wear as per manufacturer's recommendations"
+      },
+      {
+        "task": "70",
+        "description": "Check catenary sag, if present. Remove a link in belt if catenary is hanging below frame, per manufacturer's recommendations."
+      },
+      {
+        "task": "80",
+        "description": "Inspect sprockets fo wear as per manufacturer's recommendation"
+      },
+      {
+        "task": "90",
+        "description": "Check connecting rods (remove a couple of them at least part way) for wear (camshafting)."
+      },
+      {
+        "task": "100",
+        "description": "Check ARB rollers for signs of wear or damage. The ARB roller should be free of dirt and material build up. Check to see if the ARB rollers can spin freely went not engage."
+      },
+      {
+        "task": "110",
+        "description": "Check sprocket joining plate torque, adjust per manufacturer's recommendations"
+      },
+      {
+        "task": "120",
+        "description": "Grease all bearings, clean fittings before and after"
+      },
+      {
+        "task": "130",
+        "description": "Inspect wear strips for damage and wear in width and height"
+      },
+      {
+        "task": "140",
+        "description": "Inspect belt rollers, return rollers for damage and carry way rollers and wearstrips"
+      },
+      {
+        "task": "150",
+        "description": "Inspect actuators, mounts, and zone rollers, if present; jog actuators"
+      },
+      {
+        "task": "160",
+        "description": "Secure all guards with appropriate hardware"
+      },
+      {
+        "task": "170",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "180",
+        "description": "Remove lock out/tag out and run conveyor"
+      },
+      {
+        "task": "190",
+        "description": "Test run in maintenance mode, Listen for unusual noises, vibration, check belt tracking, and check for roller seizing"
+      },
+      {
+        "task": "200",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "POWERED ROLLER CONVEYOR",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with compressed air wand, vacuum or wipe down all areas, frames, beds, guides ,drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Check Reducer for oil leaks, replace if leaking, if applicable"
+      },
+      {
+        "task": "40",
+        "description": "Tighten Reduce/Motor mounting bolts"
+      },
+      {
+        "task": "50",
+        "description": "Check conduit connections and conduit condition to motor, other electrical devices on the equipment"
+      },
+      {
+        "task": "60",
+        "description": "Check drive belt for wear, alignment and tension"
+      },
+      {
+        "task": "70",
+        "description": "Check sprocket alignment and wear, tighten set screw"
+      },
+      {
+        "task": "80",
+        "description": "Check tension spring for chain drive"
+      },
+      {
+        "task": "90",
+        "description": "Lubricate all bearings with grease. Do not over lubricate."
+      },
+      {
+        "task": "100",
+        "description": "Remove any debris found in rollers"
+      },
+      {
+        "task": "110",
+        "description": "Check roller drive belt tension and condition"
+      },
+      {
+        "task": "120",
+        "description": "Check all rollers for bad bearings"
+      },
+      {
+        "task": "130",
+        "description": "Check side guard condition for broken welds"
+      },
+      {
+        "task": "140",
+        "description": "Check that all safety guards are secure, if missing fabricate and install"
+      },
+      {
+        "task": "150",
+        "description": "Check, adjust and clean all photo eyes, if applicable"
+      },
+      {
+        "task": "160",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "170",
+        "description": "Remove lock out/tag out and run conveyor"
+      },
+      {
+        "task": "180",
+        "description": "Test run equipment ensure proper operation"
+      },
+      {
+        "task": "190",
+        "description": "Check all rollers for proper operation"
+      },
+      {
+        "task": "200",
+        "description": "Check belt tracking, adjust if necessary"
+      },
+      {
+        "task": "210",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "RTU_RTL",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "Blow out with compressed air wand, vacuum or wipe down all areas, frames, guides, tracks, etc."
+      },
+      {
+        "task": "20",
+        "description": "Inspect for cracks, bent,damaged or missing portions of the frame channels (typically at ends)"
+      },
+      {
+        "task": "30",
+        "description": "Inspect for missing spanner bushings at legs and cam followers (causes frame channels to bend)"
+      },
+      {
+        "task": "40",
+        "description": "Check for loose or missing hardware"
+      },
+      {
+        "task": "50",
+        "description": "Ensure conveyor sections are nesting properly"
+      },
+      {
+        "task": "60",
+        "description": "Ensure all sections extend, and retract with ease, and do not bind"
+      },
+      {
+        "task": "70",
+        "description": "Inspect floor anchors for tightness"
+      },
+      {
+        "task": "80",
+        "description": "Check for and replace any missing or broken rollers"
+      },
+      {
+        "task": "90",
+        "description": "Look for empty hex holes on frame channels when unit is retracted, replace missing/damaged  rollers"
+      },
+      {
+        "task": "100",
+        "description": "Check for loose or missing cam followers (at ramp transfer end of frame channels)"
+      },
+      {
+        "task": "110",
+        "description": "Check that the cam followers at the package transfer end are present. Replace if missing."
+      },
+      {
+        "task": "120",
+        "description": "Check that the cam follower's nut is tight (lock washer compressed)"
+      },
+      {
+        "task": "130",
+        "description": "Check for loose/missing hardware attaching stop assembly to bottom frame channels"
+      },
+      {
+        "task": "140",
+        "description": "Check that both sections of the stop assembly are present"
+      },
+      {
+        "task": "150",
+        "description": "Check that the sliding flat to lock the stop assembly's top section is present"
+      },
+      {
+        "task": "160",
+        "description": "Check for missing and broken plastic ramp wear guides (at leg end of frame channels)"
+      },
+      {
+        "task": "170",
+        "description": "Replace broken and missing ramp wear guides (top frame channels do not have these)"
+      },
+      {
+        "task": "180",
+        "description": "Check operation of brake and latch on front leg."
+      },
+      {
+        "task": "190",
+        "description": "Check that the brake pivots down to engage with floor in trailer."
+      },
+      {
+        "task": "200",
+        "description": "Check that the brake pad is present and clear of debris."
+      },
+      {
+        "task": "210",
+        "description": "Check that the latch pivots freely and fully engages with base to secure in place."
+      },
+      {
+        "task": "220",
+        "description": "Check that ramp transfer handle is present."
+      },
+      {
+        "task": "230",
+        "description": "Check that the cam followers are present on ramp transfer"
+      },
+      {
+        "task": "240",
+        "description": "Check that the cam follower's nut is tight (lock washer compressed) on ramp transfer"
+      },
+      {
+        "task": "250",
+        "description": "Check for the two transition plates at end of base and that they pivot freely on the ramp transfer"
+      },
+      {
+        "task": "260",
+        "description": "Check that all twelve casters are present and functioning on base assembly"
+      },
+      {
+        "task": "270",
+        "description": "Check that dock latch is present and lines up with locking tube on base assembly"
+      },
+      {
+        "task": "280",
+        "description": "Inspect uhmw dead plates on base assembly"
+      },
+      {
+        "task": "290",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "GRAVITY_CHUTES_GATES",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "General Cleaning:Air blow entire units, frame/guarding/support structures, Remove all debris found"
+      },
+      {
+        "task": "20",
+        "description": "Gravity Wheels: Check for Noise, Damage, Cleanliness"
+      },
+      {
+        "task": "30",
+        "description": "Gravity Rollers: Check for Noise,Damage,Cleanliness,Worn Bearings,Axle Mounting wear,straight roller"
+      },
+      {
+        "task": "40",
+        "description": "Chutes: Check overall condition,welds,latches for proper operation,counter balance,jack/jack handle"
+      },
+      {
+        "task": "50",
+        "description": "Chutes: Check gate, if applicable"
+      },
+      {
+        "task": "60",
+        "description": "Check Hardware and supports for loose or missing bolts and visable damage"
+      },
+      {
+        "task": "70",
+        "description": "Check Beds:Guard rail position, straightness/catch points,Splice plates are secured (if applicable)"
+      },
+      {
+        "task": "80",
+        "description": "Check Beds:Squareness/level (product does not wander from side to side)"
+      },
+      {
+        "task": "90",
+        "description": "Photoeyes, if applicable are clean, aligned, wiring tight, brackets secured"
+      },
+      {
+        "task": "100",
+        "description": "For load lanes, test functionality of 50% and 75% lane full photoeyes"
+      },
+      {
+        "task": "110",
+        "description": "Test the lane full light functionality"
+      },
+      {
+        "task": "120",
+        "description": "Test load lanes-verify package flow operation,Replace any damaged rollers/wheels that restrict flow"
+      },
+      {
+        "task": "130",
+        "description": "Ball Tables- Make sure all balls within table are tight (Tighten from bottom)"
+      },
+      {
+        "task": "140",
+        "description": "Ball Tables- Make sure all balls within table turn freely"
+      },
+      {
+        "task": "150",
+        "description": "Gates:Check for worn bearings, axle mounting hole wear, bent tubes, and overall cleanliness."
+      },
+      {
+        "task": "160",
+        "description": "Gates:Inspect hardware for free movement,good balance,damaged hinges,loose or missing bolts/splice plates."
+      },
+      {
+        "task": "170",
+        "description": "Gates:Inspect for cracked welds,squareness,guard rail positions,straightness/catch points"
+      },
+      {
+        "task": "180",
+        "description": "Gates:Replace/Repair any damaged hinges."
+      },
+      {
+        "task": "190",
+        "description": "Gates:Inspect package flow and replace any damaged or poorly functioning rollers."
+      },
+      {
+        "task": "200",
+        "description": "Gates:Inspect safety straps, springs, cylinders and handles."
+      },
+      {
+        "task": "210",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "LEWCO ROLLERS",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Blow out with compressed air wand, vacuum or wipe down all areas, frames, beds, guides ,drives and bearings"
+      },
+      {
+        "task": "30",
+        "description": "Check Reducer for oil leaks, replace if leaking, if applicable"
+      },
+      {
+        "task": "40",
+        "description": "Tighten Reduce/Motor mounting bolts"
+      },
+      {
+        "task": "50",
+        "description": "Check conduit connections and conduit condition to motor, other electrical devices on the equipment"
+      },
+      {
+        "task": "60",
+        "description": "Inspect belt spools for mis-alignment, look for unusual wear to belt and spools. Replace as needed"
+      },
+      {
+        "task": "70",
+        "description": "Tighten all set screws on bearings and spools."
+      },
+      {
+        "task": "80",
+        "description": "Tighten all mounting bolts throughout conveyor."
+      },
+      {
+        "task": "90",
+        "description": "Lubricate all bearings with grease. Do not over lubricate."
+      },
+      {
+        "task": "100",
+        "description": "Remove any debris found in rollers"
+      },
+      {
+        "task": "110",
+        "description": "Check spools for proper engagement with the belt."
+      },
+      {
+        "task": "120",
+        "description": "Check all rollers for bad bearings"
+      },
+      {
+        "task": "130",
+        "description": "Check that all safety guards are secure, if missing fabricate and install"
+      },
+      {
+        "task": "140",
+        "description": "Check, adjust and clean all photo eyes, if applicable"
+      },
+      {
+        "task": "150",
+        "description": "Touch-up paint in all areas, verify all safety labels are in view"
+      },
+      {
+        "task": "160",
+        "description": "Remove lock out/tag out and run conveyor"
+      },
+      {
+        "task": "170",
+        "description": "Test run equipment ensure proper operation"
+      },
+      {
+        "task": "180",
+        "description": "Check all rollers for proper operation"
+      },
+      {
+        "task": "190",
+        "description": "Check belt tracking, adjust if necessary"
+      },
+      {
+        "task": "200",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "PLAK_STATIONS",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "Confirm that there is a secure location where PLAK spares, PLAK_LOCK_ID_FORMs are  kept and retrieve current PLAK_LOCK_ID_FORM."
+      },
+      {
+        "task": "20",
+        "description": "Locate authorized PLAK stations, that are noted on the form, and confirm that lock is tethered to the control station, that, if it’s a multi-PLAK station that 2 locks are tethered along with a yellow gang lock attachment."
+      },
+      {
+        "task": "30",
+        "description": "Check platform where authorized PLAK station is located has adequate fall protection. Note any deficiencies"
+      },
+      {
+        "task": "40",
+        "description": "Inventory the PLAK secure location / cabinet to make sure that all spares, extra keys, master key are present and accounted for. Note any discrepancies"
+      },
+      {
+        "task": "50",
+        "description": "IF there are NO PLAK locks noted on the PLAK_LOCK_ID_FORM, vendor must confirm that NO rogue locks are on any SE,E-stop, or SM stations as they perform the PMs throughout the building and bring them to the attention of the Sr. Manager to have them removed."
+      },
+      {
+        "task": "60",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "MCP",
+    "tasks": [
+      {
+        "task": "10",
+        "description": "FOLLOW LOTO PROCEDURE PRIOR TO PROCEEDING WITH PM"
+      },
+      {
+        "task": "20",
+        "description": "Verify there is no power at the cabinet."
+      },
+      {
+        "task": "30",
+        "description": "Inspect general condition of cabinet, doors, lights, connect handle. Repair any problems found."
+      },
+      {
+        "task": "40",
+        "description": "Ensure the proper fuses are in place for the motor being protected. Replace any improperly rated fuses with the correct rating."
+      },
+      {
+        "task": "50",
+        "description": "Ensure that ALL overloads are set to auto-reset and that they are set to the proper limit."
+      },
+      {
+        "task": "60",
+        "description": "Inspect and clean any heating/air units if applicable."
+      },
+      {
+        "task": "70",
+        "description": "Vacuum out cabinet and remove any debris or old fuses from cabinet."
+      },
+      {
+        "task": "80",
+        "description": "Check spare fuse storage box and replenish as needed. This may be in the spare parts cage"
+      },
+      {
+        "task": "90",
+        "description": "Check tightness of ALL electrical connections AND Tug on ALL wires with 2 fingers to ensure they are secure and properly terminated."
+      },
+      {
+        "task": "100",
+        "description": "Ensure PLC keyswitch is in the \"RUN\" position.  If not, place in \"RUN\""
+      },
+      {
+        "task": "110",
+        "description": "Remove all equipment/tools used and return cabinet to service. Wipe down entire MCP with mild cleaning solution."
+      },
+      {
+        "task": "120",
+        "description": "Test operation of equipment."
+      },
+      {
+        "task": "130",
+        "description": "NOTE ANY CORRECTIVES NEEDED AND PARTS USED ON \"CORRECTIVES & PARTS\" TAB OF THIS WORKBOOK."
+      }
+    ]
+  },
+  {
+    "name": "E-STOP",
+    "tasks": [
+      {
+        "task": "1",
+        "description": "Reference the site electrical drawings and identify all E-Stop devices on the control prints (SE, SM, pullcords, and related devices)."
+      },
+      {
+        "task": "2",
+        "description": "Use two people with phones or radios: one at the GDU and one walking the E-Stop switches."
+      },
+      {
+        "task": "3",
+        "description": "For each System E-Stop (SE), verify the field label matches the drawing and inspect the device and conduit for damage."
+      },
+      {
+        "task": "4",
+        "description": "For each System E-Stop (SE), activate the device and verify the GDU alarm name and active alarm banner match the drawing."
+      },
+      {
+        "task": "5",
+        "description": "For each System E-Stop (SE), verify smooth and complete activation and confirm the bulb is lit."
+      },
+      {
+        "task": "6",
+        "description": "For each System E-Stop (SE), deactivate the device and verify the alarm clears, the bulb turns off, and the MCP system reset is active."
+      },
+      {
+        "task": "7",
+        "description": "For each System E-Stop (SM), verify the field label matches the drawing and inspect the device and conduit for damage."
+      },
+      {
+        "task": "8",
+        "description": "For each System E-Stop (SM), activate the device and verify the GDU alarm name and active alarm banner match the drawing."
+      },
+      {
+        "task": "9",
+        "description": "For each System E-Stop (SM), verify smooth and complete activation and confirm the bulb is lit."
+      },
+      {
+        "task": "10",
+        "description": "For each System E-Stop (SM), deactivate the device and verify the alarm clears, the bulb turns off, and the MCP system reset is active."
+      },
+      {
+        "task": "11",
+        "description": "For each Emergency Pullcord (EPC), verify the label matches the drawing and inspect the device, conduit, and cable tension."
+      },
+      {
+        "task": "12",
+        "description": "For each Emergency Pullcord (EPC), activate it and verify the GDU alarm name and active alarm banner match the drawing."
+      },
+      {
+        "task": "13",
+        "description": "For each Emergency Pullcord (EPC), verify smooth and complete activation and confirm the bulb is lit."
+      },
+      {
+        "task": "14",
+        "description": "For each Emergency Pullcord (EPC), deactivate it and verify the alarm clears, the bulb turns off, and the MCP system reset is active."
+      }
+    ]
+  },
+  {
+    "name": "MCR",
+    "tasks": [
+      {
+        "task": "1",
+        "description": "Reference the site electrical drawings and identify the relays in the E-Stop MCR circuit."
+      },
+      {
+        "task": "2",
+        "description": "Use the drawing BOM to identify manufacturer and part information and verify the installed relay matches the BOM."
+      },
+      {
+        "task": "3",
+        "description": "Redline the BOM when an installed relay does not match."
+      },
+      {
+        "task": "4",
+        "description": "Check local relay inventory and update Correctives & Parts and inventory as necessary."
+      },
+      {
+        "task": "5",
+        "description": "Review the E-Stop relay series circuit drawings and verify the relay sequence matches the drawings."
+      },
+      {
+        "task": "6",
+        "description": "Cross-reference drawing wire numbers with installed relays and verify they match."
+      },
+      {
+        "task": "7",
+        "description": "Redline all relay and wire-number inconsistencies."
+      },
+      {
+        "task": "8",
+        "description": "Check the MCP for E-Stop relays not shown on the drawings and list them as correctives."
+      },
+      {
+        "task": "9",
+        "description": "Check the GDU for E-Stop relays not shown on the drawings and list them as correctives."
+      },
+      {
+        "task": "10",
+        "description": "For each relay, verify its physical location and label match the MCP drawings."
+      },
+      {
+        "task": "11",
+        "description": "For each relay, verify the coil wire labels match the drawings."
+      },
+      {
+        "task": "12",
+        "description": "For each relay, activate the associated E-Stop and confirm the GDU reports the E-Stop relay alarm."
+      },
+      {
+        "task": "13",
+        "description": "Record all relay discrepancies as correctives."
+      }
+    ]
+  },
+  {
+    "name": "E-STOP INVENTORY",
+    "tasks": [
+      {
+        "task": "1",
+        "description": "Reference the site electrical drawings and identify all E-Stop devices on the prints (SE, SM, pullcords, and related devices)."
+      },
+      {
+        "task": "2",
+        "description": "Use the BOM to identify the manufacturer and part number for each device."
+      },
+      {
+        "task": "3",
+        "description": "Account for every component in multi-component switch assemblies."
+      },
+      {
+        "task": "4",
+        "description": "Randomly select one switch of each type, apply LOTO, and verify it is de-energized."
+      },
+      {
+        "task": "5",
+        "description": "Open each selected switch enclosure and verify its components match the BOM."
+      },
+      {
+        "task": "6",
+        "description": "Add the correct parts to Correctives & Parts when a component does not match the BOM."
+      },
+      {
+        "task": "7",
+        "description": "Inventory local stock for the identified E-Stop parts."
+      },
+      {
+        "task": "8",
+        "description": "Update the onsite inventory worksheets."
+      }
+    ]
+  },
+  {
+    "name": "GDU BYPASS",
+    "tasks": [
+      {
+        "task": "1",
+        "description": "Reference the site electrical drawings and identify the site GDU bypass switches."
+      },
+      {
+        "task": "2",
+        "description": "Identify the bypass control type: exterior MCP door, interior MCP, or removable pendant."
+      },
+      {
+        "task": "3",
+        "description": "Verify all system controls are in the run position."
+      },
+      {
+        "task": "4",
+        "description": "Record failed tests in Correctives & Parts and contact FMC."
+      },
+      {
+        "task": "5",
+        "description": "Outbound: On the GDU, select Outbound and the chute positions, start the system, verify operation, and stop it."
+      },
+      {
+        "task": "6",
+        "description": "Outbound: At the bypass controls, select Outbound, press Reset, press Start, verify the conveyors start, and press Stop."
+      },
+      {
+        "task": "7",
+        "description": "Outbound: Disconnect the GDU communications cable; at the bypass controls select Outbound, Reset, and Start; verify conveyors start; then Stop."
+      },
+      {
+        "task": "8",
+        "description": "Outbound: Reconnect the GDU communications cable and return bypass controls to Auto/non-bypass."
+      },
+      {
+        "task": "9",
+        "description": "Outbound: On the GDU, select Outbound, start the system, verify operation, and stop it."
+      },
+      {
+        "task": "10",
+        "description": "Inbound: On the GDU, select Inbound and the chute positions, start the system, verify operation, and stop it."
+      },
+      {
+        "task": "11",
+        "description": "Inbound: At the bypass controls, select Inbound, press Reset, press Start, verify the conveyors start, and press Stop."
+      },
+      {
+        "task": "12",
+        "description": "Inbound: Disconnect the GDU communications cable; at the bypass controls select Inbound, Reset, and Start; verify conveyors start; then Stop."
+      },
+      {
+        "task": "13",
+        "description": "Inbound: Reconnect the GDU communications cable and return bypass controls to Auto/non-bypass."
+      },
+      {
+        "task": "14",
+        "description": "Inbound: On the GDU, select Inbound, start the system, verify operation, and stop it."
+      }
+    ]
+  }
+]
