@@ -393,8 +393,8 @@
                 <div data-id="96" class="photo-area flex items-center gap-3 flex-wrap">
                     <label class="no-print cursor-pointer h-11 px-4 bg-field-bg border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 flex items-center gap-2">📷 Take Photo<input type="file" accept="image/*" capture="environment" class="photo-camera-input hidden" /></label>
                     <label data-id="97" class="photo-upload-label no-print cursor-pointer h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 transition-colors flex items-center gap-2 min-w-[44px]">
-                        <span data-id="98" class="text-base">🖼</span> Upload Photos (up to 8)
-                        <input data-id="99" type="file" accept="image/*" multiple class="photo-input hidden" />
+                        <span data-id="98" class="text-base">🖼</span> Upload Photo (1 per task)
+                        <input data-id="99" type="file" accept="image/*" class="photo-input hidden" />
                     </label>
                     <div data-id="100" class="photo-preview grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"></div>
                 </div>
@@ -420,7 +420,8 @@
 
         // ===================== STATE =====================
         const MAX_ITEMS = 1000;
-        const MAX_PHOTOS_PER_ITEM = 8;
+        const MAX_PHOTOS_PER_ITEM = 1;
+        const MAX_PHOTOS_PER_REPORT = 10;
         const STORAGE_KEY = 'frontline_field_report';
         const PHOTO_DB_NAME = 'frontline_field_report_photos';
         const PHOTO_STORE_NAME = 'draft_photos';
@@ -1024,7 +1025,12 @@
             if (data) {
                 unitInput.value = data.unitId || '';
                 descTextarea.value = data.description || '';
-                const restoredPhotos = Array.isArray(data.photos) ? data.photos : (data.photoData ? [data.photoData] : []);
+                const restoredPhotoCapacity = Math.max(0, MAX_PHOTOS_PER_REPORT - Object.values(photoDataStore).reduce((total, storedPhotos) => {
+                    const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
+                    return total + photos.filter(Boolean).length;
+                }, 0));
+                const restoredPhotos = (Array.isArray(data.photos) ? data.photos : (data.photoData ? [data.photoData] : []))
+                    .slice(0, Math.min(MAX_PHOTOS_PER_ITEM, restoredPhotoCapacity));
                 photoDescriptionStore[id] = Array.isArray(data.photoDescriptions) ? data.photoDescriptions.slice() : [];
                 if (restoredPhotos.length) { photoDataStore[id] = restoredPhotos; renderPhotoPreviews(); }
                 if (data.photoFilename) {
@@ -1035,14 +1041,25 @@
             // Photo upload handler
             function addSelectedPhotos(input) {
                 const current = photoDataStore[id] || [];
-                const available = MAX_PHOTOS_PER_ITEM - current.length;
+                const totalPhotos = Object.values(photoDataStore).reduce((total, storedPhotos) => {
+                    const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
+                    return total + photos.filter(Boolean).length;
+                }, 0);
+                const itemAvailable = MAX_PHOTOS_PER_ITEM - current.length;
+                const reportAvailable = MAX_PHOTOS_PER_REPORT - totalPhotos;
+                const available = Math.min(itemAvailable, reportAvailable);
                 const selected = Array.from(input.files || []).slice(0, available);
-                if (!selected.length) { showToast('This item already has 8 photos.', 'warning'); return; }
+                if (!selected.length) {
+                    showToast(reportAvailable <= 0
+                        ? 'This job report already has the maximum of 10 photos.'
+                        : 'This task already has its one allowed photo.', 'warning');
+                    input.value = '';
+                    return;
+                }
                 Promise.all(selected.map(file => optimizeUploadedPhoto(file))).then(photos => {
                     photoDataStore[id] = current.concat(photos);
                     photoDescriptionStore[id] = (photoDescriptionStore[id] || []).concat(photos.map(() => ''));
                     renderPhotoPreviews(); saveState();
-                    if ((input.files || []).length > available) showToast('Only the first ' + available + ' photos were added. Maximum is 8.', 'warning');
                     input.value = '';
                 });
             }
