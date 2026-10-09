@@ -199,7 +199,7 @@
                 <div class="md:col-span-2 no-print rounded-xl border border-field-border bg-field-bg p-4">
                     <label for="report-supporting-files" class="block text-sm font-semibold text-navy-700 mb-2">Supporting Documents, Spreadsheets, or Pictures <span class="text-navy-300 font-normal">(optional)</span></label>
                     <input id="report-supporting-files" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain" class="block w-full text-sm" />
-                    <p id="report-supporting-file-list" class="mt-2 text-xs text-navy-400">Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.</p>
+                    <p id="report-supporting-file-list" class="mt-2 text-xs text-navy-400">Up to 5 files, 4 MB each: pictures, PDF, Word, Excel, CSV, or text.</p>
                 </div>
                 <div id="team-members-group" class="md:col-span-2 hidden">
                     <label for="team-members-input" class="block text-sm font-medium text-navy-700 mb-1.5">Other Technician Names <span class="text-danger-500">*</span></label>
@@ -369,6 +369,7 @@
 
     <script>
         const LOGGED_IN_TECH = __TECH_SESSION__;
+        const JACOB_PHOTO_EXEMPT = /^jacob(?:\b|\s)/i.test(String(LOGGED_IN_TECH.name || '').trim());
         // Guard Lucide
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
             lucide.createIcons();
@@ -441,13 +442,13 @@
             reportSupportingFiles = Array.from(reportSupportingFilesInput.files || []).slice(0, 5);
             reportSupportingFileList.textContent = reportSupportingFiles.length
                 ? reportSupportingFiles.map(file => file.name).join(' • ')
-                : 'Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.';
+                : 'Up to 5 files, 4 MB each: pictures, PDF, Word, Excel, CSV, or text.';
             if ((reportSupportingFilesInput.files || []).length > 5) showToast('Only the first 5 supporting files will be uploaded.', 'info');
         });
 
         async function uploadSupportingFiles(savedReportId, trackingNumber) {
             for (const file of reportSupportingFiles) {
-                if (file.size > 3750000) throw new Error('ATTACH_FAILED:' + file.name + ' is larger than 3.5 MB.');
+                if (file.size > 4000000) throw new Error('ATTACH_FAILED:' + file.name + ' is larger than 4 MB.');
                 const form = new FormData();
                 form.set('reportId', savedReportId);
                 form.set('trackingNumber', trackingNumber);
@@ -756,6 +757,7 @@
         }
 
         function validateMinimumPhotos() {
+            if (JACOB_PHOTO_EXEMPT) return true;
             const photoCount = Object.values(photoDataStore).reduce((total, storedPhotos) => {
                 const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
                 return total + photos.filter(Boolean).length;
@@ -771,6 +773,7 @@
         }
 
         function validatePhotoDescriptions() {
+            if (JACOB_PHOTO_EXEMPT) return true;
             if (reportCategory !== 'pm') return true;
             for (const card of itemsContainer.querySelectorAll('.item-card')) {
                 const id = card.dataset.itemId;
@@ -827,7 +830,7 @@
             function renderPhotoPreviews() {
                 const photos = photoDataStore[id] || [];
                 const descriptions = photoDescriptionStore[id] || [];
-                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" class="remove-photo-btn absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button><input class="photo-description mt-1 w-full px-2 py-2 border border-field-border rounded-lg text-xs" data-photo-index="${index}" value="${escapeAttr(descriptions[index] || '')}" placeholder="Describe or identify this picture${reportCategory === 'pm' ? ' (required)' : ' (optional)'}" /></div>`).join('');
+                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" class="remove-photo-btn absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button><input class="photo-description mt-1 w-full px-2 py-2 border border-field-border rounded-lg text-xs" data-photo-index="${index}" value="${escapeAttr(descriptions[index] || '')}" placeholder="Describe or identify this picture${reportCategory === 'pm' && !JACOB_PHOTO_EXEMPT ? ' (required)' : ' (optional)'}" /></div>`).join('');
                 photoPreview.querySelectorAll('.remove-photo-btn').forEach(button => button.addEventListener('click', () => {
                     const index = Number(button.dataset.photoIndex); photos.splice(index, 1); descriptions.splice(index, 1);
                     renderPhotoPreviews(); saveState();
@@ -1490,7 +1493,7 @@
             setWorkflowStatus('complete');
             reportSupportingFiles = [];
             reportSupportingFilesInput.value = '';
-            reportSupportingFileList.textContent = 'Up to 5 files, 3.5 MB each: pictures, PDF, Word, Excel, CSV, or text.';
+            reportSupportingFileList.textContent = 'Up to 5 files, 4 MB each: pictures, PDF, Word, Excel, CSV, or text.';
 
             [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput].forEach(clearFieldError);
 

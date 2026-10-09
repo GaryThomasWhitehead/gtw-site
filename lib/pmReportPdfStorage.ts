@@ -18,6 +18,13 @@ export function reportPdfPath(id: string) {
   return `reports/${String(id).replace(/[^a-zA-Z0-9._-]/g, "_")}.pdf`;
 }
 
+export function reportAttachmentPath(reportId: string, attachmentId: string, filename: string) {
+  const safeReport = String(reportId).replace(/[^a-zA-Z0-9._-]/g, "_");
+  const safeId = String(attachmentId).replace(/[^a-zA-Z0-9._-]/g, "_");
+  const safeName = String(filename).replace(/[^a-zA-Z0-9._-]/g, "_") || "attachment";
+  return `attachments/${safeReport}/${safeId}-${safeName}`;
+}
+
 export async function uploadReportPdf(url: string, key: string, path: string, pdf: Buffer | Uint8Array) {
   if (!(await ensureBucket(url, key))) return false;
   const response = await fetch(objectUrl(url, path), {
@@ -32,6 +39,20 @@ export async function downloadReportPdf(url: string, key: string, path: string) 
   const response = await fetch(objectUrl(url, path), { headers: storageHeaders(key), cache: "no-store" });
   if (!response.ok) return null;
   return Buffer.from(await response.arrayBuffer());
+}
+
+export async function uploadReportAttachment(url: string, key: string, path: string, contentType: string, bytes: Buffer | Uint8Array) {
+  if (!(await ensureBucket(url, key))) return false;
+  const response = await fetch(objectUrl(url, path), {
+    method: "POST",
+    headers: { ...storageHeaders(key), "Content-Type": contentType || "application/octet-stream", "x-upsert": "true" },
+    body: new Uint8Array(bytes),
+  });
+  return response.ok;
+}
+
+export async function downloadReportAttachment(url: string, key: string, path: string) {
+  return downloadReportPdf(url, key, path);
 }
 
 export async function deleteReportPdf(url: string, key: string, path: string) {

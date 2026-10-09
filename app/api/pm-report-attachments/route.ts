@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
+import { downloadReportAttachment, reportAttachmentPath, uploadReportAttachment } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +31,15 @@ export async function GET(request: NextRequest) {
     const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, { headers: headers(key), cache: "no-store" });
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const [row] = await response.json();
-    if (!row?.data?.base64) return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
-    return new NextResponse(Buffer.from(row.data.base64, "base64"), {
+    const attachment = row?.data;
+    const bytes = attachment?.storagePath
+      ? await downloadReportAttachment(url, key, String(attachment.storagePath))
+      : attachment?.base64 ? Buffer.from(attachment.base64, "base64") : null;
+    if (!bytes) return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
+    return new NextResponse(new Uint8Array(bytes), {
       headers: {
-        "Content-Type": row.data.contentType || "application/octet-stream",
-        "Content-Disposition": `inline; filename="${safeFilename(String(row.data.filename || "attachment"))}"`,
+        "Content-Type": attachment.contentType || "application/octet-stream",
+        "Content-Disposition": `inline; filename="${safeFilename(String(attachment.filename || "attachment"))}"`,
       },
     });
   }
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
   const file = form.get("file");
   const description = String(form.get("description") || "").trim().slice(0, 500);
   if (!reportId || !trackingNumber || !(file instanceof File)) return NextResponse.json({ error: "Report, tracking number, and file are required" }, { status: 400 });
-  if (file.size > 3_750_000) return NextResponse.json({ error: "File is too large. Maximum size is 3.5 MB." }, { status: 413 });
+  if (file.size > 4_000_000) return NextResponse.json({ error: "File is too large. Maximum size is 4 MB." }, { status: 413 });
 
   const reportKey = encodeURIComponent(`PMREPORT:${reportId}`);
   const reportResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${reportKey}&limit=1`, { headers: headers(key), cache: "no-store" });
@@ -78,9 +83,15 @@ export async function POST(request: NextRequest) {
   if (normalize(reportRow.data.trackingNumber) !== normalize(trackingNumber)) return NextResponse.json({ error: "Tracking number does not match that completed report" }, { status: 400 });
 
   const id = crypto.randomUUID();
-  const data = { id, recordType: "pm-report-attachment", reportId, trackingNumber, filename: safeFilename(file.name), description, contentType: file.type || "application/octet-stream", size: file.size, uploadedAt: new Date().toISOString(), base64: Buffer.from(await file.arrayBuffer()).toString("base64") };
+  const filename = safeFilename(file.name);
+  const contentType = file.type || "application/octet-stream";
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const useObjectStorage = file.size > 3_750_000 || !contentType.startsWith("image/");
+  const storagePath = useObjectStorage ? reportAttachmentPath(reportId, id, filename) : "";
+  const storedInObjectStorage = storagePath ? await uploadReportAttachment(url, key, storagePath, contentType, bytes) : false;
+  if (useObjectStorage && !storedInObjectStorage) return NextResponse.json({ error: "The attachment storage service could not save this file. Please try again." }, { status: 503 });
+  const data = { id, recordType: "pm-report-attachment", reportId, trackingNumber, filename, description, contentType, size: file.size, uploadedAt: new Date().toISOString(), ...(storedInObjectStorage ? { storagePath } : { base64: bytes.toString("base64") }) };
   const response = await fetch(`${url}/rest/v1/${table}`, { method: "POST", headers: { ...headers(key), Prefer: "return=minimal" }, body: JSON.stringify([{ tracking_number: `PMATTACH:${id}`, data, updated_at: data.uploadedAt }]) });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
-  const { base64: _base64, ...metadata } = data;
-  return NextResponse.json(metadata);
+  return NextResponse.json({ id, recordType: data.recordType, reportId, trackingNumber, filename, description, contentType, size: file.size, uploadedAt: data.uploadedAt });
 }
