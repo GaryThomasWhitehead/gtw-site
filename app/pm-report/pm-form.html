@@ -404,6 +404,11 @@
                 <label data-id="104" class="block text-xs font-medium text-navy-400 mb-1.5">Description of Findings</label>
                 <textarea data-id="105" class="desc-textarea w-full px-3 py-2.5 bg-field-bg border border-field-border rounded-xl text-sm text-navy-800 placeholder:text-navy-300 resize-y" rows="3" placeholder="Describe condition, issues found, actions taken..."></textarea>
             </div>
+            <label class="mt-3 flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 font-bold cursor-pointer no-print">
+                <input type="checkbox" class="needs-correction-checkbox h-6 w-6 accent-[#b45309]" />
+                Needs repair / correction
+            </label>
+            <div class="correction-print-label hidden mt-2 rounded border border-black px-2 py-1 text-xs font-bold">NEEDS REPAIR / CORRECTION</div>
             <!-- Alternating row indicator -->
             <div data-id="106" class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-navy-500/0"></div>
         </div>
@@ -530,6 +535,7 @@
                     form.set('reportId', savedReportId);
                     form.set('trackingNumber', trackingNumber);
                     form.set('description', descriptions[photoIndex] || ('Item ' + (itemIndex + 1) + ' · ' + unitId));
+                    form.set('itemId', cardId);
                     form.set('file', file);
                     const upload = await fetch('/api/pm-report-attachments', { method: 'POST', body: form });
                     if (!upload.ok) throw new Error('ATTACH_FAILED:' + file.name + ' — ' + await upload.text());
@@ -971,6 +977,21 @@
             return true;
         }
 
+        function validateCorrectionPhotos() {
+            if (JACOB_PHOTO_EXEMPT) return true;
+            for (const card of itemsContainer.querySelectorAll('.item-card')) {
+                if (!card.querySelector('.needs-correction-checkbox').checked) continue;
+                const photos = photoDataStore[card.dataset.itemId] || [];
+                if (photos.filter(Boolean).length) continue;
+                const message = 'Each item marked Needs repair / correction must have its assigned picture.';
+                alert(message);
+                showToast(message, 'error');
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            return true;
+        }
+
         // ===================== START INSPECTION =====================
         function handleStartInspection() {
             if (!validateHeaderFields()) return;
@@ -1008,6 +1029,8 @@
             const photoCameraInput = card.querySelector('.photo-camera-input');
             const photoPreview = card.querySelector('.photo-preview');
             const removeItemBtn = card.querySelector('.remove-item-btn');
+            const needsCorrectionInput = card.querySelector('.needs-correction-checkbox');
+            const correctionPrintLabel = card.querySelector('.correction-print-label');
 
             function renderPhotoPreviews() {
                 const photos = photoDataStore[id] || [];
@@ -1025,6 +1048,8 @@
             if (data) {
                 unitInput.value = data.unitId || '';
                 descTextarea.value = data.description || '';
+                needsCorrectionInput.checked = data.needsCorrection === true;
+                correctionPrintLabel.classList.toggle('hidden', !needsCorrectionInput.checked);
                 const restoredPhotoCapacity = Math.max(0, MAX_PHOTOS_PER_REPORT - Object.values(photoDataStore).reduce((total, storedPhotos) => {
                     const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
                     return total + photos.filter(Boolean).length;
@@ -1086,6 +1111,10 @@
 
             unitInput.addEventListener('input', debounce(saveState, 500));
             descTextarea.addEventListener('input', debounce(saveState, 500));
+            needsCorrectionInput.addEventListener('change', () => {
+                correctionPrintLabel.classList.toggle('hidden', !needsCorrectionInput.checked);
+                saveState();
+            });
 
             itemsContainer.appendChild(clone);
             items.push(id);
@@ -1153,6 +1182,7 @@
             if (!validateHeaderFields()) return;
             if (!validateMinimumPhotos()) return;
             if (!validatePhotoDescriptions()) return;
+            if (!validateCorrectionPhotos()) return;
 
             const loadingToast = showToast('Generating PDF…', 'info');
 
@@ -1321,10 +1351,11 @@
                 cards.forEach((card, index) => {
                     const unitId = card.querySelector('.unit-id-input').value.trim() || 'Not specified';
                     const description = card.querySelector('.desc-textarea').value.trim() || 'No description provided';
+                    const needsCorrection = card.querySelector('.needs-correction-checkbox').checked;
                     const cardId = card.dataset.itemId;
                     const storedPhotos = photoDataStore[cardId] || [];
                     const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
-                    itemDataList.push({ index: index + 1, unitId, description, photos, photoDescriptions: photoDescriptionStore[cardId] || [] });
+                    itemDataList.push({ id: cardId, index: index + 1, unitId, description, needsCorrection, photos, photoDescriptions: photoDescriptionStore[cardId] || [] });
                 });
 
                 let currentPage = 1;
@@ -1448,6 +1479,13 @@
                     doc.setFontSize(11);
                     doc.setTextColor(...NAVY);
                     doc.text('Item ' + item.index + '  |  Unit ID: ' + item.unitId, marginL, cursorY);
+                    if (item.needsCorrection) {
+                        cursorY += 5;
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(180, 83, 9);
+                        doc.text('NEEDS REPAIR / CORRECTION', marginL, cursorY);
+                    }
                     cursorY += 7;
 
                     doc.setFont('helvetica', 'normal');
@@ -1540,6 +1578,7 @@
                             workArrangement: selectedWorkArrangement(),
                             teamMembers,
                             itemCount: totalItems,
+                            items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
                             workflowStatus: selectedWorkflowStatus(),
@@ -1573,6 +1612,7 @@
                             workArrangement: selectedWorkArrangement(),
                             teamMembers,
                             itemCount: totalItems,
+                            items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
                             workflowStatus: selectedWorkflowStatus(),
@@ -1627,6 +1667,7 @@
                             workArrangement: selectedWorkArrangement(),
                             teamMembers,
                             itemCount: totalItems,
+                            items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
                             workflowStatus: selectedWorkflowStatus(),
@@ -1719,6 +1760,7 @@
             cards.forEach(card => {
                 const unitId = card.querySelector('.unit-id-input').value;
                 const description = card.querySelector('.desc-textarea').value;
+                const needsCorrection = card.querySelector('.needs-correction-checkbox').checked;
                 const cardId = card.dataset.itemId;
                 const storedPhotos = photoDataStore[cardId] || [];
                 const photos = (Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos]).filter(Boolean).slice(0, MAX_PHOTOS_PER_ITEM);
@@ -1727,6 +1769,7 @@
                     id: cardId,
                     unitId,
                     description,
+                    needsCorrection,
                     photoCount: photos.length,
                     photoDescriptions: (photoDescriptionStore[cardId] || []).slice(0, photos.length),
                     photoFilename: photoFilenames[cardId] || '',

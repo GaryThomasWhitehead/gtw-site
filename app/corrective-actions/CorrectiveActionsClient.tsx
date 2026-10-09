@@ -5,11 +5,11 @@ import styles from "./corrective-actions.module.css";
 import fedexStyles from "./fedex-form.module.css";
 import controlStyles from "./form-controls.module.css";
 
-type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string };
+type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string; sourceItemId?: string };
 type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
-const CORRECTIVE_SCAN_VERSION = 3;
+const CORRECTIVE_SCAN_VERSION = 4;
 const JOB_PLANS = ["SLIDER BED CONVEYOR", "SLIDER BED CONVEYOR W/ MOTORIZED PULLEY", "WASP 1-STAGE EXTENDO", "WASP 1-STAGE W/ MOTORIZED PULLEY", "SRS/MHS 1-STAGE EXTENDO", "NORTECH 1-STAGE EXTENDO", "SHB 1-STAGE EXTENDO", "SHB 1-STAGE W/ MOTORIZED PULLEY", "LEWCO ROLLERS", "SRS/MHS 3-STAGE EXTENDO", "NORTECH 3-STAGE EXTENDO", "WASP 5-STAGE EXTENDO", "WASP 5-STAGE W/ SWAK", "SRS 5-STAGE EXTENDO", "CALJAN 5-STAGE EXTENDO", "MAXX 5-STAGE EXTENDO", "PLAK STATION", "E-STOP", "INTERROLL POWER CURVE", "PORTEC POWER CURVE", "PSC/FLOTURN POWER CURVE", "TRANSNORM POWER CURVE", "INTRALOX", "POWERED ROLLER CONVEYOR", "RTU/RTI", "GRAVITY CONVEYOR, CHUTES & GATES", "MCP"];
-type ReportAttachment = { id: string; reportId: string; filename?: string; description?: string; contentType?: string };
+type ReportAttachment = { id: string; reportId: string; itemId?: string; filename?: string; description?: string; contentType?: string };
 type Part = { partNumber: string; description: string; manufacturer: string; qtyNeeded: string; qtyOnHand: string; asset: string };
 const blankPart = (): Part => ({ partNumber: "", description: "", manufacturer: "", qtyNeeded: "", qtyOnHand: "", asset: "" });
 const blankParts = (count = 18) => Array.from({ length: count }, blankPart);
@@ -29,6 +29,10 @@ function searchableWords(value: string) {
 
 function relatedPictures(action: Action, attachments: ReportAttachment[]) {
   const candidates = attachments.filter((attachment) => attachment.reportId === (action.sourceReportId || "") && String(attachment.contentType || "").startsWith("image/"));
+  if (action.sourceItemId) {
+    const exact = candidates.filter((attachment) => attachment.itemId === action.sourceItemId);
+    if (exact.length) return exact.slice(0, 1);
+  }
   const target = searchableWords(`${action.assetTag} ${action.repairNeeded}`);
   const scored = candidates.map((attachment) => {
     let score = 0;

@@ -3,7 +3,7 @@ import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
-const CORRECTIVE_SCAN_VERSION = 3;
+const CORRECTIVE_SCAN_VERSION = 4;
 
 type Action = {
   id: string;
@@ -12,6 +12,7 @@ type Action = {
   urgency: string;
   serviceChannelWo: string;
   sourceReportId: string;
+  sourceItemId?: string;
 };
 
 function config() {
@@ -99,7 +100,22 @@ export async function POST(request: NextRequest) {
   const text = extracted.items.flatMap((page) => page).map((item) => `${item.str}${item.hasEOL ? "\n" : " "}`).join("");
   const reportTrackingNumber = String(row.data.trackingNumber || "").trim().slice(0, 250);
   const existing: Action[] = (Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : []).map((action: Action) => ({ ...action, assetTag: compactAssetTag(action.assetTag), serviceChannelWo: reportTrackingNumber }));
-  const found = findingsFromText(text, id, reportTrackingNumber).filter((candidate) => !existing.some((action) => action.id === candidate.id));
+  const savedItems = Array.isArray(row.data.items) ? row.data.items : [];
+  const flaggedItems: Action[] = savedItems.filter((item: Record<string, unknown>) => item.needsCorrection === true).map((item: Record<string, unknown>, index: number) => {
+    const sourceItemId = String(item.id || `item-${index + 1}`);
+    const repairNeeded = cleanText(String(item.description || "Repair or correction required")).slice(0, 1500);
+    return {
+      id: `${id}-flagged-${sourceItemId}`,
+      assetTag: compactAssetTag(String(item.unitId || "Asset not entered")),
+      repairNeeded,
+      urgency: urgencyFor(repairNeeded),
+      serviceChannelWo: reportTrackingNumber,
+      sourceReportId: id,
+      sourceItemId,
+    };
+  });
+  const candidates = savedItems.length ? flaggedItems : findingsFromText(text, id, reportTrackingNumber);
+  const found = candidates.filter((candidate) => !existing.some((action) => action.id === candidate.id));
   const updated = { ...row.data, correctiveActions: [...existing, ...found], correctiveScanAt: new Date().toISOString(), correctiveScanVersion: CORRECTIVE_SCAN_VERSION };
   const updateResponse = await fetch(`${url}/rest/v1/${table}?tracking_number=eq.${recordKey}`, {
     method: "PATCH",

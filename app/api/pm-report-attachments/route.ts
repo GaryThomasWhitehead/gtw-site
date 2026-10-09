@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const select = ["id:data->>id", "reportId:data->>reportId", "trackingNumber:data->>trackingNumber", "filename:data->>filename", "description:data->>description", "contentType:data->>contentType", "size:data->size", "uploadedAt:data->>uploadedAt"].join(",");
+  const select = ["id:data->>id", "reportId:data->>reportId", "itemId:data->>itemId", "trackingNumber:data->>trackingNumber", "filename:data->>filename", "description:data->>description", "contentType:data->>contentType", "size:data->size", "uploadedAt:data->>uploadedAt"].join(",");
   const params = new URLSearchParams({ select, order: "updated_at.desc" });
   params.append("tracking_number", "gte.PMATTACH:");
   params.append("tracking_number", "lt.PMATTACH;");
@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
   const trackingNumber = String(form.get("trackingNumber") || "").trim();
   const file = form.get("file");
   const description = String(form.get("description") || "").trim().slice(0, 500);
+  const itemId = String(form.get("itemId") || "").trim().slice(0, 200);
   if (!reportId || !trackingNumber || !(file instanceof File)) return NextResponse.json({ error: "Report, tracking number, and file are required" }, { status: 400 });
   if (file.size > 4_000_000) return NextResponse.json({ error: "File is too large. Maximum size is 4 MB." }, { status: 413 });
 
@@ -90,8 +91,8 @@ export async function POST(request: NextRequest) {
   const storagePath = useObjectStorage ? reportAttachmentPath(reportId, id, filename) : "";
   const storedInObjectStorage = storagePath ? await uploadReportAttachment(url, key, storagePath, contentType, bytes) : false;
   if (useObjectStorage && !storedInObjectStorage) return NextResponse.json({ error: "The attachment storage service could not save this file. Please try again." }, { status: 503 });
-  const data = { id, recordType: "pm-report-attachment", reportId, trackingNumber, filename, description, contentType, size: file.size, uploadedAt: new Date().toISOString(), ...(storedInObjectStorage ? { storagePath } : { base64: bytes.toString("base64") }) };
+  const data = { id, recordType: "pm-report-attachment", reportId, itemId, trackingNumber, filename, description, contentType, size: file.size, uploadedAt: new Date().toISOString(), ...(storedInObjectStorage ? { storagePath } : { base64: bytes.toString("base64") }) };
   const response = await fetch(`${url}/rest/v1/${table}`, { method: "POST", headers: { ...headers(key), Prefer: "return=minimal" }, body: JSON.stringify([{ tracking_number: `PMATTACH:${id}`, data, updated_at: data.uploadedAt }]) });
   if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
-  return NextResponse.json({ id, recordType: data.recordType, reportId, trackingNumber, filename, description, contentType, size: file.size, uploadedAt: data.uploadedAt });
+  return NextResponse.json({ id, recordType: data.recordType, reportId, itemId, trackingNumber, filename, description, contentType, size: file.size, uploadedAt: data.uploadedAt });
 }
