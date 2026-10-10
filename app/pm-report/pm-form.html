@@ -389,7 +389,7 @@
             </div>
             <!-- Photo Upload -->
             <div data-id="94" class="mb-3">
-                <label data-id="95" class="block text-xs font-medium text-navy-400 mb-1.5">Photo Evidence</label>
+                <label data-id="95" class="block text-xs font-medium text-navy-400 mb-1.5">Photo Evidence <span class="font-normal">(1 picture per task)</span></label>
                 <div data-id="96" class="photo-area flex items-center gap-3 flex-wrap">
                     <label class="no-print cursor-pointer h-11 px-4 bg-field-bg border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 flex items-center gap-2">📷 Take Photo<input type="file" accept="image/*" capture="environment" class="photo-camera-input hidden" /></label>
                     <label data-id="97" class="photo-upload-label no-print cursor-pointer h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border border-dashed rounded-xl text-sm font-medium text-navy-500 transition-colors flex items-center gap-2 min-w-[44px]">
@@ -950,10 +950,13 @@
                 const photos = Array.isArray(storedPhotos) ? storedPhotos : [storedPhotos];
                 return total + photos.filter(Boolean).length;
             }, 0);
-            if (photoCount >= 2) return true;
+            const requiredPhotos = Math.min(2, Math.max(1, items.length));
+            if (photoCount >= requiredPhotos) return true;
 
-            const remaining = 2 - photoCount;
-            const message = `At least two pictures are required to complete and save this report. Please take or upload ${remaining} more picture${remaining === 1 ? '' : 's'}.`;
+            const remaining = requiredPhotos - photoCount;
+            const message = requiredPhotos === 1
+                ? 'This one-task report requires one picture before it can be saved.'
+                : `This report requires pictures on at least two different tasks. Add ${remaining} more picture${remaining === 1 ? '' : 's'} to another task.`;
             alert(message);
             showToast(message, 'error');
             inspectionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
