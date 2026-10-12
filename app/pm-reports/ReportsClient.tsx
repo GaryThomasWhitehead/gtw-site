@@ -829,7 +829,7 @@ export default function ReportsClient() {
           <button type="button" onClick={() => void openTechAccess()}>Manage Tech Access</button>
           <button type="button" onClick={() => void openPmTaskManager()}>Update PM Tasks</button>
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
-            {uploading ? "Uploading…" : "Upload to Report"}
+            {uploading ? "Uploading…" : "Upload PDF or File to Report"}
           </button>
           <a href="/pm-report">New Report</a>
           <a href="/fedex-tracker">Back to Tracker</a>
@@ -877,7 +877,7 @@ export default function ReportsClient() {
             <div className={styles.uploadPanelActions}>
               <input value={attachmentDescription} onChange={(event) => setAttachmentDescription(event.target.value)} placeholder={`Describe or identify picture${categoryOf(pendingUpload.report) === "pm" ? " (required for PM)" : " (optional)"}`} />
               <label className={styles.chooseFileButton}>
-                {uploading ? "Uploading…" : "Choose Photo or File"}
+                {uploading ? "Uploading…" : "Choose PDF, Photo, or File"}
                 <input
                   type="file"
                   accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
