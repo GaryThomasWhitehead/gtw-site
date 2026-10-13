@@ -43,6 +43,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const report = body?.report;
     if (!report?.id || !report?.pdfBase64) return NextResponse.json({ error: "A completed PDF report is required" }, { status: 400 });
+    if (technician?.timeEntryRequired) {
+      const validDuration = (value: unknown) => {
+        const match = String(value || "").trim().match(/^(\d+):([0-5]\d)$/);
+        return Boolean(match && (Number(match[1]) * 60 + Number(match[2])) > 0);
+      };
+      if (!validDuration(report.hoursOnJob) || !validDuration(report.travelHours)) {
+        return NextResponse.json({ error: "Hours on Job and Travel Hours are required and must be more than 0:00" }, { status: 400 });
+      }
+    }
     if (report.recoveryImport) {
       const select = [
         "id:data->>id",

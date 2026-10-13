@@ -185,6 +185,20 @@
                     <span data-id="32" class="print-header-value hidden text-base text-navy-800 font-medium"></span>
                     <p data-id="33" class="text-xs text-danger-500 mt-1 hidden" id="err-report-date-e5f6"></p>
                 </div>
+                <div id="leo-hours-on-job-group" class="hidden">
+                    <label for="leo-hours-on-job" class="block text-sm font-medium text-navy-700 mb-1.5">Hours on Job <span class="text-danger-500">*</span></label>
+                    <input type="text" id="leo-hours-on-job" inputmode="numeric" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. 5:30" autocomplete="off" />
+                    <span class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p class="text-xs text-navy-400 mt-1">Enter hours and minutes (H:MM). Must be more than 0:00.</p>
+                    <p class="text-xs text-danger-500 mt-1 hidden" id="err-leo-hours-on-job"></p>
+                </div>
+                <div id="leo-travel-hours-group" class="hidden">
+                    <label for="leo-travel-hours" class="block text-sm font-medium text-navy-700 mb-1.5">Travel Hours <span class="text-danger-500">*</span></label>
+                    <input type="text" id="leo-travel-hours" inputmode="numeric" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. 1:15" autocomplete="off" />
+                    <span class="print-header-value hidden text-base text-navy-800 font-medium"></span>
+                    <p class="text-xs text-navy-400 mt-1">Enter hours and minutes (H:MM). Must be more than 0:00.</p>
+                    <p class="text-xs text-danger-500 mt-1 hidden" id="err-leo-travel-hours"></p>
+                </div>
                 <fieldset class="md:col-span-2 no-print">
                     <legend class="block text-sm font-medium text-navy-700 mb-2">Working Arrangement <span class="text-danger-500">*</span></legend>
                     <div class="grid grid-cols-2 gap-2">
@@ -418,6 +432,7 @@
         const LOGGED_IN_TECH = __TECH_SESSION__;
         const PM_TASK_CATALOG = __PM_TASK_CATALOG__;
         const JACOB_PHOTO_EXEMPT = LOGGED_IN_TECH.photoOptional === true;
+        const LEO_TIME_ENTRY_REQUIRED = LOGGED_IN_TECH.timeEntryRequired === true;
         // Guard Lucide
         if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
             lucide.createIcons();
@@ -453,6 +468,8 @@
         // ===================== DOM REFS =====================
         const techNameInput = document.getElementById('tech-name-a1b2');
         const reportDateInput = document.getElementById('report-date-c3d4');
+        const hoursOnJobInput = document.getElementById('leo-hours-on-job');
+        const travelHoursInput = document.getElementById('leo-travel-hours');
         const facilityAddrInput = document.getElementById('facility-addr-g7h8');
         const trackingNumInput = document.getElementById('tracking-num-k1l2');
         const facilityIdInput = document.getElementById('facility-id-o5p6');
@@ -497,6 +514,13 @@
         const reportSupportingFilesInput = document.getElementById('report-supporting-files');
         const reportSupportingFileList = document.getElementById('report-supporting-file-list');
         let reportSupportingFiles = [];
+
+        if (LEO_TIME_ENTRY_REQUIRED) {
+            document.getElementById('leo-hours-on-job-group').classList.remove('hidden');
+            document.getElementById('leo-travel-hours-group').classList.remove('hidden');
+            hoursOnJobInput.required = true;
+            travelHoursInput.required = true;
+        }
 
         reportSupportingFilesInput.addEventListener('change', () => {
             reportSupportingFiles = Array.from(reportSupportingFilesInput.files || []).slice(0, 5);
@@ -697,7 +721,7 @@
                 location.href = '/pm-tech-login?return=/pm-report';
             });
 
-            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput];
+            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput, hoursOnJobInput, travelHoursInput];
             headerFields.forEach(f => {
                 f.addEventListener('input', debounce(saveState, 500));
                 f.addEventListener('blur', () => {
@@ -912,11 +936,11 @@
         }
 
         // ===================== VALIDATION =====================
-        function showFieldError(input) {
+        function showFieldError(input, message = 'This field is required') {
             input.classList.add('field-error');
             const errEl = input.parentElement.querySelector('p[id^="err-"]');
             if (errEl) {
-                errEl.textContent = 'This field is required';
+                errEl.textContent = message;
                 errEl.classList.remove('hidden');
             }
         }
@@ -930,9 +954,10 @@
             }
         }
 
-        function validateHeaderFields() {
+        function validateHeaderFields(requireLeoTime = false) {
             const fields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, fedexJobInput.checked ? facilityIdInput : customerNameInput];
             if (selectedWorkArrangement() === 'team') fields.push(teamMembersInput);
+            if (LEO_TIME_ENTRY_REQUIRED && requireLeoTime) fields.push(hoursOnJobInput, travelHoursInput);
             let firstInvalid = null;
             let valid = true;
             fields.forEach(f => {
@@ -943,12 +968,26 @@
                     if (!firstInvalid) firstInvalid = f;
                 }
             });
+            if (LEO_TIME_ENTRY_REQUIRED && requireLeoTime) {
+                for (const input of [hoursOnJobInput, travelHoursInput]) {
+                    if (parseDurationMinutes(input.value) <= 0) {
+                        showFieldError(input, 'Enter time as H:MM and use more than 0:00.');
+                        valid = false;
+                        if (!firstInvalid) firstInvalid = input;
+                    }
+                }
+            }
             if (!valid && firstInvalid) {
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 firstInvalid.focus();
                 showToast('Please fill in all required header fields.', 'error');
             }
             return valid;
+        }
+
+        function parseDurationMinutes(value) {
+            const match = String(value || '').trim().match(/^(\d+):([0-5]\d)$/);
+            return match ? (Number(match[1]) * 60) + Number(match[2]) : -1;
         }
 
         function validateMinimumPhotos() {
@@ -1193,7 +1232,7 @@
 
         // ===================== EXPORT PDF =====================
         function handleExportPDF(mode = 'download') {
-            if (!validateHeaderFields()) return;
+            if (!validateHeaderFields(true)) return;
             if (!validateMinimumPhotos()) return;
             if (!validatePhotoDescriptions()) return;
             if (!validateCorrectionPhotos()) return;
@@ -1351,6 +1390,8 @@
                 const facilityAddr = facilityAddrInput.value.trim() || 'Not specified';
                 const trackingNum = trackingNumInput.value.trim() || 'Not specified';
                 const dateVal = reportDateInput.value;
+                const hoursOnJob = LEO_TIME_ENTRY_REQUIRED ? hoursOnJobInput.value.trim() : '';
+                const travelHours = LEO_TIME_ENTRY_REQUIRED ? travelHoursInput.value.trim() : '';
                 let formattedDate = dateVal || 'Not specified';
                 if (dateVal) {
                     const d = new Date(dateVal + 'T12:00:00');
@@ -1468,6 +1509,11 @@
 
                 lines1 = drawInfoPair('Work Arrangement', teamMembers ? 'With Team' : 'Alone', marginL, cursorY);
                 lines2 = drawInfoPair('Other Technicians', teamMembers || 'None', marginL + colW, cursorY);
+                if (LEO_TIME_ENTRY_REQUIRED) {
+                    cursorY += infoLineH * Math.max(lines1, lines2);
+                    lines1 = drawInfoPair('Hours on Job', hoursOnJob, marginL, cursorY);
+                    lines2 = drawInfoPair('Travel Hours', travelHours, marginL + colW, cursorY);
+                }
                 cursorY += infoLineH * Math.max(lines1, lines2) + 2;
 
                 doc.setDrawColor(...NAVY);
@@ -1591,6 +1637,8 @@
                             fedexJob: fedexJobInput.checked,
                             workArrangement: selectedWorkArrangement(),
                             teamMembers,
+                            hoursOnJob,
+                            travelHours,
                             itemCount: totalItems,
                             items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
                             category: reportCategory,
@@ -1625,6 +1673,8 @@
                             fedexJob: fedexJobInput.checked,
                             workArrangement: selectedWorkArrangement(),
                             teamMembers,
+                            hoursOnJob,
+                            travelHours,
                             itemCount: totalItems,
                             items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
                             category: reportCategory,
@@ -1654,6 +1704,8 @@
                             fedexJob: fedexJobInput.checked,
                             category: reportCategory,
                             reportTypeLabel: reportType.label,
+                            hoursOnJob,
+                            travelHours,
                             filename
                         } })
                     });
@@ -1680,6 +1732,8 @@
                             fedexJob: fedexJobInput.checked,
                             workArrangement: selectedWorkArrangement(),
                             teamMembers,
+                            hoursOnJob,
+                            travelHours,
                             itemCount: totalItems,
                             items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
                             category: reportCategory,
@@ -1733,6 +1787,8 @@
             const previousReportId = reportId;
             techNameInput.value = LOGGED_IN_TECH.name;
             reportDateInput.value = localToday();
+            hoursOnJobInput.value = '';
+            travelHoursInput.value = '';
             facilityAddrInput.value = '';
             trackingNumInput.value = '';
             facilityIdInput.value = '';
@@ -1748,7 +1804,7 @@
             reportSupportingFilesInput.value = '';
             reportSupportingFileList.textContent = 'All job-report types accept up to 5 files, 4 MB each: PDF, pictures, Word, Excel, CSV, or text.';
 
-            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput].forEach(clearFieldError);
+            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput, hoursOnJobInput, travelHoursInput].forEach(clearFieldError);
 
             itemsContainer.innerHTML = '';
             items = [];
@@ -1794,6 +1850,8 @@
             const state = {
                 techName: techNameInput.value,
                 reportDate: reportDateInput.value,
+                hoursOnJob: hoursOnJobInput.value,
+                travelHours: travelHoursInput.value,
                 facilityAddr: facilityAddrInput.value,
                 trackingNum: trackingNumInput.value,
                 facilityId: facilityIdInput.value,
@@ -1827,6 +1885,8 @@
 
                 techNameInput.value = state.techName || '';
                 reportDateInput.value = state.reportDate || localToday();
+                hoursOnJobInput.value = state.hoursOnJob || '';
+                travelHoursInput.value = state.travelHours || '';
                 facilityAddrInput.value = state.facilityAddr || '';
                 trackingNumInput.value = state.trackingNum || '';
                 facilityIdInput.value = state.facilityId || '';

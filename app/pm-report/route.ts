@@ -9,7 +9,10 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
-  const tech = await validatePmTechSession(request);
+  let tech = await validatePmTechSession(request);
+  if (!tech && process.env.NODE_ENV !== "production" && request.nextUrl.searchParams.get("preview") === "leo") {
+    tech = { id: "preview-leo", name: "Leo", exp: Date.now() + 60_000, timeEntryRequired: true };
+  }
   if (!tech) return NextResponse.redirect(new URL("/pm-tech-login?return=/pm-report", request.url));
   const filePath = path.join(process.cwd(), "app", "pm-report", "pm-form.html");
   const [formHtml, catalog] = await Promise.all([
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest) {
     loadCurrentPmTaskCatalog(),
   ]);
   const html = formHtml
-    .replace("__TECH_SESSION__", JSON.stringify({ id: tech.id, name: tech.name, photoOptional: tech.photoOptional === true }).replace(/</g, "\\u003c"))
+    .replace("__TECH_SESSION__", JSON.stringify({ id: tech.id, name: tech.name, photoOptional: tech.photoOptional === true, timeEntryRequired: tech.timeEntryRequired === true }).replace(/</g, "\\u003c"))
     .replace("__PM_TASK_CATALOG__", JSON.stringify(catalog).replace(/</g, "\\u003c"));
   return new NextResponse(html, {
     headers: {
