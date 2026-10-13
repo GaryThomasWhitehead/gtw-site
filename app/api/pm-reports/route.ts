@@ -228,7 +228,29 @@ export async function GET(request: NextRequest) {
     }
     if (!response?.ok) console.warn("Completed-report index failed after retries", indexError.slice(0, 500));
     if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });
-    const rows: { tracking_number?: string }[] = await response.json();
+    let rows: { tracking_number?: string }[] = await response.json();
+    // Some PostgREST versions accept repeated range filters on the same
+    // column but return an empty result after a database restart. Fall back
+    // to the prefix lookup already used by the rest of the application so a
+    // healthy database can never be mistaken for an empty report archive.
+    if (!rows.length && !cursor) {
+      const fallbackParams = new URLSearchParams({
+        select: "tracking_number",
+        order: "tracking_number.asc",
+        limit: String(pageSize),
+        tracking_number: "like.PMREPORT:*",
+      });
+      try {
+        const fallbackResponse = await fetch(`${url}/rest/v1/${table}?${fallbackParams}`, {
+          headers: apiHeaders(key),
+          cache: "no-store",
+          signal: AbortSignal.timeout(7000),
+        });
+        if (fallbackResponse.ok) rows = await fallbackResponse.json();
+      } catch (cause) {
+        console.warn("Completed-report prefix fallback failed", cause instanceof Error ? cause.message : String(cause));
+      }
+    }
     const items = rows
       .map((row: { tracking_number?: string }) => ({
         id: String(row.tracking_number || "").replace(/^PMREPORT:/, ""),
