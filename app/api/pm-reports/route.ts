@@ -216,15 +216,15 @@ export async function GET(request: NextRequest) {
     if (cursor) params.append("tracking_number", `gt.${cursor}`);
     let response: Response | null = null;
     let indexError = "";
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
+        response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store", signal: AbortSignal.timeout(7000) });
         if (response.ok) break;
         indexError = `${response.status} ${await response.text()}`;
       } catch (cause) {
         indexError = cause instanceof Error ? cause.message : String(cause);
       }
-      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+      if (attempt < 1) await new Promise((resolve) => setTimeout(resolve, 500));
     }
     if (!response?.ok) console.warn("Completed-report index failed after retries", indexError.slice(0, 500));
     if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });

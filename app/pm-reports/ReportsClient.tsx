@@ -82,6 +82,7 @@ const TABS: { key: Category; label: string }[] = [
   { key: "tugger", label: "Tugger" },
   { key: "gas", label: "Gas Sensor" },
 ];
+const REPORT_CACHE_KEY = "frontline_completed_reports_cache_v1";
 const categoryOf = (report: Report) => report.category || "pm";
 const statusOf = (report: Report): WorkflowStatus => report.workflowStatus || "complete";
 const friendlyLoadError = (cause: unknown) => {
@@ -217,14 +218,21 @@ export default function ReportsClient() {
   const loadReports = useCallback(async () => {
     setLoadingReports(true);
     setError("");
-    setReports([]);
+    let cachedReports: Report[] = [];
+    try {
+      const cached = JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || "[]");
+      if (Array.isArray(cached)) cachedReports = cached.filter((report) => report?.id);
+    } catch (_) {}
+    if (cachedReports.length) setReports(cachedReports);
     setLoadProgress({ loaded: 0, total: 0 });
     try {
       const index: { id: string }[] = [];
       let cursor = "";
       for (let page = 0; page < 50; page += 1) {
         const listUrl = `/api/pm-reports?mode=list${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
-        const listResponse = await fetch(listUrl, { cache: "no-store" });
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 16000);
+        const listResponse = await fetch(listUrl, { cache: "no-store", signal: controller.signal }).finally(() => window.clearTimeout(timeout));
         if (!listResponse.ok) {
           const result = await listResponse.json().catch(() => ({}));
           throw new Error(result?.error || "Completed reports could not be loaded. Please try again.");
@@ -307,8 +315,14 @@ export default function ReportsClient() {
       if (stillUnavailable.length) {
         setError(`${stillUnavailable.length} of ${index.length} reports could not be loaded after automatic retries.`);
       }
+      setReports((current) => {
+        try { localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(current)); } catch (_) {}
+        return current;
+      });
     } catch (cause) {
-      setError(friendlyLoadError(cause));
+      setError(cachedReports.length
+        ? "Showing the last saved report list while the completed-report service reconnects."
+        : friendlyLoadError(cause));
     } finally {
       setLoadingReports(false);
     }
@@ -323,6 +337,7 @@ export default function ReportsClient() {
   }, []);
 
   useEffect(() => {
+    if (loadingReports || !reports.length) return;
     let cancelled = false;
     const loadAttachments = async () => {
       for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -341,7 +356,7 @@ export default function ReportsClient() {
     };
     void loadAttachments();
     return () => { cancelled = true; };
-  }, []);
+  }, [loadingReports, reports.length]);
 
   const loadTechnicians = useCallback(async () => {
     const response = await fetch("/api/pm-techs", { cache: "no-store" });
