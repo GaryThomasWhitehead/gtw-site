@@ -41,6 +41,11 @@ export async function downloadReportPdf(url: string, key: string, path: string) 
   return Buffer.from(await response.arrayBuffer());
 }
 
+export async function streamReportPdf(url: string, key: string, path: string) {
+  const response = await fetch(objectUrl(url, path), { headers: storageHeaders(key), cache: "no-store" });
+  return response.ok && response.body ? response : null;
+}
+
 export async function uploadReportAttachment(url: string, key: string, path: string, contentType: string, bytes: Buffer | Uint8Array) {
   if (!(await ensureBucket(url, key))) return false;
   const response = await fetch(objectUrl(url, path), {
