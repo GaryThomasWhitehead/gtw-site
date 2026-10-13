@@ -211,9 +211,22 @@ export async function GET(request: NextRequest) {
     const pageSize = 25;
     const cursor = request.nextUrl.searchParams.get("cursor") || "";
     const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: String(pageSize) });
-    params.append("tracking_number", "like.PMREPORT:*");
+    params.append("tracking_number", "gte.PMREPORT:");
+    params.append("tracking_number", "lt.PMREPORT;");
     if (cursor) params.append("tracking_number", `gt.${cursor}`);
-    const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
+    let response: Response | null = null;
+    let indexError = "";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
+        if (response.ok) break;
+        indexError = `${response.status} ${await response.text()}`;
+      } catch (cause) {
+        indexError = cause instanceof Error ? cause.message : String(cause);
+      }
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+    }
+    if (!response?.ok) console.warn("Completed-report index failed after retries", indexError.slice(0, 500));
     if (!response?.ok) return NextResponse.json({ error: "The completed-report index is temporarily unavailable. Please try again." }, { status: 503 });
     const rows: { tracking_number?: string }[] = await response.json();
     const items = rows
