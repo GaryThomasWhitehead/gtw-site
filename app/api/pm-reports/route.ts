@@ -233,13 +233,14 @@ export async function GET(request: NextRequest) {
     // column but return an empty result after a database restart. Fall back
     // to the prefix lookup already used by the rest of the application so a
     // healthy database can never be mistaken for an empty report archive.
-    if (!rows.length && !cursor) {
+    if (!rows.length) {
       const fallbackParams = new URLSearchParams({
         select: "tracking_number",
         order: "tracking_number.asc",
         limit: String(pageSize),
         tracking_number: "like.PMREPORT:*",
       });
+      if (cursor) fallbackParams.append("tracking_number", `gt.${cursor}`);
       try {
         const fallbackResponse = await fetch(`${url}/rest/v1/${table}?${fallbackParams}`, {
           headers: apiHeaders(key),
