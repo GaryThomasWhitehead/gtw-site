@@ -186,17 +186,25 @@
                     <p data-id="33" class="text-xs text-danger-500 mt-1 hidden" id="err-report-date-e5f6"></p>
                 </div>
                 <div id="leo-hours-on-job-group" class="hidden">
-                    <label for="leo-hours-on-job" class="block text-sm font-medium text-navy-700 mb-1.5">Hours on Job <span class="text-danger-500">*</span></label>
-                    <input type="text" id="leo-hours-on-job" inputmode="numeric" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. 5:30" autocomplete="off" />
+                    <label for="leo-hours-on-job-hours" class="block text-sm font-medium text-navy-700 mb-1.5">Hours on Job <span class="text-danger-500">*</span></label>
+                    <div class="flex items-center gap-2" id="leo-hours-on-job-control">
+                        <input type="number" id="leo-hours-on-job-hours" inputmode="numeric" min="0" step="1" class="min-w-0 flex-1 h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300" placeholder="Hours" autocomplete="off" />
+                        <span class="text-2xl font-bold text-navy-700" aria-hidden="true">:</span>
+                        <input type="number" id="leo-hours-on-job-minutes" inputmode="numeric" min="0" max="59" step="1" class="min-w-0 flex-1 h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300" placeholder="Minutes" autocomplete="off" />
+                    </div>
                     <span class="print-header-value hidden text-base text-navy-800 font-medium"></span>
-                    <p class="text-xs text-navy-400 mt-1">Enter hours and minutes (H:MM). Must be more than 0:00.</p>
+                    <p class="text-xs text-navy-400 mt-1">Hours : Minutes — must be more than 0:00.</p>
                     <p class="text-xs text-danger-500 mt-1 hidden" id="err-leo-hours-on-job"></p>
                 </div>
                 <div id="leo-travel-hours-group" class="hidden">
-                    <label for="leo-travel-hours" class="block text-sm font-medium text-navy-700 mb-1.5">Travel Hours <span class="text-danger-500">*</span></label>
-                    <input type="text" id="leo-travel-hours" inputmode="numeric" class="w-full h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300 print-hide-input" placeholder="e.g. 1:15" autocomplete="off" />
+                    <label for="leo-travel-hours-hours" class="block text-sm font-medium text-navy-700 mb-1.5">Travel Hours <span class="text-danger-500">*</span></label>
+                    <div class="flex items-center gap-2" id="leo-travel-hours-control">
+                        <input type="number" id="leo-travel-hours-hours" inputmode="numeric" min="0" step="1" class="min-w-0 flex-1 h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300" placeholder="Hours" autocomplete="off" />
+                        <span class="text-2xl font-bold text-navy-700" aria-hidden="true">:</span>
+                        <input type="number" id="leo-travel-hours-minutes" inputmode="numeric" min="0" max="59" step="1" class="min-w-0 flex-1 h-12 px-4 bg-field-bg border border-field-border rounded-xl text-base text-navy-800 placeholder:text-navy-300" placeholder="Minutes" autocomplete="off" />
+                    </div>
                     <span class="print-header-value hidden text-base text-navy-800 font-medium"></span>
-                    <p class="text-xs text-navy-400 mt-1">Enter hours and minutes (H:MM). Must be more than 0:00.</p>
+                    <p class="text-xs text-navy-400 mt-1">Hours : Minutes — must be more than 0:00.</p>
                     <p class="text-xs text-danger-500 mt-1 hidden" id="err-leo-travel-hours"></p>
                 </div>
                 <fieldset class="md:col-span-2 no-print">
@@ -468,8 +476,10 @@
         // ===================== DOM REFS =====================
         const techNameInput = document.getElementById('tech-name-a1b2');
         const reportDateInput = document.getElementById('report-date-c3d4');
-        const hoursOnJobInput = document.getElementById('leo-hours-on-job');
-        const travelHoursInput = document.getElementById('leo-travel-hours');
+        const hoursOnJobHoursInput = document.getElementById('leo-hours-on-job-hours');
+        const hoursOnJobMinutesInput = document.getElementById('leo-hours-on-job-minutes');
+        const travelHoursHoursInput = document.getElementById('leo-travel-hours-hours');
+        const travelHoursMinutesInput = document.getElementById('leo-travel-hours-minutes');
         const facilityAddrInput = document.getElementById('facility-addr-g7h8');
         const trackingNumInput = document.getElementById('tracking-num-k1l2');
         const facilityIdInput = document.getElementById('facility-id-o5p6');
@@ -518,8 +528,10 @@
         if (LEO_TIME_ENTRY_REQUIRED) {
             document.getElementById('leo-hours-on-job-group').classList.remove('hidden');
             document.getElementById('leo-travel-hours-group').classList.remove('hidden');
-            hoursOnJobInput.required = true;
-            travelHoursInput.required = true;
+            hoursOnJobHoursInput.required = true;
+            hoursOnJobMinutesInput.required = true;
+            travelHoursHoursInput.required = true;
+            travelHoursMinutesInput.required = true;
         }
 
         reportSupportingFilesInput.addEventListener('change', () => {
@@ -721,7 +733,7 @@
                 location.href = '/pm-tech-login?return=/pm-report';
             });
 
-            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput, hoursOnJobInput, travelHoursInput];
+            const headerFields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput];
             headerFields.forEach(f => {
                 f.addEventListener('input', debounce(saveState, 500));
                 f.addEventListener('blur', () => {
@@ -730,6 +742,9 @@
                         showFieldError(f);
                     }
                 });
+            });
+            [hoursOnJobHoursInput, hoursOnJobMinutesInput, travelHoursHoursInput, travelHoursMinutesInput].forEach(input => {
+                input.addEventListener('input', debounce(saveState, 500));
             });
             workflowStatusInputs.forEach(input => input.addEventListener('change', saveState));
             workArrangementInputs.forEach(input => input.addEventListener('change', updateTeamFields));
@@ -957,7 +972,6 @@
         function validateHeaderFields(requireLeoTime = false) {
             const fields = [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, fedexJobInput.checked ? facilityIdInput : customerNameInput];
             if (selectedWorkArrangement() === 'team') fields.push(teamMembersInput);
-            if (LEO_TIME_ENTRY_REQUIRED && requireLeoTime) fields.push(hoursOnJobInput, travelHoursInput);
             let firstInvalid = null;
             let valid = true;
             fields.forEach(f => {
@@ -969,11 +983,15 @@
                 }
             });
             if (LEO_TIME_ENTRY_REQUIRED && requireLeoTime) {
-                for (const input of [hoursOnJobInput, travelHoursInput]) {
-                    if (parseDurationMinutes(input.value) <= 0) {
-                        showFieldError(input, 'Enter time as H:MM and use more than 0:00.');
+                for (const entry of [
+                    { hours: hoursOnJobHoursInput, minutes: hoursOnJobMinutesInput, group: document.getElementById('leo-hours-on-job-group') },
+                    { hours: travelHoursHoursInput, minutes: travelHoursMinutesInput, group: document.getElementById('leo-travel-hours-group') },
+                ]) {
+                    clearDurationError(entry);
+                    if (durationMinutes(entry.hours, entry.minutes) <= 0) {
+                        showDurationError(entry, 'Enter hours and minutes greater than 0:00.');
                         valid = false;
-                        if (!firstInvalid) firstInvalid = input;
+                        if (!firstInvalid) firstInvalid = entry.hours;
                     }
                 }
             }
@@ -985,9 +1003,37 @@
             return valid;
         }
 
-        function parseDurationMinutes(value) {
-            const match = String(value || '').trim().match(/^(\d+):([0-5]\d)$/);
-            return match ? (Number(match[1]) * 60) + Number(match[2]) : -1;
+        function durationMinutes(hoursInput, minutesInput) {
+            const hours = Number(hoursInput.value);
+            const minutes = Number(minutesInput.value);
+            if (!Number.isInteger(hours) || hours < 0 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59) return -1;
+            return hours * 60 + minutes;
+        }
+
+        function durationValue(hoursInput, minutesInput) {
+            const total = durationMinutes(hoursInput, minutesInput);
+            if (total < 0) return '';
+            return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+        }
+
+        function setDurationValue(value, hoursInput, minutesInput) {
+            const match = String(value || '').match(/^(\d+):([0-5]\d)$/);
+            hoursInput.value = match ? match[1] : '';
+            minutesInput.value = match ? String(Number(match[2])) : '';
+        }
+
+        function clearDurationError(entry) {
+            entry.hours.classList.remove('field-error');
+            entry.minutes.classList.remove('field-error');
+            const message = entry.group.querySelector('p[id^="err-"]');
+            if (message) { message.textContent = ''; message.classList.add('hidden'); }
+        }
+
+        function showDurationError(entry, message) {
+            entry.hours.classList.add('field-error');
+            entry.minutes.classList.add('field-error');
+            const error = entry.group.querySelector('p[id^="err-"]');
+            if (error) { error.textContent = message; error.classList.remove('hidden'); }
         }
 
         function validateMinimumPhotos() {
@@ -1390,8 +1436,8 @@
                 const facilityAddr = facilityAddrInput.value.trim() || 'Not specified';
                 const trackingNum = trackingNumInput.value.trim() || 'Not specified';
                 const dateVal = reportDateInput.value;
-                const hoursOnJob = LEO_TIME_ENTRY_REQUIRED ? hoursOnJobInput.value.trim() : '';
-                const travelHours = LEO_TIME_ENTRY_REQUIRED ? travelHoursInput.value.trim() : '';
+                const hoursOnJob = LEO_TIME_ENTRY_REQUIRED ? durationValue(hoursOnJobHoursInput, hoursOnJobMinutesInput) : '';
+                const travelHours = LEO_TIME_ENTRY_REQUIRED ? durationValue(travelHoursHoursInput, travelHoursMinutesInput) : '';
                 let formattedDate = dateVal || 'Not specified';
                 if (dateVal) {
                     const d = new Date(dateVal + 'T12:00:00');
@@ -1787,8 +1833,10 @@
             const previousReportId = reportId;
             techNameInput.value = LOGGED_IN_TECH.name;
             reportDateInput.value = localToday();
-            hoursOnJobInput.value = '';
-            travelHoursInput.value = '';
+            hoursOnJobHoursInput.value = '';
+            hoursOnJobMinutesInput.value = '';
+            travelHoursHoursInput.value = '';
+            travelHoursMinutesInput.value = '';
             facilityAddrInput.value = '';
             trackingNumInput.value = '';
             facilityIdInput.value = '';
@@ -1804,7 +1852,7 @@
             reportSupportingFilesInput.value = '';
             reportSupportingFileList.textContent = 'All job-report types accept up to 5 files, 4 MB each: PDF, pictures, Word, Excel, CSV, or text.';
 
-            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput, hoursOnJobInput, travelHoursInput].forEach(clearFieldError);
+            [techNameInput, reportDateInput, facilityAddrInput, trackingNumInput, facilityIdInput, customerNameInput, teamMembersInput].forEach(clearFieldError);
 
             itemsContainer.innerHTML = '';
             items = [];
@@ -1850,8 +1898,8 @@
             const state = {
                 techName: techNameInput.value,
                 reportDate: reportDateInput.value,
-                hoursOnJob: hoursOnJobInput.value,
-                travelHours: travelHoursInput.value,
+                hoursOnJob: durationValue(hoursOnJobHoursInput, hoursOnJobMinutesInput),
+                travelHours: durationValue(travelHoursHoursInput, travelHoursMinutesInput),
                 facilityAddr: facilityAddrInput.value,
                 trackingNum: trackingNumInput.value,
                 facilityId: facilityIdInput.value,
@@ -1885,8 +1933,8 @@
 
                 techNameInput.value = state.techName || '';
                 reportDateInput.value = state.reportDate || localToday();
-                hoursOnJobInput.value = state.hoursOnJob || '';
-                travelHoursInput.value = state.travelHours || '';
+                setDurationValue(state.hoursOnJob, hoursOnJobHoursInput, hoursOnJobMinutesInput);
+                setDurationValue(state.travelHours, travelHoursHoursInput, travelHoursMinutesInput);
                 facilityAddrInput.value = state.facilityAddr || '';
                 trackingNumInput.value = state.trackingNum || '';
                 facilityIdInput.value = state.facilityId || '';

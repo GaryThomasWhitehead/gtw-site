@@ -377,13 +377,15 @@ export async function PATCH(request: NextRequest) {
   const partsNotesUpdate = body?.partsNotes === undefined ? undefined : String(body.partsNotes).trim();
   const fedexJobUpdate = body?.fedexJob === undefined ? undefined : Boolean(body.fedexJob);
   const customerNameUpdate = body?.customerName === undefined ? undefined : String(body.customerName).trim();
+  const hoursOnJobUpdate = body?.hoursOnJob === undefined ? undefined : String(body.hoursOnJob).trim();
+  const travelHoursUpdate = body?.travelHours === undefined ? undefined : String(body.travelHours).trim();
   const correctiveActionsUpdate = body?.correctiveActions === undefined ? undefined : body.correctiveActions;
   const rawDeletePdfPages: unknown[] = Array.isArray(body?.deletePdfPages) ? body.deletePdfPages : [];
   const deletePdfPages: number[] = Array.from(new Set<number>(
     rawDeletePdfPages.map((page) => Number(page)).filter((page) => Number.isInteger(page) && page > 0),
   )).sort((a, b) => a - b);
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
-  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
+  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && hoursOnJobUpdate === undefined && travelHoursUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
   }
   if (trackingNumberUpdate !== undefined && !trackingNumberUpdate) {
@@ -397,6 +399,15 @@ export async function PATCH(request: NextRequest) {
   }
   if (customerNameUpdate !== undefined && customerNameUpdate.length > 250) {
     return NextResponse.json({ error: "Customer name must be 250 characters or fewer" }, { status: 400 });
+  }
+  if (hoursOnJobUpdate !== undefined || travelHoursUpdate !== undefined) {
+    const validDuration = (value: string | undefined) => {
+      const match = String(value || "").match(/^(\d+):([0-5]\d)$/);
+      return Boolean(match && Number(match[1]) * 60 + Number(match[2]) > 0);
+    };
+    if (!validDuration(hoursOnJobUpdate) || !validDuration(travelHoursUpdate)) {
+      return NextResponse.json({ error: "Hours on Job and Travel Hours must each be more than 0:00" }, { status: 400 });
+    }
   }
   if (correctiveActionsUpdate !== undefined) {
     if (!Array.isArray(correctiveActionsUpdate) || correctiveActionsUpdate.length > 100) {
@@ -462,6 +473,8 @@ export async function PATCH(request: NextRequest) {
     ...(partsNotesUpdate !== undefined ? { partsNotes: partsNotesUpdate } : {}),
     ...(fedexJobUpdate !== undefined ? { fedexJob: fedexJobUpdate } : {}),
     ...(customerNameUpdate !== undefined ? { customerName: customerNameUpdate } : {}),
+    ...(hoursOnJobUpdate !== undefined ? { hoursOnJob: hoursOnJobUpdate } : {}),
+    ...(travelHoursUpdate !== undefined ? { travelHours: travelHoursUpdate } : {}),
     ...(correctiveActionsUpdate !== undefined ? { correctiveActions: correctiveActionsUpdate } : {}),
     ...pdfUpdate,
   };

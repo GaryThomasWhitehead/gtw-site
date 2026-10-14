@@ -54,6 +54,8 @@ type Report = {
   partsNotes?: string;
   workArrangement?: "alone" | "team";
   teamMembers?: string;
+  hoursOnJob?: string;
+  travelHours?: string;
   calibrationSheets?: GasCalibrationSheet[];
   manufacturer?: string;
   model?: string;
@@ -168,6 +170,9 @@ export default function ReportsClient() {
   const [savingActionsId, setSavingActionsId] = useState("");
   const [correctiveActionDrafts, setCorrectiveActionDrafts] = useState<Record<string, CorrectiveAction[]>>({});
   const [editingCustomerId, setEditingCustomerId] = useState("");
+  const [editingTimeId, setEditingTimeId] = useState("");
+  const [savingTimeId, setSavingTimeId] = useState("");
+  const [timeDrafts, setTimeDrafts] = useState<Record<string, { jobHours: string; jobMinutes: string; travelHours: string; travelMinutes: string }>>({});
   const [savingCustomerId, setSavingCustomerId] = useState("");
   const [customerDrafts, setCustomerDrafts] = useState<Record<string, { fedexJob: boolean; customerName: string }>>({});
   const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
@@ -737,6 +742,51 @@ export default function ReportsClient() {
     }
   }
 
+  const splitDuration = (value: string | undefined) => {
+    const match = String(value || "").match(/^(\d+):([0-5]\d)$/);
+    return { hours: match?.[1] || "", minutes: match ? String(Number(match[2])) : "" };
+  };
+
+  function editReportTime(report: Report) {
+    const job = splitDuration(report.hoursOnJob);
+    const travel = splitDuration(report.travelHours);
+    setTimeDrafts((current) => ({ ...current, [report.id]: { jobHours: job.hours, jobMinutes: job.minutes, travelHours: travel.hours, travelMinutes: travel.minutes } }));
+    setEditingTimeId(report.id);
+  }
+
+  async function saveReportTime(report: Report) {
+    const draft = timeDrafts[report.id];
+    if (!draft) return;
+    const format = (hoursValue: string, minutesValue: string) => {
+      const hours = Number(hoursValue);
+      const minutes = Number(minutesValue);
+      if (!Number.isInteger(hours) || hours < 0 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59 || hours * 60 + minutes <= 0) return "";
+      return `${hours}:${String(minutes).padStart(2, "0")}`;
+    };
+    const hoursOnJob = format(draft.jobHours, draft.jobMinutes);
+    const travelHours = format(draft.travelHours, draft.travelMinutes);
+    if (!hoursOnJob || !travelHours) {
+      setError("Hours on Job and Travel Hours must each be greater than 0:00.");
+      return;
+    }
+    setSavingTimeId(report.id);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: report.id, hoursOnJob, travelHours }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setReports((current) => current.map((item) => item.id === report.id ? { ...item, hoursOnJob, travelHours } : item));
+      setEditingTimeId("");
+    } catch (cause) {
+      setError(`Could not save report time: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setSavingTimeId("");
+    }
+  }
+
   async function editFedExTrackingNumber(report: Report) {
     if (report.fedexJob === false) return;
     const trackingNumber = prompt("Enter the correct FedEx tracking number:", report.trackingNumber || "")?.trim();
@@ -1143,6 +1193,13 @@ export default function ReportsClient() {
                           {report.reportDate || "No date"} · {report.itemCount || 0} items
                         </p>
                         {report.workArrangement && <p>{report.workArrangement === "team" ? `With team: ${report.teamMembers || "Names not entered"}` : "Worked alone"}</p>}
+                        {(report.hoursOnJob || report.travelHours) && <p><strong>Hours on Job:</strong> {report.hoursOnJob || "—"} · <strong>Travel Hours:</strong> {report.travelHours || "—"}</p>}
+                        {editingTimeId === report.id && <section className={styles.timeEditor}>
+                          <div><strong>Hours on Job</strong><span><input aria-label="Hours on job hours" type="number" min="0" step="1" value={timeDrafts[report.id]?.jobHours ?? ""} onChange={(event) => setTimeDrafts((current) => ({ ...current, [report.id]: { ...current[report.id], jobHours: event.target.value } }))} /><b>:</b><input aria-label="Hours on job minutes" type="number" min="0" max="59" step="1" value={timeDrafts[report.id]?.jobMinutes ?? ""} onChange={(event) => setTimeDrafts((current) => ({ ...current, [report.id]: { ...current[report.id], jobMinutes: event.target.value } }))} /></span></div>
+                          <div><strong>Travel Hours</strong><span><input aria-label="Travel hours hours" type="number" min="0" step="1" value={timeDrafts[report.id]?.travelHours ?? ""} onChange={(event) => setTimeDrafts((current) => ({ ...current, [report.id]: { ...current[report.id], travelHours: event.target.value } }))} /><b>:</b><input aria-label="Travel hours minutes" type="number" min="0" max="59" step="1" value={timeDrafts[report.id]?.travelMinutes ?? ""} onChange={(event) => setTimeDrafts((current) => ({ ...current, [report.id]: { ...current[report.id], travelMinutes: event.target.value } }))} /></span></div>
+                          <p>Hours : Minutes — each time must be greater than 0:00.</p>
+                          <div className={styles.timeEditorButtons}><button type="button" disabled={savingTimeId === report.id} onClick={() => void saveReportTime(report)}>{savingTimeId === report.id ? "Saving…" : "Save Time"}</button><button type="button" onClick={() => setEditingTimeId("")}>Cancel</button></div>
+                        </section>}
                         {editingCustomerId === report.id && <section className={styles.customerEditor}>
                           <label className={styles.fedexJobCheck}><input type="checkbox" checked={(customerDrafts[report.id]?.fedexJob ?? report.fedexJob) !== false} onChange={(event) => setCustomerDrafts((current) => ({ ...current, [report.id]: { fedexJob: event.target.checked, customerName: current[report.id]?.customerName ?? report.customerName ?? "" } }))} /><span>FedEx Job</span></label>
                           {(customerDrafts[report.id]?.fedexJob ?? report.fedexJob) === false && <label>Customer name<input autoFocus maxLength={250} value={customerDrafts[report.id]?.customerName ?? report.customerName ?? ""} onChange={(event) => setCustomerDrafts((current) => ({ ...current, [report.id]: { fedexJob: false, customerName: event.target.value } }))} placeholder="Enter customer name" /></label>}
@@ -1185,6 +1242,7 @@ export default function ReportsClient() {
                           </button>
                         )}
                         <button type="button" className={styles.editCustomerButton} onClick={() => editCustomer(report)}>Edit Customer</button>
+                        {(technicianIdentity(report.technician).startsWith("leo") || report.hoursOnJob || report.travelHours) && <button type="button" className={styles.editCustomerButton} onClick={() => editReportTime(report)}>Edit Time</button>}
                         <button
                           type="button"
                           onClick={() => deleteReport(report)}
