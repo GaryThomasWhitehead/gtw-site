@@ -153,6 +153,13 @@ const newestFirst = (left: Report, right: Report) => {
   // historical reports that do not have a saved timestamp.
   return rightTime.savedAt - leftTime.savedAt || rightTime.reportDate - leftTime.reportDate;
 };
+const uniqueReportsById = (rows: Report[]) => {
+  const unique = new Map<string, Report>();
+  rows.forEach((report) => {
+    if (report?.id) unique.set(report.id, report);
+  });
+  return Array.from(unique.values());
+};
 
 export default function ReportsClient() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -226,7 +233,7 @@ export default function ReportsClient() {
     let cachedReports: Report[] = [];
     try {
       const cached = JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || "[]");
-      if (Array.isArray(cached)) cachedReports = cached.filter((report) => report?.id);
+      if (Array.isArray(cached)) cachedReports = uniqueReportsById(cached.filter((report) => report?.id));
     } catch (_) {}
     if (cachedReports.length) setReports(cachedReports);
     setLoadProgress({ loaded: 0, total: 0 });
@@ -278,7 +285,7 @@ export default function ReportsClient() {
           return true;
         });
         if (!freshRows.length) return;
-        setReports((current) => [...current, ...freshRows]);
+        setReports((current) => uniqueReportsById([...current, ...freshRows]));
         setLoadProgress((current) => ({ ...current, loaded: current.loaded + freshRows.length }));
       };
       let nextChunk = 0;
@@ -321,8 +328,9 @@ export default function ReportsClient() {
         setError(`${stillUnavailable.length} of ${index.length} reports could not be loaded after automatic retries.`);
       }
       setReports((current) => {
-        try { localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(current)); } catch (_) {}
-        return current;
+        const unique = uniqueReportsById(current);
+        try { localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(unique)); } catch (_) {}
+        return unique;
       });
     } catch (cause) {
       setError(cachedReports.length
