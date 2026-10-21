@@ -251,8 +251,7 @@ export async function POST(request: NextRequest) {
   });
 
   const photoLocations = new Map<string, string>();
-  const reportLocations = new Map<string, string>();
-  const reportUrls = new Map<string, string>();
+  const reportLabels = new Map<string, string>();
   let photoRow = 3;
   const ensureFullPhoto = (attachment: Attachment, action: ExportAction) => {
     const existing = photoLocations.get(attachment.id);
@@ -272,35 +271,31 @@ export async function POST(request: NextRequest) {
     return address;
   };
 
-  const internalSheetLink = (sheetName: string, address: string, label: string) => ({
-    formula: `HYPERLINK("#'${sheetName.replace(/'/g, "''")}'!${address}","${label.replace(/"/g, '""')}")`,
-    result: label,
-  });
   const reportsSheet = workbook.addWorksheet("Job Reports", { properties: { tabColor: { argb: "FF1468A5" } } });
   reportsSheet.getColumn("A").width = 24;
   reportsSheet.getColumn("B").width = 26;
   reportsSheet.getColumn("C").width = 22;
   reportsSheet.getColumn("D").width = 24;
-  ["Facility", "Tracking / Section", "Report Date", "Open Job Report"].forEach((label, index) => {
+  ["Facility", "Tracking / Section", "Report Date", "Report Reference"].forEach((label, index) => {
     const cell = reportsSheet.getCell(1, index + 1);
     cell.value = label;
     cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
   });
+  reportsSheet.getCell("A2").note = "References are shown as plain text so recipients do not receive Excel external-link security warnings.";
   const listedReports = reportSections.length ? [...reportSections].sort((a, b) => a.reportPart - b.reportPart) : reportIds.map((reportId) => {
     const action = actions.find((item) => item.reportId === reportId || item.candidateReportIds.includes(reportId));
     return { id: reportId, facilityId: action?.facilityId || "", trackingNumber: action?.trackingNumber || "", reportDate: action?.reportDate || "", reportPart: 0 };
   });
   listedReports.forEach((report, reportIndex) => {
     const row = reportIndex + 2;
-    const reportUrl = `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(report.id)}`;
+    const reportLabel = report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`;
     reportsSheet.getCell(`A${row}`).value = report.facilityId || "Facility";
-    reportsSheet.getCell(`B${row}`).value = report.trackingNumber || "Tracking not entered";
+    reportsSheet.getCell(`B${row}`).value = reportLabel;
     reportsSheet.getCell(`C${row}`).value = report.reportDate || "";
-    reportsSheet.getCell(`D${row}`).value = { text: "Open PDF Job Report", hyperlink: reportUrl, tooltip: "Open the matching online job-report section" };
-    reportsSheet.getCell(`D${row}`).font = { color: { argb: "FF0563C1" }, underline: true, bold: true };
-    reportLocations.set(report.id, `D${row}`);
-    reportUrls.set(report.id, reportUrl);
+    reportsSheet.getCell(`D${row}`).value = `Job report: ${reportLabel}`;
+    reportsSheet.getCell(`D${row}`).font = { bold: true };
+    reportLabels.set(report.id, reportLabel);
   });
   reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
 
@@ -327,16 +322,14 @@ export async function POST(request: NextRequest) {
     ].map((attachment) => [attachmentContentKey(attachment), attachment] as const)).values()];
     const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
-      const reportUrl = reportUrls.get(action.reportId) || candidateIds.map((id) => reportUrls.get(id)).find(Boolean);
-      sheet.getCell(`L${rowNumber}`).value = reportUrl
-        ? { text: "View PDF Job Report", hyperlink: reportUrl, tooltip: "Open the matching online job-report section" }
-        : "Job report unavailable";
-      sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
+      const reportLabel = reportLabels.get(action.reportId) || candidateIds.map((id) => reportLabels.get(id)).find(Boolean);
+      sheet.getCell(`L${rowNumber}`).value = reportLabel ? `See Job Reports sheet\n${reportLabel}` : "Job report unavailable";
+      sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, bold: true, size: 9 };
       return;
     }
-    const firstPhotoAddress = ensureFullPhoto(matched[0], action);
-    sheet.getCell(`L${rowNumber}`).value = internalSheetLink("Photos", firstPhotoAddress, `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
-    sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
+    ensureFullPhoto(matched[0], action);
+    sheet.getCell(`L${rowNumber}`).value = `See Photos sheet\n${matched.length} embedded photo${matched.length === 1 ? "" : "s"}`;
+    sheet.getCell(`L${rowNumber}`).font = { bold: true, size: 9 };
     matched.slice(0, 2).forEach((attachment, photoIndex) => {
       const extension = imageExtension(attachment.contentType, attachment.filename);
       const fullAddress = ensureFullPhoto(attachment, action);
@@ -345,7 +338,6 @@ export async function POST(request: NextRequest) {
       sheet.addImage(imageId, {
         tl: { col: 11 + photoIndex * 0.5, row: rowNumber - 1 + 0.08 },
         ext: { width: 75, height: 52 },
-        hyperlinks: { hyperlink: `#'Photos'!${fullAddress}`, tooltip: "Open the full-size picture" },
       });
     });
   });
