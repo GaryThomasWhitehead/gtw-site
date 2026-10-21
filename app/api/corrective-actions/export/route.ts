@@ -50,6 +50,12 @@ type StoredReport = {
   pdfStoragePath?: string;
 };
 
+type RenderedReportPage = {
+  base64: string;
+  width: number;
+  height: number;
+};
+
 function config() {
   return {
     url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -115,6 +121,45 @@ function internalSheetLink(sheetName: string, address: string, label: string) {
   const escapedSheet = sheetName.replace(/'/g, "''");
   const escapedLabel = label.replace(/"/g, '""');
   return { formula: `HYPERLINK("#'${escapedSheet}'!${address}","${escapedLabel}")`, result: label };
+}
+
+async function trimRenderedPage(rendered: ArrayBuffer): Promise<RenderedReportPage | null> {
+  const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+  const source = Buffer.from(rendered);
+  const image = await loadImage(source);
+  const canvas = createCanvas(image.width, image.height);
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0);
+  const pixels = context.getImageData(0, 0, image.width, image.height).data;
+  let left = image.width;
+  let top = image.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < image.height; y += 2) {
+    for (let x = 0; x < image.width; x += 2) {
+      const offset = (y * image.width + x) * 4;
+      if (pixels[offset + 3] > 10 && (pixels[offset] < 246 || pixels[offset + 1] < 246 || pixels[offset + 2] < 246)) {
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+  if (right < left || bottom < top) return null;
+  const padding = 10;
+  left = Math.max(0, left - padding);
+  top = Math.max(0, top - padding);
+  right = Math.min(image.width - 1, right + padding);
+  bottom = Math.min(image.height - 1, bottom + padding);
+  const width = right - left + 1;
+  const height = bottom - top + 1;
+  const cropped = createCanvas(width, height);
+  const croppedContext = cropped.getContext("2d");
+  croppedContext.fillStyle = "#ffffff";
+  croppedContext.fillRect(0, 0, width, height);
+  croppedContext.drawImage(image, left, top, width, height, 0, 0, width, height);
+  return { base64: cropped.toBuffer("image/png").toString("base64"), width, height };
 }
 
 async function reportPdfForId(reportId: string) {
@@ -312,7 +357,7 @@ export async function POST(request: NextRequest) {
   });
   // PDF rendering is CPU-intensive. Render all report sections concurrently at
   // a readable workbook resolution so the export stays within Vercel's limit.
-  const renderedReports = new Map<string, string[] | null>();
+  const renderedReports = new Map<string, RenderedReportPage[] | null>();
   await Promise.all(listedReports.map(async (report) => {
     const pdfBytes = await reportPdfForId(report.id);
     if (!pdfBytes) {
@@ -326,9 +371,9 @@ export async function POST(request: NextRequest) {
           canvasImport: () => import("@napi-rs/canvas"),
           scale: 0.62,
         });
-        return Buffer.from(rendered).toString("base64");
+        return trimRenderedPage(rendered);
       }));
-      renderedReports.set(report.id, pages);
+      renderedReports.set(report.id, pages.filter((page): page is RenderedReportPage => Boolean(page)));
     } catch {
       renderedReports.set(report.id, null);
     }
@@ -348,13 +393,15 @@ export async function POST(request: NextRequest) {
       reportRow += 4;
       continue;
     }
-    for (const [pageIndex, pageBase64] of renderedPages.entries()) {
-      const pageImage = workbook.addImage({ base64: pageBase64, extension: "png" });
+    for (const [pageIndex, page] of renderedPages.entries()) {
+      const pageImage = workbook.addImage({ base64: page.base64, extension: "png" });
       reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageIndex + 1} of ${renderedPages.length}`;
       reportsSheet.getCell(`A${reportRow + 1}`).font = { italic: true, color: { argb: "FF5B677A" } };
-      reportsSheet.addImage(pageImage, { tl: { col: 0.35, row: reportRow + 1.15 }, ext: { width: 720, height: 932 } });
-      for (let row = reportRow + 2; row <= reportRow + 55; row += 1) reportsSheet.getRow(row).height = 14;
-      reportRow += 57;
+      const displayHeight = Math.max(80, Math.min(932, Math.round(720 * page.height / page.width)));
+      reportsSheet.addImage(pageImage, { tl: { col: 0.35, row: reportRow + 1.15 }, ext: { width: 720, height: displayHeight } });
+      const rowsUsed = Math.max(6, Math.ceil((displayHeight + 28) / 18.5));
+      for (let row = reportRow + 2; row <= reportRow + rowsUsed; row += 1) reportsSheet.getRow(row).height = 14;
+      reportRow += rowsUsed + 1;
     }
     reportRow += 2;
   }
