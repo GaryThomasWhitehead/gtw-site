@@ -345,7 +345,8 @@ export default function ReportsClient() {
         setError(`${stillUnavailable.length} of ${index.length} reports could not be loaded after automatic retries.`);
       }
       setReports((current) => {
-        const unique = uniqueReportsById(current);
+        const currentIds = new Set(index.map((item) => item.id));
+        const unique = uniqueReportsById(current).filter((report) => currentIds.has(report.id));
         try { localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(unique)); } catch (_) {}
         return unique;
       });
