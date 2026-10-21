@@ -100,7 +100,7 @@ function matchPhotos(action: ExportAction, attachments: Attachment[]) {
     return { attachment, score };
   }).sort((a, b) => b.score - a.score);
   const matched = scored.filter((item) => item.score > 0).map((item) => item.attachment);
-  return (matched.length ? matched : attachments).slice(0, 4);
+  return matched.slice(0, 4);
 }
 
 function imageExtension(contentType: string, filename: string): "png" | "jpeg" | "gif" | null {
@@ -260,6 +260,14 @@ export async function POST(request: NextRequest) {
   const requestedAttachmentIds = [...new Set(actions.flatMap((action) => action.attachmentIds))];
   const explicitAttachments = await attachmentsForIds(requestedAttachmentIds);
   const explicitAttachmentsById = new Map(explicitAttachments.map((attachment) => [attachment.id, attachment]));
+  const matchedPhotosByAction = new Map<ExportAction, Attachment[]>(actions.map((action) => {
+    const candidateIds = [...new Set([action.reportId, ...action.candidateReportIds])];
+    const explicitlyLinked = action.attachmentIds.map((id) => explicitAttachmentsById.get(id)).filter((item): item is Attachment & { base64: string } => Boolean(item));
+    const candidateAttachments = [...new Map([
+      ...candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []),
+    ].map((attachment) => [attachmentContentKey(attachment), attachment] as const)).values()];
+    return [action, explicitlyLinked.length ? explicitlyLinked : matchPhotos(action, candidateAttachments)] as const;
+  }));
 
   const templatePath = path.join(process.cwd(), "public", "templates", "FXG Correctives and Parts Runtime.xlsx");
   const workbook = new ExcelJS.Workbook();
@@ -355,10 +363,18 @@ export async function POST(request: NextRequest) {
     const action = actions.find((item) => item.reportId === reportId || item.candidateReportIds.includes(reportId));
     return { id: reportId, facilityId: action?.facilityId || "", trackingNumber: action?.trackingNumber || "", reportDate: action?.reportDate || "", reportPart: 0 };
   });
+  listedReports.forEach((report, reportIndex) => {
+    reportLabels.set(report.id, report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`);
+  });
+  const reportsNeededForMissingPhotos = new Set(actions
+    .filter((action) => !(matchedPhotosByAction.get(action) || []).length)
+    .map((action) => action.reportId));
+  const embeddedReports = listedReports.filter((report) => reportsNeededForMissingPhotos.has(report.id));
   // PDF rendering is CPU-intensive. Render all report sections concurrently at
-  // a readable workbook resolution so the export stays within Vercel's limit.
+  // a readable workbook resolution. Only reports needed by a line without a
+  // photo are included; photo-backed lines already navigate to the Photos tab.
   const renderedReports = new Map<string, RenderedReportPage[] | null>();
-  await Promise.all(listedReports.map(async (report) => {
+  await Promise.all(embeddedReports.map(async (report) => {
     const pdfBytes = await reportPdfForId(report.id);
     if (!pdfBytes) {
       renderedReports.set(report.id, null);
@@ -379,11 +395,14 @@ export async function POST(request: NextRequest) {
     }
   }));
   let reportRow = 3;
-  for (const [reportIndex, report] of listedReports.entries()) {
+  if (!embeddedReports.length) {
+    reportsSheet.getCell("A3").value = "Every corrective-action line in this export has an embedded photo, so no duplicate job-report pages are needed.";
+    reportsSheet.getCell("A3").font = { italic: true, color: { argb: "FF5B677A" } };
+  }
+  for (const [reportIndex, report] of embeddedReports.entries()) {
     const reportLabel = report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`;
     const address = `A${reportRow}`;
     reportLocations.set(report.id, address);
-    reportLabels.set(report.id, reportLabel);
     reportsSheet.getCell(address).value = `${report.facilityId || "Facility"} · Job report ${reportLabel} · ${report.reportDate || ""}`;
     reportsSheet.getCell(address).font = { bold: true, size: 14, color: { argb: "FF0C3B62" } };
     reportsSheet.getRow(reportRow).height = 24;
@@ -426,11 +445,7 @@ export async function POST(request: NextRequest) {
     for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, rowFill);
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const candidateIds = [...new Set([action.reportId, ...action.candidateReportIds])];
-    const candidateAttachments = [...new Map([
-      ...action.attachmentIds.map((id) => explicitAttachmentsById.get(id)).filter((item): item is Attachment & { base64: string } => Boolean(item)),
-      ...candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []),
-    ].map((attachment) => [attachmentContentKey(attachment), attachment] as const)).values()];
-    const matched = matchPhotos(action, candidateAttachments);
+    const matched = matchedPhotosByAction.get(action) || [];
     if (!matched.length) {
       const reportLabel = reportLabels.get(action.reportId) || candidateIds.map((id) => reportLabels.get(id)).find(Boolean);
       const reportId = reportLocations.has(action.reportId) ? action.reportId : candidateIds.find((id) => reportLocations.has(id));
