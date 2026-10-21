@@ -352,13 +352,15 @@ export async function POST(request: NextRequest) {
       const pageImage = workbook.addImage({ base64: pageBase64, extension: "png" });
       reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageIndex + 1} of ${renderedPages.length}`;
       reportsSheet.getCell(`A${reportRow + 1}`).font = { italic: true, color: { argb: "FF5B677A" } };
-      reportsSheet.addImage(pageImage, { tl: { col: 0, row: reportRow + 1 }, ext: { width: 760, height: 984 } });
+      reportsSheet.addImage(pageImage, { tl: { col: 0.35, row: reportRow + 1.15 }, ext: { width: 720, height: 932 } });
       for (let row = reportRow + 2; row <= reportRow + 55; row += 1) reportsSheet.getRow(row).height = 14;
       reportRow += 57;
     }
     reportRow += 2;
   }
-  reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
+  // Excel otherwise tries to fit the sheet's very tall image range on screen,
+  // which can open embedded reports around 10% zoom and make them look blank.
+  reportsSheet.views = [{ state: "frozen", ySplit: 1, zoomScale: 85, zoomScaleNormal: 85, showGridLines: false }];
 
   actions.forEach((action, index) => {
     const rowNumber = index + 6;
@@ -410,7 +412,7 @@ export async function POST(request: NextRequest) {
 
   sheet.views = [{ state: "frozen", ySplit: 5 }];
   sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9, printArea: `A1:L${lastFormRow}` };
-  photosSheet.views = [{ state: "frozen", ySplit: 1 }];
+  photosSheet.views = [{ state: "frozen", ySplit: 1, zoomScale: 85, zoomScaleNormal: 85, showGridLines: false }];
 
   // Add a true blank margin column to the left of the complete form. ExcelJS
   // does not move merged ranges or drawing anchors when columns are spliced,
