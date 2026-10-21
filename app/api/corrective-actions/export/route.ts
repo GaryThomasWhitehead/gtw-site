@@ -4,8 +4,9 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
+import { getDocumentProxy, renderPageAsImage } from "unpdf";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
-import { downloadReportAttachment } from "@/lib/pmReportPdfStorage";
+import { downloadReportAttachment, downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -41,6 +42,12 @@ type Attachment = {
   contentType: string;
   base64?: string;
   storagePath?: string;
+};
+
+type StoredReport = {
+  id?: string;
+  pdfBase64?: string;
+  pdfStoragePath?: string;
 };
 
 function config() {
@@ -102,6 +109,27 @@ function attachmentContentKey(attachment: Attachment) {
   return attachment.base64
     ? createHash("sha256").update(attachment.base64).digest("hex")
     : attachment.id;
+}
+
+function internalSheetLink(sheetName: string, address: string, label: string) {
+  const escapedSheet = sheetName.replace(/'/g, "''");
+  const escapedLabel = label.replace(/"/g, '""');
+  return { formula: `HYPERLINK("#'${escapedSheet}'!${address}","${escapedLabel}")`, result: label };
+}
+
+async function reportPdfForId(reportId: string) {
+  const { url, key, table } = config();
+  const trackingNumber = encodeURIComponent(`PMREPORT:${reportId}`);
+  const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
+    headers: headers(key),
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  const [row] = await response.json();
+  const report = row?.data as StoredReport | undefined;
+  if (!report) return null;
+  if (report.pdfStoragePath) return downloadReportPdf(url, key, report.pdfStoragePath);
+  return report.pdfBase64 ? Buffer.from(report.pdfBase64, "base64") : null;
 }
 
 async function attachmentsForReport(reportId: string) {
@@ -252,6 +280,7 @@ export async function POST(request: NextRequest) {
 
   const photoLocations = new Map<string, string>();
   const reportLabels = new Map<string, string>();
+  const reportLocations = new Map<string, string>();
   let photoRow = 3;
   const ensureFullPhoto = (attachment: Attachment, action: ExportAction) => {
     const existing = photoLocations.get(attachment.id);
@@ -272,31 +301,50 @@ export async function POST(request: NextRequest) {
   };
 
   const reportsSheet = workbook.addWorksheet("Job Reports", { properties: { tabColor: { argb: "FF1468A5" } } });
-  reportsSheet.getColumn("A").width = 24;
-  reportsSheet.getColumn("B").width = 26;
-  reportsSheet.getColumn("C").width = 22;
-  reportsSheet.getColumn("D").width = 24;
-  ["Facility", "Tracking / Section", "Report Date", "Report Reference"].forEach((label, index) => {
-    const cell = reportsSheet.getCell(1, index + 1);
-    cell.value = label;
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
-  });
-  reportsSheet.getCell("A2").note = "References are shown as plain text so recipients do not receive Excel external-link security warnings.";
+  reportsSheet.getColumn("A").width = 105;
+  reportsSheet.getCell("A1").value = "EMBEDDED JOB REPORTS";
+  reportsSheet.getCell("A1").font = { bold: true, size: 18, color: { argb: "FFFFFFFF" } };
+  reportsSheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
+  reportsSheet.getRow(1).height = 26;
   const listedReports = reportSections.length ? [...reportSections].sort((a, b) => a.reportPart - b.reportPart) : reportIds.map((reportId) => {
     const action = actions.find((item) => item.reportId === reportId || item.candidateReportIds.includes(reportId));
     return { id: reportId, facilityId: action?.facilityId || "", trackingNumber: action?.trackingNumber || "", reportDate: action?.reportDate || "", reportPart: 0 };
   });
-  listedReports.forEach((report, reportIndex) => {
-    const row = reportIndex + 2;
+  let reportRow = 3;
+  for (const [reportIndex, report] of listedReports.entries()) {
     const reportLabel = report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`;
-    reportsSheet.getCell(`A${row}`).value = report.facilityId || "Facility";
-    reportsSheet.getCell(`B${row}`).value = reportLabel;
-    reportsSheet.getCell(`C${row}`).value = report.reportDate || "";
-    reportsSheet.getCell(`D${row}`).value = `Job report: ${reportLabel}`;
-    reportsSheet.getCell(`D${row}`).font = { bold: true };
+    const address = `A${reportRow}`;
+    reportLocations.set(report.id, address);
     reportLabels.set(report.id, reportLabel);
-  });
+    reportsSheet.getCell(address).value = `${report.facilityId || "Facility"} · Job report ${reportLabel} · ${report.reportDate || ""}`;
+    reportsSheet.getCell(address).font = { bold: true, size: 14, color: { argb: "FF0C3B62" } };
+    reportsSheet.getRow(reportRow).height = 24;
+    const pdfBytes = await reportPdfForId(report.id);
+    if (!pdfBytes) {
+      reportsSheet.getCell(`A${reportRow + 1}`).value = "The saved PDF for this section is unavailable.";
+      reportRow += 4;
+      continue;
+    }
+    try {
+      const pdf = await getDocumentProxy(new Uint8Array(pdfBytes));
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const rendered = await renderPageAsImage(pdf, pageNumber, {
+          canvasImport: () => import("@napi-rs/canvas"),
+          scale: 0.9,
+        });
+        const pageImage = workbook.addImage({ base64: Buffer.from(rendered).toString("base64"), extension: "png" });
+        reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageNumber} of ${pdf.numPages}`;
+        reportsSheet.getCell(`A${reportRow + 1}`).font = { italic: true, color: { argb: "FF5B677A" } };
+        reportsSheet.addImage(pageImage, { tl: { col: 0, row: reportRow + 1 }, ext: { width: 760, height: 984 } });
+        for (let row = reportRow + 2; row <= reportRow + 55; row += 1) reportsSheet.getRow(row).height = 14;
+        reportRow += 57;
+      }
+    } catch {
+      reportsSheet.getCell(`A${reportRow + 1}`).value = "This saved PDF could not be displayed inside the workbook.";
+      reportRow += 4;
+    }
+    reportRow += 2;
+  }
   reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
 
   actions.forEach((action, index) => {
@@ -323,12 +371,16 @@ export async function POST(request: NextRequest) {
     const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
       const reportLabel = reportLabels.get(action.reportId) || candidateIds.map((id) => reportLabels.get(id)).find(Boolean);
-      sheet.getCell(`L${rowNumber}`).value = reportLabel ? `See Job Reports sheet\n${reportLabel}` : "Job report unavailable";
+      const reportId = reportLocations.has(action.reportId) ? action.reportId : candidateIds.find((id) => reportLocations.has(id));
+      const reportAddress = reportId ? reportLocations.get(reportId) : "";
+      sheet.getCell(`L${rowNumber}`).value = reportLabel && reportAddress
+        ? internalSheetLink("Job Reports", reportAddress, `Open job report ${reportLabel}`)
+        : "Job report unavailable";
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, bold: true, size: 9 };
       return;
     }
-    ensureFullPhoto(matched[0], action);
-    sheet.getCell(`L${rowNumber}`).value = `See Photos sheet\n${matched.length} embedded photo${matched.length === 1 ? "" : "s"}`;
+    const firstPhotoAddress = ensureFullPhoto(matched[0], action);
+    sheet.getCell(`L${rowNumber}`).value = internalSheetLink("Photos", firstPhotoAddress, `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
     sheet.getCell(`L${rowNumber}`).font = { bold: true, size: 9 };
     matched.slice(0, 2).forEach((attachment, photoIndex) => {
       const extension = imageExtension(attachment.contentType, attachment.filename);
@@ -338,6 +390,7 @@ export async function POST(request: NextRequest) {
       sheet.addImage(imageId, {
         tl: { col: 11 + photoIndex * 0.5, row: rowNumber - 1 + 0.08 },
         ext: { width: 75, height: 52 },
+        hyperlinks: { hyperlink: `#'Photos'!${fullAddress}`, tooltip: "Open full-size photo" },
       });
     });
   });
