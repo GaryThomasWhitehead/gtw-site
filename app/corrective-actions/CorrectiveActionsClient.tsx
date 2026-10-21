@@ -248,7 +248,8 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         actionMap.set(key, action);
       });
       const actions = [...actionMap.values()];
-      const reportSections = location.reports.map((report) => ({
+      const locationReports = reports.filter((report) => locationKey(report) === location.key);
+      const reportSections = locationReports.map((report) => ({
         id: report.id,
         facilityId: report.facilityId || report.customerName || "",
         trackingNumber: report.trackingNumber || baseTracking(report),
@@ -315,19 +316,25 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       {!readOnly && <div className={styles.emailBar}><label>Email to <input value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="email@example.com, another@example.com" /></label><button disabled={emailing || !totalActions} onClick={() => void emailForm()}>{emailing ? "Emailing…" : "Email This Form"}</button></div>}
       {message && <p className={styles.success}>{message}</p>}{error && <p className={styles.error}>{error}</p>}
       {loading ? <p className={styles.empty}>Loading corrective actions…</p> : locationGroups.length ? <div className={styles.locationForms}>{locationGroups.map((location) => {
+        const uniqueActionMap = new Map<string, { report: Report; action: Action; actionIndex: number; pictures: ReportAttachment[] }>();
+        location.reports.forEach((report) => (drafts[report.id] || []).forEach((action, actionIndex) => {
+          const key = `${baseTracking(report)}|${report.reportDate || ""}|${action.assetTag.trim().toLowerCase()}|${action.repairNeeded.trim().toLowerCase()}`;
+          const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
+          const current = uniqueActionMap.get(key);
+          if (!current || pictures.length > current.pictures.length) uniqueActionMap.set(key, { report, action, actionIndex, pictures });
+        }));
+        const uniqueActions = [...uniqueActionMap.values()];
         const locationDates = location.reports.map((report) => report.reportDate || "").filter(Boolean).sort();
         const locationServiceChannelNumbers = [...new Set(location.reports.map((report) => report.trackingNumber).filter(Boolean))];
-        const locationActionCount = location.reports.reduce((total, report) => total + (drafts[report.id] || []).length, 0);
+        const locationActionCount = uniqueActions.length;
         const locationParts = partsForLocation(location.key, Math.max(1, locationActionCount));
-        let locationPartIndex = 0;
-        const locationPartRows = location.reports.flatMap((report) => [
-          <tr className={fedexStyles.sourceRow} key={`${report.id}-parts-source`}><td colSpan={6}>Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button aria-hidden="true" tabIndex={-1} style={{ visibility: "hidden" }}>+ Add Line</button>}</td></tr>,
-          ...(drafts[report.id] || []).map((action) => {
-            const index = locationPartIndex++;
+        const locationPartRows = [
+          <tr className={fedexStyles.sourceRow} key={`${location.key}-parts-source`}><td colSpan={6}>Tracking #{baseTracking(location.reports[0]) || "not entered"} · {locationDates[0] || "No date"}{!readOnly && <button aria-hidden="true" tabIndex={-1} style={{ visibility: "hidden" }}>+ Add Line</button>}</td></tr>,
+          ...uniqueActions.map(({ action }, index) => {
             const part = locationParts[index] || blankPart();
             return <tr key={`${action.id}-part`}>{(Object.keys(part) as (keyof Part)[]).map((field) => <td key={field}><input className={controlStyles.partsInput} disabled={readOnly} value={part[field]} onChange={(event) => updatePart(location.key, index, field, event.target.value)} aria-label={`${location.name} ${field} row ${index + 1}`} /></td>)}</tr>;
           }),
-        ]);
+        ];
         return <section className={fedexStyles.fedexForm} key={location.key}>
         <div className={styles.locationHeader}><div><h2>{location.name}</h2><span>{locationActionCount} open action line{locationActionCount === 1 ? "" : "s"}</span></div>{!readOnly && <div><button disabled={exporting} onClick={() => void downloadFedexForm(location)}>{exporting ? "Building…" : `Download ${location.name} Form`}</button><button className={styles.archiveButton} disabled={archiving} onClick={() => void archiveAndClear(location)}>{archiving ? "Archiving…" : "Uploaded / Archive / Clear"}</button></div>}</div>
         <div className={fedexStyles.jobPlans}>{JOB_PLANS.map((plan) => <div key={plan}>{plan}<span>JOB PLAN</span></div>)}<div className={fedexStyles.instructions}>INSTRUCTIONS</div></div>
@@ -337,10 +344,9 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
           <div><strong>ServiceChannel WO#:</strong><span>{locationServiceChannelNumbers.join(", ") || "—"}</span></div>
         </div>
         <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{locationPartRows}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
-        <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{location.reports.flatMap((report) => [
-          <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
-          ...(drafts[report.id] || []).map((action, actionIndex) => {
-            const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
+        <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{[
+          <tr className={fedexStyles.sourceRow} key={`${location.key}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{location.name}</strong> · Tracking #{baseTracking(location.reports[0]) || "not entered"} · {locationDates[0] || "No date"}{!readOnly && <button onClick={() => add(location.reports[0])}>+ Add Line</button>}</td></tr>,
+          ...uniqueActions.map(({ report, action, actionIndex, pictures }) => {
             const reportSection = matchingReportSection(report, action, actionIndex, reports);
             const reportId = reportSection.id || action.sourceReportId || report.id;
             const reportSectionLabel = reportSection.trackingNumber || report.trackingNumber || "job report";
@@ -353,7 +359,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
               {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
             </tr>;
           }),
-        ])}</tbody></table></div></section></div>
+        ]}</tbody></table></div></section></div>
       </section>;
       })}</div> : <p className={styles.empty}>{readOnly ? "No corrective actions are currently listed." : "No corrective actions have been found yet. Use Scan New PM Reports to review unscanned PM reports."}</p>}
     </section>

@@ -212,6 +212,7 @@ export async function POST(request: NextRequest) {
 
   const photoLocations = new Map<string, string>();
   const reportLocations = new Map<string, string>();
+  const reportUrls = new Map<string, string>();
   let photoRow = 3;
   const ensureFullPhoto = (attachment: Attachment, action: ExportAction) => {
     const existing = photoLocations.get(attachment.id);
@@ -259,6 +260,7 @@ export async function POST(request: NextRequest) {
     reportsSheet.getCell(`D${row}`).value = { text: "Open PDF Job Report", hyperlink: reportUrl, tooltip: "Open the matching online job-report section" };
     reportsSheet.getCell(`D${row}`).font = { color: { argb: "FF0563C1" }, underline: true, bold: true };
     reportLocations.set(report.id, `D${row}`);
+    reportUrls.set(report.id, reportUrl);
   });
   reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
 
@@ -282,9 +284,9 @@ export async function POST(request: NextRequest) {
     const candidateAttachments = candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []);
     const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
-      const reportAddress = reportLocations.get(action.reportId);
-      sheet.getCell(`L${rowNumber}`).value = reportAddress
-        ? internalSheetLink("Job Reports", reportAddress, "View PDF Job Report")
+      const reportUrl = reportUrls.get(action.reportId) || candidateIds.map((id) => reportUrls.get(id)).find(Boolean);
+      sheet.getCell(`L${rowNumber}`).value = reportUrl
+        ? { text: "View PDF Job Report", hyperlink: reportUrl, tooltip: "Open the matching online job-report section" }
         : "Job report unavailable";
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
