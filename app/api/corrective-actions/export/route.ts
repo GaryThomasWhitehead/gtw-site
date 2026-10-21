@@ -310,6 +310,29 @@ export async function POST(request: NextRequest) {
     const action = actions.find((item) => item.reportId === reportId || item.candidateReportIds.includes(reportId));
     return { id: reportId, facilityId: action?.facilityId || "", trackingNumber: action?.trackingNumber || "", reportDate: action?.reportDate || "", reportPart: 0 };
   });
+  // PDF rendering is CPU-intensive. Render all report sections concurrently at
+  // a readable workbook resolution so the export stays within Vercel's limit.
+  const renderedReports = new Map<string, string[] | null>();
+  await Promise.all(listedReports.map(async (report) => {
+    const pdfBytes = await reportPdfForId(report.id);
+    if (!pdfBytes) {
+      renderedReports.set(report.id, null);
+      return;
+    }
+    try {
+      const pdf = await getDocumentProxy(new Uint8Array(pdfBytes));
+      const pages = await Promise.all(Array.from({ length: pdf.numPages }, async (_, pageIndex) => {
+        const rendered = await renderPageAsImage(pdf, pageIndex + 1, {
+          canvasImport: () => import("@napi-rs/canvas"),
+          scale: 0.62,
+        });
+        return Buffer.from(rendered).toString("base64");
+      }));
+      renderedReports.set(report.id, pages);
+    } catch {
+      renderedReports.set(report.id, null);
+    }
+  }));
   let reportRow = 3;
   for (const [reportIndex, report] of listedReports.entries()) {
     const reportLabel = report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`;
@@ -319,29 +342,19 @@ export async function POST(request: NextRequest) {
     reportsSheet.getCell(address).value = `${report.facilityId || "Facility"} · Job report ${reportLabel} · ${report.reportDate || ""}`;
     reportsSheet.getCell(address).font = { bold: true, size: 14, color: { argb: "FF0C3B62" } };
     reportsSheet.getRow(reportRow).height = 24;
-    const pdfBytes = await reportPdfForId(report.id);
-    if (!pdfBytes) {
+    const renderedPages = renderedReports.get(report.id);
+    if (!renderedPages) {
       reportsSheet.getCell(`A${reportRow + 1}`).value = "The saved PDF for this section is unavailable.";
       reportRow += 4;
       continue;
     }
-    try {
-      const pdf = await getDocumentProxy(new Uint8Array(pdfBytes));
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        const rendered = await renderPageAsImage(pdf, pageNumber, {
-          canvasImport: () => import("@napi-rs/canvas"),
-          scale: 0.9,
-        });
-        const pageImage = workbook.addImage({ base64: Buffer.from(rendered).toString("base64"), extension: "png" });
-        reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageNumber} of ${pdf.numPages}`;
-        reportsSheet.getCell(`A${reportRow + 1}`).font = { italic: true, color: { argb: "FF5B677A" } };
-        reportsSheet.addImage(pageImage, { tl: { col: 0, row: reportRow + 1 }, ext: { width: 760, height: 984 } });
-        for (let row = reportRow + 2; row <= reportRow + 55; row += 1) reportsSheet.getRow(row).height = 14;
-        reportRow += 57;
-      }
-    } catch {
-      reportsSheet.getCell(`A${reportRow + 1}`).value = "This saved PDF could not be displayed inside the workbook.";
-      reportRow += 4;
+    for (const [pageIndex, pageBase64] of renderedPages.entries()) {
+      const pageImage = workbook.addImage({ base64: pageBase64, extension: "png" });
+      reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageIndex + 1} of ${renderedPages.length}`;
+      reportsSheet.getCell(`A${reportRow + 1}`).font = { italic: true, color: { argb: "FF5B677A" } };
+      reportsSheet.addImage(pageImage, { tl: { col: 0, row: reportRow + 1 }, ext: { width: 760, height: 984 } });
+      for (let row = reportRow + 2; row <= reportRow + 55; row += 1) reportsSheet.getRow(row).height = 14;
+      reportRow += 57;
     }
     reportRow += 2;
   }
