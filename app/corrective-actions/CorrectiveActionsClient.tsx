@@ -226,24 +226,36 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       }
       await savePartsIfNeeded();
       setDirtyReportIds(new Set());
-      const seenActions = new Set<string>();
-      const actions = location.reports.flatMap((report) => (drafts[report.id] || []).map((action, actionIndex) => {
+      const actionMap = new Map<string, Action & { reportId: string; candidateReportIds: string[]; facilityId: string; trackingNumber: string; reportDate: string }>();
+      location.reports.flatMap((report) => (drafts[report.id] || []).map((action, actionIndex) => {
         const reportSection = matchingReportSection(report, action, actionIndex, reports);
         return {
           ...action,
           serviceChannelWo: baseTracking(report),
           reportId: reportSection.id,
+          candidateReportIds: [...new Set([action.sourceReportId, report.id, reportSection.id].filter(Boolean) as string[])],
           facilityId: report.facilityId || report.customerName || "",
           trackingNumber: baseTracking(report),
           reportDate: report.reportDate || "",
         };
-      })).filter((action) => {
+      })).forEach((action) => {
         const key = `${baseTracking(location.reports[0])}|${action.reportDate}|${action.assetTag.trim().toLowerCase()}|${action.repairNeeded.trim().toLowerCase()}`;
-        if (seenActions.has(key)) return false;
-        seenActions.add(key);
-        return true;
+        const existing = actionMap.get(key);
+        if (existing) {
+          existing.candidateReportIds = [...new Set([...existing.candidateReportIds, ...action.candidateReportIds])];
+          return;
+        }
+        actionMap.set(key, action);
       });
-      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts: partsForLocation(location.key, actions.length), locationName: location.name }) });
+      const actions = [...actionMap.values()];
+      const reportSections = location.reports.map((report) => ({
+        id: report.id,
+        facilityId: report.facilityId || report.customerName || "",
+        trackingNumber: report.trackingNumber || baseTracking(report),
+        reportDate: report.reportDate || "",
+        reportPart: Number(report.reportPart || 0),
+      }));
+      const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, reportSections, parts: partsForLocation(location.key, actions.length), locationName: location.name }) });
       if (!response.ok) throw new Error(await response.text());
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";

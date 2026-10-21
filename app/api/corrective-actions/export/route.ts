@@ -19,6 +19,15 @@ type ExportAction = {
   repairNeeded: string;
   urgency: string;
   serviceChannelWo: string;
+  candidateReportIds: string[];
+};
+
+type ExportReportSection = {
+  id: string;
+  facilityId: string;
+  trackingNumber: string;
+  reportDate: string;
+  reportPart: number;
 };
 
 type Attachment = {
@@ -114,11 +123,24 @@ export async function POST(request: NextRequest) {
     repairNeeded: safe(item.repairNeeded, 1500),
     urgency: safe(item.urgency, 80),
     serviceChannelWo: safe(item.trackingNumber || item.serviceChannelWo, 120),
+    candidateReportIds: Array.isArray(item.candidateReportIds)
+      ? [...new Set(item.candidateReportIds.map((id) => safe(id, 120)).filter(Boolean))].slice(0, 40)
+      : [],
   })).filter((item: ExportAction) => item.reportId && (item.assetTag || item.repairNeeded));
   if (!actions.length) return NextResponse.json({ error: "There are no corrective-action lines to export." }, { status: 400 });
   const parts = (Array.isArray(body?.parts) ? body.parts : []).slice(0, actions.length);
 
-  const reportIds = [...new Set(actions.map((action) => action.reportId))];
+  const reportSections: ExportReportSection[] = (Array.isArray(body?.reportSections) ? body.reportSections : []).map((item: Record<string, unknown>) => ({
+    id: safe(item.id, 120),
+    facilityId: safe(item.facilityId, 120),
+    trackingNumber: safe(item.trackingNumber, 120),
+    reportDate: safe(item.reportDate, 80),
+    reportPart: Math.max(0, Number(item.reportPart || 0)),
+  })).filter((item: ExportReportSection) => item.id);
+  const reportIds = [...new Set([
+    ...reportSections.map((report) => report.id),
+    ...actions.flatMap((action) => [action.reportId, ...action.candidateReportIds]),
+  ])];
   const attachmentsByReport = new Map<string, Attachment[]>();
   for (let offset = 0; offset < reportIds.length; offset += 4) {
     const batch = reportIds.slice(offset, offset + 4);
@@ -224,17 +246,19 @@ export async function POST(request: NextRequest) {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
   });
-  reportIds.forEach((reportId, reportIndex) => {
-    const action = actions.find((item) => item.reportId === reportId);
-    if (!action) return;
+  const listedReports = reportSections.length ? [...reportSections].sort((a, b) => a.reportPart - b.reportPart) : reportIds.map((reportId) => {
+    const action = actions.find((item) => item.reportId === reportId || item.candidateReportIds.includes(reportId));
+    return { id: reportId, facilityId: action?.facilityId || "", trackingNumber: action?.trackingNumber || "", reportDate: action?.reportDate || "", reportPart: 0 };
+  });
+  listedReports.forEach((report, reportIndex) => {
     const row = reportIndex + 2;
-    const reportUrl = `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(reportId)}`;
-    reportsSheet.getCell(`A${row}`).value = action.facilityId || "Facility";
-    reportsSheet.getCell(`B${row}`).value = action.trackingNumber || "Tracking not entered";
-    reportsSheet.getCell(`C${row}`).value = action.reportDate || "";
+    const reportUrl = `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(report.id)}`;
+    reportsSheet.getCell(`A${row}`).value = report.facilityId || "Facility";
+    reportsSheet.getCell(`B${row}`).value = report.trackingNumber || "Tracking not entered";
+    reportsSheet.getCell(`C${row}`).value = report.reportDate || "";
     reportsSheet.getCell(`D${row}`).value = { text: "Open PDF Job Report", hyperlink: reportUrl, tooltip: "Open the matching online job-report section" };
     reportsSheet.getCell(`D${row}`).font = { color: { argb: "FF0563C1" }, underline: true, bold: true };
-    reportLocations.set(reportId, `D${row}`);
+    reportLocations.set(report.id, `D${row}`);
   });
   reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
 
@@ -254,7 +278,9 @@ export async function POST(request: NextRequest) {
     const rowFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: rowNumber % 2 === 0 ? "FFFFFFFF" : "FFEAD3F8" } };
     for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, rowFill);
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
-    const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
+    const candidateIds = [...new Set([action.reportId, ...action.candidateReportIds])];
+    const candidateAttachments = candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []);
+    const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
       const reportAddress = reportLocations.get(action.reportId);
       sheet.getCell(`L${rowNumber}`).value = reportAddress
