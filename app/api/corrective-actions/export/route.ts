@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
@@ -95,6 +96,12 @@ function imageExtension(contentType: string, filename: string): "png" | "jpeg" |
   if (value.includes("jpeg") || value.includes("jpg")) return "jpeg";
   if (value.includes("gif")) return "gif";
   return null;
+}
+
+function attachmentContentKey(attachment: Attachment) {
+  return attachment.base64
+    ? createHash("sha256").update(attachment.base64).digest("hex")
+    : attachment.id;
 }
 
 async function attachmentsForReport(reportId: string) {
@@ -317,7 +324,7 @@ export async function POST(request: NextRequest) {
     const candidateAttachments = [...new Map([
       ...action.attachmentIds.map((id) => explicitAttachmentsById.get(id)).filter((item): item is Attachment & { base64: string } => Boolean(item)),
       ...candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []),
-    ].map((attachment) => [attachment.id, attachment] as const)).values()];
+    ].map((attachment) => [attachmentContentKey(attachment), attachment] as const)).values()];
     const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
       const reportUrl = reportUrls.get(action.reportId) || candidateIds.map((id) => reportUrls.get(id)).find(Boolean);
