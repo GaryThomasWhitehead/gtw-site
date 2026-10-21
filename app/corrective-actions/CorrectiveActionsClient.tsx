@@ -226,14 +226,16 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       }
       await savePartsIfNeeded();
       setDirtyReportIds(new Set());
-      const actionMap = new Map<string, Action & { reportId: string; candidateReportIds: string[]; facilityId: string; trackingNumber: string; reportDate: string }>();
+      const actionMap = new Map<string, Action & { reportId: string; candidateReportIds: string[]; attachmentIds: string[]; facilityId: string; trackingNumber: string; reportDate: string }>();
       location.reports.flatMap((report) => (drafts[report.id] || []).map((action, actionIndex) => {
         const reportSection = matchingReportSection(report, action, actionIndex, reports);
+        const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
         return {
           ...action,
           serviceChannelWo: baseTracking(report),
           reportId: reportSection.id,
           candidateReportIds: [...new Set([action.sourceReportId, report.id, reportSection.id].filter(Boolean) as string[])],
+          attachmentIds: pictures.map((picture) => picture.id),
           facilityId: report.facilityId || report.customerName || "",
           trackingNumber: baseTracking(report),
           reportDate: report.reportDate || "",
@@ -243,6 +245,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         const existing = actionMap.get(key);
         if (existing) {
           existing.candidateReportIds = [...new Set([...existing.candidateReportIds, ...action.candidateReportIds])];
+          existing.attachmentIds = [...new Set([...existing.attachmentIds, ...action.attachmentIds])].slice(0, 4);
           return;
         }
         actionMap.set(key, action);

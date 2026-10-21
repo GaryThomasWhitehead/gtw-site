@@ -21,6 +21,7 @@ type ExportAction = {
   urgency: string;
   serviceChannelWo: string;
   candidateReportIds: string[];
+  attachmentIds: string[];
 };
 
 type ExportReportSection = {
@@ -115,6 +116,23 @@ async function attachmentsForReport(reportId: string) {
   return loaded.filter((item): item is Attachment & { base64: string } => Boolean(item?.base64));
 }
 
+async function attachmentsForIds(ids: string[]) {
+  const { url, key, table } = config();
+  const loaded = await Promise.all(ids.map(async (id) => {
+    const trackingNumber = encodeURIComponent(`PMATTACH:${id}`);
+    const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, { headers: headers(key), cache: "no-store" });
+    if (!response.ok) return null;
+    const [row] = await response.json();
+    const item = row?.data as Attachment | undefined;
+    if (!item || !imageExtension(item.contentType, item.filename)) return null;
+    if (item.base64) return item as Attachment & { base64: string };
+    if (!item.storagePath) return null;
+    const bytes = await downloadReportAttachment(url, key, item.storagePath);
+    return bytes ? { ...item, base64: bytes.toString("base64") } : null;
+  }));
+  return loaded.filter((item): item is Attachment & { base64: string } => Boolean(item?.base64));
+}
+
 export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key } = config();
@@ -134,6 +152,9 @@ export async function POST(request: NextRequest) {
     serviceChannelWo: safe(item.trackingNumber || item.serviceChannelWo, 120),
     candidateReportIds: Array.isArray(item.candidateReportIds)
       ? [...new Set(item.candidateReportIds.map((id) => safe(id, 120)).filter(Boolean))].slice(0, 40)
+      : [],
+    attachmentIds: Array.isArray(item.attachmentIds)
+      ? [...new Set(item.attachmentIds.map((id) => safe(id, 120)).filter(Boolean))].slice(0, 4)
       : [],
   })).filter((item: ExportAction) => item.reportId && (item.assetTag || item.repairNeeded));
   if (!actions.length) return NextResponse.json({ error: "There are no corrective-action lines to export." }, { status: 400 });
@@ -156,6 +177,9 @@ export async function POST(request: NextRequest) {
     const results = await Promise.all(batch.map(async (reportId) => [reportId, await attachmentsForReport(reportId)] as const));
     for (const [reportId, attachments] of results) attachmentsByReport.set(reportId, attachments);
   }
+  const requestedAttachmentIds = [...new Set(actions.flatMap((action) => action.attachmentIds))];
+  const explicitAttachments = await attachmentsForIds(requestedAttachmentIds);
+  const explicitAttachmentsById = new Map(explicitAttachments.map((attachment) => [attachment.id, attachment]));
 
   const templatePath = path.join(process.cwd(), "public", "templates", "FXG Correctives and Parts Runtime.xlsx");
   const workbook = new ExcelJS.Workbook();
@@ -290,7 +314,10 @@ export async function POST(request: NextRequest) {
     for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, rowFill);
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const candidateIds = [...new Set([action.reportId, ...action.candidateReportIds])];
-    const candidateAttachments = candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []);
+    const candidateAttachments = [
+      ...action.attachmentIds.map((id) => explicitAttachmentsById.get(id)).filter((item): item is Attachment & { base64: string } => Boolean(item)),
+      ...candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []),
+    ];
     const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
       const reportUrl = reportUrls.get(action.reportId) || candidateIds.map((id) => reportUrls.get(id)).find(Boolean);
