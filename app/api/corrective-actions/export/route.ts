@@ -314,10 +314,10 @@ export async function POST(request: NextRequest) {
     for (const column of ["H", "I", "J", "K", "L"]) setCellFill(`${column}${rowNumber}`, rowFill);
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const candidateIds = [...new Set([action.reportId, ...action.candidateReportIds])];
-    const candidateAttachments = [
+    const candidateAttachments = [...new Map([
       ...action.attachmentIds.map((id) => explicitAttachmentsById.get(id)).filter((item): item is Attachment & { base64: string } => Boolean(item)),
       ...candidateIds.flatMap((reportId) => attachmentsByReport.get(reportId) || []),
-    ];
+    ].map((attachment) => [attachment.id, attachment] as const)).values()];
     const matched = matchPhotos(action, candidateAttachments);
     if (!matched.length) {
       const reportUrl = reportUrls.get(action.reportId) || candidateIds.map((id) => reportUrls.get(id)).find(Boolean);
