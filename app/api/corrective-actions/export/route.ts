@@ -4,9 +4,8 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
-import { getDocumentProxy, renderPageAsImage } from "unpdf";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
-import { downloadReportAttachment, downloadReportPdf } from "@/lib/pmReportPdfStorage";
+import { downloadReportAttachment } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -46,14 +45,14 @@ type Attachment = {
 
 type StoredReport = {
   id?: string;
-  pdfBase64?: string;
-  pdfStoragePath?: string;
-};
-
-type RenderedReportPage = {
-  base64: string;
-  width: number;
-  height: number;
+  reportPart?: number;
+  reportPartCount?: number;
+  items?: Array<{
+    id?: string;
+    unitId?: string;
+    description?: string;
+    needsCorrection?: boolean;
+  }>;
 };
 
 function config() {
@@ -123,46 +122,7 @@ function internalSheetLink(sheetName: string, address: string, label: string) {
   return { formula: `HYPERLINK("#'${escapedSheet}'!${address}","${escapedLabel}")`, result: label };
 }
 
-async function trimRenderedPage(rendered: ArrayBuffer): Promise<RenderedReportPage | null> {
-  const { createCanvas, loadImage } = await import("@napi-rs/canvas");
-  const source = Buffer.from(rendered);
-  const image = await loadImage(source);
-  const canvas = createCanvas(image.width, image.height);
-  const context = canvas.getContext("2d");
-  context.drawImage(image, 0, 0);
-  const pixels = context.getImageData(0, 0, image.width, image.height).data;
-  let left = image.width;
-  let top = image.height;
-  let right = -1;
-  let bottom = -1;
-  for (let y = 0; y < image.height; y += 2) {
-    for (let x = 0; x < image.width; x += 2) {
-      const offset = (y * image.width + x) * 4;
-      if (pixels[offset + 3] > 10 && (pixels[offset] < 246 || pixels[offset + 1] < 246 || pixels[offset + 2] < 246)) {
-        left = Math.min(left, x);
-        top = Math.min(top, y);
-        right = Math.max(right, x);
-        bottom = Math.max(bottom, y);
-      }
-    }
-  }
-  if (right < left || bottom < top) return null;
-  const padding = 10;
-  left = Math.max(0, left - padding);
-  top = Math.max(0, top - padding);
-  right = Math.min(image.width - 1, right + padding);
-  bottom = Math.min(image.height - 1, bottom + padding);
-  const width = right - left + 1;
-  const height = bottom - top + 1;
-  const cropped = createCanvas(width, height);
-  const croppedContext = cropped.getContext("2d");
-  croppedContext.fillStyle = "#ffffff";
-  croppedContext.fillRect(0, 0, width, height);
-  croppedContext.drawImage(image, left, top, width, height, 0, 0, width, height);
-  return { base64: cropped.toBuffer("image/png").toString("base64"), width, height };
-}
-
-async function reportPdfForId(reportId: string) {
+async function reportDataForId(reportId: string) {
   const { url, key, table } = config();
   const trackingNumber = encodeURIComponent(`PMREPORT:${reportId}`);
   const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
@@ -172,9 +132,7 @@ async function reportPdfForId(reportId: string) {
   if (!response.ok) return null;
   const [row] = await response.json();
   const report = row?.data as StoredReport | undefined;
-  if (!report) return null;
-  if (report.pdfStoragePath) return downloadReportPdf(url, key, report.pdfStoragePath);
-  return report.pdfBase64 ? Buffer.from(report.pdfBase64, "base64") : null;
+  return report || null;
 }
 
 async function attachmentsForReport(reportId: string) {
@@ -354,8 +312,12 @@ export async function POST(request: NextRequest) {
   };
 
   const reportsSheet = workbook.addWorksheet("Job Reports", { properties: { tabColor: { argb: "FF1468A5" } } });
-  reportsSheet.getColumn("A").width = 105;
-  reportsSheet.getCell("A1").value = "EMBEDDED JOB REPORTS";
+  reportsSheet.getColumn("A").width = 10;
+  reportsSheet.getColumn("B").width = 38;
+  reportsSheet.getColumn("C").width = 95;
+  reportsSheet.getColumn("D").width = 18;
+  reportsSheet.getCell("A1").value = "JOB REPORT SECTIONS";
+  reportsSheet.mergeCells("A1:D1");
   reportsSheet.getCell("A1").font = { bold: true, size: 18, color: { argb: "FFFFFFFF" } };
   reportsSheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
   reportsSheet.getRow(1).height = 26;
@@ -366,66 +328,50 @@ export async function POST(request: NextRequest) {
   listedReports.forEach((report, reportIndex) => {
     reportLabels.set(report.id, report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`);
   });
-  const reportsNeededForMissingPhotos = new Set(actions
-    .filter((action) => !(matchedPhotosByAction.get(action) || []).length)
-    .map((action) => action.reportId));
-  const embeddedReports = listedReports.filter((report) => reportsNeededForMissingPhotos.has(report.id));
-  // PDF rendering is CPU-intensive. Render all report sections concurrently at
-  // a readable workbook resolution. Only reports needed by a line without a
-  // photo are included; photo-backed lines already navigate to the Photos tab.
-  const renderedReports = new Map<string, RenderedReportPage[] | null>();
-  await Promise.all(embeddedReports.map(async (report) => {
-    const pdfBytes = await reportPdfForId(report.id);
-    if (!pdfBytes) {
-      renderedReports.set(report.id, null);
-      return;
-    }
-    try {
-      const pdf = await getDocumentProxy(new Uint8Array(pdfBytes));
-      const pages = await Promise.all(Array.from({ length: pdf.numPages }, async (_, pageIndex) => {
-        const rendered = await renderPageAsImage(pdf, pageIndex + 1, {
-          canvasImport: () => import("@napi-rs/canvas"),
-          scale: 0.62,
-        });
-        return trimRenderedPage(rendered);
-      }));
-      renderedReports.set(report.id, pages.filter((page): page is RenderedReportPage => Boolean(page)));
-    } catch {
-      renderedReports.set(report.id, null);
-    }
-  }));
+  const storedReports = new Map(await Promise.all(listedReports.map(async (report) => [report.id, await reportDataForId(report.id)] as const)));
   let reportRow = 3;
-  if (!embeddedReports.length) {
-    reportsSheet.getCell("A3").value = "Every corrective-action line in this export has an embedded photo, so no duplicate job-report pages are needed.";
-    reportsSheet.getCell("A3").font = { italic: true, color: { argb: "FF5B677A" } };
-  }
-  for (const [reportIndex, report] of embeddedReports.entries()) {
+  for (const [reportIndex, report] of listedReports.entries()) {
     const reportLabel = report.trackingNumber || `Job report section ${report.reportPart || reportIndex + 1}`;
     const address = `A${reportRow}`;
     reportLocations.set(report.id, address);
     reportsSheet.getCell(address).value = `${report.facilityId || "Facility"} · Job report ${reportLabel} · ${report.reportDate || ""}`;
     reportsSheet.getCell(address).font = { bold: true, size: 14, color: { argb: "FF0C3B62" } };
+    reportsSheet.mergeCells(`A${reportRow}:D${reportRow}`);
     reportsSheet.getRow(reportRow).height = 24;
-    const renderedPages = renderedReports.get(report.id);
-    if (!renderedPages) {
-      reportsSheet.getCell(`A${reportRow + 1}`).value = "The saved PDF for this section is unavailable.";
+    ["Item", "Unit / Task", "Description of Findings", "Correction Needed"].forEach((label, index) => {
+      const cell = reportsSheet.getCell(reportRow + 1, index + 1);
+      cell.value = label;
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7B219F" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    });
+    const savedReport = storedReports.get(report.id);
+    const allItems = savedReport?.items || [];
+    const sectionIndex = Math.max(0, Number(savedReport?.reportPart || report.reportPart || reportIndex + 1) - 1);
+    const items = allItems.length > 5 ? allItems.slice(sectionIndex * 5, sectionIndex * 5 + 5) : allItems;
+    if (!items.length) {
+      reportsSheet.mergeCells(`A${reportRow + 2}:D${reportRow + 2}`);
+      reportsSheet.getCell(`A${reportRow + 2}`).value = "No saved task details were found for this section.";
       reportRow += 4;
       continue;
     }
-    for (const [pageIndex, page] of renderedPages.entries()) {
-      const pageImage = workbook.addImage({ base64: page.base64, extension: "png" });
-      reportsSheet.getCell(`A${reportRow + 1}`).value = `Page ${pageIndex + 1} of ${renderedPages.length}`;
-      reportsSheet.getCell(`A${reportRow + 1}`).font = { italic: true, color: { argb: "FF5B677A" } };
-      const displayHeight = Math.max(80, Math.min(932, Math.round(720 * page.height / page.width)));
-      reportsSheet.addImage(pageImage, { tl: { col: 0.35, row: reportRow + 1.15 }, ext: { width: 720, height: displayHeight } });
-      const rowsUsed = Math.max(6, Math.ceil((displayHeight + 28) / 18.5));
-      for (let row = reportRow + 2; row <= reportRow + rowsUsed; row += 1) reportsSheet.getRow(row).height = 14;
-      reportRow += rowsUsed + 1;
-    }
-    reportRow += 2;
+    items.forEach((item, itemIndex) => {
+      const row = reportRow + 2 + itemIndex;
+      reportsSheet.getCell(`A${row}`).value = itemIndex + 1 + reportIndex * 5;
+      reportsSheet.getCell(`B${row}`).value = safe(item.unitId || "Task", 250);
+      reportsSheet.getCell(`C${row}`).value = safe(item.description || "No description entered", 1500);
+      reportsSheet.getCell(`D${row}`).value = item.needsCorrection ? "Yes" : "No";
+      const fill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: itemIndex % 2 ? "FFF4E9FA" : "FFFFFFFF" } };
+      for (let column = 1; column <= 4; column += 1) {
+        const cell = reportsSheet.getCell(row, column);
+        cell.fill = fill;
+        cell.alignment = { vertical: "top", wrapText: true };
+        cell.border = { bottom: { style: "thin", color: { argb: "FFD4C0E0" } } };
+      }
+      reportsSheet.getRow(row).height = Math.max(34, Math.min(90, wrappedLineCount(String(item.description || ""), 70) * 16 + 8));
+    });
+    reportRow += items.length + 4;
   }
-  // Excel otherwise tries to fit the sheet's very tall image range on screen,
-  // which can open embedded reports around 10% zoom and make them look blank.
   reportsSheet.views = [{ state: "frozen", ySplit: 1, zoomScale: 85, zoomScaleNormal: 85, showGridLines: false }];
 
   actions.forEach((action, index) => {
