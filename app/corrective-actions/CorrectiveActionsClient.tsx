@@ -328,7 +328,7 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         }));
         const uniqueActions = [...uniqueActionMap.values()];
         const locationDates = location.reports.map((report) => report.reportDate || "").filter(Boolean).sort();
-        const locationServiceChannelNumbers = [...new Set(location.reports.map((report) => report.trackingNumber).filter(Boolean))];
+        const locationServiceChannelNumbers = [...new Set(location.reports.map((report) => baseTracking(report)).filter(Boolean))];
         const locationActionCount = uniqueActions.length;
         const locationParts = partsForLocation(location.key, Math.max(1, locationActionCount));
         const locationPartRows = [
