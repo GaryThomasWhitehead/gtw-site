@@ -345,6 +345,7 @@ export async function GET(request: NextRequest) {
     "customerName:data->>customerName",
     "fedexJob:data->fedexJob",
     "itemCount:data->itemCount",
+    "totalItemCount:data->totalItemCount",
     "tuggerWorkRecords:data->tuggerWorkRecords",
     "workflowStatus:data->>workflowStatus",
     "partsNotes:data->>partsNotes",

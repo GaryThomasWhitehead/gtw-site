@@ -52,6 +52,7 @@ type Report = {
   customerName?: string;
   fedexJob?: boolean;
   itemCount?: number;
+  totalItemCount?: number;
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
   partsNotes?: string;
@@ -209,6 +210,7 @@ export default function ReportsClient() {
   const [showPmTaskManager, setShowPmTaskManager] = useState(false);
   const [pmCatalogStatus, setPmCatalogStatus] = useState<PmCatalogStatus | null>(null);
   const [uploadingPmCatalog, setUploadingPmCatalog] = useState(false);
+  const [consolidatingKey, setConsolidatingKey] = useState("");
 
   async function openPmTaskManager() {
     setShowPmTaskManager(true);
@@ -536,6 +538,25 @@ export default function ReportsClient() {
     const url = `/api/pm-reports?id=${encodeURIComponent(report.id)}`;
     const pdfWindow = window.open(url, "_blank", "noopener,noreferrer");
     if (!pdfWindow) setError("Could not open PDF. Please allow pop-ups for this site and try again.");
+  }
+
+  async function consolidateReportSections(history: JobHistory) {
+    if (!confirm(`Combine ${history.reports.length} legacy sections into groups of five tasks? The current report pages and attachments will be preserved.`)) return;
+    setConsolidatingKey(history.key);
+    setError("");
+    try {
+      const response = await fetch("/api/pm-reports/consolidate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: history.reports.map((report) => report.id) }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      await loadReports();
+    } catch (cause) {
+      setError(`Could not combine report sections: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setConsolidatingKey("");
+    }
   }
 
   async function deleteReport(report: Report) {
@@ -1145,6 +1166,11 @@ export default function ReportsClient() {
                         </span>
                         <b>{history.reports.length} {history.reports.length === 1 ? "report" : "reports"}</b>
                       </summary>
+                      {categoryOf(history.latest) === "pm" && history.reports.length > Math.max(1, Math.ceil(Math.max(...history.reports.map((report) => Number(report.totalItemCount || report.itemCount || 0))) / 5)) && (
+                        <button type="button" className={styles.editPdfButton} disabled={consolidatingKey === history.key} onClick={() => void consolidateReportSections(history)}>
+                          {consolidatingKey === history.key ? "Combining sections…" : "Fix sections — 5 tasks each"}
+                        </button>
+                      )}
                       {history.status === "parts" && (
                         <section className={styles.partsNotesEditor}>
                           <label htmlFor={`parts-notes-${history.latest.id}`}>Parts Notes</label>
