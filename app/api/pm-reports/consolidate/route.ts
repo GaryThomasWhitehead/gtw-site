@@ -47,6 +47,45 @@ export async function POST(request: NextRequest) {
   const desiredCount = Math.max(1, Math.ceil(totalItems / 5));
   if (ordered.length <= desiredCount) return NextResponse.json({ ok: true, unchanged: true, sectionCount: ordered.length });
 
+  // A prior consolidation can finish writing the desired A-F PDFs before a
+  // later legacy page fails to load. On retry, preserve those completed files
+  // and remove only the redundant source-page records.
+  const recoveredByPart = new Map<number, { tracking_number: string; data: any }>();
+  for (const row of ordered) {
+    const part = Number(row.data.reportPart || 0);
+    const count = Number(row.data.reportPartCount || 0);
+    const itemCount = Number(row.data.itemCount || 0);
+    if (count === desiredCount && part >= 1 && part <= desiredCount && itemCount > 0 && itemCount <= 5 && !recoveredByPart.has(part)) {
+      recoveredByPart.set(part, row);
+    }
+  }
+  if (recoveredByPart.size === desiredCount) {
+    const keepIds = new Set([...recoveredByPart.values()].map((row) => String(row.data.id)));
+    for (const old of ordered) {
+      const oldId = String(old.data.id);
+      if (keepIds.has(oldId)) continue;
+      const oldPart = Math.max(1, Number(old.data.reportPart || 1));
+      const targetPart = Math.min(desiredCount, Math.floor((oldPart - 1) / 5) + 1);
+      const targetId = String(recoveredByPart.get(targetPart)?.data.id || recoveredByPart.get(1)?.data.id || "");
+      if (!targetId) continue;
+      const attachmentQuery = new URLSearchParams({ select: "tracking_number,data" });
+      attachmentQuery.append("tracking_number", "like.PMATTACH:*");
+      attachmentQuery.append("data->>reportId", `eq.${oldId}`);
+      const attachmentResponse = await fetch(`${url}/rest/v1/${table}?${attachmentQuery}`, { headers: headers(key), cache: "no-store" });
+      if (attachmentResponse.ok) {
+        const attachmentRows: { tracking_number: string; data: any }[] = await attachmentResponse.json();
+        await Promise.all(attachmentRows.map((attachment) => fetch(`${url}/rest/v1/${table}?tracking_number=eq.${encodeURIComponent(attachment.tracking_number)}`, {
+          method: "PATCH", headers: { ...headers(key), Prefer: "return=minimal" }, body: JSON.stringify({ data: { ...attachment.data, reportId: targetId }, updated_at: new Date().toISOString() }),
+        })));
+      }
+    }
+    const removeIds = ordered.map((row) => String(row.data.id)).filter((id) => !keepIds.has(id));
+    const values = removeIds.map((id) => `PMREPORT:${id}`).join(",");
+    const deletion = await fetch(`${url}/rest/v1/${table}?tracking_number=in.(${values})`, { method: "DELETE", headers: { ...headers(key), Prefer: "return=minimal" } });
+    if (!deletion.ok) return NextResponse.json({ error: await deletion.text() }, { status: deletion.status });
+    return NextResponse.json({ ok: true, recovered: true, previousSectionCount: ordered.length, sectionCount: desiredCount });
+  }
+
   const fullItems = ordered.map((row) => Array.isArray(row.data.items) ? row.data.items : []).sort((a, b) => b.length - a.length)[0] || [];
   const uniqueActions = new Map<string, any>();
   for (const row of ordered) for (const action of (Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : [])) {

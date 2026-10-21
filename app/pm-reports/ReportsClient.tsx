@@ -142,7 +142,8 @@ const reportMatches = (report: Report, query: string) => {
 };
 const trackingIdentity = (report: Report) => {
   const tracking = normalizedSearch(report.baseTrackingNumber || String(report.trackingNumber || "").replace(/\s+-\s+[A-Z]+$/i, ""));
-  return tracking ? `tracking-${tracking}` : `report-${report.id}`;
+  const visitDate = normalizedSearch(report.reportDate);
+  return tracking ? `tracking-${tracking}-${visitDate || "date-not-entered"}` : `report-${report.id}`;
 };
 const reportTime = (report: Report) => {
   const reportDate = Date.parse(String(report.reportDate || ""));
@@ -584,7 +585,11 @@ export default function ReportsClient() {
         const response = await fetch("/api/pm-reports/consolidate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ids: legacyHistory.reports.map((report) => report.id) }),
+          body: JSON.stringify({
+            ids: legacyHistory.reports
+              .filter((report) => report.facilityId === "CCRA" && report.reportDate === "2026-10-19")
+              .map((report) => report.id),
+          }),
         });
         if (!response.ok) throw new Error(await response.text());
         await loadReports();
