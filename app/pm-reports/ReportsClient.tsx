@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import styles from "./reports.module.css";
 
 type Category = "all" | "regular" | "proposed" | "pm" | "tugger" | "gas";
@@ -211,6 +211,7 @@ export default function ReportsClient() {
   const [pmCatalogStatus, setPmCatalogStatus] = useState<PmCatalogStatus | null>(null);
   const [uploadingPmCatalog, setUploadingPmCatalog] = useState(false);
   const [consolidatingKey, setConsolidatingKey] = useState("");
+  const attemptedLegacyConsolidations = useRef(new Set<string>());
 
   async function openPmTaskManager() {
     setShowPmTaskManager(true);
@@ -558,6 +559,43 @@ export default function ReportsClient() {
       setConsolidatingKey("");
     }
   }
+
+  useEffect(() => {
+    if (loadingReports || consolidatingKey) return;
+    const legacyHistory = allJobHistories.find((history) => {
+      if (attemptedLegacyConsolidations.current.has(history.key)) return false;
+      if (!history.reports.some((report) => categoryOf(report) === "pm")) return false;
+      const isTargetCcraReport = history.reports.some((report) =>
+        report.facilityId === "CCRA" &&
+        report.reportDate === "2026-10-19" &&
+        String(report.baseTrackingNumber || report.trackingNumber || "").replace(/\s+-\s+[A-Z]+$/i, "").trim() === "366744570"
+      );
+      if (!isTargetCcraReport) return false;
+      const totalItems = Math.max(...history.reports.map((report) => Number(report.totalItemCount || report.itemCount || 0)));
+      const desiredSections = Math.max(1, Math.ceil(totalItems / 5));
+      return totalItems > 0 && history.reports.length > desiredSections;
+    });
+    if (!legacyHistory) return;
+    attemptedLegacyConsolidations.current.add(legacyHistory.key);
+    const repair = async () => {
+      setConsolidatingKey(legacyHistory.key);
+      setError("");
+      try {
+        const response = await fetch("/api/pm-reports/consolidate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: legacyHistory.reports.map((report) => report.id) }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        await loadReports();
+      } catch (cause) {
+        setError(`Could not automatically combine old report sections: ${cause instanceof Error ? cause.message : String(cause)}`);
+      } finally {
+        setConsolidatingKey("");
+      }
+    };
+    void repair();
+  }, [allJobHistories, loadReports, loadingReports]);
 
   async function deleteReport(report: Report) {
     const label = report.trackingNumber || report.facilityId || "this report";
