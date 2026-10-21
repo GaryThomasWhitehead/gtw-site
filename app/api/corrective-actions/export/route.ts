@@ -3,9 +3,7 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
-import { getDocumentProxy, renderPageAsImage } from "unpdf";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
-import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -97,17 +95,6 @@ async function attachmentsForReport(reportId: string) {
   if (!response.ok) throw new Error(`Could not load report pictures (${response.status}).`);
   const rows: { data?: Attachment }[] = await response.json();
   return rows.map((row) => row.data).filter((item): item is Attachment => Boolean(item?.base64 && imageExtension(item.contentType, item.filename)));
-}
-
-async function pdfForReport(reportId: string) {
-  const { url, key, table } = config();
-  const trackingNumber = encodeURIComponent(`PMREPORT:${reportId}`);
-  const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, { headers: headers(key), cache: "no-store" });
-  if (!response.ok) throw new Error(`Could not load job report ${reportId} (${response.status}).`);
-  const [row] = await response.json();
-  if (!row?.data) return null;
-  if (row.data.pdfStoragePath) return downloadReportPdf(url, key, String(row.data.pdfStoragePath));
-  return row.data.pdfBase64 ? Buffer.from(String(row.data.pdfBase64), "base64") : null;
 }
 
 export async function POST(request: NextRequest) {
@@ -222,70 +209,34 @@ export async function POST(request: NextRequest) {
     return address;
   };
 
-  const usedReportSheetNames = new Set<string>();
   const internalSheetLink = (sheetName: string, address: string, label: string) => ({
     formula: `HYPERLINK("#'${sheetName.replace(/'/g, "''")}'!${address}","${label.replace(/"/g, '""')}")`,
     result: label,
   });
-  for (const [reportIndex, reportId] of reportIds.entries()) {
+  const reportsSheet = workbook.addWorksheet("Job Reports", { properties: { tabColor: { argb: "FF1468A5" } } });
+  reportsSheet.getColumn("A").width = 24;
+  reportsSheet.getColumn("B").width = 26;
+  reportsSheet.getColumn("C").width = 22;
+  reportsSheet.getColumn("D").width = 24;
+  ["Facility", "Tracking / Section", "Report Date", "Open Job Report"].forEach((label, index) => {
+    const cell = reportsSheet.getCell(1, index + 1);
+    cell.value = label;
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
+  });
+  reportIds.forEach((reportId, reportIndex) => {
     const action = actions.find((item) => item.reportId === reportId);
-    const pdf = await pdfForReport(reportId);
-    if (!action || !pdf) continue;
-    const rawName = `JR ${action.trackingNumber || action.facilityId || reportIndex + 1}`.replace(/[\\/*?:\[\]]/g, " ").trim();
-    let reportSheetName = rawName.slice(0, 31) || `Job Report ${reportIndex + 1}`;
-    let duplicate = 2;
-    while (usedReportSheetNames.has(reportSheetName.toLowerCase())) {
-      const suffix = ` ${duplicate++}`;
-      reportSheetName = `${rawName.slice(0, 31 - suffix.length)}${suffix}`;
-    }
-    usedReportSheetNames.add(reportSheetName.toLowerCase());
-    const reportSheet = workbook.addWorksheet(reportSheetName, { properties: { tabColor: { argb: "FF1468A5" } } });
-    reportLocations.set(reportId, reportSheetName);
-    reportSheet.getColumn("A").width = 120;
-    reportSheet.getCell("A1").value = `${action.facilityId || "Facility"} · Tracking #${action.trackingNumber || "not entered"} · ${action.reportDate || "No date"}`;
-    reportSheet.getCell("A1").font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
-    reportSheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
-    reportSheet.getRow(1).height = 26;
-    reportSheet.views = [{ state: "frozen", ySplit: 1 }];
-    let reportRow = 2;
-    const document = await getDocumentProxy(new Uint8Array(pdf));
-    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
-      const rendered = Buffer.from(await renderPageAsImage(document, pageNumber, { width: 850, canvasImport: () => import("@napi-rs/canvas") }));
-      const width = 850;
-      const height = 1100;
-      const imageId = workbook.addImage({ base64: rendered.toString("base64"), extension: "png" });
-      reportSheet.getCell(`A${reportRow}`).value = `Page ${pageNumber} of ${document.numPages}`;
-      reportSheet.getCell(`A${reportRow}`).font = { bold: true, color: { argb: "FF1468A5" } };
-      reportSheet.addImage(imageId, { tl: { col: 0, row: reportRow }, ext: { width, height } });
-      const occupiedRows = Math.max(8, Math.ceil(height / 18));
-      for (let row = reportRow + 1; row < reportRow + 1 + occupiedRows; row += 1) reportSheet.getRow(row).height = 13.5;
-      reportRow += occupiedRows + 3;
-    }
-    await document.cleanup();
-
-    // Keep the original uploaded pictures with the embedded report as well as
-    // the rendered PDF pages. This avoids losing a picture when a PDF renderer
-    // cannot reproduce one of the PDF's image streams.
-    const reportAttachments = attachmentsByReport.get(reportId) || [];
-    if (reportAttachments.length) {
-      reportSheet.getCell(`A${reportRow}`).value = "ORIGINAL JOB-REPORT PHOTOS";
-      reportSheet.getCell(`A${reportRow}`).font = { bold: true, size: 13, color: { argb: "FFFFFFFF" } };
-      reportSheet.getCell(`A${reportRow}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0C3B62" } };
-      reportSheet.getRow(reportRow).height = 24;
-      reportRow += 2;
-      for (const attachment of reportAttachments) {
-        const extension = imageExtension(attachment.contentType, attachment.filename);
-        if (!extension) continue;
-        reportSheet.getCell(`A${reportRow}`).value = attachment.description || attachment.filename || "Job-report photo";
-        reportSheet.getCell(`A${reportRow}`).font = { bold: true, color: { argb: "FF1468A5" } };
-        reportSheet.getCell(`A${reportRow}`).alignment = { wrapText: true };
-        const imageId = workbook.addImage({ base64: attachment.base64, extension });
-        reportSheet.addImage(imageId, { tl: { col: 0, row: reportRow }, ext: { width: 760, height: 520 } });
-        for (let row = reportRow + 1; row <= reportRow + 30; row += 1) reportSheet.getRow(row).height = 14;
-        reportRow += 32;
-      }
-    }
-  }
+    if (!action) return;
+    const row = reportIndex + 2;
+    const reportUrl = `${request.nextUrl.origin}/api/pm-reports?id=${encodeURIComponent(reportId)}`;
+    reportsSheet.getCell(`A${row}`).value = action.facilityId || "Facility";
+    reportsSheet.getCell(`B${row}`).value = action.trackingNumber || "Tracking not entered";
+    reportsSheet.getCell(`C${row}`).value = action.reportDate || "";
+    reportsSheet.getCell(`D${row}`).value = { text: "Open PDF Job Report", hyperlink: reportUrl, tooltip: "Open the matching online job-report section" };
+    reportsSheet.getCell(`D${row}`).font = { color: { argb: "FF0563C1" }, underline: true, bold: true };
+    reportLocations.set(reportId, `D${row}`);
+  });
+  reportsSheet.views = [{ state: "frozen", ySplit: 1 }];
 
   actions.forEach((action, index) => {
     const rowNumber = index + 6;
@@ -305,17 +256,15 @@ export async function POST(request: NextRequest) {
     for (const column of ["H", "I", "J", "K", "L"]) sheet.getCell(`${column}${rowNumber}`).alignment = { vertical: "middle", wrapText: true };
     const matched = matchPhotos(action, attachmentsByReport.get(action.reportId) || []);
     if (!matched.length) {
-      const reportSheetName = reportLocations.get(action.reportId);
-      sheet.getCell(`L${rowNumber}`).value = reportSheetName
-        ? internalSheetLink(reportSheetName, "A1", "View Embedded Job Report")
+      const reportAddress = reportLocations.get(action.reportId);
+      sheet.getCell(`L${rowNumber}`).value = reportAddress
+        ? internalSheetLink("Job Reports", reportAddress, "View PDF Job Report")
         : "Job report unavailable";
       sheet.getCell(`L${rowNumber}`).font = { ...sheet.getCell(`L${rowNumber}`).font, color: { argb: "FF0563C1" }, underline: true, bold: true, size: 9 };
       return;
     }
-    const reportSheetName = reportLocations.get(action.reportId);
-    sheet.getCell(`L${rowNumber}`).value = reportSheetName
-      ? internalSheetLink(reportSheetName, "A1", "View Embedded Job Report")
-      : internalSheetLink("Photos", ensureFullPhoto(matched[0], action), `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
+    const firstPhotoAddress = ensureFullPhoto(matched[0], action);
+    sheet.getCell(`L${rowNumber}`).value = internalSheetLink("Photos", firstPhotoAddress, `Open ${matched.length} full-size photo${matched.length === 1 ? "" : "s"}`);
     sheet.getCell(`L${rowNumber}`).font = { color: { argb: "FF0563C1" }, underline: true, size: 9 };
     matched.slice(0, 2).forEach((attachment, photoIndex) => {
       const extension = imageExtension(attachment.contentType, attachment.filename);
@@ -325,6 +274,7 @@ export async function POST(request: NextRequest) {
       sheet.addImage(imageId, {
         tl: { col: 11 + photoIndex * 0.5, row: rowNumber - 1 + 0.08 },
         ext: { width: 75, height: 52 },
+        hyperlinks: { hyperlink: `#'Photos'!${fullAddress}`, tooltip: "Open the full-size picture" },
       });
     });
   });

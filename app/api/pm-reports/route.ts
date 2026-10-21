@@ -140,13 +140,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const managementAccess = hasFedExTrackerAccess(request);
   const correctiveViewerAccess = hasCorrectiveActionViewerAccess(request);
-  if (!managementAccess && !correctiveViewerAccess) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const technician = await validatePmTechSession(request);
+  const id = request.nextUrl.searchParams.get("id");
+  if (!managementAccess && !correctiveViewerAccess && !(technician && id)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
-  const id = request.nextUrl.searchParams.get("id");
   if (id) {
     const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
-    const select = "filename:data->>filename,category:data->>category,correctiveActions:data->correctiveActions,pdfStoragePath:data->>pdfStoragePath";
+    const select = "filename:data->>filename,category:data->>category,technician:data->>technician,correctiveActions:data->correctiveActions,pdfStoragePath:data->>pdfStoragePath";
     let response: Response | null = null;
     let storageError = "";
     for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -168,9 +169,13 @@ export async function GET(request: NextRequest) {
     }
     const [row] = await response.json();
     if (!row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+    const normalizeIdentity = (value: unknown) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (technician && !managementAccess && normalizeIdentity(row.technician) !== normalizeIdentity(technician.name)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const viewerActions = Array.isArray(row.correctiveActions) ? row.correctiveActions : [];
     const isReferencedCorrectivePdf = viewerActions.some((action: { sourceReportId?: string }) => String(action?.sourceReportId || id) === id);
-    if (!managementAccess && ((row.category || "pm") !== "pm" || !isReferencedCorrectivePdf)) {
+    if (!managementAccess && !technician && ((row.category || "pm") !== "pm" || !isReferencedCorrectivePdf)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (row.pdfStoragePath) {
@@ -220,8 +225,7 @@ export async function GET(request: NextRequest) {
     const pageSize = 25;
     const cursor = request.nextUrl.searchParams.get("cursor") || "";
     const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: String(pageSize) });
-    params.append("tracking_number", "gte.PMREPORT:");
-    params.append("tracking_number", "lt.PMREPORT;");
+    params.append("tracking_number", "like.PMREPORT:*");
     if (cursor) params.append("tracking_number", `gt.${cursor}`);
     let response: Response | null = null;
     let indexError = "";
@@ -283,6 +287,9 @@ export async function GET(request: NextRequest) {
       "technician:data->>technician",
       "reportDate:data->>reportDate",
       "trackingNumber:data->>trackingNumber",
+      "baseTrackingNumber:data->>baseTrackingNumber",
+      "reportPart:data->reportPart",
+      "reportPartCount:data->reportPartCount",
       "facilityId:data->>facilityId",
       "customerName:data->>customerName",
       "correctiveActions:data->correctiveActions",
@@ -291,8 +298,26 @@ export async function GET(request: NextRequest) {
     ].join(",");
     const params = new URLSearchParams({ select: correctiveSelect, order: "updated_at.desc" });
     params.append("tracking_number", "like.PMREPORT:*");
-    const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: apiHeaders(key), cache: "no-store" });
-    if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
+    let response: Response | null = null;
+    let correctiveError = "";
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        response = await fetch(`${url}/rest/v1/${table}?${params}`, {
+          headers: apiHeaders(key),
+          cache: "no-store",
+          signal: AbortSignal.timeout(15000),
+        });
+        if (response.ok) break;
+        correctiveError = `${response.status} ${await response.text()}`;
+      } catch (cause) {
+        correctiveError = cause instanceof Error ? cause.message : String(cause);
+      }
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
+    }
+    if (!response?.ok) {
+      console.warn("Corrective-action list failed after retries", correctiveError.slice(0, 500));
+      return NextResponse.json({ error: "The corrective-action list is temporarily unavailable. Please try again." }, { status: 503 });
+    }
     const rows = await response.json();
     return NextResponse.json(rows.map((row: Record<string, unknown>) => {
       const { updated_at: savedAt, ...metadata } = row;
@@ -313,6 +338,9 @@ export async function GET(request: NextRequest) {
     "reportDate:data->>reportDate",
     "facilityAddress:data->>facilityAddress",
     "trackingNumber:data->>trackingNumber",
+    "baseTrackingNumber:data->>baseTrackingNumber",
+    "reportPart:data->reportPart",
+    "reportPartCount:data->reportPartCount",
     "facilityId:data->>facilityId",
     "customerName:data->>customerName",
     "fedexJob:data->fedexJob",

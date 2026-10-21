@@ -45,6 +45,9 @@ type Report = {
   reportDate?: string;
   facilityAddress?: string;
   trackingNumber?: string;
+  baseTrackingNumber?: string;
+  reportPart?: number;
+  reportPartCount?: number;
   facilityId?: string;
   customerName?: string;
   fedexJob?: boolean;
@@ -137,7 +140,7 @@ const reportMatches = (report: Report, query: string) => {
   });
 };
 const trackingIdentity = (report: Report) => {
-  const tracking = normalizedSearch(report.trackingNumber);
+  const tracking = normalizedSearch(report.baseTrackingNumber || String(report.trackingNumber || "").replace(/\s+-\s+[A-Z]+$/i, ""));
   return tracking ? `tracking-${tracking}` : `report-${report.id}`;
 };
 const reportTime = (report: Report) => {
@@ -152,6 +155,16 @@ const newestFirst = (left: Report, right: Report) => {
   // the same job date. Fall back to the entered report date for recovered
   // historical reports that do not have a saved timestamp.
   return rightTime.savedAt - leftTime.savedAt || rightTime.reportDate - leftTime.reportDate;
+};
+const reportSectionOrder = (left: Report, right: Report) => {
+  const leftTime = reportTime(left);
+  const rightTime = reportTime(right);
+  if (rightTime.reportDate !== leftTime.reportDate) return rightTime.reportDate - leftTime.reportDate;
+  const leftPart = Number(left.reportPart || 0);
+  const rightPart = Number(right.reportPart || 0);
+  if (leftPart && rightPart && leftPart !== rightPart) return leftPart - rightPart;
+  if (leftPart !== rightPart) return leftPart ? 1 : -1;
+  return rightTime.savedAt - leftTime.savedAt;
 };
 const uniqueReportsById = (rows: Report[]) => {
   const unique = new Map<string, Report>();
@@ -419,7 +432,7 @@ export default function ReportsClient() {
       groups.set(key, [...(groups.get(key) || []), report]);
     });
     return Array.from(groups.entries()).map(([key, groupedReports]) => {
-      const sorted = [...groupedReports].sort(newestFirst);
+      const sorted = [...groupedReports].sort(reportSectionOrder);
       return { key, latest: sorted[0], reports: sorted, status: statusOf(sorted[0]) } satisfies JobHistory;
     });
   }, [reports]);
@@ -1241,6 +1254,9 @@ export default function ReportsClient() {
                           ))}
                         </div>
                         <button type="button" className={styles.pdfLinkButton} onClick={() => void openReportPdf(report)}>View PDF</button>
+                        <button type="button" className={styles.editCustomerButton} disabled={uploading} onClick={() => { setError(""); setAttachmentDescription(""); setPendingUpload({ report, trackingNumber: report.trackingNumber || "" }); }}>
+                          Add File
+                        </button>
                         <button type="button" className={styles.editPdfButton} disabled={editingPdfId === report.id} onClick={() => void deletePdfPages(report)}>
                           {editingPdfId === report.id ? "Updating PDF…" : "Delete PDF Page"}
                         </button>

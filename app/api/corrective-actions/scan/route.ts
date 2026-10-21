@@ -3,7 +3,7 @@ import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { downloadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
-const CORRECTIVE_SCAN_VERSION = 4;
+const CORRECTIVE_SCAN_VERSION = 5;
 
 type Action = {
   id: string;
@@ -13,6 +13,7 @@ type Action = {
   serviceChannelWo: string;
   sourceReportId: string;
   sourceItemId?: string;
+  sourceItemIndex?: number;
 };
 
 function config() {
@@ -72,6 +73,7 @@ function findingsFromText(text: string, reportId: string, trackingNumber: string
       urgency: urgencyFor(repairNeeded),
       serviceChannelWo: trackingNumber,
       sourceReportId: reportId,
+      sourceItemIndex: index + 1,
     });
   }
   return findings;
@@ -99,8 +101,13 @@ export async function POST(request: NextRequest) {
   const extracted = await extractTextItems(new Uint8Array(pdfBytes));
   const text = extracted.items.flatMap((page) => page).map((item) => `${item.str}${item.hasEOL ? "\n" : " "}`).join("");
   const reportTrackingNumber = String(row.data.trackingNumber || "").trim().slice(0, 250);
-  const existing: Action[] = (Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : []).map((action: Action) => ({ ...action, assetTag: compactAssetTag(action.assetTag), serviceChannelWo: reportTrackingNumber }));
-  const savedItems = Array.isArray(row.data.items) ? row.data.items : [];
+  const allExisting: Action[] = (Array.isArray(row.data.correctiveActions) ? row.data.correctiveActions : []).map((action: Action) => ({ ...action, assetTag: compactAssetTag(action.assetTag), serviceChannelWo: reportTrackingNumber }));
+  const existing = allExisting.filter((action) => !String(action.id || "").startsWith(`${id}-flagged-`) && !new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-\\d+$`).test(String(action.id || "")));
+  const allSavedItems = Array.isArray(row.data.items) ? row.data.items : [];
+  const reportPart = Math.max(1, Number(row.data.reportPart || 1));
+  const savedItems = Number(row.data.reportPartCount || 1) > 1 && allSavedItems.length > 5
+    ? allSavedItems.slice((reportPart - 1) * 5, reportPart * 5)
+    : allSavedItems;
   const flaggedItems: Action[] = savedItems.filter((item: Record<string, unknown>) => item.needsCorrection === true).map((item: Record<string, unknown>, index: number) => {
     const sourceItemId = String(item.id || `item-${index + 1}`);
     const repairNeeded = cleanText(String(item.description || "Repair or correction required")).slice(0, 1500);
@@ -112,6 +119,7 @@ export async function POST(request: NextRequest) {
       serviceChannelWo: reportTrackingNumber,
       sourceReportId: id,
       sourceItemId,
+      sourceItemIndex: Number(row.data.reportPartCount || 1) > 1 ? (reportPart - 1) * 5 + index + 1 : index + 1,
     };
   });
   const candidates = savedItems.length ? flaggedItems : findingsFromText(text, id, reportTrackingNumber);

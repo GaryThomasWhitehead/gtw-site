@@ -5,9 +5,9 @@ import styles from "./corrective-actions.module.css";
 import fedexStyles from "./fedex-form.module.css";
 import controlStyles from "./form-controls.module.css";
 
-type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string; sourceItemId?: string };
-type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
-const CORRECTIVE_SCAN_VERSION = 4;
+type Action = { id: string; assetTag: string; repairNeeded: string; urgency: string; serviceChannelWo: string; sourceReportId?: string; sourceItemId?: string; sourceItemIndex?: number };
+type Report = { id: string; category?: string; facilityId?: string; customerName?: string; trackingNumber?: string; baseTrackingNumber?: string; reportPart?: number; reportPartCount?: number; reportDate?: string; technician?: string; correctiveActions?: Action[]; correctiveScanAt?: string; correctiveScanVersion?: number };
+const CORRECTIVE_SCAN_VERSION = 5;
 const JOB_PLANS = ["SLIDER BED CONVEYOR", "SLIDER BED CONVEYOR W/ MOTORIZED PULLEY", "WASP 1-STAGE EXTENDO", "WASP 1-STAGE W/ MOTORIZED PULLEY", "SRS/MHS 1-STAGE EXTENDO", "NORTECH 1-STAGE EXTENDO", "SHB 1-STAGE EXTENDO", "SHB 1-STAGE W/ MOTORIZED PULLEY", "LEWCO ROLLERS", "SRS/MHS 3-STAGE EXTENDO", "NORTECH 3-STAGE EXTENDO", "WASP 5-STAGE EXTENDO", "WASP 5-STAGE W/ SWAK", "SRS 5-STAGE EXTENDO", "CALJAN 5-STAGE EXTENDO", "MAXX 5-STAGE EXTENDO", "PLAK STATION", "E-STOP", "INTERROLL POWER CURVE", "PORTEC POWER CURVE", "PSC/FLOTURN POWER CURVE", "TRANSNORM POWER CURVE", "INTRALOX", "POWERED ROLLER CONVEYOR", "RTU/RTI", "GRAVITY CONVEYOR, CHUTES & GATES", "MCP"];
 type ReportAttachment = { id: string; reportId: string; itemId?: string; filename?: string; description?: string; contentType?: string };
 type Part = { partNumber: string; description: string; manufacturer: string; qtyNeeded: string; qtyOnHand: string; asset: string };
@@ -44,6 +44,17 @@ function relatedPictures(action: Action, attachments: ReportAttachment[]) {
   return (matched.length ? matched : candidates).slice(0, 4);
 }
 
+function baseTracking(report: Report) {
+  return String(report.baseTrackingNumber || report.trackingNumber || "").replace(/\s+-\s+[A-Z]+$/i, "").trim();
+}
+
+function matchingReportSection(report: Report, action: Action, actionIndex: number, reports: Report[]) {
+  const itemNumber = Math.max(1, Number(action.sourceItemIndex || actionIndex + 1));
+  const partNumber = Math.floor((itemNumber - 1) / 5) + 1;
+  const base = baseTracking(report);
+  return reports.find((candidate) => baseTracking(candidate) === base && Number(candidate.reportPart || 0) === partNumber) || report;
+}
+
 export default function CorrectiveActionsClient({ readOnly = false }: { readOnly?: boolean }) {
   const [reports, setReports] = useState<Report[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Action[]>>({});
@@ -67,37 +78,13 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
     setLoading(true); setError("");
     setLoadProgress({ loaded: 0, total: 0, stage: "Loading PM report list…" });
     try {
-      const index: { id: string }[] = [];
-      let cursor = "";
-      let hasMore = true;
-      while (hasMore) {
-        const indexResponse = await fetch(`/api/pm-reports?mode=list${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, { cache: "no-store" });
-        if (!indexResponse.ok) throw new Error("Could not load the saved report list.");
-        const page = await indexResponse.json();
-        const items: { id: string }[] = Array.isArray(page) ? page : Array.isArray(page?.items) ? page.items : [];
-        index.push(...items);
-        hasMore = !Array.isArray(page) && Boolean(page?.hasMore && page?.nextCursor);
-        cursor = hasMore ? String(page.nextCursor) : "";
-      }
-      setLoadProgress({ loaded: 0, total: index.length, stage: "Loading saved corrective actions" });
-      const loaded: Report[] = [];
-      let completed = 0;
-      for (let offset = 0; offset < index.length; offset += 3) {
-        const batch = index.slice(offset, offset + 3);
-        const ids = batch.map((item) => item.id).join(",");
-        let rows: Report[] = [];
-        const response = await fetch(`/api/pm-reports?ids=${encodeURIComponent(ids)}`, { cache: "no-store" });
-        if (response.ok) rows = await response.json();
-        else {
-          for (const item of batch) {
-            const retry = await fetch(`/api/pm-reports?ids=${encodeURIComponent(item.id)}`, { cache: "no-store" });
-            if (retry.ok) rows.push(...await retry.json());
-          }
-        }
-        loaded.push(...rows);
-        completed += batch.length;
-        setLoadProgress({ loaded: Math.min(completed, index.length), total: index.length, stage: "Loading saved corrective actions" });
-      }
+      // Corrective Actions only needs compact PM metadata. Loading the full
+      // completed-report index and then hydrating every report caused dozens
+      // of database requests and could exhaust Supabase Disk IO.
+      const response = await fetch("/api/pm-reports?mode=corrective", { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load the saved corrective-action list.");
+      const loaded: Report[] = await response.json();
+      setLoadProgress({ loaded: loaded.length, total: loaded.length, stage: "Loading saved corrective actions" });
       const pm = loaded.filter((report) => (report.category || "pm") === "pm");
       setReports(pm);
       setDrafts(Object.fromEntries(pm.map((report) => [report.id, (report.correctiveActions || []).map((action) => ({
@@ -239,14 +226,23 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       }
       await savePartsIfNeeded();
       setDirtyReportIds(new Set());
-      const actions = location.reports.flatMap((report) => (drafts[report.id] || []).map((action) => ({
-        ...action,
-        serviceChannelWo: report.trackingNumber || "",
-        reportId: action.sourceReportId || report.id,
-        facilityId: report.facilityId || report.customerName || "",
-        trackingNumber: report.trackingNumber || "",
-        reportDate: report.reportDate || "",
-      })));
+      const seenActions = new Set<string>();
+      const actions = location.reports.flatMap((report) => (drafts[report.id] || []).map((action, actionIndex) => {
+        const reportSection = matchingReportSection(report, action, actionIndex, reports);
+        return {
+          ...action,
+          serviceChannelWo: baseTracking(report),
+          reportId: reportSection.id,
+          facilityId: report.facilityId || report.customerName || "",
+          trackingNumber: baseTracking(report),
+          reportDate: report.reportDate || "",
+        };
+      })).filter((action) => {
+        const key = `${baseTracking(location.reports[0])}|${action.reportDate}|${action.assetTag.trim().toLowerCase()}|${action.repairNeeded.trim().toLowerCase()}`;
+        if (seenActions.has(key)) return false;
+        seenActions.add(key);
+        return true;
+      });
       const response = await fetch("/api/corrective-actions/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actions, parts: partsForLocation(location.key, actions.length), locationName: location.name }) });
       if (!response.ok) throw new Error(await response.text());
       const blob = await response.blob();
@@ -254,8 +250,9 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
       const filename = disposition.match(/filename="([^"]+)"/)?.[1] || "FXG-Correctives-and-Parts.xlsx";
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
-      setMessage(`${location.name} FedEx Correctives & Parts workbook downloaded with linked report pictures.`);
+      link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+      setMessage(`${filename} download started. Check Chrome Downloads if it does not appear automatically.`);
     } catch (cause) { setError(`Could not create FedEx workbook: ${cause instanceof Error ? cause.message : String(cause)}`); }
     finally { setExporting(false); }
   }
@@ -330,15 +327,17 @@ export default function CorrectiveActionsClient({ readOnly = false }: { readOnly
         <div className={fedexStyles.sheetGrid}><section><div className={fedexStyles.formTitle}>PARTS NEEDED FOR CORRECTIVES</div><div className={styles.tableWrap}><table className={fedexStyles.partsTable}><thead><tr><th>Part Number</th><th>Description</th><th>Manufacturer</th><th>Qty Needed</th><th>Qty On-hand</th><th>Asset</th></tr></thead><tbody>{locationPartRows}</tbody></table></div></section><section><div className={fedexStyles.formTitle}>CORRECTIVE ACTIONS NEEDED</div>
         <div className={styles.tableWrap}><table className={fedexStyles.fedexTable}><thead><tr><th>Asset / Tag ID</th><th>Repair Needed</th><th>Urgency</th><th>SC WO #</th><th>Pictures / Job Report</th>{!readOnly && <th>Delete</th>}</tr></thead><tbody>{location.reports.flatMap((report) => [
           <tr className={fedexStyles.sourceRow} key={`${report.id}-source`}><td colSpan={readOnly ? 5 : 6}><strong>{report.facilityId || report.customerName || "Facility"}</strong> · Tracking #{report.trackingNumber || "not entered"} · {report.reportDate || "No date"}{!readOnly && <button onClick={() => add(report)}>+ Add Line</button>}</td></tr>,
-          ...(drafts[report.id] || []).map((action) => {
+          ...(drafts[report.id] || []).map((action, actionIndex) => {
             const pictures = relatedPictures({ ...action, sourceReportId: action.sourceReportId || report.id }, attachments);
-            const reportId = action.sourceReportId || report.id;
+            const reportSection = matchingReportSection(report, action, actionIndex, reports);
+            const reportId = reportSection.id || action.sourceReportId || report.id;
+            const reportSectionLabel = reportSection.trackingNumber || report.trackingNumber || "job report";
             return <tr key={action.id}>
               <td><input disabled={readOnly} value={action.assetTag} onChange={(event) => update(report.id, action.id, "assetTag", event.target.value)} /></td>
               <td><textarea disabled={readOnly} value={action.repairNeeded} onChange={(event) => update(report.id, action.id, "repairNeeded", event.target.value)} /></td>
               <td><select disabled={readOnly} value={action.urgency} onChange={(event) => update(report.id, action.id, "urgency", event.target.value)}><option>Immediate</option><option>24–72 hours</option><option>This week</option><option>1–2 weeks</option><option>Planned</option></select></td>
               <td><input readOnly value={report.trackingNumber || action.serviceChannelWo || ""} aria-label="ServiceChannel work order number from job report tracking number" /></td>
-              <td><div className={fedexStyles.photoCell}>{pictures.length ? <>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}>View PDF</a></> : <a className={controlStyles.reportThumb} target="_blank" rel="noreferrer" title="Open source job report" href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}><strong>PDF</strong>JOB REPORT</a>}</div></td>
+              <td><div className={fedexStyles.photoCell}>{pictures.length ? <>{pictures.map((picture) => <a key={picture.id} target="_blank" rel="noreferrer" title={picture.description || picture.filename || "Open full-size picture"} href={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`}><img src={`/api/pm-report-attachments?id=${encodeURIComponent(picture.id)}`} alt={picture.description || picture.filename || "Corrective action picture"} /></a>)}<a className={fedexStyles.pdfButton} target="_blank" rel="noreferrer" title={`Open ${reportSectionLabel}`} href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}>View PDF</a></> : <a className={controlStyles.reportThumb} target="_blank" rel="noreferrer" title={`Open ${reportSectionLabel}`} href={`/api/pm-reports?id=${encodeURIComponent(reportId)}`}><strong>PDF</strong>JOB REPORT</a>}</div></td>
               {!readOnly && <td><button className={styles.deleteButton} onClick={() => remove(report.id, action.id)}>Delete</button></td>}
             </tr>;
           }),

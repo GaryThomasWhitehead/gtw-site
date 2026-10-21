@@ -24,21 +24,44 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const cursor = String(body?.cursor || "");
-  const params = new URLSearchParams({ select: "tracking_number,data", order: "tracking_number.asc", limit: "1" });
+  // Do not filter or project the large JSONB report body while locating the
+  // next record. That forced Postgres to read every inline Base64 PDF and was
+  // the same Disk IO bottleneck this maintenance operation is meant to fix.
+  const params = new URLSearchParams({ select: "tracking_number", order: "tracking_number.asc", limit: "5" });
   params.append("tracking_number", "like.PMREPORT:*");
   if (cursor) params.append("tracking_number", `gt.${cursor}`);
-  params.append("data->>pdfBase64", "not.is.null");
 
   const sourceResponse = await fetch(`${url}/rest/v1/${table}?${params}`, {
     headers: headers(key),
     cache: "no-store",
+    signal: AbortSignal.timeout(15000),
   }).catch(() => null);
   if (!sourceResponse?.ok) {
     return NextResponse.json({ error: "Could not read the next legacy report" }, { status: 503 });
   }
 
-  const [row] = await sourceResponse.json() as Array<{ tracking_number: string; data: Record<string, unknown> }>;
-  if (!row) return NextResponse.json({ done: true, migrated: 0, bytesFreed: 0 });
+  const candidates = await sourceResponse.json() as Array<{ tracking_number: string }>;
+  if (!candidates.length) return NextResponse.json({ done: true, migrated: 0, bytesFreed: 0 });
+
+  let row: { tracking_number: string; data: Record<string, unknown> } | undefined;
+  for (const candidate of candidates) {
+    const exactParams = new URLSearchParams({ select: "tracking_number,data", tracking_number: `eq.${candidate.tracking_number}`, limit: "1" });
+    const exactResponse = await fetch(`${url}/rest/v1/${table}?${exactParams}`, {
+      headers: headers(key),
+      cache: "no-store",
+      signal: AbortSignal.timeout(20000),
+    }).catch(() => null);
+    if (!exactResponse?.ok) return NextResponse.json({ error: `Could not read report ${candidate.tracking_number.replace(/^PMREPORT:/, "")}` }, { status: 503 });
+    const [exactRow] = await exactResponse.json() as Array<{ tracking_number: string; data: Record<string, unknown> }>;
+    if (exactRow?.data?.pdfBase64) {
+      row = exactRow;
+      break;
+    }
+  }
+
+  if (!row) {
+    return NextResponse.json({ done: false, cursor: candidates.at(-1)?.tracking_number || cursor, migrated: 0, bytesFreed: 0 });
+  }
 
   const id = String(row.tracking_number).replace(/^PMREPORT:/, "");
   const pdfBase64 = String(row.data?.pdfBase64 || "");

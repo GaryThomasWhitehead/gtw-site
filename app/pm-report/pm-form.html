@@ -316,6 +316,12 @@
             <!-- Items Container -->
             <div data-id="64" id="items-container-a7b8" class="space-y-4 mt-4"></div>
 
+            <!-- PM convenience control: always follows the current last item -->
+            <button type="button" id="add-item-after-list-btn" class="hidden no-print mt-5 w-full min-h-14 bg-success-600 hover:bg-success-700 active:bg-success-500 text-white font-bold rounded-xl text-base transition-colors items-center justify-center gap-2 shadow-sm">
+                <span class="text-xl leading-none">＋</span>
+                Add Item After Last PM Item
+            </button>
+
             <!-- Empty State -->
             <div data-id="65" id="empty-state-c9d0" class="text-center py-12 no-print">
                 <i data-id="66" data-lucide="clipboard" class="w-12 h-12 text-navy-200 mx-auto mb-3"></i>
@@ -333,6 +339,10 @@
                 <span data-id="73" id="logged-count-num-g3h4">0</span> items logged
             </span>
             <div data-id="74" class="flex gap-2">
+                <button type="button" id="add-item-bottom-btn" class="h-11 px-4 bg-success-600 hover:bg-success-700 text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
+                    <span class="text-base leading-none">＋</span>
+                    <span class="hidden sm:inline">Add Item</span>
+                </button>
                 <button id="complete-report-btn" class="h-11 px-4 bg-[#0f766e] hover:bg-[#115e59] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
                     <span class="text-base leading-none">✓</span>
                     <span class="hidden sm:inline">Complete &amp; Save</span>
@@ -508,6 +518,8 @@
         let activePmTaskGroup = null;
         const inspectionSection = document.getElementById('inspection-section-u1v2');
         const addItemBtn = document.getElementById('add-item-btn-y5z6');
+        const addItemBottomBtn = document.getElementById('add-item-bottom-btn');
+        const addItemAfterListBtn = document.getElementById('add-item-after-list-btn');
         const itemsContainer = document.getElementById('items-container-a7b8');
         const emptyState = document.getElementById('empty-state-c9d0');
         const itemCountBadge = document.getElementById('item-count-badge-w3x4');
@@ -543,19 +555,59 @@
         });
 
         async function uploadSupportingFiles(savedReportId, trackingNumber) {
+            const preparedFiles = [];
             for (const file of reportSupportingFiles) {
-                if (file.size > 4000000) throw new Error('ATTACH_FAILED:' + file.name + ' is larger than 4 MB.');
+                if (file.size <= 3750000) {
+                    preparedFiles.push(file);
+                } else if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+                    const pieces = await splitPdfForSafeUpload(file, 3500000);
+                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    pieces.forEach((piece, index) => preparedFiles.push(new File([piece], file.name.replace(/\.pdf$/i, '') + ' - ' + (alphabet[index] || String(index + 1)) + '.pdf', { type: 'application/pdf' })));
+                } else if (file.type.startsWith('image/')) {
+                    const optimized = await optimizeUploadedPhoto(file);
+                    const blob = await (await fetch(optimized)).blob();
+                    preparedFiles.push(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+                } else {
+                    throw new Error('ATTACH_FAILED:' + file.name + ' is larger than 4 MB. Large PDFs and pictures are split or compressed automatically; this file type must be reduced first.');
+                }
+            }
+            for (const file of preparedFiles) {
+                if (file.size > 4000000) throw new Error('ATTACH_FAILED:' + file.name + ' is still larger than 4 MB after preparation.');
                 const form = new FormData();
                 form.set('reportId', savedReportId);
                 form.set('trackingNumber', trackingNumber);
                 form.set('file', file);
                 const response = await fetch('/api/pm-report-attachments', { method: 'POST', body: form });
                 if (!response.ok) throw new Error('ATTACH_FAILED:' + file.name + ' — ' + await response.text());
+                const result = await response.json();
+                if (result.pdfMergeWarning || result.includedInPdf !== true) {
+                    throw new Error('ATTACH_FAILED:' + file.name + ' was uploaded, but it was not confirmed inside the final PDF. Please try Complete & Save again.');
+                }
+            }
+            if (reportSupportingFiles.length) {
+                reportSupportingFiles = [];
+                reportSupportingFilesInput.value = '';
+                reportSupportingFileList.textContent = 'Files uploaded. You may choose more files if needed.';
             }
         }
 
-        async function uploadJobReportPhotos(savedReportId, trackingNumber) {
-            const cards = Array.from(itemsContainer.querySelectorAll('.item-card'));
+        async function downloadSavedCombinedPdf(savedReportId, filename) {
+            const response = await fetch('/api/pm-reports?id=' + encodeURIComponent(savedReportId), { cache: 'no-store' });
+            if (!response.ok) throw new Error('DOWNLOAD_FAILED:' + await response.text());
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function uploadJobReportPhotos(savedReportId, trackingNumber, allowedCardIds = null) {
+            const allowed = allowedCardIds ? new Set(allowedCardIds) : null;
+            const cards = Array.from(itemsContainer.querySelectorAll('.item-card')).filter(card => !allowed || allowed.has(card.dataset.itemId));
             for (let itemIndex = 0; itemIndex < cards.length; itemIndex++) {
                 const card = cards[itemIndex];
                 const cardId = card.dataset.itemId;
@@ -721,6 +773,12 @@
             document.getElementById('add-pm-tasks-to-report').addEventListener('click', addCompletedPmTasksToReport);
             renderPmTaskGroups();
             addItemBtn.addEventListener('click', () => addItem());
+            addItemBottomBtn.addEventListener('click', () => addItem());
+            addItemAfterListBtn.addEventListener('click', () => {
+                addItem();
+                const lastItem = itemsContainer.lastElementChild;
+                if (lastItem) lastItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
             printBtn.addEventListener('click', () => handleExportPDF('download'));
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
             emailPdfBtn.addEventListener('click', () => {
@@ -782,6 +840,8 @@
             document.getElementById('report-footer-label').textContent = 'Frontline Pro Services · ' + REPORT_TYPES[category].short;
             document.title = 'Frontline ' + REPORT_TYPES[category].label;
             createPmTaskBtn.classList.toggle('hidden', category !== 'pm');
+            addItemAfterListBtn.classList.toggle('hidden', category !== 'pm' || items.length === 0);
+            addItemAfterListBtn.classList.toggle('flex', category === 'pm' && items.length > 0);
             document.querySelectorAll('.photo-limit-copy').forEach(element => {
                 element.textContent = category === 'pm' ? '(1 picture per PM task)' : '(up to 8 pictures per item)';
             });
@@ -1132,7 +1192,7 @@
             function renderPhotoPreviews() {
                 const photos = photoDataStore[id] || [];
                 const descriptions = photoDescriptionStore[id] || [];
-                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" class="remove-photo-btn absolute top-1 right-1 bg-white text-danger-600 rounded-full w-8 h-8 font-bold shadow">×</button><input class="photo-description mt-1 w-full px-2 py-2 border border-field-border rounded-lg text-xs" data-photo-index="${index}" value="${escapeAttr(descriptions[index] || '')}" placeholder="Describe or identify this picture${reportCategory === 'pm' && !JACOB_PHOTO_EXEMPT ? ' (required)' : ' (optional)'}" /></div>`).join('');
+                photoPreview.innerHTML = photos.map((photo, index) => `<div class="relative"><img class="photo-thumb border border-field-border w-full aspect-square object-cover" src="${photo}" alt="Photo ${index + 1}"/><button type="button" data-photo-index="${index}" aria-label="Remove photo ${index + 1}" title="Remove this photo" class="remove-photo-btn absolute top-2 right-2 bg-white border border-danger-200 text-danger-700 rounded-lg h-10 px-3 font-bold shadow">× Remove</button><input class="photo-description mt-1 w-full px-2 py-2 border border-field-border rounded-lg text-xs" data-photo-index="${index}" value="${escapeAttr(descriptions[index] || '')}" placeholder="Describe or identify this picture${reportCategory === 'pm' && !JACOB_PHOTO_EXEMPT ? ' (required)' : ' (optional)'}" /></div>`).join('');
                 photoPreview.querySelectorAll('.remove-photo-btn').forEach(button => button.addEventListener('click', () => {
                     const index = Number(button.dataset.photoIndex); photos.splice(index, 1); descriptions.splice(index, 1);
                     renderPhotoPreviews(); saveState();
@@ -1250,6 +1310,8 @@
             const count = items.length;
             itemCountBadge.textContent = count + (count === 1 ? ' item' : ' items');
             loggedCountNum.textContent = count;
+            addItemAfterListBtn.classList.toggle('hidden', reportCategory !== 'pm' || count === 0);
+            addItemAfterListBtn.classList.toggle('flex', reportCategory === 'pm' && count > 0);
         }
 
         // ===================== PRINT =====================
@@ -1310,6 +1372,81 @@
                 reader.onerror = () => reject(new Error('Could not prepare the PDF for saving.'));
                 reader.readAsDataURL(blob);
             });
+        }
+
+        function loadPdfLib() {
+            if (window.PDFLib) return Promise.resolve(window.PDFLib);
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector('script[data-pdf-lib]');
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(window.PDFLib), { once: true });
+                    existing.addEventListener('error', reject, { once: true });
+                    return;
+                }
+                const script = document.createElement('script');
+                script.dataset.pdfLib = 'true';
+                script.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+                script.onload = () => resolve(window.PDFLib);
+                script.onerror = () => reject(new Error('Could not load the PDF splitting library.'));
+                document.head.appendChild(script);
+            });
+        }
+
+        async function splitPdfForSafeUpload(blob, maxBytes = 3000000) {
+            if (blob.size <= maxBytes) return [blob];
+            const PDFLib = await loadPdfLib();
+            const source = await PDFLib.PDFDocument.load(await blob.arrayBuffer());
+            const pageIndexes = source.getPageIndices();
+            const parts = [];
+            let start = 0;
+            while (start < pageIndexes.length) {
+                let bestBytes = null;
+                let bestEnd = start;
+                for (let end = start; end < pageIndexes.length; end++) {
+                    const candidate = await PDFLib.PDFDocument.create();
+                    const copied = await candidate.copyPages(source, pageIndexes.slice(start, end + 1));
+                    copied.forEach(page => candidate.addPage(page));
+                    const bytes = await candidate.save({ useObjectStreams: true });
+                    if (bytes.length > maxBytes && end > start) break;
+                    bestBytes = bytes;
+                    bestEnd = end + 1;
+                    if (bytes.length > maxBytes) break;
+                }
+                if (!bestBytes) throw new Error('SAVE_FAILED:A PDF page is too large to save safely. Please remove one oversized picture and try again.');
+                parts.push(new Blob([bestBytes], { type: 'application/pdf' }));
+                start = bestEnd;
+            }
+            return parts;
+        }
+
+        function reportPartLabel(index) {
+            let value = index + 1;
+            let label = '';
+            while (value > 0) {
+                value -= 1;
+                label = String.fromCharCode(65 + (value % 26)) + label;
+                value = Math.floor(value / 26);
+            }
+            return label;
+        }
+
+        async function splitPdfByTaskGroups(blob, itemPageRanges, tasksPerPart = 5) {
+            if (!itemPageRanges.length || itemPageRanges.length <= tasksPerPart) return [blob];
+            const PDFLib = await loadPdfLib();
+            const source = await PDFLib.PDFDocument.load(await blob.arrayBuffer());
+            const parts = [];
+            for (let startItem = 0; startItem < itemPageRanges.length; startItem += tasksPerPart) {
+                const endItem = Math.min(itemPageRanges.length - 1, startItem + tasksPerPart - 1);
+                const firstPage = startItem === 0 ? 0 : itemPageRanges[startItem].startPage - 1;
+                const lastPage = itemPageRanges[endItem].endPage - 1;
+                const target = await PDFLib.PDFDocument.create();
+                const indexes = Array.from({ length: lastPage - firstPage + 1 }, (_, offset) => firstPage + offset);
+                const copied = await target.copyPages(source, indexes);
+                copied.forEach(page => target.addPage(page));
+                const bytes = await target.save({ useObjectStreams: true });
+                parts.push(new Blob([bytes], { type: 'application/pdf' }));
+            }
+            return parts;
         }
 
         function imageUrlToDataUrl(url) {
@@ -1572,6 +1709,7 @@
                 const thumbH = 127;
                 const textAreaW = contentW;
 
+                const itemPageRanges = [];
                 for (let idx = 0; idx < itemDataList.length; idx++) {
                     const item = itemDataList[idx];
                     if (idx > 0) {
@@ -1580,6 +1718,7 @@
                         currentPage++;
                         drawPageHeader();
                     }
+                    const itemStartPage = currentPage;
 
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(11);
@@ -1633,16 +1772,13 @@
                             }
                         }
                     } else {
-                        doc.setFillColor(242, 244, 247);
-                        doc.setDrawColor(...GRAY_LIGHT);
-                        doc.setLineWidth(0.3);
-                        doc.roundedRect(imageX, cursorY, thumbW, thumbH, 2, 2, 'FD');
                         doc.setFont('helvetica', 'normal');
                         doc.setFontSize(7);
                         doc.setTextColor(...GRAY_TEXT);
-                        doc.text('No Photo', pageW / 2, cursorY + thumbH / 2, { align: 'center' });
+                        doc.text('No photo submitted', marginL, cursorY);
+                        cursorY += 5;
                     }
-                    if (!item.photos.length) cursorY += thumbH + 5;
+                    itemPageRanges.push({ startPage: itemStartPage, endPage: currentPage });
                 }
 
                 drawPageFooter(currentPage);
@@ -1667,76 +1803,72 @@
                 const safeDate = reportDateInput.value || 'undated';
                 const uniqueReportNumber = String(reportId || Date.now()).replace(/[^a-zA-Z0-9]/g, '').slice(-10);
                 const filename = 'Frontline_' + reportType.file + '_' + safeFacId + '_' + safeDate + '_' + uniqueReportNumber + '.pdf';
+                let archivedPartsPromise = null;
+                async function archivePdfParts() {
+                    if (archivedPartsPromise) return archivedPartsPromise;
+                    archivedPartsPromise = (async () => {
+                        const pdfParts = reportCategory === 'pm'
+                            ? await splitPdfByTaskGroups(doc.output('blob'), itemPageRanges, 5)
+                            : await splitPdfForSafeUpload(doc.output('blob'));
+                        const savedParts = [];
+                        for (let partIndex = 0; partIndex < pdfParts.length; partIndex++) {
+                            const label = reportPartLabel(partIndex);
+                            const suffix = pdfParts.length > 1 ? ' - ' + label : '';
+                            const partId = pdfParts.length > 1 ? reportId + '-part-' + (partIndex + 1) : reportId;
+                            const partTracking = trackingNum + suffix;
+                            const partFilename = pdfParts.length > 1 ? filename.replace(/\.pdf$/i, '_' + label + '.pdf') : filename;
+                            const partItems = reportCategory === 'pm' && pdfParts.length > 1
+                                ? itemDataList.slice(partIndex * 5, partIndex * 5 + 5)
+                                : itemDataList;
+                            const pdfBase64 = await blobToBase64(pdfParts[partIndex]);
+                            const response = await fetch('/api/pm-reports', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ report: {
+                                    id: partId,
+                                    technician: techName,
+                                    reportDate: dateVal,
+                                    facilityAddress: facilityAddr,
+                                    trackingNumber: partTracking,
+                                    baseTrackingNumber: trackingNum,
+                                    reportPart: partIndex + 1,
+                                    reportPartCount: pdfParts.length,
+                                    facilityId,
+                                    customerName: fedexJobInput.checked ? '' : customerName,
+                                    fedexJob: fedexJobInput.checked,
+                                    workArrangement: selectedWorkArrangement(),
+                                    teamMembers,
+                                    hoursOnJob,
+                                    travelHours,
+                                    itemCount: partItems.length,
+                                    totalItemCount: totalItems,
+                                    items: partItems.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
+                                    category: reportCategory,
+                                    reportTypeLabel: reportType.label + (suffix ? ' Part ' + suffix.trim().replace('-', '').trim() : ''),
+                                    workflowStatus: selectedWorkflowStatus(),
+                                    filename: partFilename,
+                                    pdfBase64,
+                                    completedAt: new Date().toISOString()
+                                } })
+                            });
+                            if (!response.ok) throw new Error('SAVE_FAILED:' + await response.text());
+                            savedParts.push({ id: partId, trackingNumber: partTracking, filename: partFilename, itemIds: partItems.map(item => item.id) });
+                        }
+                        return savedParts;
+                    })();
+                    return archivedPartsPromise;
+                }
                 if (mode === 'complete') {
-                    const pdfBase64 = await blobToBase64(doc.output('blob'));
-                    const response = await fetch('/api/pm-reports', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ report: {
-                            id: reportId,
-                            technician: techName,
-                            reportDate: dateVal,
-                            facilityAddress: facilityAddr,
-                            trackingNumber: trackingNum,
-                            facilityId,
-                            customerName: fedexJobInput.checked ? '' : customerName,
-                            fedexJob: fedexJobInput.checked,
-                            workArrangement: selectedWorkArrangement(),
-                            teamMembers,
-                            hoursOnJob,
-                            travelHours,
-                            itemCount: totalItems,
-                            items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
-                            category: reportCategory,
-                            reportTypeLabel: reportType.label,
-                            workflowStatus: selectedWorkflowStatus(),
-                            filename,
-                            pdfBase64,
-                            completedAt: new Date().toISOString()
-                        } })
-                    });
-                    if (!response.ok) {
-                        const details = await response.text();
-                        throw new Error('SAVE_FAILED:' + details);
-                    }
-                    await uploadJobReportPhotos(reportId, trackingNum);
-                    await uploadSupportingFiles(reportId, trackingNum);
+                    const savedParts = await archivePdfParts();
+                    for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
+                    await uploadSupportingFiles(savedParts[0].id, savedParts[0].trackingNumber);
+                    for (const part of savedParts) await downloadSavedCombinedPdf(part.id, part.filename);
                     removeToast(loadingToast);
-                    showToast('Completed report and supporting files saved. It is now available under Completed Reports.', 'success');
+                    showToast(savedParts.length > 1 ? 'Large report saved and downloaded as ' + savedParts.map(part => part.trackingNumber).join(', ') + '. Upload each PDF part to HCP.' : 'Complete combined report saved and downloaded to this device. It is ready to upload to HCP.', 'success');
                 } else if (mode === 'share') {
-                    const pdfBase64 = await blobToBase64(doc.output('blob'));
-                    const archiveResponse = await fetch('/api/pm-reports', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ report: {
-                            id: reportId,
-                            technician: techName,
-                            reportDate: dateVal,
-                            facilityAddress: facilityAddr,
-                            trackingNumber: trackingNum,
-                            facilityId,
-                            customerName: fedexJobInput.checked ? '' : customerName,
-                            fedexJob: fedexJobInput.checked,
-                            workArrangement: selectedWorkArrangement(),
-                            teamMembers,
-                            hoursOnJob,
-                            travelHours,
-                            itemCount: totalItems,
-                            items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
-                            category: reportCategory,
-                            reportTypeLabel: reportType.label,
-                            workflowStatus: selectedWorkflowStatus(),
-                            filename,
-                            pdfBase64,
-                            completedAt: new Date().toISOString()
-                        } })
-                    });
-                    if (!archiveResponse.ok) {
-                        const details = await archiveResponse.text();
-                        throw new Error('SAVE_FAILED:' + details);
-                    }
-                    await uploadJobReportPhotos(reportId, trackingNum);
-                    await uploadSupportingFiles(reportId, trackingNum);
+                    const savedParts = await archivePdfParts();
+                    for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
+                    await uploadSupportingFiles(savedParts[0].id, savedParts[0].trackingNumber);
                     const response = await fetch('/api/pm-reports/email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1763,42 +1895,12 @@
                     removeToast(loadingToast);
                     showToast('Report saved and notice emailed successfully to Jacob, Daniel, and Gary.', 'success');
                 } else {
-                    const pdfBase64 = await blobToBase64(doc.output('blob'));
-                    const response = await fetch('/api/pm-reports', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ report: {
-                            id: reportId,
-                            technician: techName,
-                            reportDate: dateVal,
-                            facilityAddress: facilityAddr,
-                            trackingNumber: trackingNum,
-                            facilityId,
-                            customerName: fedexJobInput.checked ? '' : customerName,
-                            fedexJob: fedexJobInput.checked,
-                            workArrangement: selectedWorkArrangement(),
-                            teamMembers,
-                            hoursOnJob,
-                            travelHours,
-                            itemCount: totalItems,
-                            items: itemDataList.map(({ id, unitId, description, needsCorrection, photoDescriptions, photos }) => ({ id, unitId, description, needsCorrection, photoCount: photos.filter(Boolean).length, photoDescriptions })),
-                            category: reportCategory,
-                            reportTypeLabel: reportType.label,
-                            workflowStatus: selectedWorkflowStatus(),
-                            filename,
-                            pdfBase64,
-                            completedAt: new Date().toISOString()
-                        } })
-                    });
-                    if (!response.ok) {
-                        const details = await response.text();
-                        throw new Error('SAVE_FAILED:' + details);
-                    }
-                    await uploadJobReportPhotos(reportId, trackingNum);
-                    await uploadSupportingFiles(reportId, trackingNum);
-                    doc.save(filename);
+                    const savedParts = await archivePdfParts();
+                    for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
+                    await uploadSupportingFiles(savedParts[0].id, savedParts[0].trackingNumber);
+                    for (const part of savedParts) await downloadSavedCombinedPdf(part.id, part.filename);
                     removeToast(loadingToast);
-                    showToast('Report saved and PDF downloaded successfully!', 'success');
+                    showToast(savedParts.length > 1 ? 'Large report saved and downloaded in ' + savedParts.length + ' parts.' : 'Report, attachments, and combined PDF downloaded successfully!', 'success');
                 }
 
             } catch (err) {
@@ -1813,6 +1915,8 @@
                     showToast('The report email could not be sent. Please try again.', 'error');
                 } else if (String(err && err.message || '').startsWith('ATTACH_FAILED:')) {
                     showToast('The report was saved, but a supporting file could not be uploaded. ' + String(err.message).replace('ATTACH_FAILED:', '').slice(0, 180), 'error');
+                } else if (String(err && err.message || '').startsWith('DOWNLOAD_FAILED:')) {
+                    showToast('The report and attachments were saved, but the combined PDF could not be downloaded. Please try Download PDF again.', 'error');
                 } else if (mode === 'complete' || String(err && err.message || '').startsWith('SAVE_FAILED:')) {
                     const detail = String(err && err.message || '').replace('SAVE_FAILED:', '');
                     showToast('The PDF was created, but the completed report could not be saved.' + (detail ? ' ' + detail.slice(0, 180) : ''), 'error');

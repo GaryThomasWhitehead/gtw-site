@@ -15,10 +15,11 @@ export default function ImportCompletedReportPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setSaving(true);
     setMessage("Reading PDF…");
     try {
-      const form = new FormData(event.currentTarget);
+      const form = new FormData(formElement);
       const file = form.get("pdf") as File;
       if (!file?.size || file.type !== "application/pdf") throw new Error("Choose a PDF report.");
       const pdfBase64 = await blobToBase64(file);
@@ -47,7 +48,7 @@ export default function ImportCompletedReportPage() {
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || `Server returned ${response.status}`);
       setMessage("Completed report saved successfully.");
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
     } finally {
