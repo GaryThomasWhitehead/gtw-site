@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
+import { downloadReportAttachment } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -36,7 +37,8 @@ type Attachment = {
   filename: string;
   description: string;
   contentType: string;
-  base64: string;
+  base64?: string;
+  storagePath?: string;
 };
 
 function config() {
@@ -103,7 +105,14 @@ async function attachmentsForReport(reportId: string) {
   const response = await fetch(`${url}/rest/v1/${table}?${params}`, { headers: headers(key), cache: "no-store" });
   if (!response.ok) throw new Error(`Could not load report pictures (${response.status}).`);
   const rows: { data?: Attachment }[] = await response.json();
-  return rows.map((row) => row.data).filter((item): item is Attachment => Boolean(item?.base64 && imageExtension(item.contentType, item.filename)));
+  const images = rows.map((row) => row.data).filter((item): item is Attachment => Boolean(item && imageExtension(item.contentType, item.filename)));
+  const loaded = await Promise.all(images.map(async (item) => {
+    if (item.base64) return item as Attachment & { base64: string };
+    if (!item.storagePath) return null;
+    const bytes = await downloadReportAttachment(url, key, item.storagePath);
+    return bytes ? { ...item, base64: bytes.toString("base64") } : null;
+  }));
+  return loaded.filter((item): item is Attachment & { base64: string } => Boolean(item?.base64));
 }
 
 export async function POST(request: NextRequest) {
