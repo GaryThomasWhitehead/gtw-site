@@ -536,10 +536,15 @@ export default function ReportsClient() {
   const tuggerHistoryMode = tab === "tugger" && tuggerView === "history";
   const gasHistoryMode = tab === "gas" && gasView === "history";
 
-  async function openReportPdf(report: Report) {
+  function openReportPdf(report: Report) {
     setError("");
     const url = `/api/pm-reports?id=${encodeURIComponent(report.id)}`;
-    const pdfWindow = window.open(url, "_blank", "noopener,noreferrer");
+    // Some mobile browsers deliberately return null when `noopener` is passed
+    // as a window feature even though the new tab opened successfully. Open
+    // synchronously from the tap, then sever the opener when a WindowProxy is
+    // available so a successful mobile open is not reported as a failure.
+    const pdfWindow = window.open(url, "_blank");
+    if (pdfWindow) pdfWindow.opener = null;
     if (!pdfWindow) setError("Could not open PDF. Please allow pop-ups for this site and try again.");
   }
 
