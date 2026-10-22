@@ -29,6 +29,22 @@ function partLabel(index: number) {
   return label;
 }
 
+async function archiveBeforeRemoval(url: string, key: string, table: string, rows: { tracking_number: string; data: any }[], reason: string) {
+  if (!rows.length) return;
+  const archivedAt = new Date().toISOString();
+  const archiveRows = rows.map((row, index) => ({
+    tracking_number: `PMREPORTTRASH:${String(row.data?.id || "unknown")}:${Date.now()}-${index}`,
+    data: { ...row.data, recoveryDeletedAt: archivedAt, recoveryReason: reason, recoveryOriginalKey: row.tracking_number },
+    updated_at: archivedAt,
+  }));
+  const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+    method: "POST",
+    headers: { ...headers(key), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify(archiveRows),
+  });
+  if (!response.ok) throw new Error(`Could not create consolidation recovery copies: ${await response.text()}`);
+}
+
 export async function POST(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
@@ -80,6 +96,7 @@ export async function POST(request: NextRequest) {
       }
     }
     const removeIds = ordered.map((row) => String(row.data.id)).filter((id) => !keepIds.has(id));
+    await archiveBeforeRemoval(url, key, table, ordered.filter((row) => removeIds.includes(String(row.data.id))), "consolidation-retry-cleanup");
     const values = removeIds.map((id) => `PMREPORT:${id}`).join(",");
     const deletion = await fetch(`${url}/rest/v1/${table}?tracking_number=in.(${values})`, { method: "DELETE", headers: { ...headers(key), Prefer: "return=minimal" } });
     if (!deletion.ok) return NextResponse.json({ error: await deletion.text() }, { status: deletion.status });
@@ -156,6 +173,7 @@ export async function POST(request: NextRequest) {
 
   const removeIds = ordered.map((row) => String(row.data.id)).filter((id) => !keptIds.includes(id));
   if (removeIds.length) {
+    await archiveBeforeRemoval(url, key, table, ordered.filter((row) => removeIds.includes(String(row.data.id))), "consolidation");
     const values = removeIds.map((id) => `PMREPORT:${id}`).join(",");
     const deletion = await fetch(`${url}/rest/v1/${table}?tracking_number=in.(${values})`, { method: "DELETE", headers: { ...headers(key), Prefer: "return=minimal" } });
     if (!deletion.ok) return NextResponse.json({ error: await deletion.text() }, { status: deletion.status });

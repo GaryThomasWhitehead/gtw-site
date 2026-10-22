@@ -9,6 +9,11 @@ const RECIPIENTS = [
   "gary@frontlineworldwide.com",
 ];
 
+const TECHNICIAN_NOTIFICATION_EMAILS: Record<string, string> = {
+  leo: "leo@frontlineworldwide.com",
+  leofernandez: "leo@frontlineworldwide.com",
+};
+
 function clean(value: unknown) {
   return String(value || "").replace(/[<>]/g, "").trim();
 }
@@ -34,12 +39,15 @@ export async function POST(request: NextRequest) {
     const facilityId = clean(report.customerName) || clean(report.facilityId) || "Facility";
     const trackingNumber = clean(report.trackingNumber) || "No tracking number";
     const reportType = clean(report.reportTypeLabel) || "Preventive Maintenance Report";
+    const technicianKey = clean(report.technician).toLowerCase().replace(/[^a-z0-9]/g, "");
+    const technicianRecipient = TECHNICIAN_NOTIFICATION_EMAILS[technicianKey];
+    const recipients = [...new Set([...RECIPIENTS, ...(technicianRecipient ? [technicianRecipient] : [])])];
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from,
-        to: RECIPIENTS,
+        to: recipients,
         subject: `Frontline ${reportType} - ${facilityId} - ${trackingNumber}`,
         html: `<p>A Frontline ${reportType} has been completed.</p><p><strong>Facility/Customer:</strong> ${facilityId}<br><strong>Tracking:</strong> ${trackingNumber}<br><strong>Technician:</strong> ${clean(report.technician) || "Not entered"}<br><strong>Date:</strong> ${clean(report.reportDate) || "Not entered"}<br><strong>Address:</strong> ${clean(report.facilityAddress) || "Not entered"}${technician.timeEntryRequired ? `<br><strong>Hours on Job:</strong> ${clean(report.hoursOnJob)}<br><strong>Travel Hours:</strong> ${clean(report.travelHours)}` : ""}</p>`,
       }),

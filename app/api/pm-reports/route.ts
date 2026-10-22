@@ -122,10 +122,20 @@ export async function POST(request: NextRequest) {
     const data = storedInObjectStorage
       ? { ...reportMetadata, pdfStoragePath, recordType: "pm-report" }
       : { ...storedReport, recordType: "pm-report" };
+    const savedAt = new Date().toISOString();
+    const primaryRow = { tracking_number: `PMREPORT:${report.id}`, data, updated_at: savedAt };
+    // Keep a second, non-listable recovery record for every completed report.
+    // This makes an accidental UI deletion or maintenance cleanup recoverable
+    // without duplicating the PDF object itself when object storage is active.
+    const recoveryRow = {
+      tracking_number: `PMREPORTBACKUP:${report.id}`,
+      data: { ...data, recoveryBackupOf: report.id, recoveryBackedUpAt: savedAt },
+      updated_at: savedAt,
+    };
     const response = await fetchWithRetry(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
       method: "POST",
       headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify([{ tracking_number: `PMREPORT:${report.id}`, data, updated_at: new Date().toISOString() }]),
+      body: JSON.stringify([primaryRow, recoveryRow]),
     });
     if (!response.ok) return NextResponse.json({ error: (await response.text()) || `Storage returned ${response.status}` }, { status: response.status });
     return NextResponse.json({ ok: true, id: report.id });
@@ -527,6 +537,24 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Incorrect management password" }, { status: 403 });
   }
   const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
+  const existingResponse = await fetchWithRetry(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
+    headers: apiHeaders(key),
+    cache: "no-store",
+  });
+  if (!existingResponse.ok) return NextResponse.json({ error: "Could not create a recovery copy before deletion" }, { status: 503 });
+  const [existingRow] = await existingResponse.json();
+  if (!existingRow?.data) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  const deletedAt = new Date().toISOString();
+  const recoveryResponse = await fetchWithRetry(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+    method: "POST",
+    headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify([{
+      tracking_number: `PMREPORTTRASH:${id}:${Date.now()}`,
+      data: { ...existingRow.data, recoveryDeletedAt: deletedAt, recoveryDeletedId: id },
+      updated_at: deletedAt,
+    }]),
+  });
+  if (!recoveryResponse.ok) return NextResponse.json({ error: "Could not create a recovery copy before deletion" }, { status: 503 });
   const response = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
     method: "DELETE",
     headers: { ...apiHeaders(key), Prefer: "return=minimal" },
