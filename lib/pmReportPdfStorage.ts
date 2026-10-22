@@ -2,6 +2,7 @@ const BUCKET = process.env.PM_REPORT_PDF_BUCKET || "pm-report-pdfs";
 
 const storageHeaders = (key: string) => ({ apikey: key, Authorization: `Bearer ${key}` });
 const objectUrl = (url: string, path: string) => `${url}/storage/v1/object/${encodeURIComponent(BUCKET)}/${path.split("/").map(encodeURIComponent).join("/")}`;
+const signedObjectUrl = (url: string, path: string) => `${url}/storage/v1/object/sign/${encodeURIComponent(BUCKET)}/${path.split("/").map(encodeURIComponent).join("/")}`;
 
 async function ensureBucket(url: string, key: string) {
   const existing = await fetch(`${url}/storage/v1/bucket/${encodeURIComponent(BUCKET)}`, { headers: storageHeaders(key), cache: "no-store" });
@@ -44,6 +45,21 @@ export async function downloadReportPdf(url: string, key: string, path: string) 
 export async function streamReportPdf(url: string, key: string, path: string) {
   const response = await fetch(objectUrl(url, path), { headers: storageHeaders(key), cache: "no-store" });
   return response.ok && response.body ? response : null;
+}
+
+export async function createSignedReportObjectUrl(url: string, key: string, path: string, expiresIn = 300) {
+  const response = await fetch(signedObjectUrl(url, path), {
+    method: "POST",
+    headers: { ...storageHeaders(key), "Content-Type": "application/json" },
+    body: JSON.stringify({ expiresIn }),
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  const data = await response.json() as { signedURL?: string; signedUrl?: string };
+  const signed = String(data.signedURL || data.signedUrl || "");
+  if (!signed) return null;
+  if (/^https?:\/\//i.test(signed)) return signed;
+  return `${url}${signed.startsWith("/") ? "" : "/"}${signed}`;
 }
 
 export async function uploadReportAttachment(url: string, key: string, path: string, contentType: string, bytes: Buffer | Uint8Array) {

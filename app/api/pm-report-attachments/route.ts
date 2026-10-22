@@ -4,7 +4,7 @@ import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
-import { downloadReportAttachment, downloadReportPdf, reportAttachmentPath, reportPdfPath, uploadReportAttachment, uploadReportPdf } from "@/lib/pmReportPdfStorage";
+import { createSignedReportObjectUrl, downloadReportAttachment, downloadReportPdf, reportAttachmentPath, reportPdfPath, uploadReportAttachment, uploadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 
@@ -158,6 +158,14 @@ export async function GET(request: NextRequest) {
     if (!response.ok) return NextResponse.json({ error: await response.text() }, { status: response.status });
     const [row] = await response.json();
     const attachment = row?.data;
+    if (attachment?.storagePath) {
+      const signedUrl = await createSignedReportObjectUrl(url, key, String(attachment.storagePath));
+      if (signedUrl) {
+        const redirect = NextResponse.redirect(signedUrl, 307);
+        redirect.headers.set("Cache-Control", "private, no-store");
+        return redirect;
+      }
+    }
     const bytes = attachment?.storagePath
       ? await downloadReportAttachment(url, key, String(attachment.storagePath))
       : attachment?.base64 ? Buffer.from(attachment.base64, "base64") : null;

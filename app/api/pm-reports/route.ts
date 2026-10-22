@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { PDFDocument } from "pdf-lib";
 import { expectedFedExTrackerPassword, hasCorrectiveActionViewerAccess, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
-import { deleteReportPdf, downloadReportPdf, reportPdfPath, streamReportPdf, uploadReportPdf } from "@/lib/pmReportPdfStorage";
+import { createSignedReportObjectUrl, deleteReportPdf, downloadReportPdf, reportPdfPath, streamReportPdf, uploadReportPdf } from "@/lib/pmReportPdfStorage";
 
 export const dynamic = "force-dynamic";
 
@@ -204,6 +204,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (row.pdfStoragePath) {
+      const signedUrl = await createSignedReportObjectUrl(url, key, String(row.pdfStoragePath));
+      if (signedUrl) {
+        const redirect = NextResponse.redirect(signedUrl, 307);
+        redirect.headers.set("Cache-Control", "private, no-store");
+        return redirect;
+      }
       const storedPdf = await streamReportPdf(url, key, String(row.pdfStoragePath));
       if (storedPdf?.body) {
         const contentLength = storedPdf.headers.get("content-length");
