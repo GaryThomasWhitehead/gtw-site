@@ -1234,7 +1234,12 @@
             if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
             await uploadSupportingFiles(reportUniqueId, hdr.trackingNum);
             if (mode === 'download') {
-                doc.save(filename);
+                const link = document.createElement('a');
+                link.href = '/api/pm-reports?id=' + encodeURIComponent(reportUniqueId) + '&download=1';
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
                 showToast('Report verified in Completed Reports; supporting files saved and PDF downloaded successfully', 'success');
                 return;
             }

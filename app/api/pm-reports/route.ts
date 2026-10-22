@@ -167,6 +167,7 @@ export async function GET(request: NextRequest) {
   const correctiveViewerAccess = hasCorrectiveActionViewerAccess(request);
   const technician = await validatePmTechSession(request);
   const id = request.nextUrl.searchParams.get("id");
+  const forceDownload = request.nextUrl.searchParams.get("download") === "1";
   if (!managementAccess && !correctiveViewerAccess && !(technician && id)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
   if (!url || !key) return NextResponse.json({ error: "Storage is not configured" }, { status: 503 });
@@ -206,7 +207,9 @@ export async function GET(request: NextRequest) {
     if (row.pdfStoragePath) {
       const signedUrl = await createSignedReportObjectUrl(url, key, String(row.pdfStoragePath));
       if (signedUrl) {
-        const redirect = NextResponse.redirect(signedUrl, 307);
+        const deliveryUrl = new URL(signedUrl);
+        if (forceDownload) deliveryUrl.searchParams.set("download", String(row.filename || "pm-report.pdf").replace(/[^a-zA-Z0-9._-]/g, "_"));
+        const redirect = NextResponse.redirect(deliveryUrl, 307);
         redirect.headers.set("Cache-Control", "private, no-store");
         return redirect;
       }
@@ -215,7 +218,7 @@ export async function GET(request: NextRequest) {
         const contentLength = storedPdf.headers.get("content-length");
         return new NextResponse(storedPdf.body, { headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`,
+          "Content-Disposition": `${forceDownload ? "attachment" : "inline"}; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`,
           "Cache-Control": "private, max-age=300",
           ...(contentLength ? { "Content-Length": contentLength } : {}),
         } });
@@ -245,7 +248,7 @@ export async function GET(request: NextRequest) {
         }).catch(() => null);
       }
     }
-    return new NextResponse(new Uint8Array(pdf), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`, "Cache-Control": "private, max-age=300" } });
+    return new NextResponse(new Uint8Array(pdf), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `${forceDownload ? "attachment" : "inline"}; filename="${String(row.filename || "pm-report.pdf").replace(/\"/g, "")}"`, "Cache-Control": "private, max-age=300" } });
   }
 
   const mode = request.nextUrl.searchParams.get("mode");

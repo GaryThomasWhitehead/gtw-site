@@ -592,17 +592,15 @@
         }
 
         async function downloadSavedCombinedPdf(savedReportId, filename) {
-            const response = await fetch('/api/pm-reports?id=' + encodeURIComponent(savedReportId), { cache: 'no-store' });
-            if (!response.ok) throw new Error('DOWNLOAD_FAILED:' + await response.text());
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
+            link.href = '/api/pm-reports?id=' + encodeURIComponent(savedReportId) + '&download=1';
             link.download = filename;
             document.body.appendChild(link);
             link.click();
             link.remove();
-            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+            // Give mobile download managers time to accept each file before a
+            // multi-part report starts its next secured download.
+            await new Promise(resolve => window.setTimeout(resolve, 750));
         }
 
         async function uploadJobReportPhotos(savedReportId, trackingNumber, allowedCardIds = null) {
