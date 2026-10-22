@@ -59,7 +59,10 @@ export async function createSignedReportObjectUrl(url: string, key: string, path
   const signed = String(data.signedURL || data.signedUrl || "");
   if (!signed) return null;
   if (/^https?:\/\//i.test(signed)) return signed;
-  return `${url}${signed.startsWith("/") ? "" : "/"}${signed}`;
+  const relative = signed.startsWith("/") ? signed : `/${signed}`;
+  // Supabase returns `/object/sign/...`; that path is relative to its Storage
+  // service base rather than the project root.
+  return `${url}${relative.startsWith("/storage/v1/") ? relative : `/storage/v1${relative}`}`;
 }
 
 export async function uploadReportAttachment(url: string, key: string, path: string, contentType: string, bytes: Buffer | Uint8Array) {
