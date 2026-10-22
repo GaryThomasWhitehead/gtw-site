@@ -1235,7 +1235,7 @@
             await uploadSupportingFiles(reportUniqueId, hdr.trackingNum);
             if (mode === 'download') {
                 doc.save(filename);
-                showToast('Report and supporting files saved; PDF downloaded successfully', 'success');
+                showToast('Report verified in Completed Reports; supporting files saved and PDF downloaded successfully', 'success');
                 return;
             }
             if (mode === 'share') {
@@ -1243,7 +1243,7 @@
                 const emailResponse = await fetch('/api/pm-reports/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report: emailReport }) });
                 if (!emailResponse.ok) throw new Error(await emailResponse.text());
             }
-            showToast(mode === 'share' ? 'Report saved and notice emailed successfully' : 'Completed report saved', 'success');
+            showToast(mode === 'share' ? 'Report verified in Completed Reports and notice emailed successfully' : 'Completed report verified in Completed Reports', 'success');
         }
 
         // ─── Initialize ───

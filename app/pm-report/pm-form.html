@@ -782,7 +782,7 @@
             printBtn.addEventListener('click', () => handleExportPDF('download'));
             exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
             emailPdfBtn.addEventListener('click', () => {
-                if (confirm('Save this completed report and email the notice to Jacob, Daniel, and Gary?')) handleExportPDF('share');
+                if (confirm('Save this completed report on the site and email the completion notice? Leo receives a copy only when this report is submitted from Leo’s technician account.')) handleExportPDF('share');
             });
             completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
@@ -1864,7 +1864,7 @@
                     await uploadSupportingFiles(savedParts[0].id, savedParts[0].trackingNumber);
                     for (const part of savedParts) await downloadSavedCombinedPdf(part.id, part.filename);
                     removeToast(loadingToast);
-                    showToast(savedParts.length > 1 ? 'Large report saved and downloaded as ' + savedParts.map(part => part.trackingNumber).join(', ') + '. Upload each PDF part to HCP.' : 'Complete combined report saved and downloaded to this device. It is ready to upload to HCP.', 'success');
+                    showToast(savedParts.length > 1 ? 'Large report verified on the site and downloaded as ' + savedParts.map(part => part.trackingNumber).join(', ') + '. Upload each PDF part to HCP.' : 'Complete report verified in Completed Reports and downloaded to this device. It is ready to upload to HCP.', 'success');
                 } else if (mode === 'share') {
                     const savedParts = await archivePdfParts();
                     for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
@@ -1893,14 +1893,14 @@
                         throw new Error('EMAIL_FAILED:' + details);
                     }
                     removeToast(loadingToast);
-                    showToast('Report saved and notice emailed successfully to Jacob, Daniel, and Gary.', 'success');
+                    showToast('Report verified in Completed Reports and the completion notice was emailed.', 'success');
                 } else {
                     const savedParts = await archivePdfParts();
                     for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
                     await uploadSupportingFiles(savedParts[0].id, savedParts[0].trackingNumber);
                     for (const part of savedParts) await downloadSavedCombinedPdf(part.id, part.filename);
                     removeToast(loadingToast);
-                    showToast(savedParts.length > 1 ? 'Large report saved and downloaded in ' + savedParts.length + ' parts.' : 'Report, attachments, and combined PDF downloaded successfully!', 'success');
+                    showToast(savedParts.length > 1 ? 'Large report verified on the site and downloaded in ' + savedParts.length + ' parts.' : 'Report verified in Completed Reports; attachments and combined PDF downloaded successfully!', 'success');
                 }
 
             } catch (err) {

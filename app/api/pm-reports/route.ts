@@ -138,6 +138,21 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify([primaryRow, recoveryRow]),
     });
     if (!response.ok) return NextResponse.json({ error: (await response.text()) || `Storage returned ${response.status}` }, { status: response.status });
+    // Do not tell the technician that Save or Download succeeded until both
+    // the visible archive record and its recovery copy can be read back.
+    const verificationValues = [`PMREPORT:${report.id}`, `PMREPORTBACKUP:${report.id}`].join(",");
+    const verificationParams = new URLSearchParams({ select: "tracking_number" });
+    verificationParams.append("tracking_number", `in.(${verificationValues})`);
+    const verification = await fetchWithRetry(`${url}/rest/v1/${table}?${verificationParams}`, {
+      headers: apiHeaders(key),
+      cache: "no-store",
+    });
+    if (!verification.ok) return NextResponse.json({ error: "The report was written but could not be verified. Please save it again." }, { status: 503 });
+    const verifiedRows: { tracking_number?: string }[] = await verification.json();
+    const verifiedKeys = new Set(verifiedRows.map((row) => String(row.tracking_number || "")));
+    if (!verifiedKeys.has(`PMREPORT:${report.id}`) || !verifiedKeys.has(`PMREPORTBACKUP:${report.id}`)) {
+      return NextResponse.json({ error: "The report archive could not be confirmed. Please save it again." }, { status: 503 });
+    }
     return NextResponse.json({ ok: true, id: report.id });
   } catch (error) {
     const cause = error instanceof Error && error.cause && typeof error.cause === "object"
