@@ -125,6 +125,27 @@ export async function POST(request: NextRequest) {
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invoice could not be submitted" }, { status: 500 }); }
 }
 
+export async function DELETE(request: NextRequest) {
+  if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const body = await request.json();
+    const id = String(body.id || "").trim();
+    if (!id) return NextResponse.json({ error: "Invoice approval ID is required" }, { status: 400 });
+    const record = await row(id);
+    if (!record?.invoice) return NextResponse.json({ error: "Saved invoice was not found" }, { status: 404 });
+    if (record.status !== "pending") return NextResponse.json({ error: "Only pending invoice approvals can be deleted" }, { status: 409 });
+    const { url, key, table } = cfg();
+    const response = await fetch(`${url}/rest/v1/${table}?tracking_number=eq.${encodeURIComponent(`INVOICEAPPROVAL:${id}`)}`, {
+      method: "DELETE",
+      headers: { ...headers(key), Prefer: "return=minimal" },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return NextResponse.json({ deleted: true, id });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invoice approval could not be deleted" }, { status: 500 });
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json(), token = String(body.token || ""), [id, raw] = token.split(".");
