@@ -7,7 +7,7 @@ type Approval = {
   revision: number;
   status: string;
   updatedAt: string;
-  invoice: { invoiceNumber?: string; location?: string; address?: string; tracking?: string; completed?: string; category?: string; summary?: string; totals?: { grand?: string } };
+  invoice: { invoiceNumber?: string; location?: string; address?: string; tracking?: string; completed?: string; technicians?: string; category?: string; summary?: string; totals?: { grand?: string } };
   reviewers?: { name?: string; decision?: string; reason?: string }[];
 };
 
@@ -33,7 +33,7 @@ export default function ApprovedInvoicesPage() {
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return records;
-    return records.filter((record) => [record.invoice.invoiceNumber, record.invoice.location, record.invoice.address, record.invoice.tracking, record.invoice.category, record.invoice.summary]
+    return records.filter((record) => [record.invoice.invoiceNumber, record.invoice.location, record.invoice.address, record.invoice.tracking, record.invoice.technicians, record.invoice.category, record.invoice.summary]
       .some((value) => String(value || "").toLowerCase().includes(term)));
   }, [records, query]);
 
@@ -61,7 +61,7 @@ export default function ApprovedInvoicesPage() {
         {filtered.map((record) => {
           const approval = record.reviewers?.find((reviewer) => reviewer.decision === "approved");
           return <article key={record.id}>
-            <div><h2>{record.invoice.location || "No location"} · {record.invoice.tracking || "No tracking number"}</h2><p>Invoice {record.invoice.invoiceNumber || "not entered"} · Revision {record.revision} · {record.invoice.totals?.grand || "$0.00"}</p><p>{record.invoice.completed || new Date(record.updatedAt).toLocaleDateString()} · {record.invoice.category || "Job type not entered"}</p>{approval && <small>{approval.name || "Reviewer"}: approved</small>}</div>
+            <div><h2>{record.invoice.location || "No location"} · {record.invoice.tracking || "No tracking number"}</h2><p>Invoice {record.invoice.invoiceNumber || "not entered"} · Revision {record.revision} · {record.invoice.totals?.grand || "$0.00"}</p><p>{record.invoice.completed || new Date(record.updatedAt).toLocaleDateString()} · {record.invoice.category || "Job type not entered"}</p><p>Technicians: {record.invoice.technicians || "Not entered"}</p>{approval && <small>{approval.name || "Reviewer"}: approved</small>}</div>
             <div className="rowActions"><a href={`/invoice-creator?invoice=${encodeURIComponent(record.id)}`}>View Invoice</a><button disabled={sendingId === record.id} onClick={() => void emailCopy(record)}>{sendingId === record.id ? "Sending…" : "Email Me Copy"}</button></div>
           </article>;
         })}
