@@ -308,9 +308,7 @@ export default function SamplesPage() {
         subtitle="A special Photo Music Video sample"
       >
         <Ratio16x9>
-          <video style={videoStyle} controls preload="metadata" playsInline>
-            <source src="/videos/through_the_years.mp4" type="video/mp4" />
-          </video>
+          <a href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg" target="_blank" rel="noreferrer" style={{ ...videoStyle, display: "grid", placeItems: "center", color: "white", background: "#111", fontWeight: 800 }}>Watch on YouTube</a>
         </Ratio16x9>
       </FeaturedCard>
 
@@ -319,17 +317,13 @@ export default function SamplesPage() {
       <div style={grid}>
         <MediaCard title="Not for Sale" tag="Video">
           <Ratio16x9>
-            <video style={videoStyle} controls preload="metadata" playsInline>
-              <source src="/videos/not-for-sale.mp4" type="video/mp4" />
-            </video>
+            <a href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg" target="_blank" rel="noreferrer" style={{ ...videoStyle, display: "grid", placeItems: "center", color: "white", background: "#111", fontWeight: 800 }}>Watch on YouTube</a>
           </Ratio16x9>
         </MediaCard>
 
         <MediaCard title="Still Holding My Hand" tag="Video">
           <Ratio16x9>
-            <video style={videoStyle} controls preload="metadata" playsInline>
-              <source src="/videos/still-holding-my-hand.mp4" type="video/mp4" />
-            </video>
+            <a href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg" target="_blank" rel="noreferrer" style={{ ...videoStyle, display: "grid", placeItems: "center", color: "white", background: "#111", fontWeight: 800 }}>Watch on YouTube</a>
           </Ratio16x9>
         </MediaCard>
       </div>
