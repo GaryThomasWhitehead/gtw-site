@@ -157,14 +157,15 @@ export default function Home() {
             maxWidth: 980,
           }}
         >
-          <a
-            href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "white", display: "block", padding: "28px", textAlign: "center", fontWeight: 800 }}
+          <video
+            controls
+            preload="metadata"
+            style={{ width: "100%", height: "auto", display: "block" }}
           >
-            Watch Sweetly Sentimental on YouTube
-          </a>
+            {/* ✅ file is: public/videos/sweetly_sentimental.mp4 */}
+            <source src="/videos/sweetly_sentimental.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         {/* ✅ BRAND POSITIONING */}
@@ -333,14 +334,14 @@ export default function Home() {
             marginBottom: 12,
           }}
         >
-          <a
-            href="https://www.youtube.com/channel/UC8sxDC0vLnUeR2VQmK3qyVg"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "white", display: "block", padding: "28px", textAlign: "center", fontWeight: 800 }}
+          <video
+            controls
+            preload="metadata"
+            style={{ width: "100%", height: "auto", display: "block" }}
           >
-            Watch Not for Sale on YouTube
-          </a>
+            <source src="/videos/not-for-sale.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         <div
