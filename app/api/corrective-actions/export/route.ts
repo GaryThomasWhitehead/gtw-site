@@ -236,6 +236,12 @@ export async function POST(request: NextRequest) {
   const sheet = workbook.getWorksheet("Correctives & Parts");
   if (!sheet) return NextResponse.json({ error: "FedEx worksheet template is missing." }, { status: 500 });
   sheet.unprotect();
+  // Replace the template's old screenshot of the red job-plan buttons with
+  // the current Frontline Pro Services banner on every generated workbook.
+  (sheet as unknown as { _media: unknown[] })._media = [];
+  const headerLogo = await readFile(path.join(process.cwd(), "public", "frontline-pro-services-logo.png"));
+  const headerLogoId = workbook.addImage({ buffer: headerLogo as never, extension: "png" });
+  sheet.addImage(headerLogoId, { tl: { col: 0, row: 0 }, ext: { width: 1120, height: 158 } });
   const photosSheet = workbook.addWorksheet("Photos", { properties: { tabColor: { argb: "FF7B219F" } } });
   photosSheet.getColumn("A").width = 105;
   photosSheet.getColumn("B").width = 24;
