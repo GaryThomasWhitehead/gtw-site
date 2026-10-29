@@ -1602,6 +1602,7 @@
       const outOfStatePage = "__out_of_state";
       const emergencyPage = "__emergency_2_hour";
       const oldJobDays = 45;
+      const deletedOrdersStorageKey = `${storageKey}:deleted-tracking-numbers`;
       const fields = ["trackingNumber", "location", "classOfWork", "status", "cost", "priority", "assignedTo", "dueDate", "callDate", "jobDescription", "notes", "nextStep"];
       const emergencyTechnicians = ["Austin", "Brett", "Daniel", "Dennis", "Francisco", "Jacob", "Jeff", "Jose", "Leo", "Ricci"];
 
@@ -1656,16 +1657,39 @@
         }
       }
 
+      function deletedTrackingNumbers() {
+        try {
+          const values = JSON.parse(localStorage.getItem(deletedOrdersStorageKey) || "[]");
+          return new Set(Array.isArray(values) ? values.map(value => String(value || "").trim()).filter(Boolean) : []);
+        } catch {
+          return new Set();
+        }
+      }
+
+      function rememberDeletedOrder(order) {
+        const key = String(order?.trackingNumber || order?.id || "").trim();
+        if (!key) return;
+        const deleted = deletedTrackingNumbers();
+        deleted.add(key);
+        localStorage.setItem(deletedOrdersStorageKey, JSON.stringify([...deleted]));
+      }
+
+      function excludeDeletedOrders(sourceOrders) {
+        const deleted = deletedTrackingNumbers();
+        return sourceOrders.filter(order => !deleted.has(String(order?.trackingNumber || order?.id || "").trim()));
+      }
+
       function loadOrders() {
         const saved = localStorage.getItem(storageKey);
         if (!saved) {
-          cacheOrders(defaultOrders);
-          return defaultOrders;
+          const availableDefaults = excludeDeletedOrders(defaultOrders);
+          cacheOrders(availableDefaults);
+          return availableDefaults;
         }
         try {
           const parsed = JSON.parse(saved);
-          if (!Array.isArray(parsed) || !parsed.length) return defaultOrders;
-          const merged = mergeDefaultOrders(parsed.filter(order => !isEmptyUnclassifiedOrder(order)));
+          if (!Array.isArray(parsed)) return excludeDeletedOrders(defaultOrders);
+          const merged = mergeDefaultOrders(excludeDeletedOrders(parsed.filter(order => !isEmptyUnclassifiedOrder(order))));
           cacheOrders(merged);
           return merged;
         } catch {
@@ -1674,8 +1698,12 @@
       }
 
       function mergeDefaultOrders(savedOrders) {
+        const deleted = deletedTrackingNumbers();
         const seenTracking = new Set(savedOrders.map(order => String(order.trackingNumber || "").trim()).filter(Boolean));
-        const missingDefaults = defaultOrders.filter(order => !seenTracking.has(String(order.trackingNumber || "").trim()));
+        const missingDefaults = defaultOrders.filter(order => {
+          const key = String(order.trackingNumber || order.id || "").trim();
+          return !deleted.has(key) && !seenTracking.has(String(order.trackingNumber || "").trim());
+        });
         return [...savedOrders, ...missingDefaults];
       }
 
@@ -1699,7 +1727,7 @@
           }
           if (Array.isArray(remoteOrders) && remoteOrders.length) {
             const invalidOrders = remoteOrders.filter(order => isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order));
-            orders = remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order) && !isInvalidNtsOrder(order));
+            orders = excludeDeletedOrders(remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order) && !isInvalidNtsOrder(order)));
             refreshFacilityLabels();
             orders = orders.map(order => ({ ...order, location: normalizeLocation(order.location) }));
             if (invalidOrders.length) {
@@ -2253,13 +2281,24 @@
         render();
       }
 
-      function deleteOrder() {
+      async function deleteOrder() {
         const order = selectedOrder();
         if (!order || !confirm(`Delete work order ${order.trackingNumber || "without tracking number"}?`)) return;
-        orders = orders.filter(item => item.id !== order.id);
-        selectedId = orders[0]?.id || null;
-        saveOrders();
-        render();
+        const deleteButton = document.querySelector("#deleteButton");
+        deleteButton.disabled = true;
+        try {
+          const key = String(order.trackingNumber || order.id || "").trim();
+          if (key) await deleteRemoteOrders([key]);
+          rememberDeletedOrder(order);
+          orders = orders.filter(item => item.id !== order.id);
+          selectedId = orders[0]?.id || null;
+          cacheOrders(orders);
+          render();
+        } catch (error) {
+          console.error("Unable to permanently delete work order:", error);
+          alert(`The work order could not be permanently deleted. ${error.message || "Please try again."}`);
+          deleteButton.disabled = false;
+        }
       }
 
       function exportOrders() {
