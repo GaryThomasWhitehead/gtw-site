@@ -85,7 +85,10 @@ export async function GET(request: NextRequest) {
   }
 
   const rows = await response.json();
-  return NextResponse.json(rows.map((row: { data: WorkOrder }) => row.data).filter((data: WorkOrder) => data?.recordType !== "pm-report"), { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
+  return NextResponse.json(rows
+    .map((row: { data: WorkOrder }) => row.data)
+    .filter((data: WorkOrder) => !["pm-report", "deleted-work-order"].includes(String(data?.recordType || ""))),
+  { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
 }
 
 export async function PUT(request: NextRequest) {
@@ -99,6 +102,19 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Expected an array of work orders." }, { status: 400 });
   }
 
+  const tombstoneResponse = await fetch(
+    `${url}/rest/v1/${table}?select=tracking_number&data-%3E%3ErecordType=eq.deleted-work-order`,
+    { headers: headers(key), cache: "no-store" }
+  );
+  if (!tombstoneResponse.ok) {
+    return NextResponse.json({ error: await tombstoneResponse.text() }, { status: tombstoneResponse.status });
+  }
+  const deletedTrackingNumbers = new Set<string>(
+    ((await tombstoneResponse.json()) as Array<{ tracking_number?: string }>)
+      .map(row => String(row.tracking_number || "").trim())
+      .filter(Boolean)
+  );
+
   const ordersByTrackingNumber = new Map<string, WorkOrder>();
   let ordersWithTrackingNumbers = 0;
 
@@ -106,6 +122,7 @@ export async function PUT(request: NextRequest) {
     if (isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order)) continue;
     const trackingNumber = String(order.trackingNumber || order.id || "").trim();
     if (!trackingNumber) continue;
+    if (deletedTrackingNumbers.has(trackingNumber)) continue;
 
     ordersWithTrackingNumbers += 1;
     const previous = ordersByTrackingNumber.get(trackingNumber);
@@ -229,13 +246,19 @@ export async function DELETE(request: NextRequest) {
   let deleted = 0;
   for (let index = 0; index < trackingNumbers.length; index += 75) {
     const batch = trackingNumbers.slice(index, index + 75);
-    const values = batch.map((value) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`).join(",");
-    const response = await fetch(`${url}/rest/v1/${table}?tracking_number=in.(${encodeURIComponent(values)})`, {
-      method: "DELETE",
+    const deletedAt = new Date().toISOString();
+    const tombstones = batch.map(tracking_number => ({
+      tracking_number,
+      data: { trackingNumber: tracking_number, recordType: "deleted-work-order", deletedAt },
+      updated_at: deletedAt
+    }));
+    const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+      method: "POST",
       headers: {
         ...headers(key),
-        Prefer: "return=minimal"
-      }
+        Prefer: "resolution=merge-duplicates,return=minimal"
+      },
+      body: JSON.stringify(tombstones)
     });
 
     if (!response.ok) {

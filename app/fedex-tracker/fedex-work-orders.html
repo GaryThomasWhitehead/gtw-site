@@ -2482,7 +2482,10 @@
       function upsertImportedOrders(importedOrders) {
         let created = 0;
         let updated = 0;
+        const deleted = deletedTrackingNumbers();
         importedOrders.forEach(imported => {
+          const importedKey = String(imported.trackingNumber || imported.id || "").trim();
+          if (deleted.has(importedKey)) return;
           const index = orders.findIndex(order => String(order.trackingNumber || "").trim() === imported.trackingNumber);
           if (index === -1) {
             orders.push(imported);
