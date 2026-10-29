@@ -1405,10 +1405,12 @@
                     const copied = await candidate.copyPages(source, pageIndexes.slice(start, end + 1));
                     copied.forEach(page => candidate.addPage(page));
                     const bytes = await candidate.save({ useObjectStreams: true });
+                    if (bytes.length > maxBytes && end === start) {
+                        throw new Error('SAVE_FAILED:One PDF page is too large to upload. Please remove one oversized picture from that item and try again.');
+                    }
                     if (bytes.length > maxBytes && end > start) break;
                     bestBytes = bytes;
                     bestEnd = end + 1;
-                    if (bytes.length > maxBytes) break;
                 }
                 if (!bestBytes) throw new Error('SAVE_FAILED:A PDF page is too large to save safely. Please remove one oversized picture and try again.');
                 parts.push(new Blob([bestBytes], { type: 'application/pdf' }));
@@ -1805,9 +1807,24 @@
                 async function archivePdfParts() {
                     if (archivedPartsPromise) return archivedPartsPromise;
                     archivedPartsPromise = (async () => {
-                        const pdfParts = reportCategory === 'pm'
+                        const groupedParts = reportCategory === 'pm'
                             ? await splitPdfByTaskGroups(doc.output('blob'), itemPageRanges, 5)
-                            : await splitPdfForSafeUpload(doc.output('blob'));
+                            : [doc.output('blob')];
+                        const pdfParts = [];
+                        const pdfPartItems = [];
+                        for (let groupIndex = 0; groupIndex < groupedParts.length; groupIndex++) {
+                            // Base64 adds roughly 33% and the report metadata adds more.
+                            // Keep the raw PDF well below Vercel's request/response limit,
+                            // including task groups containing several high-resolution photos.
+                            const safeParts = await splitPdfForSafeUpload(groupedParts[groupIndex], 2200000);
+                            const groupItems = reportCategory === 'pm'
+                                ? itemDataList.slice(groupIndex * 5, groupIndex * 5 + 5)
+                                : itemDataList;
+                            for (const safePart of safeParts) {
+                                pdfParts.push(safePart);
+                                pdfPartItems.push(groupItems);
+                            }
+                        }
                         const savedParts = [];
                         for (let partIndex = 0; partIndex < pdfParts.length; partIndex++) {
                             const label = reportPartLabel(partIndex);
@@ -1815,9 +1832,7 @@
                             const partId = pdfParts.length > 1 ? reportId + '-part-' + (partIndex + 1) : reportId;
                             const partTracking = trackingNum + suffix;
                             const partFilename = pdfParts.length > 1 ? filename.replace(/\.pdf$/i, '_' + label + '.pdf') : filename;
-                            const partItems = reportCategory === 'pm' && pdfParts.length > 1
-                                ? itemDataList.slice(partIndex * 5, partIndex * 5 + 5)
-                                : itemDataList;
+                            const partItems = pdfPartItems[partIndex] || itemDataList;
                             const pdfBase64 = await blobToBase64(pdfParts[partIndex]);
                             const response = await fetch('/api/pm-reports', {
                                 method: 'POST',
