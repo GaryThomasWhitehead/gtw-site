@@ -6,6 +6,7 @@ type Result = {
   sent?: Array<{ id: string; trackingNumber: string; reportDate: string }>;
   failed?: Array<{ id: string; error: string }>;
   remaining?: number;
+  notFound?: string[];
   error?: string;
 };
 
@@ -14,6 +15,7 @@ export default function LeoEmailBackfillPage() {
   const [running, setRunning] = useState(false);
   const [sent, setSent] = useState<Array<{ id: string; trackingNumber: string; reportDate: string }>>([]);
   const [failed, setFailed] = useState<Array<{ id: string; error: string }>>([]);
+  const [notFound, setNotFound] = useState<string[]>([]);
 
   const recoveredLeoTrackingNumbers = [
     "367426130", "364597797", "364841928", "364597581", "364566070", "363900000", "363226092",
@@ -24,6 +26,7 @@ export default function LeoEmailBackfillPage() {
     setRunning(true);
     setSent([]);
     setFailed([]);
+    setNotFound([]);
     const allSent: Array<{ id: string; trackingNumber: string; reportDate: string }> = [];
     const allFailed: Array<{ id: string; error: string }> = [];
     try {
@@ -38,6 +41,7 @@ export default function LeoEmailBackfillPage() {
         if (!response.ok) throw new Error(result.error || "The recovery request failed");
         allSent.push(...(result.sent || []));
         allFailed.push(...(result.failed || []));
+        setNotFound(result.notFound || []);
         setSent([...allSent]);
         setFailed([...allFailed]);
         if (allFailed.length || !result.remaining) break;
@@ -61,6 +65,7 @@ export default function LeoEmailBackfillPage() {
     </button>
     {sent.length > 0 && <section><h2>Sent ({sent.length})</h2><ul>{sent.map((item) => <li key={item.id}>{item.reportDate} · {item.trackingNumber || item.id}</li>)}</ul></section>}
     {failed.length > 0 && <section><h2>Failed ({failed.length})</h2><ul>{failed.map((item) => <li key={item.id}>{item.id}: {item.error}</li>)}</ul></section>}
+    {notFound.length > 0 && <section><h2>Not found on site ({notFound.length})</h2><p>{notFound.join(", ")}</p></section>}
     <p style={{ marginTop: 24 }}><a href="/pm-reports">Back to Completed Reports</a></p>
   </main>;
 }

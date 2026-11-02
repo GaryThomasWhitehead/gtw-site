@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const since = /^\d{4}-\d{2}-\d{2}$/.test(String(body?.since || "")) ? String(body.since) : new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const batchSize = Math.min(3, Math.max(1, Number(body?.batchSize) || 2));
-  const requestedTrackingNumbers = new Set((Array.isArray(body?.trackingNumbers) ? body.trackingNumbers : [])
+  const requestedTrackingNumbers = new Set<string>((Array.isArray(body?.trackingNumbers) ? body.trackingNumbers : [])
     .map((value: unknown) => String(value || "").trim())
     .filter((value: string) => /^\d{6,12}$/.test(value)));
 
   const reportParams = new URLSearchParams({ select: "tracking_number,technician:data->>technician,reportDate:data->>reportDate,jobTracking:data->>trackingNumber", order: "updated_at.asc", limit: "1000" });
   reportParams.append("tracking_number", "like.PMREPORT:*");
-  reportParams.append("data->>reportDate", `gte.${since}`);
+  if (!requestedTrackingNumbers.size) reportParams.append("data->>reportDate", `gte.${since}`);
   const reportIndexResponse = await fetch(`${url}/rest/v1/${table}?${reportParams}`, { headers: apiHeaders(key), cache: "no-store" });
   if (!reportIndexResponse.ok) return NextResponse.json({ error: "Could not list Leo's saved reports" }, { status: 502 });
   const reportIndex = await reportIndexResponse.json() as Array<{ tracking_number?: string; technician?: string; reportDate?: string; jobTracking?: string }>;
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   const delivered = new Set(markerRows.map((row) => String(row.tracking_number || "").replace(/^PMREPORTEMAIL:LEO:/, "")));
   const candidates = reportIndex
     .filter((row) => requestedTrackingNumbers.size
-      ? requestedTrackingNumbers.has(String(row.jobTracking || "").trim())
+      ? requestedTrackingNumbers.has(String(row.jobTracking || "").replace(/\D/g, ""))
       : String(row.technician || "").trim().toLowerCase().replace(/[^a-z]/g, "").startsWith("leo"))
     .map((row) => ({ ...row, id: String(row.tracking_number || "").replace(/^PMREPORT:/, "") }))
     .filter((row) => row.id && !delivered.has(row.id));
@@ -70,5 +70,7 @@ export async function POST(request: NextRequest) {
       failed.push({ id: candidate.id, error: error instanceof Error ? error.message : String(error) });
     }
   }
-  return NextResponse.json({ ok: failed.length === 0, since, total: candidates.length, sent, failed, remaining: Math.max(0, candidates.length - sent.length) });
+  const matchedTrackingNumbers = new Set(reportIndex.map((row) => String(row.jobTracking || "").replace(/\D/g, "")).filter((value) => requestedTrackingNumbers.has(value)));
+  const notFound = [...requestedTrackingNumbers].filter((value) => !matchedTrackingNumbers.has(value));
+  return NextResponse.json({ ok: failed.length === 0, since, total: candidates.length, sent, failed, remaining: Math.max(0, candidates.length - sent.length), notFound });
 }
