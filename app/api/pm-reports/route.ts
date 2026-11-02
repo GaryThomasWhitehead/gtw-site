@@ -4,6 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import { expectedFedExTrackerPassword, hasCorrectiveActionViewerAccess, hasFedExTrackerAccess } from "@/lib/fedexTrackerAuth";
 import { validatePmTechSession } from "@/lib/pmTechAuth";
 import { createSignedReportObjectUrl, deleteReportPdf, downloadReportPdf, reportPdfPath, streamReportPdf, uploadReportPdf } from "@/lib/pmReportPdfStorage";
+import { sendLeoSavedReportPdf } from "@/lib/leoReportEmail";
 
 export const dynamic = "force-dynamic";
 
@@ -153,7 +154,33 @@ export async function POST(request: NextRequest) {
     if (!verifiedKeys.has(`PMREPORT:${report.id}`) || !verifiedKeys.has(`PMREPORTBACKUP:${report.id}`)) {
       return NextResponse.json({ error: "The report archive could not be confirmed. Please save it again." }, { status: 503 });
     }
-    return NextResponse.json({ ok: true, id: report.id });
+    let leoCopySent = false;
+    let leoCopyError = "";
+    if (technician?.timeEntryRequired) {
+      const emailMarker = `PMREPORTEMAIL:LEO:${report.id}`;
+      const markerParams = new URLSearchParams({ select: "tracking_number", tracking_number: `eq.${emailMarker}`, limit: "1" });
+      const markerResponse = await fetch(`${url}/rest/v1/${table}?${markerParams}`, { headers: apiHeaders(key), cache: "no-store" }).catch(() => null);
+      const markerRows = markerResponse?.ok ? await markerResponse.json() : [];
+      if (markerRows.length) {
+        leoCopySent = true;
+      } else {
+        try {
+          const providerId = await sendLeoSavedReportPdf(storedReport, pdfBytes);
+          const emailedAt = new Date().toISOString();
+          const savedMarker = await fetchWithRetry(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+            method: "POST",
+            headers: { ...apiHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify([{ tracking_number: emailMarker, data: { recordType: "pm-report-email", reportId: report.id, technician: technician.name, recipient: "leo@frontlineworldwide.com", providerId, emailedAt }, updated_at: emailedAt }]),
+          });
+          if (!savedMarker.ok) throw new Error("The PDF was emailed, but its delivery record could not be saved");
+          leoCopySent = true;
+        } catch (emailError) {
+          leoCopyError = emailError instanceof Error ? emailError.message : "Leo's PDF copy could not be emailed";
+          console.error("Leo saved-report PDF email failed", { reportId: report.id, error: leoCopyError });
+        }
+      }
+    }
+    return NextResponse.json({ ok: true, id: report.id, ...(technician?.timeEntryRequired ? { leoCopySent, ...(leoCopyError ? { leoCopyError } : {}) } : {}) });
   } catch (error) {
     const cause = error instanceof Error && error.cause && typeof error.cause === "object"
       ? String((error.cause as { code?: string; message?: string }).code || (error.cause as { message?: string }).message || "")
