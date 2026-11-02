@@ -22,13 +22,16 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const since = /^\d{4}-\d{2}-\d{2}$/.test(String(body?.since || "")) ? String(body.since) : new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const batchSize = Math.min(3, Math.max(1, Number(body?.batchSize) || 2));
+  const requestedTrackingNumbers = new Set((Array.isArray(body?.trackingNumbers) ? body.trackingNumbers : [])
+    .map((value: unknown) => String(value || "").trim())
+    .filter((value: string) => /^\d{6,12}$/.test(value)));
 
-  const reportParams = new URLSearchParams({ select: "tracking_number,technician:data->>technician,reportDate:data->>reportDate", order: "updated_at.asc", limit: "1000" });
+  const reportParams = new URLSearchParams({ select: "tracking_number,technician:data->>technician,reportDate:data->>reportDate,jobTracking:data->>trackingNumber", order: "updated_at.asc", limit: "1000" });
   reportParams.append("tracking_number", "like.PMREPORT:*");
   reportParams.append("data->>reportDate", `gte.${since}`);
   const reportIndexResponse = await fetch(`${url}/rest/v1/${table}?${reportParams}`, { headers: apiHeaders(key), cache: "no-store" });
   if (!reportIndexResponse.ok) return NextResponse.json({ error: "Could not list Leo's saved reports" }, { status: 502 });
-  const reportIndex = await reportIndexResponse.json() as Array<{ tracking_number?: string; technician?: string; reportDate?: string }>;
+  const reportIndex = await reportIndexResponse.json() as Array<{ tracking_number?: string; technician?: string; reportDate?: string; jobTracking?: string }>;
 
   const markerParams = new URLSearchParams({ select: "tracking_number", limit: "1000" });
   markerParams.append("tracking_number", "like.PMREPORTEMAIL:LEO:*");
@@ -37,7 +40,9 @@ export async function POST(request: NextRequest) {
   const markerRows = await markerResponse.json() as Array<{ tracking_number?: string }>;
   const delivered = new Set(markerRows.map((row) => String(row.tracking_number || "").replace(/^PMREPORTEMAIL:LEO:/, "")));
   const candidates = reportIndex
-    .filter((row) => String(row.technician || "").trim().toLowerCase().replace(/[^a-z]/g, "").startsWith("leo"))
+    .filter((row) => requestedTrackingNumbers.size
+      ? requestedTrackingNumbers.has(String(row.jobTracking || "").trim())
+      : String(row.technician || "").trim().toLowerCase().replace(/[^a-z]/g, "").startsWith("leo"))
     .map((row) => ({ ...row, id: String(row.tracking_number || "").replace(/^PMREPORT:/, "") }))
     .filter((row) => row.id && !delivered.has(row.id));
 

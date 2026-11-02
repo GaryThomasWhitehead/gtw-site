@@ -15,7 +15,12 @@ export default function LeoEmailBackfillPage() {
   const [sent, setSent] = useState<Array<{ id: string; trackingNumber: string; reportDate: string }>>([]);
   const [failed, setFailed] = useState<Array<{ id: string; error: string }>>([]);
 
-  async function run() {
+  const recoveredLeoTrackingNumbers = [
+    "367426130", "364597797", "364841928", "364597581", "364566070", "363900000", "363226092",
+    "361475538", "362617263", "362473627", "359489749", "359409934", "361440093",
+  ];
+
+  async function run(trackingNumbers: string[] = []) {
     setRunning(true);
     setSent([]);
     setFailed([]);
@@ -27,7 +32,7 @@ export default function LeoEmailBackfillPage() {
         const response = await fetch("/api/pm-reports/leo-email-backfill", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ since: "2026-10-02", batchSize: 2 }),
+          body: JSON.stringify({ since: "2026-10-02", batchSize: 2, ...(trackingNumbers.length ? { trackingNumbers } : {}) }),
         });
         const result = await response.json() as Result;
         if (!response.ok) throw new Error(result.error || "The recovery request failed");
@@ -50,6 +55,9 @@ export default function LeoEmailBackfillPage() {
     <p>{message}</p>
     <button type="button" onClick={() => void run()} disabled={running} style={{ background: "#075985", color: "white", border: 0, borderRadius: 8, padding: "12px 18px", fontWeight: 700 }}>
       {running ? "Sending…" : "Email Leo's Last 30 Days"}
+    </button>
+    <button type="button" onClick={() => void run(recoveredLeoTrackingNumbers)} disabled={running} style={{ marginLeft: 12, background: "#7c3aed", color: "white", border: 0, borderRadius: 8, padding: "12px 18px", fontWeight: 700 }}>
+      {running ? "Sending…" : "Email Leo's Recreated Reports"}
     </button>
     {sent.length > 0 && <section><h2>Sent ({sent.length})</h2><ul>{sent.map((item) => <li key={item.id}>{item.reportDate} · {item.trackingNumber || item.id}</li>)}</ul></section>}
     {failed.length > 0 && <section><h2>Failed ({failed.length})</h2><ul>{failed.map((item) => <li key={item.id}>{item.id}: {item.error}</li>)}</ul></section>}
