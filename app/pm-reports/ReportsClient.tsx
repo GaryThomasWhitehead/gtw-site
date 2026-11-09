@@ -569,21 +569,20 @@ export default function ReportsClient() {
     return () => controller.abort();
   }, []);
   const outstandingParts = useMemo(() => {
-    const reported = jobHistories.flatMap(history => history.reports.flatMap(report => {
+    const reported = allJobHistories.flatMap(history => history.reports.flatMap(report => {
       if (report.partsOrders == null && history.status === "complete") return [];
       const legacy = report.partsOrders == null ? legacyPartOrder(report.partsNotes) : undefined;
       return (report.partsOrders ?? (legacy ? [legacy] : []))
         .map((part, index) => ({ report, part, index, legacy: Boolean(legacy), trackingOrder: null as TrackingPartOrders | null }))
         .filter(({ part }) => !part.received);
     }));
-    if (tab !== "all") return reported;
     return [...reported, ...trackingOrders.flatMap(trackingOrder => trackingOrder.partsOrders
       .map((part, index) => ({
         report: { id: `tracking-${trackingOrder.trackingNumber}`, trackingNumber: trackingOrder.trackingNumber, facilityId: trackingOrder.location } as Report,
         part, index, legacy: false, trackingOrder,
       }))
       .filter(({ part }) => !part.received))];
-  }, [jobHistories, tab, trackingOrders]);
+  }, [allJobHistories, trackingOrders]);
   const visibleParts = outstandingParts.filter(({ report, part }) => reportMatches(report, query) || part.description.toLowerCase().includes(query.trim().toLowerCase()));
   const editingPartsReport = reports.find(report => report.id === editingPartsReportId);
   const partsEditorRef = useRef<HTMLElement>(null);
@@ -1101,6 +1100,7 @@ export default function ReportsClient() {
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload PDF or File to Report"}
           </button>
+          <button type="button" onClick={() => { setTab("all"); setQuery(""); setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowPartsOnOrder(true); }}>Parts on Order</button>
           <a href="/pm-report">New Report</a>
           <a href="/fedex-tracker">Back to Tracker</a>
         </div>
