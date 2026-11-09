@@ -5,6 +5,7 @@ import { expectedFedExTrackerPassword, hasCorrectiveActionViewerAccess, hasFedEx
 import { validatePmTechSession } from "@/lib/pmTechAuth";
 import { createSignedReportObjectUrl, deleteReportPdf, downloadReportPdf, reportPdfPath, streamReportPdf, uploadReportPdf } from "@/lib/pmReportPdfStorage";
 import { sendLeoSavedReportPdf } from "@/lib/leoReportEmail";
+import { validatePartsOrders, type PartOrder } from "@/lib/partsOrders";
 
 export const dynamic = "force-dynamic";
 
@@ -410,6 +411,7 @@ export async function GET(request: NextRequest) {
     "tuggerWorkRecords:data->tuggerWorkRecords",
     "workflowStatus:data->>workflowStatus",
     "partsNotes:data->>partsNotes",
+    "partsOrders:data->partsOrders",
     "workArrangement:data->>workArrangement",
     "teamMembers:data->>teamMembers",
     "manufacturer:data->>manufacturer",
@@ -465,6 +467,15 @@ export async function PATCH(request: NextRequest) {
   const workflowStatus = String(body?.workflowStatus || "").trim();
   const trackingNumberUpdate = body?.trackingNumber === undefined ? undefined : String(body.trackingNumber).trim();
   const partsNotesUpdate = body?.partsNotes === undefined ? undefined : String(body.partsNotes).trim();
+  let partsOrdersUpdate: PartOrder[] | undefined;
+  let previousPartsOrders: PartOrder[] = [];
+  if (body?.partsOrders !== undefined) {
+    try {
+      partsOrdersUpdate = validatePartsOrders(body.partsOrders);
+      previousPartsOrders = validatePartsOrders(body.previousPartsOrders);
+    }
+    catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 400 }); }
+  }
   const fedexJobUpdate = body?.fedexJob === undefined ? undefined : Boolean(body.fedexJob);
   const customerNameUpdate = body?.customerName === undefined ? undefined : String(body.customerName).trim();
   const hoursOnJobUpdate = body?.hoursOnJob === undefined ? undefined : String(body.hoursOnJob).trim();
@@ -475,7 +486,7 @@ export async function PATCH(request: NextRequest) {
     rawDeletePdfPages.map((page) => Number(page)).filter((page) => Number.isInteger(page) && page > 0),
   )).sort((a, b) => a - b);
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
-  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && hoursOnJobUpdate === undefined && travelHoursUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
+  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && partsOrdersUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && hoursOnJobUpdate === undefined && travelHoursUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
   }
   if (trackingNumberUpdate !== undefined && !trackingNumberUpdate) {
@@ -521,13 +532,20 @@ export async function PATCH(request: NextRequest) {
     }
   }
   const trackingNumber = encodeURIComponent(`PMREPORT:${id}`);
-  const currentResponse = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=eq.${trackingNumber}&limit=1`, {
+  const currentResponse = await fetch(`${url}/rest/v1/${table}?select=data,updated_at&tracking_number=eq.${trackingNumber}&limit=1`, {
     headers: apiHeaders(key),
     cache: "no-store",
   });
   if (!currentResponse.ok) return NextResponse.json({ error: await currentResponse.text() }, { status: currentResponse.status });
   const rows = await currentResponse.json();
   if (!rows.length) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  if (partsOrdersUpdate !== undefined) {
+    const previous = rows[0].data?.partsOrders ?? [];
+    const snapshot = (orders: PartOrder[]) => JSON.stringify(orders.map(({ description, price, orderedOn, expectedOn, received }) => [description, price, orderedOn, expectedOn, received]));
+    if (snapshot(previousPartsOrders) !== snapshot(previous)) {
+      return NextResponse.json({ error: "The saved part orders changed. Reload the reports and try again." }, { status: 409 });
+    }
+  }
   let pdfUpdate: Record<string, unknown> = {};
   if (deletePdfPages.length) {
     const originalBase64 = String(rows[0].data?.pdfBase64 || "");
@@ -561,6 +579,7 @@ export async function PATCH(request: NextRequest) {
     ...(workflowStatus ? { workflowStatus } : {}),
     ...(trackingNumberUpdate !== undefined ? { trackingNumber: trackingNumberUpdate } : {}),
     ...(partsNotesUpdate !== undefined ? { partsNotes: partsNotesUpdate } : {}),
+    ...(partsOrdersUpdate !== undefined ? { partsOrders: partsOrdersUpdate } : {}),
     ...(fedexJobUpdate !== undefined ? { fedexJob: fedexJobUpdate } : {}),
     ...(customerNameUpdate !== undefined ? { customerName: customerNameUpdate } : {}),
     ...(hoursOnJobUpdate !== undefined ? { hoursOnJob: hoursOnJobUpdate } : {}),
@@ -568,13 +587,15 @@ export async function PATCH(request: NextRequest) {
     ...(correctiveActionsUpdate !== undefined ? { correctiveActions: correctiveActionsUpdate } : {}),
     ...pdfUpdate,
   };
-  const updateResponse = await fetchWithRetry(`${url}/rest/v1/${table}?tracking_number=eq.${trackingNumber}`, {
+  const updateQuery = `tracking_number=eq.${trackingNumber}${partsOrdersUpdate !== undefined ? `&updated_at=eq.${encodeURIComponent(rows[0].updated_at)}&select=tracking_number` : ""}`;
+  const updateResponse = await fetchWithRetry(`${url}/rest/v1/${table}?${updateQuery}`, {
     method: "PATCH",
-    headers: { ...apiHeaders(key), Prefer: "return=minimal" },
+    headers: { ...apiHeaders(key), Prefer: partsOrdersUpdate !== undefined ? "return=representation" : "return=minimal" },
     body: JSON.stringify({ data: updatedData, updated_at: new Date().toISOString() }),
   });
   if (!updateResponse.ok) return NextResponse.json({ error: await updateResponse.text() }, { status: updateResponse.status });
-  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, correctiveActions: updatedData.correctiveActions, pdfPageCount: updatedData.pdfPageCount });
+  if (partsOrdersUpdate !== undefined && !(await updateResponse.json()).length) return NextResponse.json({ error: "This report changed while saving. Reload the reports and try again." }, { status: 409 });
+  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, partsOrders: updatedData.partsOrders, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, correctiveActions: updatedData.correctiveActions, pdfPageCount: updatedData.pdfPageCount });
 }
 
 export async function DELETE(request: NextRequest) {

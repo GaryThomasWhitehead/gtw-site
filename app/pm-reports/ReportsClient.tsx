@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import styles from "./reports.module.css";
+import PartsOrderEditor from "./PartsOrderEditor";
+import { legacyPartOrder, partOrderTracking, type PartOrder, type TrackingPartOrders } from "@/lib/partsOrders";
 
 type Category = "all" | "regular" | "proposed" | "pm" | "tugger" | "gas";
 type TuggerView = "reports" | "history";
@@ -56,6 +58,7 @@ type Report = {
   tuggerWorkRecords?: TuggerWorkRecord[];
   workflowStatus?: WorkflowStatus;
   partsNotes?: string;
+  partsOrders?: PartOrder[] | null;
   workArrangement?: "alone" | "team";
   teamMembers?: string;
   hoursOnJob?: string;
@@ -181,7 +184,21 @@ export default function ReportsClient() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Category>("all");
   const [statusTab, setStatusTab] = useState<WorkflowStatus>("complete");
+  const [showPartsOnOrder, setShowPartsOnOrder] = useState(false);
+  const [editingPartsReportId, setEditingPartsReportId] = useState("");
+  const [addingParts, setAddingParts] = useState(false);
+  const [partTrackingInput, setPartTrackingInput] = useState("");
+  const [trackingOrders, setTrackingOrders] = useState<TrackingPartOrders[]>([]);
+  const [trackingDraft, setTrackingDraft] = useState<TrackingPartOrders | null>(null);
+  const [partLocation, setPartLocation] = useState("");
+  const [partLookupBusy, setPartLookupBusy] = useState(false);
+  const [partLookupError, setPartLookupError] = useState("");
+  const [trackingOrdersError, setTrackingOrdersError] = useState("");
+  const [loadingTrackingOrders, setLoadingTrackingOrders] = useState(false);
+  const [deletingPart, setDeletingPart] = useState(false);
+  const [partDeleteFeedback, setPartDeleteFeedback] = useState<{ message: string; error: boolean } | null>(null);
   const [tuggerView, setTuggerView] = useState<TuggerView>("reports");
+  const [downloadingHistory, setDownloadingHistory] = useState(false);
   const [gasView, setGasView] = useState<TuggerView>("reports");
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
@@ -449,11 +466,15 @@ export default function ReportsClient() {
     tab === "all" || history.reports.some((report) => categoryOf(report) === tab)
   ), [allJobHistories, tab]);
 
-  const searchingAllReports = tab === "all";
+  // "All Reports" is the unfiltered archive: it must include every workflow
+  // status as well as every report category. A typed search also spans all
+  // statuses so a report cannot disappear merely because a status tab was
+  // selected earlier.
+  const searchingAcrossStatuses = tab === "all" || Boolean(query.trim());
   const shown = useMemo(() => jobHistories.filter((history) =>
-    (searchingAllReports || history.status === statusTab) &&
+    (searchingAcrossStatuses || history.status === statusTab) &&
     history.reports.some((report) => reportMatches(report, query))
-  ), [jobHistories, query, searchingAllReports, statusTab]);
+  ), [jobHistories, query, searchingAcrossStatuses, statusTab]);
 
   const technicianGroups = useMemo(() => {
     const groups = new Map<string, { label: string; histories: JobHistory[]; reportCount: number }>();
@@ -476,7 +497,7 @@ export default function ReportsClient() {
   const tuggerHistory = useMemo(
     () =>
       jobHistories
-        .filter((history) => categoryOf(history.latest) === "tugger" && history.status === statusTab)
+        .filter((history) => categoryOf(history.latest) === "tugger" && (searchingAcrossStatuses || history.status === statusTab))
         .flatMap((history) => history.reports)
         .flatMap((report) => {
           if (report.tuggerWorkRecords?.length) {
@@ -506,12 +527,12 @@ export default function ReportsClient() {
                 (compactQuery && normalizedSearch(value).includes(compactQuery));
             });
         }),
-    [jobHistories, query, statusTab],
+    [jobHistories, query, searchingAcrossStatuses, statusTab],
   );
   const gasHistory = useMemo(
     () =>
       jobHistories
-        .filter((history) => categoryOf(history.latest) === "gas" && history.status === statusTab)
+        .filter((history) => categoryOf(history.latest) === "gas" && (searchingAcrossStatuses || history.status === statusTab))
         .flatMap((history) => history.reports)
         .flatMap((report) => {
           const sheets = report.calibrationSheets?.length
@@ -531,10 +552,144 @@ export default function ReportsClient() {
             });
         })
         .sort((left, right) => newestFirst(left.report, right.report)),
-    [jobHistories, query, statusTab],
+    [jobHistories, query, searchingAcrossStatuses, statusTab],
   );
-  const tuggerHistoryMode = tab === "tugger" && tuggerView === "history";
-  const gasHistoryMode = tab === "gas" && gasView === "history";
+  const tuggerHistoryMode = !showPartsOnOrder && tab === "tugger" && tuggerView === "history";
+  const gasHistoryMode = !showPartsOnOrder && tab === "gas" && gasView === "history";
+  useEffect(() => {
+    if (!showPartsOnOrder) return;
+    const controller = new AbortController();
+    setTrackingOrdersError("");
+    setLoadingTrackingOrders(true);
+    fetch("/api/parts-orders", { cache: "no-store", signal: controller.signal }).then(async response => {
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      if (!controller.signal.aborted) setTrackingOrders(result);
+    }).catch(cause => { if (!controller.signal.aborted) setTrackingOrdersError(cause.message || "Could not load tracking-number part orders."); })
+      .finally(() => { if (!controller.signal.aborted) setLoadingTrackingOrders(false); });
+    return () => controller.abort();
+  }, [showPartsOnOrder]);
+  const outstandingParts = useMemo(() => {
+    const reported = jobHistories.flatMap(history => history.reports.flatMap(report => {
+      if (report.partsOrders == null && history.status === "complete") return [];
+      const legacy = report.partsOrders == null ? legacyPartOrder(report.partsNotes) : undefined;
+      return (report.partsOrders ?? (legacy ? [legacy] : []))
+        .map((part, index) => ({ report, part, index, legacy: Boolean(legacy), trackingOrder: null as TrackingPartOrders | null }))
+        .filter(({ part }) => !part.received);
+    }));
+    if (tab !== "all") return reported;
+    return [...reported, ...trackingOrders.flatMap(trackingOrder => trackingOrder.partsOrders
+      .map((part, index) => ({
+        report: { id: `tracking-${trackingOrder.trackingNumber}`, trackingNumber: trackingOrder.trackingNumber, facilityId: trackingOrder.location } as Report,
+        part, index, legacy: false, trackingOrder,
+      }))
+      .filter(({ part }) => !part.received))];
+  }, [jobHistories, tab, trackingOrders]);
+  const visibleParts = outstandingParts.filter(({ report, part }) => reportMatches(report, query) || part.description.toLowerCase().includes(query.trim().toLowerCase()));
+  const editingPartsReport = reports.find(report => report.id === editingPartsReportId);
+  const partsEditorRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (showPartsOnOrder && (editingPartsReportId || trackingDraft)) partsEditorRef.current?.focus();
+  }, [showPartsOnOrder, editingPartsReportId, trackingDraft]);
+
+  async function savePartOrders(report: Report, partsOrders: PartOrder[]) {
+    const response = await fetch("/api/pm-reports", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: report.id, partsOrders, previousPartsOrders: report.partsOrders ?? [] }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Could not save part orders.");
+    setReports(current => current.map(item => item.id === report.id ? { ...item, partsOrders: result.partsOrders } : item));
+  }
+
+  async function openTrackingOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const tracking = partOrderTracking(partTrackingInput);
+    if (!tracking) { setPartLookupError("Enter a valid tracking number."); return; }
+    setPartLookupBusy(true);
+    setPartLookupError("");
+    try {
+      const response = await fetch(`/api/parts-orders?tracking=${encodeURIComponent(tracking)}`, { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      const report = reports.find(item => partOrderTracking(item.baseTrackingNumber || item.trackingNumber) === tracking);
+      setTrackingDraft(result);
+      setPartLocation(result.location || report?.facilityId || report?.customerName || "");
+    } catch (cause) { setPartLookupError(cause instanceof Error ? cause.message : "Could not open this tracking number."); }
+    finally { setPartLookupBusy(false); }
+  }
+
+  async function saveTrackingOrder(record: TrackingPartOrders, partsOrders: PartOrder[], closeEditor = true) {
+    const response = await fetch("/api/parts-orders", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...record, partsOrders }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Could not save part orders.");
+    setTrackingOrders(current => [...current.filter(item => item.trackingNumber !== record.trackingNumber), result]);
+    if (!closeEditor) return;
+    setTrackingDraft(null);
+    setAddingParts(false);
+    setTab("all");
+    setQuery("");
+  }
+
+  async function deletePart({ report, part, index, legacy, trackingOrder }: (typeof outstandingParts)[number]) {
+    if (deletingPart) return;
+    const confirmation = legacy
+      ? `Remove the previous order note for tracking #${report.trackingNumber} from Parts on Order?`
+      : `Delete “${part.description}” from tracking #${report.trackingNumber}?`;
+    if (!window.confirm(confirmation)) return;
+    setDeletingPart(true);
+    setPartDeleteFeedback(null);
+    try {
+      const remaining = (trackingOrder?.partsOrders ?? report.partsOrders ?? []).filter((_, position) => position !== index);
+      if (trackingOrder) await saveTrackingOrder(trackingOrder, remaining, false);
+      else await savePartOrders(report, remaining);
+      setPartDeleteFeedback({ message: legacy ? "Order note removed from Parts on Order." : "Part deleted.", error: false });
+    } catch (cause) {
+      setPartDeleteFeedback({ message: cause instanceof Error ? cause.message : "Could not delete this part.", error: true });
+    } finally { setDeletingPart(false); }
+  }
+
+  function partOrderEditor(report: Report) {
+    return <PartsOrderEditor key={report.id} orders={report.partsOrders ?? []} legacyNote={report.partsOrders == null ? report.partsNotes : undefined} onSave={orders => savePartOrders(report, orders)} />;
+  }
+
+  async function downloadTuggerHistory() {
+    if (loadingReports || downloadingHistory || !tuggerHistory.length) return;
+    setDownloadingHistory(true);
+    try {
+      const { createTuggerHistoryPdf } = await import("@/lib/tuggerHistoryPdf");
+      const now = new Date();
+      const bytes = await createTuggerHistoryPdf(tuggerHistory.map(({ item, report }) => ({
+        date: item.reportDate || report.reportDate || "",
+        technician: report.technician || "",
+        location: [item.facilityId || report.facilityId, item.location || report.facilityAddress].filter(Boolean).join("\n"),
+        tracking: item.trackingNumber || report.trackingNumber || "",
+        tugger: item.tuggerId || (item.legacy ? "See original PDF" : ""),
+        manufacturer: item.manufacturer || (item.legacy ? "See original PDF" : ""),
+        serial: item.serialNumber || (item.legacy ? "See original PDF" : ""),
+        description: item.description || "",
+      })), {
+        status: searchingAcrossStatuses ? "All statuses" : STATUS_TABS.find(status => status.key === statusTab)?.label || statusTab,
+        query: query.trim(),
+        generatedAt: now.toLocaleString(),
+      });
+      const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Frontline_Tugger_Work_History_${searchingAcrossStatuses ? "all-statuses" : statusTab}_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (cause) {
+      setError(`Could not download tugger work history: ${cause instanceof Error ? cause.message : String(cause)}`);
+    } finally {
+      setDownloadingHistory(false);
+    }
+  }
 
   function openReportPdf(report: Report) {
     setError("");
@@ -1054,11 +1209,12 @@ export default function ReportsClient() {
         <div className={styles.statusTabs} aria-label="Report workflow status">
           {STATUS_TABS.map((item) => {
             const count = jobHistories.filter((history) => history.status === item.key).length;
-            return <button key={item.key} className={statusTab === item.key ? styles.activeStatusTab : ""} onClick={() => setStatusTab(item.key)}>{item.label}<span>{count}</span></button>;
+            return <button key={item.key} className={!showPartsOnOrder && !searchingAcrossStatuses && statusTab === item.key ? styles.activeStatusTab : ""} onClick={() => { setShowPartsOnOrder(false); setAddingParts(false); setTrackingDraft(null); setStatusTab(item.key); }}>{item.label}<span>{count}</span></button>;
           })}
+          <button type="button" aria-pressed={showPartsOnOrder} className={showPartsOnOrder ? styles.activeStatusTab : ""} onClick={() => { setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowPartsOnOrder(true); }}>Parts on Order<span>{outstandingParts.length}</span></button>
         </div>
 
-        {tab === "tugger" && (
+        {!showPartsOnOrder && tab === "tugger" && (
           <div className={styles.subtabs}>
             <button
               className={tuggerView === "reports" ? styles.activeSubtab : ""}
@@ -1074,7 +1230,7 @@ export default function ReportsClient() {
             </button>
           </div>
         )}
-        {tab === "gas" && (
+        {!showPartsOnOrder && tab === "gas" && (
           <div className={styles.subtabs}>
             <button className={gasView === "reports" ? styles.activeSubtab : ""} onClick={() => setGasView("reports")}>
               Completed Gas Sensor Reports
@@ -1087,9 +1243,9 @@ export default function ReportsClient() {
 
         <div className={styles.summary}>
           <div>
-            <strong>{tuggerHistoryMode ? tuggerHistory.length : gasHistoryMode ? gasHistory.length : shown.length}</strong>
+            <strong>{showPartsOnOrder ? visibleParts.length : tuggerHistoryMode ? tuggerHistory.length : gasHistoryMode ? gasHistory.length : shown.length}</strong>
             <span>
-              {tuggerHistoryMode
+              {showPartsOnOrder ? "parts on order" : tuggerHistoryMode
                 ? "tuggers worked on"
                 : gasHistoryMode
                   ? "sensor service records"
@@ -1101,7 +1257,7 @@ export default function ReportsClient() {
           <input
             aria-label="Search reports"
             placeholder={
-              tuggerHistoryMode
+              showPartsOnOrder ? "Search location, tracking number, or part…" : tuggerHistoryMode
                 ? "Search technician, tracking, tugger, serial…"
                 : gasHistoryMode
                   ? "Search location ID, sensor tag, serial…"
@@ -1111,7 +1267,15 @@ export default function ReportsClient() {
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
-        {searchingAllReports && (
+        {tuggerHistoryMode && (
+          <div className={styles.historyDownload}>
+            <button type="button" className={styles.pdfLinkButton} disabled={loadingReports || downloadingHistory || !tuggerHistory.length} onClick={() => void downloadTuggerHistory()}>
+              {downloadingHistory ? "Preparing PDF…" : "Download History PDF"}
+            </button>
+            <span>{searchingAcrossStatuses ? "Downloads matching work-history rows across all statuses." : "Downloads the work-history rows matching the selected status."}</span>
+          </div>
+        )}
+        {!showPartsOnOrder && searchingAcrossStatuses && (
           <p className={styles.searchScope}>{query.trim() ? "Searching" : "Showing"} Job Complete, Need Parts, and Need to Return</p>
         )}
 
@@ -1133,7 +1297,62 @@ export default function ReportsClient() {
           </p>
         )}
 
-        {gasHistoryMode ? (
+        {showPartsOnOrder ? (
+          <section aria-label="Parts on Order">
+            <p className={styles.partsOrderHint}>
+              <button type="button" className={styles.pdfLinkButton} aria-expanded={addingParts} aria-controls="add-part-order" disabled={loadingTrackingOrders || partLookupBusy || deletingPart} onClick={() => { setPartTrackingInput(""); setPartLookupError(""); setTrackingDraft(null); setEditingPartsReportId(""); setAddingParts(true); }}>Add Part on Order</button>
+            </p>
+            {loadingTrackingOrders && <p role="status">Loading parts saved by tracking number…</p>}
+            {trackingOrdersError && <p role="alert" className={styles.error}>{trackingOrdersError}</p>}
+            {partDeleteFeedback && <p role={partDeleteFeedback.error ? "alert" : "status"} className={partDeleteFeedback.error ? styles.error : styles.partsOrderHint}>{partDeleteFeedback.message}</p>}
+            {(addingParts || trackingDraft) && <section id="add-part-order" ref={partsEditorRef} tabIndex={-1} className={`${styles.partsNotesEditor} ${styles.partJobPicker}`}>
+              {addingParts && !trackingDraft && <form className={styles.partOrderEditor} onSubmit={openTrackingOrder}>
+                <label htmlFor="part-tracking">Tracking number</label>
+                <input id="part-tracking" maxLength={64} required value={partTrackingInput} disabled={partLookupBusy} onChange={event => setPartTrackingInput(event.target.value)} />
+                <p>You can enter a tracking number before a visit or report exists.</p>
+                <button type="submit" disabled={partLookupBusy}>{partLookupBusy ? "Opening…" : "Continue"}</button>
+                {partLookupError && <p role="alert">{partLookupError}</p>}
+              </form>}
+              {trackingDraft && <>
+                <strong>Tracking #{trackingDraft.trackingNumber}</strong>
+                <label htmlFor="part-location">Location (if known)</label>
+                <input id="part-location" maxLength={250} value={partLocation} onChange={event => setPartLocation(event.target.value)} />
+                <PartsOrderEditor key={`${trackingDraft.trackingNumber}-${addingParts ? "add" : "edit"}`} orders={trackingDraft.partsOrders} startWithPart={addingParts} detailsChanged={partLocation !== trackingDraft.location} onSave={orders => saveTrackingOrder({ ...trackingDraft, location: partLocation }, orders)} />
+              </>}
+              <button type="button" disabled={partLookupBusy} onClick={() => { setAddingParts(false); setTrackingDraft(null); }}>Close order form</button>
+            </section>}
+            {visibleParts.length > 0 && <div className={styles.historyWrap}>
+              <table className={styles.partOrdersTable}>
+                <thead><tr><th>Location</th><th>Tracking #</th><th>Part description</th><th>Price</th><th>Ordered date</th><th>Expected delivery</th><th>Order details</th></tr></thead>
+                <tbody>{visibleParts.map(row => {
+                  const { report, part, index, legacy, trackingOrder } = row;
+                  return <tr key={`${report.id}-${index}`}>
+                  <td><strong>{report.customerName || report.facilityId || "Not recorded"}</strong>{report.facilityAddress && <small>{report.facilityAddress}</small>}</td>
+                  <td>{report.trackingNumber || "Not recorded"}</td>
+                  <td>{legacy && <small>Previous order note</small>}{part.description}</td>
+                  <td>{part.price ? Number(part.price).toLocaleString("en-US", { style: "currency", currency: "USD" }) : "Not recorded"}</td>
+                  <td>{part.orderedOn || "Not recorded"}</td>
+                  <td>{part.expectedOn || "Not recorded"}</td>
+                  <td><div className={styles.partOrderButtons}><button type="button" className={styles.pdfLinkButton} disabled={deletingPart || partLookupBusy || (Boolean(trackingOrder) && loadingTrackingOrders)} onClick={() => {
+                    setAddingParts(false);
+                    setTrackingDraft(trackingOrder);
+                    setPartLocation(trackingOrder?.location || "");
+                    setEditingPartsReportId(trackingOrder ? "" : report.id);
+                  }}>Update order</button>
+                    <button type="button" className={styles.deletePartButton} disabled={deletingPart || addingParts || Boolean(trackingDraft) || Boolean(editingPartsReportId) || (trackingOrder ? loadingTrackingOrders : loadingReports)} onClick={() => void deletePart(row)}>Delete part</button>
+                  </div></td>
+                </tr>;
+                })}</tbody>
+              </table>
+            </div>}
+            {!addingParts && editingPartsReport && <section ref={partsEditorRef} tabIndex={-1} className={styles.partsNotesEditor}>
+              <strong>{editingPartsReport.customerName || editingPartsReport.facilityId} · Tracking #{editingPartsReport.trackingNumber}</strong>
+              {partOrderEditor(editingPartsReport)}
+              <button type="button" onClick={() => setEditingPartsReportId("")}>Close order details</button>
+            </section>}
+            {!loadingReports && !loadingTrackingOrders && !trackingOrdersError && !visibleParts.length && <p className={styles.empty}>No parts on order match this view.</p>}
+          </section>
+        ) : gasHistoryMode ? (
           <div className={styles.gasHistoryWrap}>
             <table className={styles.gasHistoryTable}>
               <thead><tr><th>Date</th><th>Location ID</th><th>Address</th><th>Sensor Location / Tag</th><th>Manufacturer</th><th>Model</th><th>Serial #</th><th>Target Gas</th><th>Gas Standard</th><th>Technician</th><th>Tracking #</th><th>Notes</th><th>Report</th><th>New Report</th></tr></thead>
@@ -1220,7 +1439,7 @@ export default function ReportsClient() {
                           {consolidatingKey === history.key ? "Combining sections…" : "Fix sections — 5 tasks each"}
                         </button>
                       )}
-                      {history.status === "parts" && (
+                      {(history.status === "parts" || history.status === "return" || history.reports.some(report => report.partsOrders?.length)) && (
                         <section className={styles.partsNotesEditor}>
                           <label htmlFor={`parts-notes-${history.latest.id}`}>Parts Notes</label>
                           <p>Record parts ordered, order dates, expected arrival, and follow-up details.</p>
@@ -1234,6 +1453,11 @@ export default function ReportsClient() {
                           <button type="button" disabled={savingNoteId === history.latest.id} onClick={() => void savePartsNotes(history.latest)}>
                             {savingNoteId === history.latest.id ? "Saving…" : "Save Parts Notes"}
                           </button>
+                          {partOrderEditor(history.latest)}
+                          {history.reports.filter(report => report.id !== history.latest.id && (report.partsOrders?.length || legacyPartOrder(report.partsNotes))).map(report => <details key={report.id}>
+                            <summary>Part orders from {report.reportDate || "earlier report"}</summary>
+                            {partOrderEditor(report)}
+                          </details>)}
                         </section>
                       )}
                       <details className={styles.correctiveActions}>
@@ -1361,7 +1585,7 @@ export default function ReportsClient() {
           </div>
         )}
 
-        {!loadingReports && !error && (tuggerHistoryMode ? tuggerHistory.length === 0 : gasHistoryMode ? gasHistory.length === 0 : shown.length === 0) && (
+        {!showPartsOnOrder && !loadingReports && !error && (tuggerHistoryMode ? tuggerHistory.length === 0 : gasHistoryMode ? gasHistory.length === 0 : shown.length === 0) && (
           <p className={styles.empty}>
             {tuggerHistoryMode
               ? "No Tugger work-history records yet. New completed Tugger reports will be added automatically."
