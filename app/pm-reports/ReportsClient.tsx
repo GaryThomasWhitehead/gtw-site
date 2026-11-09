@@ -185,6 +185,7 @@ export default function ReportsClient() {
   const [tab, setTab] = useState<Category>("all");
   const [statusTab, setStatusTab] = useState<WorkflowStatus>("complete");
   const [showPartsOnOrder, setShowPartsOnOrder] = useState(false);
+  const [showReceivedParts, setShowReceivedParts] = useState(false);
   const [editingPartsReportId, setEditingPartsReportId] = useState("");
   const [addingParts, setAddingParts] = useState(false);
   const [partTrackingInput, setPartTrackingInput] = useState("");
@@ -554,8 +555,9 @@ export default function ReportsClient() {
         .sort((left, right) => newestFirst(left.report, right.report)),
     [jobHistories, query, searchingAcrossStatuses, statusTab],
   );
-  const tuggerHistoryMode = !showPartsOnOrder && tab === "tugger" && tuggerView === "history";
-  const gasHistoryMode = !showPartsOnOrder && tab === "gas" && gasView === "history";
+  const showingParts = showPartsOnOrder || showReceivedParts;
+  const tuggerHistoryMode = !showingParts && tab === "tugger" && tuggerView === "history";
+  const gasHistoryMode = !showingParts && tab === "gas" && gasView === "history";
   useEffect(() => {
     const controller = new AbortController();
     setTrackingOrdersError("");
@@ -568,27 +570,27 @@ export default function ReportsClient() {
       .finally(() => { if (!controller.signal.aborted) setLoadingTrackingOrders(false); });
     return () => controller.abort();
   }, []);
-  const outstandingParts = useMemo(() => {
+  const allSavedParts = useMemo(() => {
     const reported = allJobHistories.flatMap(history => history.reports.flatMap(report => {
       if (report.partsOrders == null && history.status === "complete") return [];
       const legacy = report.partsOrders == null ? legacyPartOrder(report.partsNotes) : undefined;
       return (report.partsOrders ?? (legacy ? [legacy] : []))
-        .map((part, index) => ({ report, part, index, legacy: Boolean(legacy), trackingOrder: null as TrackingPartOrders | null }))
-        .filter(({ part }) => !part.received);
+        .map((part, index) => ({ report, part, index, legacy: Boolean(legacy), trackingOrder: null as TrackingPartOrders | null }));
     }));
     return [...reported, ...trackingOrders.flatMap(trackingOrder => trackingOrder.partsOrders
       .map((part, index) => ({
         report: { id: `tracking-${trackingOrder.trackingNumber}`, trackingNumber: trackingOrder.trackingNumber, facilityId: trackingOrder.location } as Report,
         part, index, legacy: false, trackingOrder,
-      }))
-      .filter(({ part }) => !part.received))];
+      })))];
   }, [allJobHistories, trackingOrders]);
-  const visibleParts = outstandingParts.filter(({ report, part }) => reportMatches(report, query) || part.description.toLowerCase().includes(query.trim().toLowerCase()));
+  const outstandingParts = allSavedParts.filter(({ part }) => !part.received);
+  const receivedParts = allSavedParts.filter(({ part }) => part.received);
+  const visibleParts = (showReceivedParts ? receivedParts : outstandingParts).filter(({ report, part }) => reportMatches(report, query) || part.description.toLowerCase().includes(query.trim().toLowerCase()));
   const editingPartsReport = reports.find(report => report.id === editingPartsReportId);
   const partsEditorRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (showPartsOnOrder && (editingPartsReportId || trackingDraft)) partsEditorRef.current?.focus();
-  }, [showPartsOnOrder, editingPartsReportId, trackingDraft]);
+    if (showingParts && (editingPartsReportId || trackingDraft)) partsEditorRef.current?.focus();
+  }, [showingParts, editingPartsReportId, trackingDraft]);
 
   async function savePartOrders(report: Report, partsOrders: PartOrder[]) {
     const response = await fetch("/api/pm-reports", {
@@ -632,7 +634,7 @@ export default function ReportsClient() {
     setQuery("");
   }
 
-  async function deletePart({ report, part, index, legacy, trackingOrder }: (typeof outstandingParts)[number]) {
+  async function deletePart({ report, part, index, legacy, trackingOrder }: (typeof allSavedParts)[number]) {
     if (deletingPart) return;
     const confirmation = legacy
       ? `Remove the previous order note for tracking #${report.trackingNumber} from Parts on Order?`
@@ -1100,7 +1102,7 @@ export default function ReportsClient() {
           <button type="button" onClick={startAttachmentUpload} disabled={uploading}>
             {uploading ? "Uploading…" : "Upload PDF or File to Report"}
           </button>
-          <button type="button" onClick={() => { setTab("all"); setQuery(""); setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowPartsOnOrder(true); }}>Parts on Order</button>
+          <button type="button" onClick={() => { setTab("all"); setQuery(""); setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowReceivedParts(false); setShowPartsOnOrder(true); }}>Parts on Order</button>
           <a href="/pm-report">New Report</a>
           <a href="/fedex-tracker">Back to Tracker</a>
         </div>
@@ -1208,12 +1210,13 @@ export default function ReportsClient() {
         <div className={styles.statusTabs} aria-label="Report workflow status">
           {STATUS_TABS.map((item) => {
             const count = jobHistories.filter((history) => history.status === item.key).length;
-            return <button key={item.key} className={!showPartsOnOrder && !searchingAcrossStatuses && statusTab === item.key ? styles.activeStatusTab : ""} onClick={() => { setShowPartsOnOrder(false); setAddingParts(false); setTrackingDraft(null); setStatusTab(item.key); }}>{item.label}<span>{count}</span></button>;
+            return <button key={item.key} className={!showingParts && !searchingAcrossStatuses && statusTab === item.key ? styles.activeStatusTab : ""} onClick={() => { setShowPartsOnOrder(false); setShowReceivedParts(false); setAddingParts(false); setTrackingDraft(null); setStatusTab(item.key); }}>{item.label}<span>{count}</span></button>;
           })}
-          <button type="button" aria-pressed={showPartsOnOrder} className={showPartsOnOrder ? styles.activeStatusTab : ""} onClick={() => { setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowPartsOnOrder(true); }}>Parts on Order<span>{outstandingParts.length}</span></button>
+          <button type="button" aria-pressed={showPartsOnOrder} className={showPartsOnOrder ? styles.activeStatusTab : ""} onClick={() => { setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowReceivedParts(false); setShowPartsOnOrder(true); }}>Parts on Order<span>{outstandingParts.length}</span></button>
+          <button type="button" aria-pressed={showReceivedParts} className={showReceivedParts ? styles.activeStatusTab : ""} onClick={() => { setEditingPartsReportId(""); setAddingParts(false); setTrackingDraft(null); setShowPartsOnOrder(false); setShowReceivedParts(true); }}>Received Parts<span>{receivedParts.length}</span></button>
         </div>
 
-        {!showPartsOnOrder && tab === "tugger" && (
+        {!showingParts && tab === "tugger" && (
           <div className={styles.subtabs}>
             <button
               className={tuggerView === "reports" ? styles.activeSubtab : ""}
@@ -1229,7 +1232,7 @@ export default function ReportsClient() {
             </button>
           </div>
         )}
-        {!showPartsOnOrder && tab === "gas" && (
+        {!showingParts && tab === "gas" && (
           <div className={styles.subtabs}>
             <button className={gasView === "reports" ? styles.activeSubtab : ""} onClick={() => setGasView("reports")}>
               Completed Gas Sensor Reports
@@ -1242,9 +1245,9 @@ export default function ReportsClient() {
 
         <div className={styles.summary}>
           <div>
-            <strong>{showPartsOnOrder ? visibleParts.length : tuggerHistoryMode ? tuggerHistory.length : gasHistoryMode ? gasHistory.length : shown.length}</strong>
+            <strong>{showingParts ? visibleParts.length : tuggerHistoryMode ? tuggerHistory.length : gasHistoryMode ? gasHistory.length : shown.length}</strong>
             <span>
-              {showPartsOnOrder ? "parts on order" : tuggerHistoryMode
+              {showReceivedParts ? "received parts" : showPartsOnOrder ? "parts on order" : tuggerHistoryMode
                 ? "tuggers worked on"
                 : gasHistoryMode
                   ? "sensor service records"
@@ -1256,7 +1259,7 @@ export default function ReportsClient() {
           <input
             aria-label="Search reports"
             placeholder={
-              showPartsOnOrder ? "Search location, tracking number, or part…" : tuggerHistoryMode
+              showingParts ? "Search location, tracking number, or part…" : tuggerHistoryMode
                 ? "Search technician, tracking, tugger, serial…"
                 : gasHistoryMode
                   ? "Search location ID, sensor tag, serial…"
@@ -1274,7 +1277,7 @@ export default function ReportsClient() {
             <span>{searchingAcrossStatuses ? "Downloads matching work-history rows across all statuses." : "Downloads the work-history rows matching the selected status."}</span>
           </div>
         )}
-        {!showPartsOnOrder && searchingAcrossStatuses && (
+        {!showingParts && searchingAcrossStatuses && (
           <p className={styles.searchScope}>{query.trim() ? "Searching" : "Showing"} Job Complete, Need Parts, and Need to Return</p>
         )}
 
@@ -1296,11 +1299,11 @@ export default function ReportsClient() {
           </p>
         )}
 
-        {showPartsOnOrder ? (
-          <section aria-label="Parts on Order">
-            <p className={styles.partsOrderHint}>
+        {showingParts ? (
+          <section aria-label={showReceivedParts ? "Received Parts" : "Parts on Order"}>
+            {showPartsOnOrder && <p className={styles.partsOrderHint}>
               <button type="button" className={styles.pdfLinkButton} aria-expanded={addingParts} aria-controls="add-part-order" disabled={loadingTrackingOrders || partLookupBusy || deletingPart} onClick={() => { setPartTrackingInput(""); setPartLookupError(""); setTrackingDraft(null); setEditingPartsReportId(""); setAddingParts(true); }}>Add Part on Order</button>
-            </p>
+            </p>}
             {loadingTrackingOrders && <p role="status">Loading parts saved by tracking number…</p>}
             {trackingOrdersError && <p role="alert" className={styles.error}>{trackingOrdersError}</p>}
             {partDeleteFeedback && <p role={partDeleteFeedback.error ? "alert" : "status"} className={partDeleteFeedback.error ? styles.error : styles.partsOrderHint}>{partDeleteFeedback.message}</p>}
@@ -1349,7 +1352,7 @@ export default function ReportsClient() {
               {partOrderEditor(editingPartsReport)}
               <button type="button" onClick={() => setEditingPartsReportId("")}>Close order details</button>
             </section>}
-            {!loadingReports && !loadingTrackingOrders && !trackingOrdersError && !visibleParts.length && <p className={styles.empty}>No parts on order match this view.</p>}
+            {!loadingReports && !loadingTrackingOrders && !trackingOrdersError && !visibleParts.length && <p className={styles.empty}>No {showReceivedParts ? "received parts" : "parts on order"} match this view.</p>}
           </section>
         ) : gasHistoryMode ? (
           <div className={styles.gasHistoryWrap}>
@@ -1584,7 +1587,7 @@ export default function ReportsClient() {
           </div>
         )}
 
-        {!showPartsOnOrder && !loadingReports && !error && (tuggerHistoryMode ? tuggerHistory.length === 0 : gasHistoryMode ? gasHistory.length === 0 : shown.length === 0) && (
+        {!showingParts && !loadingReports && !error && (tuggerHistoryMode ? tuggerHistory.length === 0 : gasHistoryMode ? gasHistory.length === 0 : shown.length === 0) && (
           <p className={styles.empty}>
             {tuggerHistoryMode
               ? "No Tugger work-history records yet. New completed Tugger reports will be added automatically."
