@@ -557,7 +557,6 @@ export default function ReportsClient() {
   const tuggerHistoryMode = !showPartsOnOrder && tab === "tugger" && tuggerView === "history";
   const gasHistoryMode = !showPartsOnOrder && tab === "gas" && gasView === "history";
   useEffect(() => {
-    if (!showPartsOnOrder) return;
     const controller = new AbortController();
     setTrackingOrdersError("");
     setLoadingTrackingOrders(true);
@@ -568,7 +567,7 @@ export default function ReportsClient() {
     }).catch(cause => { if (!controller.signal.aborted) setTrackingOrdersError(cause.message || "Could not load tracking-number part orders."); })
       .finally(() => { if (!controller.signal.aborted) setLoadingTrackingOrders(false); });
     return () => controller.abort();
-  }, [showPartsOnOrder]);
+  }, []);
   const outstandingParts = useMemo(() => {
     const reported = jobHistories.flatMap(history => history.reports.flatMap(report => {
       if (report.partsOrders == null && history.status === "complete") return [];
