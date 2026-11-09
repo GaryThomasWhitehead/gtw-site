@@ -157,7 +157,9 @@ export async function PUT(request: NextRequest) {
     const reason = String(body.reason || "").trim().slice(0, 3000);
     if (!decision || (decision === "denied" && !reason)) return NextResponse.json({ error: "A reason is required when denying an invoice" }, { status: 400 });
     reviewer.decision = decision; reviewer.reason = reason; reviewer.decidedAt = new Date().toISOString();
-    record.status = decision;
+    // A denial requests changes but is not a terminal invoice state. Keep the
+    // invoice in Pending Invoice Approvals until another reviewer approves it.
+    record.status = decision === "approved" ? "approved" : "pending";
     record.updatedAt = new Date().toISOString(); await save(record);
     if (decision === "approved") await syncApprovedInvoice(record, reviewer.name);
     const ownerLink = `${request.nextUrl.protocol}//${request.nextUrl.host}/invoice-creator?invoice=${encodeURIComponent(record.id)}`;
