@@ -449,7 +449,7 @@ export default function ReportsClient() {
     tab === "all" || history.reports.some((report) => categoryOf(report) === tab)
   ), [allJobHistories, tab]);
 
-  const searchingAllReports = tab === "all" && Boolean(query.trim());
+  const searchingAllReports = tab === "all";
   const shown = useMemo(() => jobHistories.filter((history) =>
     (searchingAllReports || history.status === statusTab) &&
     history.reports.some((report) => reportMatches(report, query))
@@ -1112,7 +1112,7 @@ export default function ReportsClient() {
           />
         </div>
         {searchingAllReports && (
-          <p className={styles.searchScope}>Searching Job Complete, Need Parts, and Need to Return</p>
+          <p className={styles.searchScope}>{query.trim() ? "Searching" : "Showing"} Job Complete, Need Parts, and Need to Return</p>
         )}
 
         {loadingReports && (

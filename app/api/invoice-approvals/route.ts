@@ -36,6 +36,21 @@ async function save(record: Record<string, unknown>) {
   const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, { method: "POST", headers: { ...headers(key), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify([{ tracking_number: `INVOICEAPPROVAL:${record.id}`, data: record, updated_at: new Date().toISOString() }]) });
   if (!response.ok) throw new Error(await response.text());
 }
+async function saveDecision(record: { id: string; revision: number; updatedAt: string }) {
+  const { url, key, table } = cfg();
+  const params = new URLSearchParams({
+    tracking_number: `eq.INVOICEAPPROVAL:${record.id}`,
+    "data->>status": "eq.pending",
+    "data->>revision": `eq.${record.revision}`,
+  });
+  const response = await fetch(`${url}/rest/v1/${table}?${params}`, {
+    method: "PATCH",
+    headers: { ...headers(key), Prefer: "return=representation" },
+    body: JSON.stringify({ data: record, updated_at: record.updatedAt }),
+  });
+  if (!response.ok) throw new Error("Could not save the invoice decision");
+  return (await response.json()).length === 1;
+}
 async function syncApprovedInvoice(record: any, approvedBy = "Management") {
   const tracking = String(record?.invoice?.tracking || "").trim();
   if (!tracking) return false;
@@ -76,6 +91,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ...publicRecord(record), reviewer: reviewer.name, alreadyDecided: record.status !== "pending" || Boolean(reviewer.decision) });
     }
     if (!hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const id = request.nextUrl.searchParams.get("id");
+    if (id) {
+      const record = await row(id);
+      if (!record?.invoice) return NextResponse.json({ error: "Saved invoice was not found" }, { status: 404 });
+      return NextResponse.json({ ...publicRecord(record), reviewer: "Management", alreadyDecided: record.status !== "pending" }, { headers: { "Cache-Control": "no-store" } });
+    }
     const { url, key, table } = cfg();
     const response = await fetch(`${url}/rest/v1/${table}?select=data&tracking_number=like.INVOICEAPPROVAL%3A%25&order=updated_at.desc&limit=250`, { headers: headers(key), cache: "no-store" });
     if (!response.ok) throw new Error(await response.text());
@@ -148,22 +169,34 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json(), token = String(body.token || ""), [id, raw] = token.split(".");
-    const record = id && raw ? await row(id) : null;
-    const reviewer = record?.reviewers?.find((r: any) => r.tokenHash === hash(raw || ""));
+    const body = await request.json();
+    const token = String(body.token || "");
+    const [tokenId, raw] = token.split(".");
+    if (!token && !hasFedExTrackerAccess(request)) return NextResponse.json({ error: "Management sign-in is required" }, { status: 401 });
+    const id = token ? (raw ? tokenId : "") : String(body.id || "");
+    const record = id ? await row(id) : null;
+    const reviewer = token
+      ? record?.reviewers?.find((r: any) => r.tokenHash === hash(raw || ""))
+      : { name: "Management", decision: "", reason: "", decidedAt: "" };
     if (!record || !reviewer) return NextResponse.json({ error: "This review link is invalid or expired" }, { status: 404 });
     if (record.status !== "pending" || reviewer.decision) return NextResponse.json({ error: "This invoice revision has already been decided" }, { status: 409 });
+    if ((!token || body.revision !== undefined) && body.revision !== record.revision) return NextResponse.json({ error: "This invoice changed. Reload it before recording your decision." }, { status: 409 });
     const decision = body.decision === "approved" ? "approved" : body.decision === "denied" ? "denied" : "";
     const reason = String(body.reason || "").trim().slice(0, 3000);
     if (!decision || (decision === "denied" && !reason)) return NextResponse.json({ error: "A reason is required when denying an invoice" }, { status: 400 });
     reviewer.decision = decision; reviewer.reason = reason; reviewer.decidedAt = new Date().toISOString();
-    // A denial requests changes but is not a terminal invoice state. Keep the
-    // invoice in Pending Invoice Approvals until another reviewer approves it.
+    if (!token) record.reviewers = [...(record.reviewers || []), reviewer];
+    // A denial is a request for changes, not a terminal invoice state. Keep the
+    // invoice in Pending Invoice Approvals until a reviewer or management
+    // approves it. The reviewer's denial and reason remain on the record.
     record.status = decision === "approved" ? "approved" : "pending";
-    record.updatedAt = new Date().toISOString(); await save(record);
-    if (decision === "approved") await syncApprovedInvoice(record, reviewer.name);
+    record.updatedAt = new Date().toISOString();
+    if (!await saveDecision(record)) return NextResponse.json({ error: "This invoice changed or was already decided. Reload to see its latest status." }, { status: 409 });
     const ownerLink = `${request.nextUrl.protocol}//${request.nextUrl.host}/invoice-creator?invoice=${encodeURIComponent(record.id)}`;
-    await email(OWNER, `Invoice ${decision} by ${reviewer.name} - ${record.invoice.location} - ${record.invoice.tracking}`, `<p>${esc(reviewer.name)} <strong>${esc(decision)}</strong> the proposed invoice.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Technicians on Job:</strong> ${esc(record.invoice.technicians) || "Not entered"}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p>${reason ? `<p><strong>Requested changes:</strong><br>${esc(reason)}</p>` : ""}<p><a href="${esc(ownerLink)}">View the invoice</a></p>`);
-    return NextResponse.json({ ok: true, status: record.status });
+    const [notification, trackerSync] = await Promise.allSettled([
+      email(OWNER, `Invoice ${decision} by ${reviewer.name} - ${record.invoice.location} - ${record.invoice.tracking}`, `<p>${esc(reviewer.name)} <strong>${esc(decision)}</strong> the proposed invoice.</p><p><strong>Invoice Number:</strong> ${esc(record.invoice.invoiceNumber) || "Not entered"}<br><strong>Location:</strong> ${esc(record.invoice.location)}<br><strong>Tracking:</strong> ${esc(record.invoice.tracking)}<br><strong>Technicians on Job:</strong> ${esc(record.invoice.technicians) || "Not entered"}<br><strong>Total:</strong> ${esc(record.invoice.totals?.grand)}</p>${reason ? `<p><strong>Requested changes:</strong><br>${esc(reason).replace(/\r?\n/g, "<br>")}</p>` : ""}<p><a href="${esc(ownerLink)}">View the invoice</a></p>`),
+      decision === "approved" ? syncApprovedInvoice(record, reviewer.name) : Promise.resolve(),
+    ]);
+    return NextResponse.json({ ok: true, status: record.status, emailSent: notification.status === "fulfilled", trackerSyncFailed: trackerSync.status === "rejected" });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Decision could not be saved" }, { status: 500 }); }
 }
