@@ -70,6 +70,23 @@ function headers(key: string) {
   };
 }
 
+function trackingKey(value: unknown) {
+  return String(value || "").trim().toUpperCase();
+}
+
+async function loadDeletedTrackingNumbers(url: string, key: string, table: string) {
+  const response = await fetch(
+    `${url}/rest/v1/${table}?select=tracking_number&data-%3E%3ErecordType=eq.deleted-work-order`,
+    { headers: headers(key), cache: "no-store" }
+  );
+  if (!response.ok) throw new Error(await response.text());
+  return new Set<string>(
+    ((await response.json()) as Array<{ tracking_number?: string }>)
+      .map(row => trackingKey(row.tracking_number))
+      .filter(Boolean)
+  );
+}
+
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return unauthorized();
   const { url, key, table } = supabaseConfig();
@@ -102,25 +119,16 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Expected an array of work orders." }, { status: 400 });
   }
 
-  const tombstoneResponse = await fetch(
-    `${url}/rest/v1/${table}?select=tracking_number&data-%3E%3ErecordType=eq.deleted-work-order`,
-    { headers: headers(key), cache: "no-store" }
-  );
-  if (!tombstoneResponse.ok) {
-    return NextResponse.json({ error: await tombstoneResponse.text() }, { status: tombstoneResponse.status });
-  }
-  const deletedTrackingNumbers = new Set<string>(
-    ((await tombstoneResponse.json()) as Array<{ tracking_number?: string }>)
-      .map(row => String(row.tracking_number || "").trim())
-      .filter(Boolean)
-  );
+  let deletedTrackingNumbers: Set<string>;
+  try { deletedTrackingNumbers = await loadDeletedTrackingNumbers(url, key, table); }
+  catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 503 }); }
 
   const ordersByTrackingNumber = new Map<string, WorkOrder>();
   let ordersWithTrackingNumbers = 0;
 
   for (const order of orders as WorkOrder[]) {
     if (isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order)) continue;
-    const trackingNumber = String(order.trackingNumber || order.id || "").trim();
+    const trackingNumber = trackingKey(order.trackingNumber || order.id);
     if (!trackingNumber) continue;
     if (deletedTrackingNumbers.has(trackingNumber)) continue;
 
@@ -173,14 +181,18 @@ export async function PATCH(request: NextRequest) {
   }
 
   const allowedFields = ["location", "classOfWork", "jobDescription", "callDate", "dueDate"];
+  let deletedTrackingNumbers: Set<string>;
+  try { deletedTrackingNumbers = await loadDeletedTrackingNumbers(url, key, table); }
+  catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 503 }); }
   const updatedAt = new Date().toISOString();
   const rows: Array<{ tracking_number: string; data: WorkOrder; updated_at: string }> = [];
   let matched = 0;
   let created = 0;
 
   for (const alert of alerts as WorkOrder[]) {
-    const trackingNumber = String(alert.trackingNumber || "").trim();
+    const trackingNumber = trackingKey(alert.trackingNumber);
     if (!trackingNumber) continue;
+    if (deletedTrackingNumbers.has(trackingNumber)) continue;
 
     const lookup = await fetch(
       `${url}/rest/v1/${table}?select=data&tracking_number=eq.${encodeURIComponent(trackingNumber)}&limit=1`,
@@ -236,7 +248,7 @@ export async function DELETE(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const trackingNumbers: string[] = Array.isArray(body?.trackingNumbers)
-    ? Array.from(new Set<string>(body.trackingNumbers.map((value: unknown) => String(value || "").trim()).filter(Boolean)))
+    ? Array.from(new Set<string>(body.trackingNumbers.map((value: unknown) => trackingKey(value)).filter(Boolean)))
     : [];
 
   if (!trackingNumbers.length) {
