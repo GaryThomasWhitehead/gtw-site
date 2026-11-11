@@ -34,3 +34,6 @@
 .partJobPicker>input,.partJobPicker>select{width:100%;min-width:0;min-height:44px;padding:8px 10px;border:1px solid #aebfce;border-radius:8px;background:white;font:inherit;color:#17334f}
 .partJobPicker form>input{width:100%;min-height:44px;padding:8px 10px;border:1px solid #aebfce;border-radius:8px;font:inherit}
 .deletePartButton{border:1px solid #ebc4c4;border-radius:8px;padding:9px 12px;background:#fff0f0;color:#992424;font-weight:800;white-space:nowrap;cursor:pointer}.deletePartButton:disabled{opacity:.55;cursor:default}
+.reportActions{flex-wrap:wrap;max-width:100%;min-width:0;justify-content:flex-end}
+@media(max-width:1000px){.list article{align-items:stretch;flex-direction:column}.reportActions{justify-content:flex-start;align-items:flex-start}.statusChecks{grid-template-columns:repeat(3,minmax(0,1fr));width:100%;min-width:0}.reportActions a,.reportActions button{box-sizing:border-box;flex:1 1 120px;min-height:44px;padding:10px 12px;white-space:normal;text-align:center}}
+@media(max-width:700px){.statusChecks{grid-template-columns:1fr}.reportActions a,.reportActions button{flex-basis:calc(50% - 5px)}}
