@@ -298,16 +298,7 @@
         <div data-id="55" class="max-w-3xl mx-auto flex items-center justify-between flex-wrap gap-3">
             <span data-id="56" id="logged-count-lc1" class="text-sm font-semibold text-slate_alt-600 tabular-nums">0 items logged</span>
             <div data-id="57" class="flex items-center gap-2">
-                <button id="complete-report-btn" class="bg-[#0f766e] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Complete &amp; Save</button>
-                <button data-id="58" id="print-btn-p1" class="bg-slate_alt-200 hover:bg-slate_alt-300 text-slate_alt-700 font-semibold text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
-                    <i data-id="59" data-lucide="printer" class="w-4 h-4"></i>
-                    Download PDF
-                </button>
-                <button data-id="60" id="export-pdf-btn-e1" class="bg-success-600 hover:bg-success-700 text-white font-bold text-sm rounded-xl px-4 py-2.5 flex items-center gap-2 min-h-[44px] transition-colors">
-                    <i data-id="61" data-lucide="file-down" class="w-4 h-4"></i>
-                    Export PDF
-                </button>
-                <button id="email-pdf-btn" class="bg-[#2563eb] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Save & Email</button>
+                <button id="complete-report-btn" class="bg-[#0f766e] text-white font-bold text-sm rounded-xl px-4 py-2.5 min-h-[44px]">Save, Download &amp; Email</button>
             </div>
         </div>
     </div>
@@ -895,39 +886,16 @@
         fedexJobEl.addEventListener('change', updateJobTypeFields);
         customerNameEl.addEventListener('input', syncNonFedExTrackingNumber);
 
-        // ─── PDF Export ───
-        exportPdfBtn.addEventListener('click', async function() {
-            if (!validateHeader() || !validateTuggerItems()) return;
-            if (!validateMinimumPhotos()) return;
-            if (typeof window.jspdf === 'undefined') {
-                showToast('PDF library not loaded. Please try again.', 'error');
-                return;
-            }
-            showToast('Saving report and generating PDF...', 'success');
-            exportPdfBtn.disabled = true;
-            try {
-                await generatePDF('download');
-            } catch (error) {
-                console.error('Tugger report download failed:', error);
-                showToast('The report could not be saved, so the PDF was not downloaded. Check your connection and try again.', 'error');
-            } finally {
-                exportPdfBtn.disabled = false;
-            }
-        });
-
         completeReportBtn.addEventListener('click', () => runPdfAction('complete'));
-        emailPdfBtn.addEventListener('click', () => {
-            if (confirm('Save this completed report and email the notice to Jacob, Daniel, and Gary?')) runPdfAction('share');
-        });
 
         async function runPdfAction(mode) {
             if (!validateHeader() || !validateTuggerItems()) return;
             if (!validateMinimumPhotos()) return;
-            const button = mode === 'share' ? emailPdfBtn : completeReportBtn;
+            const button = completeReportBtn;
             const originalText = button.textContent;
             button.disabled = true;
-            button.textContent = mode === 'share' ? 'Emailing…' : 'Saving…';
-            showToast(mode === 'share' ? 'Preparing report email…' : 'Preparing and saving report…', 'success');
+            button.textContent = 'Saving…';
+            showToast('Saving online, downloading, and emailing report…', 'success');
             try {
                 await generatePDF(mode);
             } catch (error) {
@@ -936,7 +904,7 @@
                 if (message.includes('413') || message.toLowerCase().includes('too large')) {
                     showToast('This report is still too large to upload. Remove one photo and try again.', 'error');
                 } else {
-                    showToast(mode === 'share' ? 'Email failed. Check your connection and try again.' : 'Save failed. Check your connection and try again.', 'error');
+                    showToast('The report could not finish saving, downloading, and emailing. Check your connection and try again.', 'error');
                 }
             } finally {
                 button.disabled = false;
@@ -1233,22 +1201,24 @@
             const archiveResponse = await fetch('/api/pm-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
             if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
             await uploadSupportingFiles(reportUniqueId, hdr.trackingNum);
-            if (mode === 'download') {
+            if (mode === 'download' || mode === 'complete') {
                 const link = document.createElement('a');
                 link.href = '/api/pm-reports?id=' + encodeURIComponent(reportUniqueId) + '&download=1';
                 link.download = filename;
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
-                showToast('Report verified in Completed Reports; supporting files saved and PDF downloaded successfully', 'success');
-                return;
+                if (mode === 'download') {
+                    showToast('Report verified in Completed Reports; supporting files saved and PDF downloaded successfully', 'success');
+                    return;
+                }
             }
-            if (mode === 'share') {
+            if (mode === 'share' || mode === 'complete') {
                 const { pdfBase64: _pdfBase64, ...emailReport } = report;
                 const emailResponse = await fetch('/api/pm-reports/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report: emailReport }) });
                 if (!emailResponse.ok) throw new Error(await emailResponse.text());
             }
-            showToast(mode === 'share' ? 'Report verified in Completed Reports and notice emailed successfully' : 'Completed report verified in Completed Reports', 'success');
+            showToast(mode === 'complete' ? 'Report saved online, downloaded to this device, and emailed successfully' : mode === 'share' ? 'Report verified in Completed Reports and notice emailed successfully' : 'Completed report verified in Completed Reports', 'success');
         }
 
         // ─── Initialize ───

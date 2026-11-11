@@ -345,19 +345,7 @@
                 </button>
                 <button id="complete-report-btn" class="h-11 px-4 bg-[#0f766e] hover:bg-[#115e59] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
                     <span class="text-base leading-none">✓</span>
-                    <span class="hidden sm:inline">Complete &amp; Save</span>
-                </button>
-                <button data-id="75" id="print-btn-i5j6" class="h-11 px-4 bg-field-bg hover:bg-navy-100 border border-field-border text-navy-500 font-medium rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
-                    <i data-id="76" data-lucide="printer" class="w-4 h-4"></i>
-                    <span data-id="77" class="hidden sm:inline">Download PDF</span>
-                </button>
-                <button data-id="78" id="export-pdf-btn-p4q5" class="h-11 px-4 bg-[#16a34a] hover:bg-[#15803d] active:bg-[#166534] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
-                    <span data-id="79" class="text-base leading-none">📄</span>
-                    <span data-id="80" class="hidden sm:inline">Export PDF</span>
-                </button>
-                <button id="email-pdf-btn" class="h-11 px-4 bg-[#2563eb] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 min-w-[44px]">
-                    <span class="text-base leading-none">✉</span>
-                    <span class="hidden sm:inline">Save & Email</span>
+                    <span>Save, Download &amp; Email</span>
                 </button>
             </div>
         </div>
@@ -776,11 +764,6 @@
                 addItem();
                 const lastItem = itemsContainer.lastElementChild;
                 if (lastItem) lastItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-            printBtn.addEventListener('click', () => handleExportPDF('download'));
-            exportPdfBtn.addEventListener('click', () => handleExportPDF('download'));
-            emailPdfBtn.addEventListener('click', () => {
-                if (confirm('Save this completed report on the site and email the completion notice? Leo receives a copy only when this report is submitted from Leo’s technician account.')) handleExportPDF('share');
             });
             completeReportBtn.addEventListener('click', () => handleExportPDF('complete'));
             clearAllBtn.addEventListener('click', handleClearAll);
@@ -1878,8 +1861,27 @@
                     for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
                     await uploadSupportingFiles(savedParts[0].id, savedParts[0].trackingNumber);
                     for (const part of savedParts) await downloadSavedCombinedPdf(part.id, part.filename);
+                    const response = await fetch('/api/pm-reports/email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ report: {
+                            technician: techName,
+                            reportDate: dateVal,
+                            facilityAddress: facilityAddr,
+                            trackingNumber: trackingNum,
+                            facilityId,
+                            customerName: fedexJobInput.checked ? '' : customerName,
+                            fedexJob: fedexJobInput.checked,
+                            category: reportCategory,
+                            reportTypeLabel: reportType.label,
+                            hoursOnJob,
+                            travelHours,
+                            filename
+                        } })
+                    });
+                    if (!response.ok) throw new Error('EMAIL_FAILED:' + await response.text());
                     removeToast(loadingToast);
-                    showToast(savedParts.length > 1 ? 'Large report verified on the site and downloaded as ' + savedParts.map(part => part.trackingNumber).join(', ') + '. Upload each PDF part to HCP.' : 'Complete report verified in Completed Reports and downloaded to this device. It is ready to upload to HCP.', 'success');
+                    showToast(savedParts.length > 1 ? 'Report saved online, downloaded as ' + savedParts.map(part => part.trackingNumber).join(', ') + ', and emailed. Upload each PDF part to HCP.' : 'Report saved online, downloaded to this device, and emailed successfully.', 'success');
                 } else if (mode === 'share') {
                     const savedParts = await archivePdfParts();
                     for (const part of savedParts) await uploadJobReportPhotos(part.id, part.trackingNumber, part.itemIds);
