@@ -480,14 +480,18 @@ export async function PATCH(request: NextRequest) {
   const customerNameUpdate = body?.customerName === undefined ? undefined : String(body.customerName).trim();
   const hoursOnJobUpdate = body?.hoursOnJob === undefined ? undefined : String(body.hoursOnJob).trim();
   const travelHoursUpdate = body?.travelHours === undefined ? undefined : String(body.travelHours).trim();
+  const categoryUpdate = body?.category === undefined ? undefined : String(body.category).trim().toLowerCase();
   const correctiveActionsUpdate = body?.correctiveActions === undefined ? undefined : body.correctiveActions;
   const rawDeletePdfPages: unknown[] = Array.isArray(body?.deletePdfPages) ? body.deletePdfPages : [];
   const deletePdfPages: number[] = Array.from(new Set<number>(
     rawDeletePdfPages.map((page) => Number(page)).filter((page) => Number.isInteger(page) && page > 0),
   )).sort((a, b) => a - b);
   if (!id) return NextResponse.json({ error: "Report ID is required" }, { status: 400 });
-  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && partsOrdersUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && hoursOnJobUpdate === undefined && travelHoursUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
+  if (trackingNumberUpdate === undefined && partsNotesUpdate === undefined && partsOrdersUpdate === undefined && fedexJobUpdate === undefined && customerNameUpdate === undefined && hoursOnJobUpdate === undefined && travelHoursUpdate === undefined && categoryUpdate === undefined && correctiveActionsUpdate === undefined && !deletePdfPages.length && !["complete", "parts", "return"].includes(workflowStatus)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
+  }
+  if (categoryUpdate !== undefined && !["regular", "proposed", "pm", "tugger", "gas"].includes(categoryUpdate)) {
+    return NextResponse.json({ error: "Invalid report category" }, { status: 400 });
   }
   if (trackingNumberUpdate !== undefined && !trackingNumberUpdate) {
     return NextResponse.json({ error: "Tracking number is required" }, { status: 400 });
@@ -584,6 +588,14 @@ export async function PATCH(request: NextRequest) {
     ...(customerNameUpdate !== undefined ? { customerName: customerNameUpdate } : {}),
     ...(hoursOnJobUpdate !== undefined ? { hoursOnJob: hoursOnJobUpdate } : {}),
     ...(travelHoursUpdate !== undefined ? { travelHours: travelHoursUpdate } : {}),
+    ...(categoryUpdate !== undefined ? {
+      category: categoryUpdate,
+      reportTypeLabel: categoryUpdate === "tugger" ? "Tugger Repairs & Maintenance Report"
+        : categoryUpdate === "pm" ? "Preventive Maintenance Report"
+        : categoryUpdate === "proposed" ? "Proposed Work Report"
+        : categoryUpdate === "gas" ? "Gas Sensor Report"
+        : "Regular Job Report",
+    } : {}),
     ...(correctiveActionsUpdate !== undefined ? { correctiveActions: correctiveActionsUpdate } : {}),
     ...pdfUpdate,
   };
@@ -595,7 +607,7 @@ export async function PATCH(request: NextRequest) {
   });
   if (!updateResponse.ok) return NextResponse.json({ error: await updateResponse.text() }, { status: updateResponse.status });
   if (partsOrdersUpdate !== undefined && !(await updateResponse.json()).length) return NextResponse.json({ error: "This report changed while saving. Reload the reports and try again." }, { status: 409 });
-  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, partsNotes: updatedData.partsNotes, partsOrders: updatedData.partsOrders, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, correctiveActions: updatedData.correctiveActions, pdfPageCount: updatedData.pdfPageCount });
+  return NextResponse.json({ ok: true, id, workflowStatus: updatedData.workflowStatus, trackingNumber: updatedData.trackingNumber, category: updatedData.category, partsNotes: updatedData.partsNotes, partsOrders: updatedData.partsOrders, fedexJob: updatedData.fedexJob, customerName: updatedData.customerName, correctiveActions: updatedData.correctiveActions, pdfPageCount: updatedData.pdfPageCount });
 }
 
 export async function DELETE(request: NextRequest) {
