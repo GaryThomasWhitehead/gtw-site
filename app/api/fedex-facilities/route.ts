@@ -40,16 +40,25 @@ function locationAddress(value: unknown) {
 export async function GET(request: NextRequest) {
   if (!hasFedExTrackerAccess(request) && !await validatePmTechSession(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { url, key, table } = config();
-  if (!url || !key) return NextResponse.json({ facilities: [] });
 
   const params = new URLSearchParams({ select: "data", tracking_number: "not.like.PM*" });
-  const response = await fetch(`${url}/rest/v1/${table}?${params}`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
-    cache: "no-store",
-  });
-  if (!response.ok) return NextResponse.json({ facilities: [] });
-
-  const rows = await response.json() as StoredRow[];
+  let rows: StoredRow[] = [];
+  for (let attempt = 0; url && key && attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(`${url}/rest/v1/${table}?${params}`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (response.ok) {
+        rows = await response.json() as StoredRow[];
+        break;
+      }
+    } catch (error) {
+      console.warn("Facility lookup attempt failed", { attempt: attempt + 1, error: error instanceof Error ? error.message : String(error) });
+    }
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+  }
   const facilities = new Map<string, { id: string; address: string; date: string; fullAddress: boolean }>();
 
   function addFacility(idValue: unknown, addressValue: unknown, dateValue: unknown, fullAddress = true) {
