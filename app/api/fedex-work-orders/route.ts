@@ -101,10 +101,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: await response.text() }, { status: response.status });
   }
 
-  const rows = await response.json();
+  const rows = await response.json() as Array<{ tracking_number?: string; data: WorkOrder }>;
+  const deletedTrackingNumbers = new Set(
+    rows
+      .filter(row => String(row.data?.recordType || "") === "deleted-work-order")
+      .map(row => trackingKey(row.data?.trackingNumber || row.tracking_number?.replace(/^DELETED:/i, "")))
+      .filter(Boolean)
+  );
   return NextResponse.json(rows
     .map((row: { data: WorkOrder }) => row.data)
-    .filter((data: WorkOrder) => !["pm-report", "deleted-work-order"].includes(String(data?.recordType || ""))),
+    .filter((data: WorkOrder) => !["pm-report", "deleted-work-order"].includes(String(data?.recordType || "")))
+    .filter((data: WorkOrder) => !deletedTrackingNumbers.has(trackingKey(data?.trackingNumber || data?.id))),
   { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
 }
 
