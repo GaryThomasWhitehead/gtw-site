@@ -76,13 +76,13 @@ function trackingKey(value: unknown) {
 
 async function loadDeletedTrackingNumbers(url: string, key: string, table: string) {
   const response = await fetch(
-    `${url}/rest/v1/${table}?select=tracking_number&data-%3E%3ErecordType=eq.deleted-work-order`,
+    `${url}/rest/v1/${table}?select=tracking_number,data&data-%3E%3ErecordType=eq.deleted-work-order`,
     { headers: headers(key), cache: "no-store" }
   );
   if (!response.ok) throw new Error(await response.text());
   return new Set<string>(
-    ((await response.json()) as Array<{ tracking_number?: string }>)
-      .map(row => trackingKey(row.tracking_number))
+    ((await response.json()) as Array<{ tracking_number?: string; data?: WorkOrder }>)
+      .map(row => trackingKey(row.data?.trackingNumber || row.tracking_number?.replace(/^DELETED:/i, "")))
       .filter(Boolean)
   );
 }
@@ -259,9 +259,11 @@ export async function DELETE(request: NextRequest) {
   for (let index = 0; index < trackingNumbers.length; index += 75) {
     const batch = trackingNumbers.slice(index, index + 75);
     const deletedAt = new Date().toISOString();
-    const tombstones = batch.map(tracking_number => ({
-      tracking_number,
-      data: { trackingNumber: tracking_number, recordType: "deleted-work-order", deletedAt },
+    const tombstones = batch.map(originalTrackingNumber => ({
+      // Store suppression separately so a stale browser or later import can
+      // never overwrite the permanent deletion marker.
+      tracking_number: `DELETED:${originalTrackingNumber}`,
+      data: { trackingNumber: originalTrackingNumber, recordType: "deleted-work-order", deletedAt },
       updated_at: deletedAt
     }));
     const response = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
@@ -275,6 +277,15 @@ export async function DELETE(request: NextRequest) {
 
     if (!response.ok) {
       return NextResponse.json({ error: await response.text(), deletedBeforeError: deleted }, { status: response.status });
+    }
+
+    const liveKeys = batch.map(value => encodeURIComponent(value)).join(",");
+    const removeLive = await fetch(`${url}/rest/v1/${table}?tracking_number=in.(${liveKeys})`, {
+      method: "DELETE",
+      headers: { ...headers(key), Prefer: "return=minimal" }
+    });
+    if (!removeLive.ok) {
+      return NextResponse.json({ error: await removeLive.text(), deletedBeforeError: deleted }, { status: removeLive.status });
     }
     deleted += batch.length;
   }
