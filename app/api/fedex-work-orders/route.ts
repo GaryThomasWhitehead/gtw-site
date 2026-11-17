@@ -92,16 +92,19 @@ export async function GET(request: NextRequest) {
   const { url, key, table } = supabaseConfig();
   if (!url || !key) return missingConfig();
 
-  const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&tracking_number=not.like.PMREPORT%3A*&order=tracking_number.asc`, {
-    headers: headers(key),
-    cache: "no-store"
-  });
-
-  if (!response.ok) {
-    return NextResponse.json({ error: await response.text() }, { status: response.status });
+  const rows: Array<{ tracking_number?: string; data: WorkOrder }> = [];
+  for (let offset = 0; ; offset += 1000) {
+    const response = await fetch(`${url}/rest/v1/${table}?select=tracking_number,data&order=tracking_number.asc&offset=${offset}&limit=1000`, {
+      headers: headers(key),
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      return NextResponse.json({ error: await response.text() }, { status: response.status });
+    }
+    const page = await response.json() as Array<{ tracking_number?: string; data: WorkOrder }>;
+    rows.push(...page);
+    if (page.length < 1000) break;
   }
-
-  const rows = await response.json() as Array<{ tracking_number?: string; data: WorkOrder }>;
   const deletedTrackingNumbers = new Set(
     rows
       .filter(row => String(row.data?.recordType || "") === "deleted-work-order")
@@ -109,8 +112,9 @@ export async function GET(request: NextRequest) {
       .filter(Boolean)
   );
   return NextResponse.json(rows
+    .filter(row => !/^PM(?:REPORT|PARTORDER):/i.test(String(row.tracking_number || "")))
     .map((row: { data: WorkOrder }) => row.data)
-    .filter((data: WorkOrder) => !["pm-report", "deleted-work-order"].includes(String(data?.recordType || "")))
+    .filter((data: WorkOrder) => !["pm-report", "tracking-part-orders", "tugger-inventory", "deleted-work-order"].includes(String(data?.recordType || "")))
     .filter((data: WorkOrder) => !deletedTrackingNumbers.has(trackingKey(data?.trackingNumber || data?.id))),
   { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
 }

@@ -2332,6 +2332,7 @@
               setImportProgress(70, "Saving to shared tracker");
               const sync = await saveOrders();
               if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
+              await loadRemoteOrders();
               finishImportProgress();
               alert(`Import complete. ${result.created} new jobs and ${result.updated} existing jobs were saved to the shared tracker.`);
             } else {
@@ -2342,6 +2343,7 @@
               setImportProgress(70, "Saving to shared tracker");
               const sync = await saveOrders();
               if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
+              await loadRemoteOrders();
               finishImportProgress();
             }
             render();
@@ -2375,7 +2377,7 @@
             setImportProgress(70, "Saving to shared tracker");
             const sync = await saveOrders();
             if (!sync.shared) throw new Error(`The file was saved only in this browser. ${sync.error}`);
-            render();
+            await loadRemoteOrders();
             finishImportProgress();
             alert(`Import complete. ${result.created} new jobs and ${result.updated} existing jobs were saved to the shared tracker.`);
           } catch (error) {
