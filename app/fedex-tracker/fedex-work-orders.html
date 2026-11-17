@@ -1728,13 +1728,11 @@
             });
           }
           if (Array.isArray(remoteOrders)) {
-            const invalidOrders = remoteOrders.filter(order => isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order));
-            orders = excludeDeletedOrders(remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order) && !isInvalidNtsOrder(order)));
+            // Older valid work orders may not have every newer classification
+            // field. Loading the tracker must never hide or delete them.
+            orders = excludeDeletedOrders(remoteOrders);
             refreshFacilityLabels();
             orders = orders.map(order => ({ ...order, location: normalizeLocation(order.location) }));
-            if (invalidOrders.length) {
-              await deleteRemoteOrders(invalidOrders.map(order => order.trackingNumber || order.id));
-            }
             cacheOrders(orders);
             selectedId = orders[0]?.id || null;
           }

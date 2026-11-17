@@ -176,6 +176,49 @@ export async function PUT(request: NextRequest) {
   });
 }
 
+export async function POST(request: NextRequest) {
+  if (!hasFedExTrackerAccess(request)) return unauthorized();
+  const { url, key, table } = supabaseConfig();
+  if (!url || !key) return missingConfig();
+
+  const body = await request.json().catch(() => ({}));
+  const orders = body?.action === "restoreDeletedOrders" && Array.isArray(body?.orders) ? body.orders as WorkOrder[] : [];
+  if (!orders.length) {
+    return NextResponse.json({ error: "Expected deleted work orders to restore." }, { status: 400 });
+  }
+
+  let restored = 0;
+  for (let index = 0; index < orders.length; index += 75) {
+    const batch = orders.slice(index, index + 75);
+    const rows = batch.flatMap(data => {
+      const tracking_number = trackingKey(data.trackingNumber || data.id);
+      return tracking_number ? [{ tracking_number, data, updated_at: new Date().toISOString() }] : [];
+    });
+    if (!rows.length) continue;
+
+    const markerKeys = rows.map(row => encodeURIComponent(`DELETED:${row.tracking_number}`)).join(",");
+    const clearMarkers = await fetch(`${url}/rest/v1/${table}?tracking_number=in.(${markerKeys})`, {
+      method: "DELETE",
+      headers: { ...headers(key), Prefer: "return=minimal" }
+    });
+    if (!clearMarkers.ok) {
+      return NextResponse.json({ error: await clearMarkers.text(), restoredBeforeError: restored }, { status: clearMarkers.status });
+    }
+
+    const restore = await fetch(`${url}/rest/v1/${table}?on_conflict=tracking_number`, {
+      method: "POST",
+      headers: { ...headers(key), Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(rows)
+    });
+    if (!restore.ok) {
+      return NextResponse.json({ error: await restore.text(), restoredBeforeError: restored }, { status: restore.status });
+    }
+    restored += rows.length;
+  }
+
+  return NextResponse.json({ ok: true, restored });
+}
+
 export async function PATCH(request: NextRequest) {
   if (!hasFedExTrackerAccess(request)) return unauthorized();
   const { url, key, table } = supabaseConfig();
