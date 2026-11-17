@@ -1542,7 +1542,9 @@
         }
 ];
 
-      let orders = loadOrders();
+      // The shared tracker is authoritative. Do not display an old browser
+      // cache while the current server list is loading.
+      let orders = [];
       let selectedId = orders[0]?.id || null;
       let activeLocation = "all";
       let locationCompletedView = false;
@@ -1725,7 +1727,7 @@
               if (label && !knownFacilityLabels.has(id)) facilityLabels.set(id, label);
             });
           }
-          if (Array.isArray(remoteOrders) && remoteOrders.length) {
+          if (Array.isArray(remoteOrders)) {
             const invalidOrders = remoteOrders.filter(order => isEmptyUnclassifiedOrder(order) || isInvalidNtsOrder(order));
             orders = excludeDeletedOrders(remoteOrders.filter(order => !isEmptyUnclassifiedOrder(order) && !isInvalidNtsOrder(order)));
             refreshFacilityLabels();
@@ -1737,10 +1739,12 @@
             selectedId = orders[0]?.id || null;
           }
           remoteSyncEnabled = true;
-          saveOrders();
           render();
         } catch (error) {
           console.warn("FedEx tracker is using local browser storage only:", error);
+          orders = loadOrders();
+          selectedId = orders[0]?.id || null;
+          render();
         }
       }
 
