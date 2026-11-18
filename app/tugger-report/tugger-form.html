@@ -924,6 +924,64 @@
             return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1] || ''); reader.onerror = reject; reader.readAsDataURL(blob); });
         }
 
+        function loadPdfLib() {
+            if (window.PDFLib) return Promise.resolve(window.PDFLib);
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector('script[data-pdf-lib]');
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(window.PDFLib), { once: true });
+                    existing.addEventListener('error', reject, { once: true });
+                    return;
+                }
+                const script = document.createElement('script');
+                script.dataset.pdfLib = 'true';
+                script.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+                script.onload = () => resolve(window.PDFLib);
+                script.onerror = () => reject(new Error('Could not load the PDF splitting library.'));
+                document.head.appendChild(script);
+            });
+        }
+
+        async function splitPdfForSafeUpload(blob, maxBytes = 2700000) {
+            if (blob.size <= maxBytes) return [blob];
+            const PDFLib = await loadPdfLib();
+            const source = await PDFLib.PDFDocument.load(await blob.arrayBuffer());
+            const pageIndexes = source.getPageIndices();
+            const parts = [];
+            let start = 0;
+            while (start < pageIndexes.length) {
+                let bestBytes = null;
+                let bestEnd = start;
+                for (let end = start; end < pageIndexes.length; end++) {
+                    const candidate = await PDFLib.PDFDocument.create();
+                    const copied = await candidate.copyPages(source, pageIndexes.slice(start, end + 1));
+                    copied.forEach(page => candidate.addPage(page));
+                    const bytes = await candidate.save({ useObjectStreams: true });
+                    if (bytes.length > maxBytes && end === start) {
+                        throw new Error('One PDF page is too large to upload. Please remove one oversized picture and try again.');
+                    }
+                    if (bytes.length > maxBytes) break;
+                    bestBytes = bytes;
+                    bestEnd = end + 1;
+                }
+                if (!bestBytes) throw new Error('The PDF could not be divided into safe upload parts.');
+                parts.push(new Blob([bestBytes], { type: 'application/pdf' }));
+                start = bestEnd;
+            }
+            return parts;
+        }
+
+        function reportPartLabel(index) {
+            let value = index + 1;
+            let label = '';
+            while (value > 0) {
+                value -= 1;
+                label = String.fromCharCode(65 + (value % 26)) + label;
+                value = Math.floor(value / 26);
+            }
+            return label;
+        }
+
         function optimizePhotoData(dataUrl) {
             return new Promise((resolve, reject) => {
                 const image = new Image();
@@ -1179,7 +1237,8 @@
             const reportUniqueId = state.reportId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
             const uniqueReportNumber = String(reportUniqueId).replace(/[^a-zA-Z0-9]/g, '').slice(-10);
             const filename = 'Frontline_Tugger_' + facilityId + '_' + dateStr + '_' + uniqueReportNumber + '.pdf';
-            const pdfBase64 = await blobToBase64(doc.output('blob'));
+            const fullPdfBlob = doc.output('blob');
+            const pdfParts = await splitPdfForSafeUpload(fullPdfBlob);
             const report = {
                 id: reportUniqueId,
                 technician: hdr.techName, reportDate: hdr.date, facilityAddress: hdr.facilityAddr,
@@ -1198,30 +1257,51 @@
                     manufacturer: item.manufacturer || '',
                     serialNumber: item.serialNum || ''
                 })),
-                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', workflowStatus: selectedWorkflowStatus(), filename, pdfBase64,
+                category: 'tugger', reportTypeLabel: 'Tugger Repairs & Maintenance Report', workflowStatus: selectedWorkflowStatus(), filename,
                 completedAt: new Date().toISOString()
             };
-            const archiveResponse = await fetch('/api/pm-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
-            if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
-            await uploadSupportingFiles(reportUniqueId, hdr.trackingNum);
+            const savedParts = [];
+            for (let partIndex = 0; partIndex < pdfParts.length; partIndex++) {
+                const label = reportPartLabel(partIndex);
+                const suffix = pdfParts.length > 1 ? ' - ' + label : '';
+                const partId = pdfParts.length > 1 ? reportUniqueId + '-part-' + (partIndex + 1) : reportUniqueId;
+                const partFilename = pdfParts.length > 1 ? filename.replace(/\.pdf$/i, '_' + label + '.pdf') : filename;
+                const pdfBase64 = await blobToBase64(pdfParts[partIndex]);
+                const partReport = {
+                    ...report,
+                    id: partId,
+                    trackingNumber: hdr.trackingNum + suffix,
+                    baseTrackingNumber: hdr.trackingNum,
+                    reportPart: partIndex + 1,
+                    reportPartCount: pdfParts.length,
+                    reportTypeLabel: report.reportTypeLabel + (suffix ? ' Part ' + label : ''),
+                    filename: partFilename,
+                    pdfBase64
+                };
+                const archiveResponse = await fetch('/api/pm-reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report: partReport }) });
+                if (!archiveResponse.ok) throw new Error(await archiveResponse.text());
+                savedParts.push({ id: partId, filename: partFilename });
+            }
+            await uploadSupportingFiles(savedParts[0].id, hdr.trackingNum);
             if (mode === 'download' || mode === 'complete') {
-                const link = document.createElement('a');
-                link.href = '/api/pm-reports?id=' + encodeURIComponent(reportUniqueId) + '&download=1';
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
+                for (const part of savedParts) {
+                    const link = document.createElement('a');
+                    link.href = '/api/pm-reports?id=' + encodeURIComponent(part.id) + '&download=1';
+                    link.download = part.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }
                 if (mode === 'download') {
-                    showToast('Report verified in Completed Reports; supporting files saved and PDF downloaded successfully', 'success');
+                    showToast(savedParts.length > 1 ? 'Large Tugger report saved and downloaded in ' + savedParts.length + ' safe PDF parts.' : 'Report verified in Completed Reports; supporting files saved and PDF downloaded successfully', 'success');
                     return;
                 }
             }
             if (mode === 'share' || mode === 'complete') {
-                const { pdfBase64: _pdfBase64, ...emailReport } = report;
-                const emailResponse = await fetch('/api/pm-reports/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report: emailReport }) });
+                const emailResponse = await fetch('/api/pm-reports/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ report }) });
                 if (!emailResponse.ok) throw new Error(await emailResponse.text());
             }
-            showToast(mode === 'complete' ? 'Report saved online, downloaded to this device, and emailed successfully' : mode === 'share' ? 'Report verified in Completed Reports and notice emailed successfully' : 'Completed report verified in Completed Reports', 'success');
+            showToast(mode === 'complete' ? (savedParts.length > 1 ? 'Large Tugger report saved online in ' + savedParts.length + ' safe PDF parts, downloaded, and emailed successfully' : 'Report saved online, downloaded to this device, and emailed successfully') : mode === 'share' ? 'Report verified in Completed Reports and notice emailed successfully' : 'Completed report verified in Completed Reports', 'success');
         }
 
         // ─── Initialize ───
