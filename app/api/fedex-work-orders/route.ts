@@ -31,7 +31,7 @@ function isEmptyUnclassifiedOrder(order: WorkOrder) {
   const address = String(order.address || "").trim();
   const unclassified = !classification || /^unclassified$/i.test(classification);
   const missingLocation = !location || /^unassigned location$/i.test(location);
-  return unclassified && missingLocation && !address;
+  return missingLocation || (unclassified && !address);
 }
 
 function isInvalidNtsOrder(order: WorkOrder) {
@@ -115,6 +115,7 @@ export async function GET(request: NextRequest) {
     .filter(row => !/^PM(?:REPORT|PARTORDER):/i.test(String(row.tracking_number || "")))
     .map((row: { data: WorkOrder }) => row.data)
     .filter((data: WorkOrder) => !["pm-report", "tracking-part-orders", "tugger-inventory", "deleted-work-order"].includes(String(data?.recordType || "")))
+    .filter((data: WorkOrder) => !isEmptyUnclassifiedOrder(data))
     .filter((data: WorkOrder) => !deletedTrackingNumbers.has(trackingKey(data?.trackingNumber || data?.id))),
   { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } });
 }
@@ -257,8 +258,6 @@ export async function PATCH(request: NextRequest) {
     }
     const existingRows = await lookup.json() as Array<{ data?: WorkOrder }>;
     const existing = existingRows[0]?.data || {};
-    if (existingRows.length) matched += 1;
-    else created += 1;
 
     const data: WorkOrder = { ...existing };
     data.id = data.id || crypto.randomUUID();
@@ -278,6 +277,9 @@ export async function PATCH(request: NextRequest) {
     if (alertNote && !currentNotes.includes(alertNote)) {
       data.notes = [currentNotes, alertNote].filter(Boolean).join("\n");
     }
+    if (isEmptyUnclassifiedOrder(data)) continue;
+    if (existingRows.length) matched += 1;
+    else created += 1;
     rows.push({ tracking_number: trackingNumber, data, updated_at: updatedAt });
   }
 
